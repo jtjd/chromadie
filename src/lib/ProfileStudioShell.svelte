@@ -198,7 +198,8 @@
     --studio-display: 'Manrope Variable', var(--font-display-stack, sans-serif);
     position: relative;
     isolation: isolate;
-    display: block;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
     width: 100%;
     min-width: 320px;
@@ -256,7 +257,7 @@
   .profile-studio-shell__menu-divider { height: 1px; margin: .3rem .4rem; background: var(--studio-border); }
 
   .profile-studio-shell__mobile-tools { display: none; }
-  .profile-studio-shell__workspace { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: clamp(42px, 5vw, 82px); width: min(calc(100% - 48px), 1440px); margin: 0 auto; padding: 2.35rem 0 5.6rem; }
+  .profile-studio-shell__workspace { position: relative; z-index: 1; display: grid; flex: 1 0 auto; grid-template-columns: minmax(0, 1fr); align-items: start; gap: clamp(42px, 5vw, 82px); width: min(calc(100% - 48px), 1440px); margin: 0 auto; padding: 2.35rem 0 5.6rem; }
   .profile-studio-shell--with-preview .profile-studio-shell__workspace { grid-template-columns: minmax(540px, 640px) minmax(400px, 1fr); }
   .profile-studio-shell__content { --surface-panel: var(--studio-panel); --surface-panel-strong: var(--studio-panel-card); --surface-panel-soft: var(--studio-control); --surface-inset: var(--studio-control-deep); box-sizing: border-box; width: 100%; min-width: 0; }
   .profile-studio-shell__preview { position: sticky; top: 5.9rem; display: block; min-width: 0; height: calc(100dvh - 7.3rem); min-height: 34rem; overflow: visible; }

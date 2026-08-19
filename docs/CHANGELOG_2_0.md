@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Anchor the Profile Studio footer
+
+- Fixed the Premium and other short Profile Studio sections so the opaque
+  footer sits at the bottom of the desktop viewport instead of floating below
+  the dashboard content.
+- Kept the workspace responsive and content-driven for longer editors and
+  narrow screens.
+
 ## 2026-08-19 — Soften the homepage leaderboard into the hero atmosphere
 
 - Changed the daily leaderboard from a solid dark slab to translucent glass

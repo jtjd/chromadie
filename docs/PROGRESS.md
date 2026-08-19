@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Anchor Profile Studio footer on short desktop pages — 2026-08-19
+
+- Changed the Profile Studio shell to a column flex layout and let the
+  workspace consume remaining viewport space, keeping the footer at the
+  bottom of short routes such as Premium.
+- Preserved normal document flow for longer editors and the existing mobile
+  sticky actions/footer behavior.
+
 ## Homepage leaderboard atmosphere — 2026-08-19
 
 - Reworked the daily leaderboard into a sky-matched glass surface with

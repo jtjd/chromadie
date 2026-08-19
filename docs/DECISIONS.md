@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Let Profile Studio own the bottom of the viewport
+
+Profile Studio is a full-page dashboard, including its stable opaque footer.
+The shell therefore uses a column flex layout and gives the workspace the
+flexible middle region. Short sections can now place the footer at the
+viewport bottom instead of leaving it directly beneath their content with the
+editable atmosphere continuing below. The workspace still grows with its
+content, so longer editors retain ordinary document scrolling and mobile
+preview/save controls remain unchanged.
+
 ## 2026-08-19 — Let the homepage leaderboard belong to the profile atmosphere
 
 The homepage leaderboard is part of the hero composition, not a separate

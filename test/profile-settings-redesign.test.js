@@ -72,6 +72,8 @@ test('Customize owns opaque dashboard chrome over editable profile backgrounds',
 test('Profile Studio header uses the centered homepage shell geometry', async () => {
   const shell = await readFile(new URL('../src/lib/ProfileStudioShell.svelte', import.meta.url), 'utf8');
 
+  assert.match(shell, /\.profile-studio-shell \{[\s\S]*display: flex;[\s\S]*flex-direction: column;/);
+  assert.match(shell, /\.profile-studio-shell__workspace \{[\s\S]*flex: 1 0 auto;/);
   assert.match(shell, /<div class="profile-studio-shell__header-inner">/);
   assert.match(shell, /\.profile-studio-shell__header-inner \{[\s\S]*width: min\(1480px, calc\(100% - 64px\)\);[\s\S]*margin-inline: auto;/);
   assert.match(shell, /@media \(max-width: 1100px\) \{[\s\S]*\.profile-studio-shell__header-inner \{ width: min\(calc\(100% - 40px\), 980px\); \}/);
