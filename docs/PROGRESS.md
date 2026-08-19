@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Direct route startup and site font boundary — 2026-08-19
+
+- Initialized route state from the current browser URL before the first lazy
+  outlet render, so direct refreshes do not briefly load the homepage tree.
+- Scoped site-shell typography to Inter and Manrope while preserving Spline
+  Sans and IBM Plex Mono for the profile renderer.
+- A fresh 1440px production trace now shows `/pricing` at about 195 KB
+  transferred and `/roll` at about 218 KB, with no `HomePage` chunk in either
+  route. The homepage still loads its authored hero media and measured about
+  360 KB on a cold visit.
+- Right-sized the four authored homepage avatar fixtures to 512×512. The
+  total avatar payload fell from about 205 KB to 94 KB without changing the
+  rendered specimen at desktop or mobile sizes.
+
 ## Route startup and shared chrome cost — 2026-08-19
 
 - Removed unconditional idle prefetching of the Roll, Leaderboard, Profile,

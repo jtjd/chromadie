@@ -48,6 +48,8 @@ test('normal site surfaces inherit the homepage type, canvas, and button contrac
   assert.match(siteStyles, /--site-atmosphere-image: url\('\/site\/chromadie-roll-horizon\.webp'\)/);
   assert.match(siteStyles, /\.app-shell--site/);
   assert.match(app, /class:app-shell--site=\{/);
+  assert.match(app, /\.app-shell--site,[\s\S]*font-family: 'Inter'/);
+  assert.match(app, /\.app-shell--home \.skip-link/);
   assert.ok(atmosphereAsset.size > 1000, 'roll horizon should be a real local image asset');
   assert.match(siteStyles, /background: var\(--white\)/);
   assert.match(header, /\.site-mode-header--home \.site-mode-header__nav button:not\(\.site-mode-header__claim-link\)/);

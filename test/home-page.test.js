@@ -4,6 +4,29 @@ import { stat, readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
+const readWebpDimensions = async path => {
+  const image = await readFile(new URL(`../${path}`, import.meta.url));
+  assert.equal(image.toString('ascii', 0, 4), 'RIFF');
+  assert.equal(image.toString('ascii', 8, 12), 'WEBP');
+
+  const chunkType = image.toString('ascii', 12, 16);
+  if (chunkType === 'VP8 ') {
+    return {
+      width: image.readUInt16LE(26) & 0x3fff,
+      height: image.readUInt16LE(28) & 0x3fff
+    };
+  }
+
+  if (chunkType === 'VP8X') {
+    return {
+      width: 1 + image[24] + (image[25] << 8) + (image[26] << 16),
+      height: 1 + image[27] + (image[28] << 8) + (image[29] << 16)
+    };
+  }
+
+  throw new Error(`Unsupported WebP chunk ${chunkType} in ${path}`);
+};
+
 const [home, hero, demo, fixtures, community, dailyLeaderboard, claim, header, sharedHeader, footer, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
   read('src/lib/HomePage.svelte'),
   read('src/lib/homepage/HomepageHero.svelte'),
@@ -121,6 +144,19 @@ test('homepage fixtures are local, deterministic, scored, and outside production
   for (const filename of assetPaths) {
     const image = await stat(new URL(`../public/homepage/fixtures/${filename}`, import.meta.url));
     assert.ok(image.size > 1000, `${filename} should be a real local fixture asset`);
+  }
+
+  for (const filename of [
+    'meilin/avatar.webp',
+    'p2/p2avatar.webp',
+    'minimal-avatar.webp',
+    'portfolio-avatar.webp'
+  ]) {
+    assert.deepEqual(
+      await readWebpDimensions(`public/homepage/fixtures/${filename}`),
+      { width: 512, height: 512 },
+      `${filename} should be sized for its rendered homepage surface`
+    );
   }
 });
 

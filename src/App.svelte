@@ -20,26 +20,42 @@
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
   const VALID_APP_ROUTES = new Set(['app', 'privacy', 'terms', 'how-to-play', 'auth', 'auth-callback', 'reset-password']);
-  let view = 'home';
-  let leaderboardTab = 'today';
-  let routeMode = 'app';
-  let authRouteTab = 'login';
-  let authRouteNext = '';
-  let authRouteUsername = '';
+  // Resolve the browser location before the first RouteOutlet pass. Starting
+  // every document as Home briefly imports the homepage tree even when a
+  // visitor directly opens /pricing, /roll, or an information route. The
+  // mount-time parse below still owns side effects such as challenge and
+  // alias resolution; this first pass only prevents the wrong lazy split
+  // point from entering the network graph.
+  const initialRoute = typeof window !== 'undefined'
+    ? parseRouteLocation(window.location.pathname, window.location.search)
+    : null;
+  let view = initialRoute?.view || 'home';
+  let leaderboardTab = initialRoute?.leaderboardTab || 'today';
+  let routeMode = initialRoute?.routeMode || 'app';
+  let authRouteTab = initialRoute?.authTab || 'login';
+  let authRouteNext = initialRoute?.authNext || '';
+  let authRouteUsername = initialRoute?.authUsername || '';
   let logoutInProgress = false;
-  let challengeData = null;
+  let challengeData = initialRoute?.challengeId !== null && initialRoute?.challengeId !== undefined
+    ? {
+      id: initialRoute.challengeId,
+      fromUsername: initialRoute.challengeFrom,
+      loading: true,
+      error: null
+    }
+    : null;
   let challengeLoadRequestId = 0;
-  let selectedProfileUsername = null;
-  let profileRouteKind = null;
-  let aliasResolving = false;
+  let selectedProfileUsername = initialRoute?.profileUsername || null;
+  let profileRouteKind = initialRoute?.profileRouteKind || null;
+  let aliasResolving = Boolean(initialRoute?.profileAlias);
   let aliasResolutionRequestId = 0;
-  let legacyProfile = false;
+  let legacyProfile = Boolean(initialRoute?.legacyProfile);
   let founderLaunchWindowActive = false;
   let routeInitialized = false;
   let mainContent = null;
   let routeFocusRequest = 0;
   let lastTrackedRouteKey = '';
-  let profileVisualFixture = '';
+  let profileVisualFixture = getProfileVisualFixture();
   let routeTarget;
   let homepageHeaderTransitionPending = false;
 
@@ -1058,6 +1074,16 @@
     align-self: stretch;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Site surfaces use the bundled Inter/Manrope contract. Keep the profile
+     default Spline face available to profile renderers without making the
+     hidden skip link pull it onto every public route. */
+  .app-shell--site,
+  .app-shell--home,
+  .app-shell--site .skip-link,
+  .app-shell--home .skip-link {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
 
   .app-shell--home {

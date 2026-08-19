@@ -49,3 +49,11 @@ test('primary navigation prefetches destinations for mouse and keyboard users', 
 test('the app does not prefetch unrelated route trees during idle startup', () => {
   assert.doesNotMatch(app, /prefetchCommonRoutes|requestIdleCallback|cancelIdlePrefetch/);
 });
+
+test('direct refresh resolves the current route before lazy outlet startup', () => {
+  assert.match(app, /const initialRoute = typeof window !== 'undefined'/);
+  assert.match(app, /parseRouteLocation\(window\.location\.pathname, window\.location\.search\)/);
+  assert.match(app, /let view = initialRoute\?\.view \|\| 'home'/);
+  assert.match(app, /let routeMode = initialRoute\?\.routeMode \|\| 'app'/);
+  assert.doesNotMatch(app, /let view = 'home';[\s\S]{0,180}onMount\(\(\) => \{[\s\S]{0,180}parseRoute\(\)/);
+});

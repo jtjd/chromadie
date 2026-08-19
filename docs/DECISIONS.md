@@ -1,5 +1,18 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Keep direct refreshes on their requested route
+
+App initializes the pure route state from `window.location` before the first
+lazy outlet pass. The existing mount-time route parsing remains responsible
+for side effects such as challenge loading and alias resolution. This keeps a
+direct `/pricing`, `/roll`, or information-route refresh from importing the
+homepage split point and its profile demo dependencies first.
+
+The site shell also scopes its hidden skip-link and shared chrome to Inter and
+Manrope. Profile routes retain Spline Sans and IBM Plex Mono where their
+renderers need them, but public marketing and game routes no longer fetch the
+58 KB Spline face merely through inherited global typography.
+
 ## 2026-08-19 — Keep route startup work intent-driven
 
 The shell no longer prefetches the Roll, Leaderboard, Profile, and Auth route

@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Keep direct route startup focused
+
+- Resolve the current URL before the first lazy route render, avoiding a
+  transient homepage import on direct Pricing, Roll, Leaderboard, and content
+  route refreshes.
+- Keep the Spline profile face scoped to profile rendering so the site shell
+  does not download it on ordinary marketing and game routes.
+- Resize the authored homepage avatar fixtures to their actual display scale,
+  reducing their combined payload while preserving the reference composition.
+
 ## 2026-08-19 — Reduce route startup and shared chrome media cost
 
 - Removed unconditional idle route prefetching while preserving destination
