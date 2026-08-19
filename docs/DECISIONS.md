@@ -1,5 +1,17 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Keep route startup work intent-driven
+
+The shell no longer prefetches the Roll, Leaderboard, Profile, and Auth route
+trees during idle startup. Those modules remain lazy and the shared header
+still prefetches the exact destination on mouse hover or keyboard focus,
+preserving fast intentional navigation without making every homepage visit
+pay for unrelated route code.
+
+The shared AM mark also uses an alpha WebP sized for its largest rendered
+header treatment. This keeps the visual mark unchanged while reducing the
+shared chrome request from roughly 117 KB to roughly 8 KB per fresh route.
+
 ## 2026-08-19 — Defer and compress below-the-fold homepage photography
 
 The homepage’s three showcase cards are part of the authored marketing

@@ -13,7 +13,6 @@ const [app, outlet, loaders, header] = await Promise.all([
 
 test('route loading keeps the shell and previous page mounted until a destination resolves', () => {
   assert.match(app, /<RouteOutlet/);
-  assert.match(app, /prefetchRouteComponent/);
   assert.match(app, /homepageHeaderTransitionPending/);
   assert.match(app, /on:loaded=\{handleRouteSettled\}/);
   assert.match(app, /on:error=\{handleRouteSettled\}/);
@@ -45,4 +44,8 @@ test('primary navigation prefetches destinations for mouse and keyboard users', 
   assert.match(header, /on:focus=\{\(\) => prefetch\('leaderboard'\)\}/);
   assert.match(header, /on:mouseenter=\{\(\) => prefetch\('profileSettings'\)\}/);
   assert.match(header, /on:focus=\{\(\) => prefetch\('profileSettings'\)\}/);
+});
+
+test('the app does not prefetch unrelated route trees during idle startup', () => {
+  assert.doesNotMatch(app, /prefetchCommonRoutes|requestIdleCallback|cancelIdlePrefetch/);
 });

@@ -112,7 +112,7 @@
     <div class="profile-studio-shell__header-inner">
       {#if showBrand}
         <a class="profile-studio-shell__brand" href="/" aria-label="chm.lol home">
-          <img class="profile-studio-shell__brand-logo" src="/brand/am-mark-v1.png" alt="" width="72" height="58" decoding="async" />
+          <img class="profile-studio-shell__brand-logo" src="/brand/am-mark-v1.webp" alt="" width="72" height="58" decoding="async" />
         </a>
       {/if}
       <div class="profile-studio-shell__header-actions">

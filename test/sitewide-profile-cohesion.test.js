@@ -32,7 +32,7 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /--site-header-control-size: 0\.84rem/);
   assert.match(siteHeader, /--site-header-font: 'Inter'/);
   assert.match(siteHeader, /--site-header-display: 'Manrope Variable'/);
-  assert.match(siteHeader, /src="\/brand\/am-mark-v1\.png"/);
+  assert.match(siteHeader, /src="\/brand\/am-mark-v1\.webp"/);
   assert.match(siteHeader, /\.site-mode-header--home \.site-mode-header__nav button/);
   assert.match(siteHeader, /color: rgba\(255, 255, 255, 0\.94\) !important/);
   assert.match(siteHeader, /data-site-chrome="header"/);

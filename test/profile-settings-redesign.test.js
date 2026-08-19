@@ -63,7 +63,7 @@ test('Customize owns opaque dashboard chrome over editable profile backgrounds',
   assert.match(shell, /variant="studio"/);
   assert.match(shell, /site-footer--studio/);
   assert.match(shell, /background: var\(--bg, #0e0e10\)/);
-  assert.match(shell, /src="\/brand\/am-mark-v1\.png"/);
+  assert.match(shell, /src="\/brand\/am-mark-v1\.webp"/);
   assert.match(footer, /export let variant = 'site'/);
   assert.match(footer, /class:site-footer--studio=\{variant === 'studio'\}/);
   assert.match(footer, /site-footer__brand-logo/);

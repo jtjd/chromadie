@@ -7,7 +7,7 @@
   <div class="site-footer__identity">
     {#if variant === 'studio'}
       <a class="site-footer__brand" href="/" aria-label="chm.lol home">
-        <img class="site-footer__brand-logo" src="/brand/am-mark-v1.png" alt="" width="52" height="42" decoding="async" />
+        <img class="site-footer__brand-logo" src="/brand/am-mark-v1.webp" alt="" width="52" height="42" decoding="async" />
       </a>
     {:else}
       <span>chm.lol</span>

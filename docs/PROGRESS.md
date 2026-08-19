@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Route startup and shared chrome cost — 2026-08-19
+
+- Removed unconditional idle prefetching of the Roll, Leaderboard, Profile,
+  and Auth route trees; existing header hover/focus intent prefetch remains.
+- Removed two unused global font CSS imports, reducing the shared stylesheet
+  from about 79.6 KB to 76.9 KB raw in the production build.
+- Re-encoded the shared AM mark from a 667×540 PNG (~117 KB) to a 288×233
+  alpha WebP (~8 KB), updating the shared header, footer, and Profile Studio.
+- A production trace after the startup change showed no unrelated route
+  chunks after 2.5 seconds; the current logo change removes roughly 108 KB
+  from that same fresh-shell request set.
+
 ## Homepage media loading boundary — 2026-08-19
 
 - Deferred the three below-the-fold photographic showcase backgrounds and

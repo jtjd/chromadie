@@ -18,7 +18,7 @@ test('the approved homepage typography is bundled and authoritative', async () =
   assert.match(fonts, /font-family: 'Clash Display'/);
   assert.match(fonts, /font-family: 'Inter'/);
   assert.match(fonts, /font-weight: 400/);
-  assert.match(main, /@fontsource-variable\/inter\/wght\.css/);
+  assert.match(fonts, /inter-latin-wght-normal/);
   assert.match(main, /@fontsource-variable\/manrope\/wght\.css/);
   assert.doesNotMatch(index, /fonts\.googleapis|fonts\.gstatic/);
   assert.match(homepage, /font-family: 'Inter'/);

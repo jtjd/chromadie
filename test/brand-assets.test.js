@@ -18,6 +18,18 @@ async function readPngSize(path) {
   };
 }
 
+async function readWebpSize(path) {
+  const webp = await readFile(new URL(path, root));
+  assert.equal(webp.toString('ascii', 0, 4), 'RIFF');
+  assert.equal(webp.toString('ascii', 8, 12), 'WEBP');
+  assert.equal(webp.toString('ascii', 12, 16), 'VP8X');
+  return {
+    width: 1 + webp.readUIntLE(24, 3),
+    height: 1 + webp.readUIntLE(27, 3),
+    hasAlpha: Boolean(webp[20] & 0x10)
+  };
+}
+
 test('brand icon references use the new vector and versioned raster assets', async () => {
   const [index, app, header, manifestText] = await Promise.all([
     readText('index.html'),
@@ -31,7 +43,7 @@ test('brand icon references use the new vector and versioned raster assets', asy
   assert.match(index, /href="\/favicon-16-v2\.png"/);
   assert.match(index, /href="\/favicon-32-v2\.png"/);
   assert.match(index, /href="\/apple-touch-icon-v2\.png"/);
-  assert.match(header, /src="\/brand\/am-mark-v1\.png"/);
+  assert.match(header, /src="\/brand\/am-mark-v1\.webp"/);
   assert.doesNotMatch(header, /site-mode-header__wordmark|site-mode-header__brand-mark/);
   assert.doesNotMatch(`${index}\n${app}\n${header}\n${manifestText}`, /favicon-96\.png|apple-touch-icon\.png|icon-(?:192|512)\.png/);
 
@@ -52,12 +64,12 @@ test('brand raster assets have the expected dimensions and alpha behavior', asyn
     ['public/icon-512-v2.png', [512, 512, 2]],
     ['public/icon-maskable-192-v2.png', [192, 192, 2]],
     ['public/icon-maskable-512-v2.png', [512, 512, 2]],
-    ['public/brand/am-mark-v1.png', [667, 540, 6]]
   ]);
 
   for (const [path, [width, height, colorType]] of expected) {
     assert.deepEqual(await readPngSize(path), { width, height, colorType });
   }
+  assert.deepEqual(await readWebpSize('public/brand/am-mark-v1.webp'), { width: 288, height: 233, hasAlpha: true });
 });
 
 test('homepage structured data connects Google-facing logo and primary image entities', async () => {

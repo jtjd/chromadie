@@ -9,7 +9,6 @@
   import NotFound from './lib/NotFound.svelte';
   import RouteLoading from './lib/RouteLoading.svelte';
   import RouteOutlet from './lib/RouteOutlet.svelte';
-  import { prefetchRouteComponent } from './lib/routeLoaders.js';
   import { loadChallengeLink } from './lib/challenges';
   import { getAppOrigin } from './lib/authUrls';
   import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
@@ -41,7 +40,6 @@
   let routeFocusRequest = 0;
   let lastTrackedRouteKey = '';
   let profileVisualFixture = '';
-  let cancelIdlePrefetch = null;
   let routeTarget;
   let homepageHeaderTransitionPending = false;
 
@@ -439,25 +437,9 @@
     parseRoute();
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('click', handleInternalLinkClick);
-
-    const prefetchCommonRoutes = () => {
-      for (const key of ['game', 'leaderboard', 'profileShell', 'authPage']) {
-        void prefetchRouteComponent(key);
-      }
-    };
-
-    const idleWindow = /** @type {any} */ (window);
-    if (typeof idleWindow.requestIdleCallback === 'function') {
-      const idleId = idleWindow.requestIdleCallback(prefetchCommonRoutes, { timeout: 1800 });
-      cancelIdlePrefetch = () => idleWindow.cancelIdleCallback(idleId);
-    } else {
-      const timerId = window.setTimeout(prefetchCommonRoutes, 1200);
-      cancelIdlePrefetch = () => window.clearTimeout(timerId);
-    }
   });
 
   onDestroy(() => {
-    cancelIdlePrefetch?.();
     window.removeEventListener('popstate', handlePopState);
     window.removeEventListener('click', handleInternalLinkClick);
   });

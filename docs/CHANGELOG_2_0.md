@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Reduce route startup and shared chrome media cost
+
+- Removed unconditional idle route prefetching while preserving destination
+  prefetch on header hover and keyboard focus.
+- Removed unused global font imports from the shared shell.
+- Replaced the oversized shared AM PNG with a smaller alpha WebP without
+  changing the rendered logo treatment.
+
 ## 2026-08-19 — Reduce homepage media cost without changing the composition
 
 - Deferred photographic showcase media until the lower section approaches the

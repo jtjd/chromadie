@@ -49,7 +49,7 @@
 <header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} class:site-mode-header--home-route={isHomeMode} class:site-mode-header--leaderboard={isLeaderboardMode} data-site-chrome="header" style="--site-header-accent: var(--white, #ffffff);">
   <div class="site-mode-header__inner">
     <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
-      <img class="site-mode-header__brand-logo" src="/brand/am-mark-v1.png" alt="" width="72" height="58" decoding="async" />
+      <img class="site-mode-header__brand-logo" src="/brand/am-mark-v1.webp" alt="" width="72" height="58" decoding="async" />
     </a>
 
     {#if !minimalMode}
