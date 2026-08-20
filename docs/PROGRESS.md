@@ -13,6 +13,24 @@
   three-day retention. Removed the previously retained Actions evidence set,
   which contained disposable browser profiles and caches.
 
+## Progression comprehension pass — 2026-08-20
+
+- Reworked the shared progression presentation around one clear “Today's
+  direction” action, profile-derived accent rules, and plain-language rank,
+  streak, reward, and pacing copy while keeping the existing dark site shell.
+- Reduced each journey lane to a featured goal first, with additional active
+  goals and future goals available behind explicit controls. Discovery keeps
+  its independent-find meaning, and the weekly color is labeled as a
+  secondary challenge.
+- Replaced misleading empty metrics and “No history yet” states on the
+  dedicated route with server-truthful goal/earned-expression summaries and a
+  bounded history handoff. Reward previews now wrap long names safely on
+  narrow screens.
+- Added source-contract coverage and updated the authenticated progression
+  browser smoke for the new hierarchy, mobile layout, reduced-motion behavior,
+  future-goal control, and no-overflow contract. No database or authority
+  changes were required.
+
 ## Progression Core System — 2026-08-20
 
 - Completed the research-backed progression core: **Rank** remains mastery,

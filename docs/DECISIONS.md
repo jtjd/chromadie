@@ -16,6 +16,26 @@ This preserves the required release gates while preventing incremental pushes,
 network stalls, and disposable browser state from consuming unbounded metered
 runner minutes or artifact storage.
 
+## 2026-08-20 — Use a focused, shared progression hierarchy
+
+The progression surface should feel more game-like through hierarchy and
+clear next actions, not through a separate neon dashboard. The shared
+`ProfileProgression` component now leads with “Today's direction,” uses the
+player's validated profile color only as a restrained rule/accent, and keeps
+the existing dark route shell, typography, and button language.
+
+Each Rank/Ritual/Discovery lane shows one featured goal first. Additional
+active goals and future goals remain available through explicit disclosure
+controls so the page is scannable without implying that independent Discovery
+conditions are a sequential queue. Weekly color remains a secondary challenge
+and never competes with the primary direction.
+
+The dedicated route does not manufacture achievements, collection counts, or
+history events when those private feeds are absent. It shows server-derived
+journey and earned-expression totals and a truthful history handoff instead.
+This is a presentation-only change: no schema, RPC authority, scoring,
+eligibility, reward, inventory, or RLS boundary changed.
+
 ## 2026-08-20 — Retain Rank, Ritual, and Discovery as the progression core
 
 The progression research in [PROGRESSION_RESEARCH.md](PROGRESSION_RESEARCH.md)

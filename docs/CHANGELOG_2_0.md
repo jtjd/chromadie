@@ -11,6 +11,21 @@ Document user-visible redesign changes by milestone.
 - Reduced smoke-test evidence to short-lived failure diagnostics instead of
   retaining browser profiles, caches, and local service state.
 
+## 2026-08-20 — Make progression easier to read
+
+- Added a shared “Today's direction” focus so the next useful roll is obvious
+  without removing the Rank/Ritual/Discovery model or changing progression
+  authority.
+- Simplified the summary cards and goal language, gave each lane one featured
+  goal, and moved additional active/future goals behind clear “See more” and
+  “See later goals” controls. Discovery remains explicitly independent, while
+  Weekly color is presented as a secondary challenge.
+- Corrected dedicated-route empty-state messaging so roll history, goals, and
+  earned expressions are never reported as zero merely because a private
+  detail feed is unavailable. Long reward names now wrap on mobile.
+- Preserved the existing near-black canvas, quiet rules, typography, buttons,
+  server-owned progression data, and reduced-motion behavior.
+
 ## 2026-08-20 — Complete the Progression Core System locally
 
 - Retained the research-backed Rank/Ritual/Discovery model: mastery, sustained

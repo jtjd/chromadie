@@ -206,12 +206,18 @@ test('progression presentation and guest claim copy keep authority and privacy b
 
   assert.match(state, /Ritual/);
   assert.match(state, /Discovery/);
-  assert.match(progression, /Not found yet/);
+  assert.match(progression, /Find it whenever it appears/);
   assert.match(progression, /journeyState/);
   assert.doesNotMatch(progression, /0\/0/);
-  assert.doesNotMatch(progression, /Discover the condition|Keep rolling/);
+  assert.match(progression, /Your profile story/);
+  assert.match(progression, /Today's direction/);
+  assert.match(progression, /Build mastery/);
+  assert.match(progression, /Find rare colors/);
+  assert.match(progression, /Each discovery is independent/);
+  assert.match(progression, /Expressions earned/);
+  assert.doesNotMatch(progression, /No history yet/);
   assert.match(overview, /Some goals unavailable/);
-  assert.match(progression, /Color of the Week/);
+  assert.match(progression, /Weekly color/);
   assert.match(progression, /IntersectionObserver/);
   assert.match(progression, /progression_goal_viewed/);
   assert.doesNotMatch(progression, /recordUnlockSeen/);

@@ -3,7 +3,6 @@
   import { loadProgressionData } from './progressionData.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import ProfileProgression from './ProfileProgression.svelte';
-  import { getRankState } from './ranks.js';
   import { accountState, authInitialized, isAuthenticated, profile, session } from './stores.js';
   import { supabase } from './supabase.js';
 
@@ -20,10 +19,7 @@
     userId: accountProfile?.id || accountId,
     isStaff: Boolean(accountProfile?.is_staff)
   });
-  $: lifetimeEp = Math.max(0, Number(progression?.currentEp ?? accountProfile?.lifetime_ep) || 0);
-  $: rankState = getRankState(lifetimeEp);
-  $: nextExpression = progression?.nextJourney?.ritual || progression?.nextJourney?.discovery || null;
-  $: journeyState = progression?.journeyState || 'unavailable';
+  $: focusGoal = resolveFocusGoal(progression);
   $: pageLoading = !$authInitialized
     || $accountState === ACCOUNT_STATES.PROFILE_LOADING
     || ($accountState === ACCOUNT_STATES.AUTHENTICATED && loading && !progressionLoaded);
@@ -89,6 +85,29 @@
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
   }
+
+  function resolveFocusGoal(currentProgression = progression) {
+    const candidates = [
+      currentProgression?.nextJourney?.ritual,
+      currentProgression?.nextJourney?.discovery,
+      currentProgression?.nextJourney?.rank,
+      currentProgression?.nextObjective
+    ];
+    return candidates.find(node => node && node.unlocked !== true && !node.unlockedAt && !node.unlocked_at) || null;
+  }
+
+  function focusProgressLabel(node) {
+    if (!node) return 'Roll today to keep building your profile.';
+    const current = Number(node?.progress?.current);
+    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
+    if (Number.isFinite(current) && Number.isFinite(target) && target > 0) {
+      const rawUnit = node?.progress?.unit || (node?.track === 'rank' ? 'points' : 'rolls');
+      const unit = String(rawUnit).toLowerCase() === 'ep' ? 'points' : rawUnit;
+      return `${formatNumber(current)} / ${formatNumber(target)} ${unit}`;
+    }
+    if (node?.track === 'discovery') return 'Find it whenever it appears. Each discovery is independent.';
+    return node.description || 'Keep rolling to move your profile forward.';
+  }
 </script>
 
 <svelte:head>
@@ -144,12 +163,12 @@
 
       <section class="progression-page__account-bar" aria-label="Progression actions">
         <div class="progression-page__account-copy">
-          <span class="progression-page__account-label">{accountProfile.display_name || accountProfile.username || 'Your profile'}</span>
-          <strong>{rankState.next ? formatNumber(Math.max(0, rankState.next.min - lifetimeEp)) + ' EP to ' + rankState.next.name : 'Highest rank reached'}</strong>
-          {#if nextExpression}<small>Current focus: {nextExpression.name}</small>{:else if journeyState === 'empty'}<small>No journey goals are published yet.</small>{:else if journeyState === 'partial'}<small>Some journey goals are unavailable.</small>{:else if journeyState === 'unavailable'}<small>Journey goals are unavailable.</small>{:else}<small>All journey goals complete.</small>{/if}
+          <span class="progression-page__account-label">Today's direction · {accountProfile.display_name || accountProfile.username || 'Your profile'}</span>
+          <strong>{focusGoal?.name || 'Keep building your profile'}</strong>
+          <small>{focusProgressLabel(focusGoal)}</small>
         </div>
         <div class="progression-page__account-actions">
-          <a class="site-button" href="/roll">Roll today</a>
+          <a class="site-button" href="/roll">{focusGoal?.track === 'discovery' ? 'Roll and explore' : 'Roll today'}</a>
           <a class="site-button site-button--secondary" href="/profile/settings#customize-effects">Equip expression</a>
         </div>
       </section>
@@ -382,5 +401,22 @@
     .progression-page {
       scroll-behavior: auto;
     }
+  }
+
+  .progression-page__account-bar {
+    border-color: var(--color-line-strong, var(--progression-line));
+    border-left: 3px solid var(--color-ink-strong, var(--progression-text));
+  }
+
+  .progression-page__account-copy strong {
+    font: 650 1.12rem/1.15 var(--font-display-stack, sans-serif);
+    letter-spacing: -.015em;
+  }
+
+  .progression-page__account-copy small {
+    max-width: 38rem;
+    overflow: visible;
+    white-space: normal;
+    line-height: 1.45;
   }
 </style>

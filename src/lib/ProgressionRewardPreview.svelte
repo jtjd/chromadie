@@ -153,14 +153,15 @@
 </div>
 
 <style>
-  .progression-reward-preview { display:grid; gap:.45rem; min-width:0; }
+  .progression-reward-preview { display:grid; gap:.45rem; min-width:0; width:100%; }
   .progression-reward-preview__trigger,
   .progression-reward-preview__retry {
-    display:inline-flex;
+    display:flex;
     align-items:center;
     gap:.55rem;
     min-height:2.75rem;
-    padding:.45rem .65rem;
+    width:100%;
+    padding:.55rem .7rem;
     border:1px solid var(--color-line-subtle);
     border-radius:var(--radius-sm);
     background:var(--surface-inset);
@@ -177,8 +178,8 @@
   .progression-reward-preview__retry:focus-visible { outline:2px solid var(--color-ink-strong); outline-offset:2px; }
   .progression-reward-preview__status { flex:0 0 .55rem; width:.55rem; height:.55rem; border:1px solid var(--color-line-strong); border-radius:50%; background:var(--color-ink-strong); }
   .progression-reward-preview__trigger-copy { display:grid; gap:.15rem; min-width:0; }
-  .progression-reward-preview__trigger-copy strong { overflow:hidden; font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
-  .progression-reward-preview__trigger-copy small { color:var(--color-ink-muted); font-size:.7rem; }
+  .progression-reward-preview__trigger-copy strong { overflow-wrap:anywhere; font-size:var(--type-small); line-height:1.2; }
+  .progression-reward-preview__trigger-copy small { color:var(--color-ink-muted); font-size:.7rem; line-height:1.25; }
   .progression-reward-preview__panel { display:grid; gap:.45rem; overflow:hidden; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-panel-soft); }
   .progression-reward-preview__panel :global(.shop-preview-area) { min-height:5.5rem; }
   .progression-reward-preview__state { display:flex; align-items:center; justify-content:space-between; gap:.65rem; min-height:5.5rem; padding:.75rem; color:var(--color-ink-muted); font-size:.72rem; line-height:1.45; }
