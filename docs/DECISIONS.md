@@ -1,5 +1,21 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-20 — Bound CI runner and evidence-storage usage
+
+- Keep the fast application checks on every `main` push and pull request, with
+  superseded runs cancelled and a ten-minute job ceiling.
+- Run the local Supabase and browser suite on every pull request, on
+  schema/browser-sensitive `main` changes, or by manual dispatch. Give the
+  heavy job a fifteen-minute ceiling and use the hosted runner's preinstalled
+  browser instead of an unbounded package-manager install.
+- Upload only compact top-level browser evidence when a smoke test fails, and
+  retain it for three days. Browser profiles, caches, local service state, and
+  successful-run evidence are not release artifacts.
+
+This preserves the required release gates while preventing incremental pushes,
+network stalls, and disposable browser state from consuming unbounded metered
+runner minutes or artifact storage.
+
 ## 2026-08-20 — Retain Rank, Ritual, and Discovery as the progression core
 
 The progression research in [PROGRESSION_RESEARCH.md](PROGRESSION_RESEARCH.md)

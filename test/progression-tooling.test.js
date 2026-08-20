@@ -87,11 +87,12 @@ test('progression route budget excludes and separately measures lazy preview cod
 });
 
 test('database security and progression runners isolate score baselines and execute the behavior file', async () => {
-  const [security, runner, packageJson, workflow, smoke] = await Promise.all([
+  const [security, runner, packageJson, fastWorkflow, databaseWorkflow, smoke] = await Promise.all([
     read('scripts/check-database-security.mjs'),
     read('scripts/check-progression-database.mjs'),
     read('package.json'),
     read('.github/workflows/ci.yml'),
+    read('.github/workflows/database-ci.yml'),
     read('scripts/browser/progression-smoke.mjs')
   ]);
 
@@ -101,9 +102,20 @@ test('database security and progression runners isolate score baselines and exec
   assert.match(packageJson, /check:progression-db/);
   assert.match(packageJson, /test:browser:progression/);
   assert.match(packageJson, /check:username-policy-drift/);
-  assert.match(workflow, /Run progression database behavior checks/);
-  assert.match(workflow, /Check username policy drift/);
-  assert.match(workflow, /Run progression browser smoke/);
+  assert.match(fastWorkflow, /cancel-in-progress: true/);
+  assert.match(fastWorkflow, /timeout-minutes: 10/);
+  assert.match(databaseWorkflow, /Run progression database behavior checks/);
+  assert.match(databaseWorkflow, /Check username policy drift/);
+  assert.match(databaseWorkflow, /Run progression browser smoke/);
+  assert.match(databaseWorkflow, /workflow_dispatch:/);
+  assert.match(databaseWorkflow, /supabase\/\*\*/);
+  assert.match(databaseWorkflow, /cancel-in-progress: true/);
+  assert.match(databaseWorkflow, /timeout-minutes: 15/);
+  assert.match(databaseWorkflow, /Locate preinstalled browser/);
+  assert.doesNotMatch(databaseWorkflow, /apt-get/);
+  assert.match(databaseWorkflow, /if: failure\(\)/);
+  assert.match(databaseWorkflow, /path: \/tmp\/chromadie-ci-evidence/);
+  assert.match(databaseWorkflow, /retention-days: 3/);
   assert.doesNotMatch(smoke, /uploadGeneratedImage/);
   assert.match(smoke, /startVite/);
   assert.match(smoke, /progression-page__state/);

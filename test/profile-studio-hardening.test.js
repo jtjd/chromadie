@@ -21,7 +21,7 @@ test('source-aware dirty state keeps sibling editor drafts independent', () => {
 });
 
 test('Profile Studio publishes identity and the complete expression-aware configuration through one server boundary', async () => {
-  const [settings, customize, appearance, identity, cosmetics, media, migration, expressionPublishMigration, security, ci] = await Promise.all([
+  const [settings, customize, appearance, identity, cosmetics, media, migration, expressionPublishMigration, security, ci, databaseCi] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
@@ -31,7 +31,8 @@ test('Profile Studio publishes identity and the complete expression-aware config
     read('supabase/migrations/20260811100000_profile_studio_publish_atomic.sql'),
     read('supabase/migrations/20260812140000_profile_studio_publish_expression_contract.sql'),
     read('supabase/tests/launch_security.sql'),
-    read('.github/workflows/ci.yml')
+    read('.github/workflows/ci.yml'),
+    read('.github/workflows/database-ci.yml')
   ]);
 
   assert.match(settings, /publish_profile_studio_v2/);
@@ -61,7 +62,7 @@ test('Profile Studio publishes identity and the complete expression-aware config
   assert.match(security, /profile_studio_atomic_failure/);
   assert.match(security, /publish_profile_studio_v2\(jsonb,text,text,timestamptz\)/);
   assert.match(ci, /npm run check:performance/);
-  assert.match(ci, /npm run test:browser:production/);
+  assert.match(databaseCi, /npm run test:browser:production/);
 });
 
 test('media mutation RPCs preserve the optimistic publish token contract', async () => {

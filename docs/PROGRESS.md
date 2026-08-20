@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## CI usage controls — 2026-08-20
+
+- Split the fast application gate from the database/browser gate so ordinary
+  `main` pushes no longer start local Supabase and browser infrastructure.
+  Pull requests still receive the full gate, while schema- and browser-sensitive
+  pushes and manual dispatches retain direct coverage.
+- Added concurrency cancellation plus ten- and fifteen-minute job ceilings,
+  and replaced the network-dependent Chromium package installation with hosted
+  runner browser discovery.
+- Restricted browser artifacts to failure-only screenshots, JSON, and logs with
+  three-day retention. Removed the previously retained Actions evidence set,
+  which contained disposable browser profiles and caches.
+
 ## Progression Core System — 2026-08-20
 
 - Completed the research-backed progression core: **Rank** remains mastery,

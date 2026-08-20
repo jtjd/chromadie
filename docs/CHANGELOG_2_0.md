@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-20 — Bound continuous-integration usage
+
+- Kept fast code validation on every change while moving the local database and
+  browser suite to pull requests, relevant `main` changes, and manual runs.
+- Added cancellation and hard time limits so superseded or stalled jobs cannot
+  consume hours of runner time.
+- Reduced smoke-test evidence to short-lived failure diagnostics instead of
+  retaining browser profiles, caches, and local service state.
+
 ## 2026-08-20 — Complete the Progression Core System locally
 
 - Retained the research-backed Rank/Ritual/Discovery model: mastery, sustained

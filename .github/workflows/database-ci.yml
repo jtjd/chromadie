@@ -1,0 +1,95 @@
+name: Database and browser CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/database-ci.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'supabase/**'
+      - 'scripts/browser/**'
+      - 'scripts/check-database-security.mjs'
+      - 'scripts/check-progression-database.mjs'
+      - 'scripts/check-scoring-parity.mjs'
+      - 'scripts/run-supabase-sql-test.mjs'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: database-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Start local Supabase
+        run: npx supabase start
+      - name: Replay migrations and seed
+        run: npm run db:reset
+      - name: Lint database
+        run: npx supabase db lint --local --level warning --fail-on warning
+      - name: Run database security checks
+        run: npm run check:db-security
+      - name: Check username policy drift
+        run: npm run check:username-policy-drift
+      - name: Run progression database behavior checks
+        run: npm run check:progression-db
+      - name: Check SQL and JavaScript scoring parity
+        run: npm run check:scoring-parity
+      - name: Locate preinstalled browser
+        shell: bash
+        run: |
+          browser_path="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$browser_path"
+          echo "CHROMIUM_BIN=$browser_path" >> "$GITHUB_ENV"
+      - name: Export local Supabase browser credentials
+        shell: bash
+        run: |
+          npx supabase status -o env > /tmp/chromadie-supabase-status.env
+          api_url=$(awk -F= '$1 == "API_URL" { print $2 }' /tmp/chromadie-supabase-status.env | tr -d "'\"")
+          anon_key=$(awk -F= '$1 == "ANON_KEY" { print $2 }' /tmp/chromadie-supabase-status.env | tr -d "'\"")
+          test -n "$api_url"
+          test -n "$anon_key"
+          {
+            echo "VITE_SUPABASE_URL=$api_url"
+            echo "VITE_SUPABASE_PUBLISHABLE_KEY=$anon_key"
+          } >> "$GITHUB_ENV"
+      - name: Run production browser smoke
+        run: npm run test:browser:production
+      - name: Run progression browser smoke
+        run: npm run test:browser:progression
+      - name: Prepare compact browser evidence
+        if: failure()
+        shell: bash
+        run: |
+          evidence_root=/tmp/chromadie-ci-evidence
+          mkdir -p "$evidence_root"
+          for source_dir in /tmp/chromadie-profile-studio-smoke-* /tmp/chromadie-progression-smoke-*; do
+            test -d "$source_dir" || continue
+            target_dir="$evidence_root/$(basename "$source_dir")"
+            mkdir -p "$target_dir"
+            find "$source_dir" -maxdepth 1 -type f \
+              \( -name '*.png' -o -name '*.json' -o -name '*.log' \) \
+              -exec cp {} "$target_dir"/ \;
+          done
+      - name: Upload failed browser smoke evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-smoke-failure-${{ github.run_attempt }}
+          path: /tmp/chromadie-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 3
+          compression-level: 9
