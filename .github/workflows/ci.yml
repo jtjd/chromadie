@@ -69,6 +69,10 @@ jobs:
         run: npx supabase db lint --local --level warning --fail-on warning
       - name: Run database security checks
         run: npm run check:db-security
+      - name: Check username policy drift
+        run: npm run check:username-policy-drift
+      - name: Run progression database behavior checks
+        run: npm run check:progression-db
       - name: Check SQL and JavaScript scoring parity
         run: npm run check:scoring-parity
       - name: Install Chromium for production browser smoke
@@ -89,10 +93,14 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Run production browser smoke
         run: npm run test:browser:production
+      - name: Run progression browser smoke
+        run: npm run test:browser:progression
       - name: Upload production browser smoke evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: production-browser-smoke-evidence
-          path: /tmp/chromadie-profile-studio-smoke-*
+          path: |
+            /tmp/chromadie-profile-studio-smoke-*
+            /tmp/chromadie-progression-smoke-*
           if-no-files-found: ignore

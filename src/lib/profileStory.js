@@ -113,8 +113,13 @@ export function normalizeProfileProgressionProof(value) {
     : Array.isArray(root.recentUnlocks)
       ? root.recentUnlocks
       : [];
+  const completedCountValue = Number(root.completed_count ?? root.completedCount);
+  const completedCount = Number.isFinite(completedCountValue)
+    ? Math.max(0, Math.min(Math.floor(completedCountValue), 1000000))
+    : 0;
 
   return {
+    completedCount,
     recentUnlocks: source
       .map(item => {
         if (!item || typeof item !== 'object') return null;

@@ -19,6 +19,7 @@ const cursorTrailsPath = path.join(repoRoot, 'src/lib/cursor-trail/cursorTrails.
 const avatarEffectsPath = path.join(repoRoot, 'src/lib/avatar-effect/avatarEffects.js');
 const profileLayoutsPath = path.join(repoRoot, 'src/lib/profile-layout/profileLayouts.js');
 const profileAtmospheresPath = path.join(repoRoot, 'src/lib/profile-atmosphere/atmospheres.js');
+const progressionManifestPath = path.join(repoRoot, 'scripts/progression-manifest.mjs');
 
 const badgeModule = await import(pathToFileURL(badgeDataPath).href);
 const balanceConfig = await import(pathToFileURL(balanceConfigPath).href);
@@ -27,6 +28,7 @@ const cursorTrails = await import(pathToFileURL(cursorTrailsPath).href);
 const avatarEffects = await import(pathToFileURL(avatarEffectsPath).href);
 const profileLayouts = await import(pathToFileURL(profileLayoutsPath).href);
 const profileAtmospheres = await import(pathToFileURL(profileAtmospheresPath).href);
+const progressionManifest = await import(pathToFileURL(progressionManifestPath).href);
 const baseScoringSql = await readFile(baseScoringSqlPath, 'utf8');
 const finalScoringSql = await readFile(finalScoringSqlPath, 'utf8');
 const scoreTuningSql = await readFile(scoreTuningSqlPath, 'utf8');
@@ -34,6 +36,9 @@ const scoringSql = `${baseScoringSql}\n${finalScoringSql}`;
 const rollSql = await readFile(rollSqlPath, 'utf8');
 const seed = await readFile(seedPath, 'utf8');
 const d2NameCatalogMigration = await readFile(d2NameCatalogMigrationPath, 'utf8');
+const progressionRewardKeys = new Set(
+  progressionManifest.progressionRewardKeys(await progressionManifest.readProgressionManifest())
+);
 
 const knownBadgeIds = new Set([
   ...Object.keys(badgeModule.BADGES || {}),
@@ -238,8 +243,8 @@ const expectedBorderPrices = Object.freeze({
 const expectedBorderKeys = new Set(Object.values(profileBorders.PROFILE_BORDER_DEFINITIONS).map(definition => definition.itemKey));
 const borderKeySet = new Set(borderRows.map(row => row.itemKey));
 const borderInvalidRows = borderRows.filter(row => (
-  !expectedBorderKeys.has(row.itemKey)
-    || expectedBorderPrices[row.itemKey] !== row.cost
+    !expectedBorderKeys.has(row.itemKey)
+    || (progressionRewardKeys.has(row.itemKey) ? row.cost !== 0 : expectedBorderPrices[row.itemKey] !== row.cost)
     || !profileBorders.isProfileBorderKey(row.rendererKey)
     || !expectedNameRarities.has(row.rarity)
     || !row.description.trim()
@@ -292,12 +297,16 @@ const launchExpectedRenderers = new Set([
 ]);
 const launchInvalidRows = launchRows.filter(row => (
   !launchExpectedRenderers.has(row.itemKey)
-  || launchExpectedCosts[row.itemKey] !== row.cost
+  || (progressionRewardKeys.has(row.itemKey) ? row.cost !== 0 : launchExpectedCosts[row.itemKey] !== row.cost)
   || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.rendererKey)
   || !expectedNameRarities.has(row.rarity)
   || !row.description.trim()
   || !row.collection.trim()
-  || row.accessTier !== (row.slot === 'profile_layout' || row.slot === 'profile_motion' ? 'free' : 'earned')
+  || row.accessTier !== (
+    progressionRewardKeys.has(row.itemKey)
+      ? 'earned'
+      : (row.slot === 'profile_layout' || row.slot === 'profile_motion' ? 'free' : 'earned')
+  )
 ));
 const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'].map(slot => [
   slot,

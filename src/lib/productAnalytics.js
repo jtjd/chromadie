@@ -16,6 +16,10 @@ export const PRODUCT_ANALYTICS_EVENTS = Object.freeze([
   'progression_roll_completed',
   'progression_goal_viewed',
   'progression_unlock_seen',
+  'progression_unlock_presented',
+  'progression_reward_previewed',
+  'progression_cta_used',
+  'progression_unlock_acknowledged',
   'progression_weekly_focus_viewed',
   'progression_weekly_focus_completed',
   'progression_share_started',
@@ -38,6 +42,10 @@ const EVENT_PROPERTY_KEYS = Object.freeze({
   progression_roll_completed: new Set(['surface', 'accountMode', 'rolloutStage']),
   progression_goal_viewed: new Set(['surface', 'accountMode', 'rolloutStage', 'track']),
   progression_unlock_seen: new Set(['surface', 'accountMode', 'rolloutStage', 'track']),
+  progression_unlock_presented: new Set(['surface', 'accountMode', 'rolloutStage', 'track']),
+  progression_reward_previewed: new Set(['surface', 'accountMode', 'rolloutStage', 'track']),
+  progression_cta_used: new Set(['surface', 'accountMode', 'rolloutStage', 'track', 'action']),
+  progression_unlock_acknowledged: new Set(['surface', 'accountMode', 'rolloutStage', 'track']),
   progression_weekly_focus_viewed: new Set(['surface', 'accountMode', 'rolloutStage']),
   progression_weekly_focus_completed: new Set(['surface', 'accountMode', 'rolloutStage']),
   progression_share_started: new Set(['surface', 'accountMode', 'rolloutStage', 'method']),
@@ -50,13 +58,28 @@ const PROGRESSION_ANALYTICS_EVENTS = new Set([
   'progression_roll_completed',
   'progression_goal_viewed',
   'progression_unlock_seen',
+  'progression_unlock_presented',
+  'progression_reward_previewed',
+  'progression_cta_used',
+  'progression_unlock_acknowledged',
   'progression_weekly_focus_viewed',
   'progression_weekly_focus_completed',
   'progression_share_started',
   'progression_claim_started'
 ]);
+export const PROGRESSION_EXACTLY_ONCE_EVENTS = Object.freeze([
+  'progression_unlock_presented',
+  'progression_reward_previewed',
+  'progression_cta_used',
+  'progression_unlock_acknowledged'
+]);
+
+const EXACTLY_ONCE_EVENTS = new Set(PROGRESSION_EXACTLY_ONCE_EVENTS);
 const ROLLOUT_STAGES = new Set(['off', 'staff', 'internal', 'cohort', 'all']);
+const DEDUPE_KEY_PATTERN = /^[a-z0-9_:-]{1,100}$/i;
+const DEDUPE_LIMIT = 256;
 let productAnalyticsAdapter = null;
+const progressionDedupeKeys = new Set();
 
 function getStorage() {
   try {
@@ -95,6 +118,35 @@ function normalizeProperties(eventName, properties) {
   );
 }
 
+function isAuthenticatedProgressionEvent(eventName, properties) {
+  return !PROGRESSION_ANALYTICS_EVENTS.has(eventName)
+    || properties?.accountMode === 'authenticated';
+}
+
+function configuredRolloutStage() {
+  const value = typeof import.meta !== 'undefined' && import.meta.env
+    ? String(import.meta.env.VITE_CHROMADIE_ROLLOUT_STAGE || 'all').trim().toLowerCase()
+    : 'all';
+  return ROLLOUT_STAGES.has(value) ? value : 'all';
+}
+
+function localDedupeKey(value, fallback) {
+  const candidate = typeof value === 'string' ? value.trim() : '';
+  return DEDUPE_KEY_PATTERN.test(candidate) ? candidate : fallback;
+}
+
+function rememberProgressionEvent(key) {
+  progressionDedupeKeys.add(key);
+  if (progressionDedupeKeys.size > DEDUPE_LIMIT) {
+    const oldest = progressionDedupeKeys.values().next().value;
+    if (oldest) progressionDedupeKeys.delete(oldest);
+  }
+}
+
+export function resetProgressionAnalyticsDedupe() {
+  progressionDedupeKeys.clear();
+}
+
 export function getProductAnalyticsConsent() {
   const storage = getStorage();
   if (!storage) return null;
@@ -114,6 +166,7 @@ export function setProductAnalyticsConsent(value) {
   } catch {
     // Ignore storage failures; the current preference remains unknown.
   }
+  resetProgressionAnalyticsDedupe();
   return getProductAnalyticsConsent();
 }
 
@@ -132,24 +185,19 @@ export function createBrowserProductAnalyticsAdapter(target = null) {
   };
 }
 
-function configuredRolloutStage() {
-  const value = typeof import.meta !== 'undefined' && import.meta.env
-    ? String(import.meta.env.VITE_CHROMADIE_ROLLOUT_STAGE || 'all').trim().toLowerCase()
-    : 'all';
-  return ROLLOUT_STAGES.has(value) ? value : 'all';
-}
-
 /**
- * Dispatch the existing page-local event and, for progression events only,
- * increment the bounded server aggregate. The RPC is observational and never
- * blocks a roll, auth flow, or profile render.
+ * Dispatch the existing page-local event and, for authenticated progression
+ * events only, increment the bounded server aggregate. The RPC is
+ * observational and never blocks a roll, auth flow, or profile render.
  */
 export function createAggregateProductAnalyticsAdapter({ supabaseClient = null, target = null } = {}) {
   const browserAdapter = createBrowserProductAnalyticsAdapter(target);
   return {
     send(event) {
       const sent = browserAdapter.send(event);
-      if (!PROGRESSION_ANALYTICS_EVENTS.has(event?.name) || !supabaseClient?.rpc) return sent;
+      if (!PROGRESSION_ANALYTICS_EVENTS.has(event?.name)
+        || event?.properties?.accountMode !== 'authenticated'
+        || !supabaseClient?.rpc) return sent;
 
       const properties = event.properties || {};
       const request = supabaseClient.rpc('record_progression_event', {
@@ -185,6 +233,9 @@ export function trackProductEvent(eventName, properties = {}) {
   if (!PRODUCT_ANALYTICS_EVENTS.includes(eventName)) {
     return { accepted: false, reason: 'invalid_event' };
   }
+  if (!isAuthenticatedProgressionEvent(eventName, properties)) {
+    return { accepted: false, reason: 'authenticated_required' };
+  }
   if (getProductAnalyticsConsent() !== 'granted') {
     return { accepted: false, reason: 'consent_required' };
   }
@@ -203,4 +254,29 @@ export function trackProductEvent(eventName, properties = {}) {
   } catch {
     return { accepted: true, sent: false };
   }
+}
+
+/**
+ * Canonical helper for unlock presentation, preview, CTA, and acknowledgement
+ * events. Dedupe keys are local-only presentation identities; they are never
+ * included in the aggregate payload, so no account id or raw color can leak.
+ */
+export function trackProgressionEvent(eventName, properties = {}, options = {}) {
+  if (!PROGRESSION_ANALYTICS_EVENTS.has(eventName)) {
+    return { accepted: false, reason: 'invalid_event' };
+  }
+
+  const once = options.once ?? EXACTLY_ONCE_EVENTS.has(eventName);
+  const localKey = localDedupeKey(
+    options.dedupeKey || options.key || properties.dedupeKey || properties.milestoneId,
+    eventName
+  );
+  const dedupeKey = eventName + ':' + localKey;
+  if (once && progressionDedupeKeys.has(dedupeKey)) {
+    return { accepted: false, reason: 'duplicate' };
+  }
+
+  const result = trackProductEvent(eventName, properties);
+  if (once && result.accepted) rememberProgressionEvent(dedupeKey);
+  return result;
 }

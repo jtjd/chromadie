@@ -1,19 +1,25 @@
 import { readFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { reportSupabaseSqlResult, runSupabaseSql } from './run-supabase-sql-test.mjs';
 
 const testPath = fileURLToPath(new URL('../supabase/tests/launch_security.sql', import.meta.url));
-const container = process.env.SUPABASE_DB_CONTAINER || 'supabase_db_Chromadie';
-const result = spawnSync(
-  'docker',
-  ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres'],
-  {
-    input: readFileSync(testPath, 'utf8'),
-    encoding: 'utf8',
-    maxBuffer: 16 * 1024 * 1024
-  }
-);
+const source = readFileSync(testPath, 'utf8');
+const scoreBaseline = `
+CREATE TEMP TABLE audit_score_baseline AS
+SELECT count(*)::bigint AS score_count FROM public.scores;
+`;
+const scoreAssertion = /SELECT pg_temp\.audit_assert\(\s*\(SELECT count\(\*\) = 0 FROM public\.scores\),\s*'guest roll wrote a score'\s*\);/;
+if (!scoreAssertion.test(source)) {
+  console.error('Launch security test no longer contains the guest score-write assertion expected by its isolation adapter.');
+  process.exit(1);
+}
+const isolatedSource = source
+  .replace(/^BEGIN;\s*/m, match => `${match}${scoreBaseline}`)
+  .replace(scoreAssertion, `SELECT pg_temp.audit_assert(
+  (SELECT count(*) = (SELECT score_count FROM audit_score_baseline) FROM public.scores),
+  'guest roll wrote a score'
+);`);
 
-process.stdout.write(result.stdout || '');
-process.stderr.write(result.stderr || '');
-if (result.status !== 0) process.exit(result.status || 1);
+const status = reportSupabaseSqlResult(runSupabaseSql(isolatedSource));
+if (status !== 0) process.exit(status);
+console.log('Database security checks passed.');

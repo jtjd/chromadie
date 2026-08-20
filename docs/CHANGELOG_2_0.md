@@ -2,6 +2,34 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-20 — Complete the Progression Core System locally
+
+- Retained the research-backed Rank/Ritual/Discovery model: mastery, sustained
+  roll practice, and an independent color-discovery story. No XP currency,
+  fourth bar, battle pass, or seasonal pressure was added.
+- Completed the server-authoritative manifest, roll-transaction grant path,
+  idempotent account reconciliation, owner read boundary, live presentation/
+  acknowledgement transitions, and bounded public progression proof.
+- Made progression rewards genuine zero-cost earned expressions using active
+  canonical renderers, while preserving the generous free baseline and keeping
+  Premium as expression rather than gameplay prestige. Added earned 730- and
+  1,095-roll capstones and retired greyscale from the published future journey
+  without deleting historical ownership.
+- Kept the route narrow and lazy, reused the canonical reward preview on
+  demand, shared the unlock queue across both roll surfaces, and handed earned
+  expressions to Profile Studio. Corrected future-goal and independent
+  Discovery visibility.
+- Defined progression analytics as consented, authenticated-only daily
+  aggregates with explicit lifecycle semantics, no hover proxy or raw
+  identifiers, and scheduled rather than hot-path retention cleanup.
+- Local acceptance evidence includes 436 Node tests, build/check/full ESLint,
+  link/CSP/performance/responsive/profile-certification/audit gates, database
+  reset/lint/security/progression/scoring checks, progression and R2-local
+  browser smoke, and production browser smoke. The ordered progression
+  migration chain is applied remotely through `20260820000000`, and the remote
+  76-item catalog matches the seed; application hosting remains a separate
+  deployment concern.
+
 ## 2026-08-19 — Bring Progression back into the site system
 
 - Reworked /progression to match the existing Leaderboard/supporting-route

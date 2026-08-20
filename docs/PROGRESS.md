@@ -1,5 +1,46 @@
 # Chromadie 2.0 Progress
 
+## Progression Core System — 2026-08-20
+
+- Completed the research-backed progression core: **Rank** remains mastery,
+  **Ritual** remains sustained daily play, and **Discovery** remains the
+  independent stochastic color story. XP/currencies, seasonal pressure, and a
+  fourth progression bar remain out of scope. See
+  [PROGRESSION_RESEARCH.md](PROGRESSION_RESEARCH.md).
+- Kept the authored `progression_milestones` manifest, the durable
+  `user_progression_milestones` ledger, and server-authoritative eligibility
+  and acquisition. `grant_progression_milestones()` remains inside the roll
+  transaction; the service-only `reconcile_progression_account()` repairs
+  historical accounts and inventory; `get_my_progression()` is the owner read
+  boundary; owner-only presentation and acknowledgement RPCs close the live
+  unlock state; public story proof remains bounded.
+- Published progression rewards are real zero-cost `earned` items backed by
+  active canonical renderers. The free baseline and Premium expression
+  boundaries remain intact. The 730- and 1,095-roll Ritual capstones are
+  earned; greyscale remains historical but is retired from the published
+  journey because of its approximately 179-year expected wait.
+- Kept `/progression` narrow and lazy, loaded the canonical preview only on
+  demand, and shared one restrained unlock queue across both roll surfaces.
+  Unlocks can hand off directly to Profile Studio's `#customize-effects`, and
+  public profiles expose only bounded recent proof. Corrected future-goal and
+  Discovery visibility so deterministic future goals remain future while
+  stochastic finds remain independently unfound rather than sequentially
+  hidden.
+- Aligned the progression analytics contract with the client and final SQL:
+  authenticated-only daily aggregates, explicit goal/presentation/preview/
+  equip/acknowledgement/completion/CTA semantics, no hover proxy or raw
+  identifiers, local presentation dedupe only, and scheduled retention rather
+  than hot-path cleanup. See [ANALYTICS_CONTRACT.md](ANALYTICS_CONTRACT.md).
+- Local acceptance evidence is executable: 436 Node tests; `npm run build`,
+  `npm run check`, full `npx eslint src/`; links, CSP, performance, responsive
+  build, profile certification, and `npm audit --audit-level=high`; database
+  reset/lint, database security, progression database, and scoring parity;
+  progression browser smoke; R2 local smoke; and production browser smoke.
+  The ordered `20260819150000`–`20260820000000` migration chain was then
+  applied to the linked Supabase project; its migration ledger is aligned and
+  the 76-item remote catalog matches the seed. Application-hosting deployment
+  remains separate from this database migration record.
+
 ## Progression visual-system correction — 2026-08-19
 
 - Rebuilt the dedicated /progression shell around the existing supporting

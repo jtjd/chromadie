@@ -1,5 +1,6 @@
 <script>
   import RollTile from './RollTile.svelte';
+  import ProgressionUnlockQueue from './ProgressionUnlockQueue.svelte';
   import { supabase } from './supabase';
   import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
   import { createChallengeLink } from './challenges';
@@ -70,7 +71,6 @@
   let countdownInterval;
   let milestoneGranted = '';
   let newMilestones = [];
-  let lastUnlockAnalyticsKey = '';
 
   let showImageModal = false;
   let imagePreviewUrl = '';
@@ -488,7 +488,6 @@
     percentileDisplay = null;
     milestoneGranted = '';
     newMilestones = [];
-    lastUnlockAnalyticsKey = '';
     cotwHit = false;
     guestProgressRestored = false;
   }
@@ -890,20 +889,6 @@
       newMilestones = normalizeNewMilestones(data.new_milestones);
     }
 
-    if (newMilestones.length) {
-      const unlockKey = newMilestones.map(milestone => milestone.id).join('|');
-      if (unlockKey !== lastUnlockAnalyticsKey) {
-        lastUnlockAnalyticsKey = unlockKey;
-        for (const milestone of newMilestones) {
-          trackProductEvent('progression_unlock_seen', {
-            surface: dedicated ? 'dedicated-roll' : 'root-roll',
-            accountMode: getRollAccountMode($session),
-            track: milestone.track || 'rank'
-          });
-        }
-      }
-    }
-
     if (data.badges && data.badges.includes('cotw_hit')) {
         cotwHit = true;
         trackProductEvent('progression_weekly_focus_completed', {
@@ -976,6 +961,12 @@
     }
     trackProductEvent('progression_claim_started', { surface: 'roll', accountMode: 'guest' });
     dispatch('promptlogin', { mode: 'signup' });
+  }
+
+  function handleProgressionUnlockAcknowledgement(event) {
+    const unlockId = event?.detail?.unlock?.id;
+    if (!unlockId) return;
+    newMilestones = newMilestones.filter(milestone => milestone.id !== unlockId);
   }
 
   onMount(async () => {
@@ -1278,12 +1269,14 @@
       {/if}
 
       {#if newMilestones.length}
-        <div class="milestone-banner progression-unlock-banner" role="status" aria-live="polite">
-          <strong>New expression unlocked</strong>
-          {#each newMilestones as milestone (milestone.id)}
-            <span>{milestone.reward?.name || milestone.name}</span>
-          {/each}
-        </div>
+        <ProgressionUnlockQueue
+          unlocks={newMilestones}
+          surface={dedicated ? 'dedicated-roll' : 'root-roll'}
+          username={$profile?.username || 'You'}
+          displayColor={displayColor}
+          avatarSrc={$profile?.avatar_url || $profile?.avatar_path || ''}
+          on:acknowledge={handleProgressionUnlockAcknowledgement}
+        />
       {/if}
 
       {#if !$isAuthenticated && guestProgressRestored && !dedicated}

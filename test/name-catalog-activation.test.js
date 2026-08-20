@@ -12,10 +12,10 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('the curated catalog keeps the approved active Name rows and nine Profile Border rows', async () => {
   const seed = await read('supabase/seed.sql');
-  assert.equal((seed.match(/'name_font_[a-z0-9_]+'/g) || []).length, 10);
-  assert.equal((seed.match(/'name_material_[a-z0-9_]+'/g) || []).length, 7);
-  assert.equal((seed.match(/'name_motion_[a-z0-9_]+'/g) || []).length, 10);
-  assert.equal((seed.match(/'border_(?:celestial|chroma|crystal|glitch|gold|neon|prism|void|signal)'/g) || []).length, 9);
+  assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 10);
+  assert.equal((seed.match(/^\s*\('name_material_[a-z0-9_]+'/gm) || []).length, 7);
+  assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 10);
+  assert.equal((seed.match(/^\s*\('border_(?:celestial|chroma|crystal|glitch|gold|neon|prism|void|signal)'/gm) || []).length, 9);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 11,

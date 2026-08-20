@@ -118,7 +118,7 @@ function emptyProfileContext(overrides = {}) {
     targetScores: [],
     timelineEvents: [],
     collectionItems: [],
-    progressionProof: { recentUnlocks: [] },
+    progressionProof: { completedCount: 0, recentUnlocks: [] },
     profileConfig: null,
     social: createEmptyProfileSocial(),
     socialSettings: createDefaultProfileSocialSettings(),

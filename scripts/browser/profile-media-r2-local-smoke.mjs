@@ -336,7 +336,7 @@ async function verifyAssetDelivery(asset, label) {
 async function studioMediaUrls() {
   return page.evaluate('(() => {' +
     'const avatar = document.querySelector(".profile-studio-preview .profile-reference-card__avatar");' +
-    'const background = document.querySelector(".profile-studio-preview .profile-shell__media-image");' +
+    'const background = document.querySelector(".profile-environment--studio .profile-environment__image, .profile-environment--studio .profile-environment__video");' +
     'const url = element => element?.currentSrc || element?.src || "";' +
     'return { avatar: url(avatar), background: url(background) };' +
   '})()');
@@ -455,6 +455,14 @@ async function main() {
   await page.waitFor('document.querySelector(".profile-settings-page") && document.querySelector(".studio-customize")', 'local Profile Studio');
   await page.click('#profile-customize-tab-media', 'local media customize tab');
   await page.waitFor('document.querySelector("#profile-customize-tab-media")?.getAttribute("aria-selected") === "true" && document.querySelector("#customize-media")', 'visible local media editor');
+  // The Customize panel is rendered before its profile-media section is
+  // dynamically imported. Wait for the actual upload controls before
+  // dispatching synthetic files; otherwise a healthy app can be sampled in
+  // the intentional loading window and reported as a missing selector.
+  await page.waitFor(
+    'document.querySelector(\'input[aria-label="Choose avatar image"]\') && document.querySelector(\'input[aria-label="Choose background image"]\')',
+    'local media upload inputs'
+  );
 
   const uploadCases = [
     { kind: 'avatar', selector: 'input[aria-label="Choose avatar image"]', width: 256, height: 256, filename: 'r2-smoke-avatar.png', statusText: 'Avatar saved' },

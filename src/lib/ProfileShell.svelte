@@ -53,7 +53,7 @@
   let targetScores = [];
   let timelineEvents = [];
   let collectionItems = [];
-  let progressionProof = { recentUnlocks: [] };
+  let progressionProof = { completedCount: 0, recentUnlocks: [] };
   let profileConfig = null;
   let social = createEmptyProfileSocial();
   let socialSettings = createDefaultProfileSocialSettings();
@@ -129,7 +129,7 @@
     targetScores = [];
     timelineEvents = [];
     collectionItems = [];
-    progressionProof = { recentUnlocks: [] };
+    progressionProof = { completedCount: 0, recentUnlocks: [] };
     profileConfig = null;
     social = createEmptyProfileSocial();
     socialSettings = createDefaultProfileSocialSettings();
@@ -197,7 +197,7 @@
         targetScores = Array.isArray(previewScores) ? previewScores : [];
         timelineEvents = Array.isArray(previewTimelineEvents) ? previewTimelineEvents : [];
         collectionItems = Array.isArray(previewCollectionItems) ? previewCollectionItems : [];
-        progressionProof = { recentUnlocks: [] };
+        progressionProof = { completedCount: 0, recentUnlocks: [] };
         allAchievements = Array.isArray(previewAllAchievements) ? previewAllAchievements : [];
         loading = false;
       }
@@ -460,7 +460,9 @@
   $: effectiveProfileConfig = profileRenderSnapshot?.configuration || normalizeProfileConfig(null, '#CDD2FF');
   $: appearance = profileRenderSnapshot?.appearance || effectiveProfileConfig.appearance;
   $: storyUnlocks = profileRenderSnapshot?.story?.unlocks || getProfileStoryUnlocks(targetProfile);
-  $: progressionProofSnapshot = profileRenderSnapshot?.story?.progressionProof || { recentUnlocks: [] };
+  $: progressionProofSnapshot = profileRenderSnapshot?.story?.progressionProof || { completedCount: 0, recentUnlocks: [] };
+  $: progressionProofCount = Math.min(1000000, Math.max(0, Number(progressionProofSnapshot?.completedCount ?? progressionProofSnapshot?.completed_count) || 0));
+  $: progressionProofRolls = Math.max(0, Number(progressionProofSnapshot?.totalRolls ?? progressionProofSnapshot?.total_rolls ?? renderProfile?.total_rolls) || 0);
   $: latestRoll = profileRenderSnapshot?.roll?.latest || null;
   $: profileBio = profileRenderSnapshot?.identity?.bio || '';
   $: identityPresentation = profileRenderSnapshot?.identity?.presentation || {};
@@ -735,13 +737,19 @@
                   </div>
                   <span class="profile-shell__rank-next">{rankState.next ? rankState.next.name + ' at ' + formatStat(rankState.next.min) + ' EP' : 'Highest rank reached'}</span>
                 </div>
-                {#if profileFeatureFlags.progressionJourney && progressionProofSnapshot.recentUnlocks.length}
-                  <div class="profile-shell__progression-proof" aria-label="Recent earned expressions">
-                    <span class="profile-shell__progression-proof-label">Recent unlocks</span>
-                    <div>
-                      {#each progressionProofSnapshot.recentUnlocks as unlock (unlock.id)}
-                        <span class="profile-shell__progression-proof-item"><strong>{unlock.reward?.name || unlock.name}</strong><small>{unlock.track === 'discovery' ? 'Discovery' : unlock.track === 'ritual' ? 'Ritual' : 'Rank'}</small></span>
-                      {/each}
+                {#if profileFeatureFlags.progressionJourney && (progressionProofSnapshot.recentUnlocks.length || progressionProofCount)}
+                  <div class="profile-shell__progression-proof" aria-label="Progression history">
+                    {#if progressionProofSnapshot.recentUnlocks.length}<span class="profile-shell__progression-proof-label">Recent unlocks</span>{:else}<span class="profile-shell__progression-proof-label">Profile history</span>{/if}
+                    {#if progressionProofSnapshot.recentUnlocks.length}
+                      <div>
+                        {#each progressionProofSnapshot.recentUnlocks.slice(0, 2) as unlock (unlock.id)}
+                          <span class="profile-shell__progression-proof-item"><strong>{unlock.reward?.name || unlock.name}</strong><small>{unlock.track === 'discovery' ? 'Discovery' : unlock.track === 'ritual' ? 'Ritual' : 'Rank'}</small></span>
+                        {/each}
+                      </div>
+                    {/if}
+                    <div class="profile-shell__progression-proof-stats">
+                      {#if progressionProofCount}<span>{formatStat(progressionProofCount)} milestones</span>{/if}
+                      {#if progressionProofRolls}<span>{formatStat(progressionProofRolls)} rolls</span>{/if}
                     </div>
                     {#if isOwnProfile}<a class="profile-shell__progression-link" href="/progression">View full progression</a>{/if}
                   </div>
@@ -940,6 +948,7 @@
   .profile-shell__progression-proof-item { display:grid; gap:.14rem; min-width:8rem; padding:.5rem .65rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
   .profile-shell__progression-proof-item strong { color:var(--color-ink-strong); font-size:var(--type-small); }
   .profile-shell__progression-proof-item small { color:var(--color-ink-muted); font-size:.68rem; }
+  .profile-shell__progression-proof-stats { display:flex; flex-wrap:wrap; gap:.45rem; color:var(--color-ink-muted); font:600 .68rem/1.2 var(--font-mono-stack); }
   .profile-shell__progression-link { justify-self:start; color:var(--color-ink-strong); font-size:var(--type-small); font-weight:650; text-decoration:none; }
   .profile-shell__progression-link:hover, .profile-shell__progression-link:focus-visible { color:var(--profile-accent); }
 

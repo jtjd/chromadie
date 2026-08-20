@@ -28,9 +28,19 @@
   $: recentUnlockCount = Array.isArray(progression?.recentUnlocks) ? progression.recentUnlocks.length : 0;
   $: journeyEnabled = featureFlags?.progressionJourney !== false;
   $: journeyState = progression?.journeyState || 'unavailable';
-  $: ritualNext = progression?.nextJourney?.ritual || null;
-  $: discoveryNext = progression?.nextJourney?.discovery || null;
+  $: progressionMilestones = Array.isArray(progression?.milestones) ? progression.milestones : [];
+  $: ritualNext = getFocusGoal('ritual', progression, progressionMilestones);
+  $: discoveryNext = getFocusGoal('discovery', progression, progressionMilestones);
   $: weeklyFocus = progression?.weeklyFocus || null;
+
+  function getFocusGoal(track, currentProgression, currentMilestones) {
+    const serverGoal = currentProgression?.nextJourney?.[track];
+    if (serverGoal && !serverGoal.unlocked) return serverGoal;
+    const source = Array.isArray(currentProgression?.journeyByTrack?.[track])
+      ? currentProgression.journeyByTrack[track]
+      : currentMilestones.filter(node => node?.track === track);
+    return source.find(node => node && !node.unlocked && !node.unlocked_at && node.published !== false) || null;
+  }
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
@@ -84,11 +94,17 @@
       </div>
     </div>
 
+    <section class="profile-studio-overview__progression" aria-label="Progression focus">
+      <div><span class="profile-studio-overview__label">Rank / mastery</span><strong>{rankState.current.name}</strong><small>{formatNumber(lifetimeEp)} EP</small></div>
+      <div><span class="profile-studio-overview__label">Ritual</span><strong>{ritualNext?.name || (journeyState === 'empty' ? 'No goals yet' : journeyState === 'unavailable' ? 'Unavailable' : 'Journey complete')}</strong><small>{ritualNext?.reward?.name || 'Sustained practice'}</small></div>
+      <div><span class="profile-studio-overview__label">Discovery</span><strong>{discoveryNext?.name || (journeyState === 'partial' ? 'Some goals unavailable' : journeyState === 'empty' ? 'No goals yet' : journeyState === 'unavailable' ? 'Unavailable' : 'Journey complete')}</strong><small>{discoveryNext?.reward?.name || 'Unusual color finds'}</small></div>
+    </section>
+
     <nav class="profile-studio-overview__actions" aria-label="Profile studio actions">
-      <a href="#customize"><strong>Customize</strong><span>Identity & presence</span><b aria-hidden="true">→</b></a>
-      <a href="#customize"><strong>Expression</strong><span>Media & cosmetics</span><b aria-hidden="true">→</b></a>
+      <a href="#customize"><strong>Customize</strong><span>Identity & presence</span></a>
+      <a href="#customize-effects"><strong>Expression</strong><span>Media & cosmetics</span></a>
       <a href="/progression"><strong>Progression</strong><span>Rolls & milestones</span></a>
-      <a href="#customize-links"><strong>Links</strong><span>Sharing & aliases</span><b aria-hidden="true">→</b></a>
+      <a href="#customize-links"><strong>Links</strong><span>Sharing & aliases</span></a>
     </nav>
 
     <div class="profile-studio-overview__lower">
@@ -153,12 +169,15 @@
   .profile-studio-overview__rank-copy > span:last-child { color:var(--color-ink-muted); font-size:var(--type-small); }
   .profile-studio-overview__bar { height:.5rem; overflow:hidden; border-radius:999px; background:var(--color-line-subtle); }
   .profile-studio-overview__bar span { display:block; height:100%; border-radius:inherit; background:var(--profile-overview-accent); }
+  .profile-studio-overview__progression { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem; }
+  .profile-studio-overview__progression > div { display:grid; gap:.25rem; min-width:0; padding:.75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
+  .profile-studio-overview__progression strong { overflow:hidden; color:var(--color-ink-strong); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
+  .profile-studio-overview__progression small { overflow:hidden; color:var(--color-ink-muted); font-size:.7rem; text-overflow:ellipsis; white-space:nowrap; }
   .profile-studio-overview__actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.55rem; }
   .profile-studio-overview__actions a { position:relative; display:grid; gap:.3rem; min-width:0; padding:.85rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
   .profile-studio-overview__actions a:hover, .profile-studio-overview__actions a:focus-visible { border-color:color-mix(in srgb,var(--profile-overview-accent) 54%,var(--color-line-subtle)); background:var(--surface-panel-soft); }
   .profile-studio-overview__actions strong { color:var(--color-ink-strong); font-size:var(--type-small); }
   .profile-studio-overview__actions span { color:var(--color-ink-muted); font-size:.72rem; }
-  .profile-studio-overview__actions b { position:absolute; right:.75rem; bottom:.75rem; color:var(--profile-overview-accent); font-weight:500; }
   .profile-studio-overview__lower { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(15rem,.85fr); gap:1rem; }
   .profile-studio-overview__trace, .profile-studio-overview__summary { min-width:0; padding-top:1rem; border-top:1px solid var(--color-line-subtle); }
   .profile-studio-overview__section-heading h3 { margin-top:.3rem; }
@@ -174,7 +193,7 @@
   .profile-studio-overview dt { color:var(--color-ink-muted); font-size:.72rem; }
   .profile-studio-overview dd { margin:0; color:var(--color-ink-strong); font:650 .9rem var(--font-mono-stack); }
   .profile-studio-overview__summary > p, .profile-studio-overview__empty { margin:.7rem 0 0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.5; }
-  @media (max-width:800px) { .profile-studio-overview__hero, .profile-studio-overview__lower { grid-template-columns:1fr; } .profile-studio-overview__actions { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:800px) { .profile-studio-overview__hero, .profile-studio-overview__lower { grid-template-columns:1fr; } .profile-studio-overview__progression { grid-template-columns:1fr; } .profile-studio-overview__actions { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width:520px) { .profile-studio-overview__header, .profile-studio-overview__section-heading { align-items:flex-start; flex-direction:column; } .profile-studio-overview__header-actions { justify-items:start; } .profile-studio-overview__actions { grid-template-columns:1fr; } .profile-studio-overview__identity p { white-space:normal; } }
   @media (prefers-reduced-motion:reduce) { .profile-studio-overview__bar span { transition:none; } }
 </style>

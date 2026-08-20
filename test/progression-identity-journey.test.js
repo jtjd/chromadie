@@ -60,6 +60,87 @@ test('progression normalization preserves server-published journey lanes and wee
   assert.equal(createEmptyProgression().journeyState, 'unavailable');
 });
 
+test('progression keeps approaching deterministic goals and parallel discoveries visible', async () => {
+  const component = await read('src/lib/ProfileProgression.svelte');
+  const reward = itemKey => ({ item_key: itemKey, name: itemKey, slot: 'expression' });
+  const progression = normalizeProgressionData({
+    total_rolls: 42,
+    current_streak: 5,
+    longest_streak: 9,
+    milestones: [
+      {
+        id: 'journey_roll_10',
+        name: 'Ten rolls',
+        track: 'ritual',
+        metric: 'achievement',
+        progress_source: 'total_rolls',
+        progress_target: 10,
+        sort_order: 10,
+        progress: { current: 10, target: 10, unit: 'rolls' },
+        unlocked: true,
+        reward: reward('ritual_ten')
+      },
+      {
+        id: 'journey_streak_14',
+        name: '14-day streak',
+        track: 'ritual',
+        metric: 'achievement',
+        progress_source: 'longest_streak',
+        progress_target: 14,
+        sort_order: 20,
+        progress: { current: 9, target: 14, unit: 'days' },
+        unlocked: false,
+        reward: reward('ritual_streak')
+      },
+      {
+        id: 'journey_roll_50',
+        name: '50 rolls',
+        track: 'ritual',
+        metric: 'achievement',
+        progress_source: 'total_rolls',
+        progress_target: 50,
+        sort_order: 30,
+        progress: { current: 42, target: 50, unit: 'rolls' },
+        unlocked: false,
+        reward: reward('ritual_fifty')
+      },
+      {
+        id: 'journey_roll_100',
+        name: '100 rolls',
+        track: 'ritual',
+        metric: 'achievement',
+        progress_source: 'total_rolls',
+        progress_target: 100,
+        sort_order: 40,
+        progress: { current: 42, target: 100, unit: 'rolls' },
+        unlocked: false,
+        reward: reward('ritual_hundred')
+      },
+      ...['rare', 'epic', 'anomaly'].map((name, index) => ({
+        id: 'discovery_' + name,
+        name,
+        track: 'discovery',
+        metric: 'achievement',
+        sort_order: 10 + index * 10,
+        unlocked: false,
+        reward: reward('discovery_' + name)
+      }))
+    ]
+  });
+
+  const ritual = Object.fromEntries(progression.journeyByTrack.ritual.map(node => [node.id, node]));
+  assert.equal(ritual.journey_streak_14.presentationState, 'active');
+  assert.equal(ritual.journey_roll_50.presentationState, 'future');
+  assert.equal(ritual.journey_roll_50.progress.current, 42);
+  assert.equal(ritual.journey_roll_100.presentationState, 'future');
+
+  const discovery = progression.journeyByTrack.discovery;
+  assert.equal(discovery.length, 3);
+  assert.ok(discovery.every(node => node.presentationState === 'active'));
+  assert.match(component, /if \(state === 'future'\) return 'future'/);
+  assert.match(component, /activeNodes: lane\.id === 'discovery' \? activeNodes : activeNodes\.slice\(0, 2\)/);
+});
+
 test('the journey schema is additive, catalog-backed, and returned by the authoritative roll path', async () => {
   const [journey, goalContract, analytics, destinationSurface, rollResponse, rewardAccess, rewardAnalytics, seed] = await Promise.all([
     read('supabase/migrations/20260819160000_progression_identity_journey.sql'),

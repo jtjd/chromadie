@@ -170,10 +170,10 @@ test('seed and migrations contain the launch products and version bumps', async 
     read('supabase/migrations/20260804120000_launch_cosmetic_expansion.sql'),
     read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql')
   ]);
-  assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
-  assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 4);
-  assert.equal((seed.match(/\('profile_layout_[a-z0-9_]+'/g) || []).length, 3);
-  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 12);
+  assert.equal((seed.match(/^\s+\('cursor_trail_[a-z0-9_]+'/gm) || []).length, 16);
+  assert.equal((seed.match(/^\s+\('avatar_effect_[a-z0-9_]+'/gm) || []).length, 4);
+  assert.equal((seed.match(/^\s+\('profile_layout_[a-z0-9_]+'/gm) || []).length, 3);
+  assert.equal((seed.match(/^\s+\('profile_atmosphere_[a-z0-9_]+'/gm) || []).length, 12);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');
   const atmosphereExpansionMigration = await read('supabase/migrations/20260804210000_atmosphere_expansion.sql');

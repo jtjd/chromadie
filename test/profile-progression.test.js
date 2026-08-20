@@ -20,7 +20,7 @@ test('progression is a dedicated page backed by existing profile history', async
   assert.match(progression, /verified on the server/);
   assert.match(progression, /prefers-reduced-motion/);
   assert.match(progression, /analyticsSurface/);
-  assert.match(page, /loadProfileContext/);
+  assert.match(page, /loadProgressionData/);
   assert.match(page, /ProfileProgression/);
   assert.match(page, /analyticsSurface="progression"/);
   assert.match(page, /href="\/login\?next=%2Fprogression"/);

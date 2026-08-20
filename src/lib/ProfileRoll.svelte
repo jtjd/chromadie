@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { SvelteSet } from 'svelte/reactivity';
   import RollPreview from './RollPreview.svelte';
   import { supabase } from './supabase';
   import {
@@ -16,8 +17,9 @@
   import { getBadgeMeta } from './badgeData';
   import { getPercentileTier } from './rollPresentation.js';
   import { canInitiateRoll, normalizeCanonicalRoll } from './rollState.js';
+  import { normalizeNewMilestones } from './progressionState.js';
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
-  import { trackProductEvent } from './productAnalytics.js';
+  import { trackProductEvent, trackProgressionEvent } from './productAnalytics.js';
   import { sleep, normalizeHexColor } from './utils.js';
   import {
     getRevealHex,
@@ -27,6 +29,7 @@
     ROLL_REVEAL_STEPS
   } from './rollReveal.js';
   import Module from './foundation/Module.svelte';
+  import ProgressionUnlockQueue from './ProgressionUnlockQueue.svelte';
 
   export let moduleSize = 'wide';
   export let compact = false;
@@ -72,6 +75,7 @@
   let contributors = [];
   let revealedBadges = [];
   let newAchievements = [];
+  let newMilestones = [];
   let milestoneGranted = '';
   let cotwHit = false;
   let percentileDisplay = null;
@@ -90,6 +94,7 @@
   let shareInProgress = false;
   let replayData = null;
   let replayCanonical = null;
+  let acknowledgedProgressionUnlockIds = new SvelteSet();
 
   $: fixtureRollReady = visualFixture === 'guest-onboarding' && Boolean(fixtureResult);
   $: rewardBadges = revealedBadges.filter(id => SYSTEM_BADGE_IDS.has(id));
@@ -180,6 +185,7 @@
     contributors = [];
     revealedBadges = [];
     newAchievements = [];
+    newMilestones = [];
     milestoneGranted = '';
     cotwHit = false;
     percentileDisplay = null;
@@ -190,6 +196,14 @@
     skipRevealRequested = false;
     freshReveal = false;
     detailsOpen = true;
+  }
+
+  function normalizeProgressionUnlocks(data) {
+    const additive = normalizeNewMilestones(data?.new_progression_unlocks)
+      .filter(milestone => !acknowledgedProgressionUnlockIds.has(milestone.id));
+    if (additive.length) return additive;
+    return normalizeNewMilestones(data?.new_milestones)
+      .filter(milestone => !acknowledgedProgressionUnlockIds.has(milestone.id));
   }
 
   function applyServerPresentation(data, canonical, { animateScore = false, revealBadges = true, notifyProfile = true } = {}) {
@@ -204,6 +218,7 @@
     contributors = safeCanonical.contributors;
     revealedBadges = revealBadges ? sortBadgesDescending(safeCanonical.badges) : [];
     newAchievements = normalizeNewAchievements(data?.new_achievements);
+    newMilestones = normalizeProgressionUnlocks(data);
     milestoneGranted = typeof data?.milestone_granted === 'string' ? data.milestone_granted : '';
     cotwHit = safeCanonical.badges.includes('cotw_hit');
     percentileDisplay = data?.percentile !== undefined && data?.total_rollers !== undefined
@@ -219,6 +234,24 @@
   function primeCanonicalConditions(canonical) {
     traits = Array.isArray(canonical?.traits) ? canonical.traits : [];
     contributors = Array.isArray(canonical?.contributors) ? canonical.contributors : [];
+  }
+
+  function handleProgressionUnlockAcknowledgement(event) {
+    const unlockId = event?.detail?.unlock?.id;
+    if (!unlockId) return;
+    acknowledgedProgressionUnlockIds = new SvelteSet(acknowledgedProgressionUnlockIds);
+    acknowledgedProgressionUnlockIds.add(unlockId);
+    newMilestones = newMilestones.filter(milestone => milestone.id !== unlockId);
+    if (replayData) {
+      replayData = Object.fromEntries(
+        Object.entries(replayData).map(([key, value]) => [
+          key,
+          ['new_progression_unlocks', 'new_milestones'].includes(key) && Array.isArray(value)
+            ? value.filter(milestone => milestone?.id !== unlockId && milestone?.milestone_id !== unlockId)
+            : value
+        ])
+      );
+    }
   }
 
   function setPrerollState() {
@@ -559,6 +592,10 @@
       accountMode: 'authenticated',
       isReroll
     });
+    trackProgressionEvent('progression_roll_completed', {
+      surface: 'roll',
+      accountMode: 'authenticated'
+    });
     phase = 'results';
     loading = false;
     const hadLaunchBadge = $profile?.equipped_badges?.includes('launch_edition');
@@ -734,6 +771,17 @@
           {shareInProgress ? 'Sharing…' : 'Share roll'}
         </button>
       </div>
+
+      {#if newMilestones.length}
+        <ProgressionUnlockQueue
+          unlocks={newMilestones}
+          surface="profile-roll"
+          username={$profile?.username || 'You'}
+          {displayColor}
+          avatarSrc={$profile?.avatar_url || $profile?.avatar_path || ''}
+          on:acknowledge={handleProgressionUnlockAcknowledgement}
+        />
+      {/if}
 
       <details class="profile-roll__details" bind:open={detailsOpen}>
         <summary>{detailsOpen ? 'Collapse score breakdown' : 'View score breakdown'}</summary>

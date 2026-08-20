@@ -1,5 +1,25 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-20 — Retain Rank, Ritual, and Discovery as the progression core
+
+The progression research in [PROGRESSION_RESEARCH.md](PROGRESSION_RESEARCH.md)
+supports retaining the three dimensions: Rank records accumulated mastery,
+Ritual records returning and sustaining the daily roll, and Discovery records
+the player's stochastic color story. Together they deepen profile identity
+without adding a second game economy or a generic gamification layer.
+
+Rank remains the single broad aggregate measure; Ritual uses current streak for
+daily context, longest streak for durable proof, and total rolls for history;
+Discovery remains a parallel set of unfound opportunities rather than a
+sequential random queue. Earned milestones stay server-published and
+profile-relevant, while public proof remains bounded and owner-controlled.
+
+XP/currencies, battle-pass or seasonal pressure, paid prestige, popularity
+leaderboards, and badge-wall accumulation are rejected because they weaken the
+daily color ritual, invite social farming or false status, and shift the
+profile away from a player's authentic roll history. Premium continues to buy
+expression; gameplay earns prestige.
+
 ## 2026-08-19 — Keep Progression inside the site visual system
 
 The dedicated Progression route now follows the established supporting-route

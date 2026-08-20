@@ -35,6 +35,7 @@ export function simulateBalance({
   const random = createRandom(seed);
   const scorer = legacy ? scoreColor : scoreCandidateColor;
   const rarities = Object.fromEntries(rarityOrder.map(rarity => [rarity, 0]));
+  const conditions = new Map();
   let totalScore = 0;
   let totalConditions = 0;
   let f1Rolls = 0;
@@ -57,8 +58,23 @@ export function simulateBalance({
     const conditionIds = legacy ? result.badges : result.conditions.map(condition => condition.id);
     totalConditions += conditionIds.length;
     totalContributors += legacy ? result.badges.length : result.contributors.length;
+    for (const conditionId of conditionIds) {
+      conditions.set(conditionId, (conditions.get(conditionId) || 0) + 1);
+    }
     if (conditionIds.includes('f1')) f1Rolls += 1;
   }
+
+  const conditionDistribution = Object.fromEntries(
+    [...conditions.keys()].sort().map(conditionId => {
+      const count = conditions.get(conditionId);
+      const frequency = count / rolls;
+      return [conditionId, {
+        count,
+        frequency,
+        expectedRolls: frequency > 0 ? 1 / frequency : null
+      }];
+    })
+  );
 
   return {
     rolls,
@@ -71,10 +87,12 @@ export function simulateBalance({
     averageConditions: totalConditions / rolls,
     averageContributors: totalContributors / rolls,
     f1Frequency: f1Rolls / rolls,
+    conditions: conditionDistribution,
     rarities: Object.fromEntries(
       rarityOrder.map(rarity => [rarity, {
         count: rarities[rarity],
-        frequency: rarities[rarity] / rolls
+        frequency: rarities[rarity] / rolls,
+        expectedRolls: rarities[rarity] > 0 ? rolls / rarities[rarity] : null
       }])
     )
   };
@@ -95,7 +113,15 @@ function printReport(report) {
     const result = report.rarities[rarity];
     console.log(
       `  ${rarity.padEnd(9)} ${result.count.toLocaleString().padStart(10)} ` +
-        `(${(result.frequency * 100).toFixed(3)}%)`
+      `(${(result.frequency * 100).toFixed(3)}%)`
+    );
+  }
+  console.log('Tracked condition frequencies:');
+  for (const [conditionId, result] of Object.entries(report.conditions)) {
+    if (!['high_contrast', 'greyscale', 'palindrome', 'prime_sum', 'repeated_pair', 'saturation_spike'].includes(conditionId)) continue;
+    console.log(
+      `  ${conditionId.padEnd(18)} ${result.count.toLocaleString().padStart(10)} ` +
+      `(${(result.frequency * 100).toFixed(3)}%; expected ${result.expectedRolls?.toFixed(1) || 'never'} rolls)`
     );
   }
 }

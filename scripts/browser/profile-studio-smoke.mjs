@@ -1860,7 +1860,7 @@ try {
       assert(state.items.every(item => item.box && item.box.left >= state.shell.left - 1 && item.box.right <= state.shell.right + 1), `Leaderboard row wrapper escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.entries.every(entry => entry && entry.left >= state.shell.left - 1 && entry.right <= state.shell.right + 1), `Leaderboard entry escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.avatarStates.every(avatar => !avatar.inViewport || avatar.imageLoaded || avatar.fallback), `Leaderboard contains an unloaded visible avatar without a fallback at ${width}px: ${JSON.stringify(state)}.`);
-      assert(state.backgroundImage.includes('leaderboard-background.webp'), `Leaderboard background is not loaded from the authored local asset at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.backgroundImage === 'none' || state.backgroundImage.includes('leaderboard-background.webp'), `Leaderboard route surface is neither the current transparent treatment nor the legacy authored asset at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.headerBackground === 'rgba(0, 0, 0, 0)', `Leaderboard header is not transparent at ${width}px: ${JSON.stringify(state)}.`);
       measurements.push({ width, height, ...state });
     }
@@ -2016,8 +2016,10 @@ try {
       return { developmentMode: true, hashedAssetCheck: 'production-only' };
     }
     const failedAssets = page.requestLog.filter(request => {
+      let sameOrigin = false;
+      try { sameOrigin = new URL(request.url).origin === new URL(appUrl).origin; } catch { /* ignore malformed/third-party telemetry URLs */ }
       const isAsset = /\/assets\/|\.(?:css|js)(?:\?|$)/i.test(request.url);
-      return isAsset && (request.failed || Number(request.status) >= 400);
+      return sameOrigin && isAsset && (request.failed || Number(request.status) >= 400);
     });
     assert(!failedAssets.length, `Profile build requested missing or failed assets: ${JSON.stringify(failedAssets.slice(0, 8))}.`);
     const state = await page.evaluate(`(() => {

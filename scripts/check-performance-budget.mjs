@@ -29,8 +29,23 @@ const budgets = {
       // The reference workspace keeps preview/device controls and four editor
       // surfaces in the authenticated dashboard route. Keep a tight route
       // ceiling while accounting for that intentional presentation payload.
-      javascript: 528 * 1024,
+      // The progression history summary is shared by the Studio dashboard;
+      // keep the cap just above its measured post-milestone payload.
+      javascript: 540 * 1024,
       css: 225 * 1024
+    },
+    progression: {
+      entries: ['src/lib/ProgressionPage.svelte'],
+      // Progression is a route-lazy surface. Keep the initial page useful on
+      // mobile while leaving room for the account state and journey lanes.
+      javascript: 400 * 1024,
+      css: 115 * 1024,
+      // Reward previews must reuse canonical renderers on demand. Their
+      // chunk is a separate budget and must not be counted in the route's
+      // initial payload.
+      dynamicEntries: ['src/lib/ShopItemPreview.svelte'],
+      dynamicJavascript: 160 * 1024,
+      dynamicCss: 90 * 1024
     }
   }
 };
@@ -145,8 +160,76 @@ async function summarizeManifestEntries(manifest, entries) {
 
   return {
     javascript: await totalSize(javascriptFiles),
-    css: await totalSize(cssFiles)
+    css: await totalSize(cssFiles),
+    javascriptFiles,
+    cssFiles,
+    manifestKeys: visited
   };
+}
+
+function createManifestResolver(manifest) {
+  return function resolveManifestKey(key) {
+    if (manifest[key]) return key;
+    const sourceName = String(key).split('/').pop()?.replace(/\.[^.]+$/, '');
+    const candidates = Object.entries(manifest)
+      .filter(([, item]) => item?.name === sourceName && item.file?.endsWith('.js'))
+      .map(([candidate]) => candidate);
+    if (candidates.length === 1) return candidates[0];
+    throw new Error(`Performance manifest is missing ${key}`);
+  };
+}
+
+async function summarizeDynamicManifestEntries(manifest, entries, initialSummary) {
+  const resolveManifestKey = createManifestResolver(manifest);
+  const visited = new Set();
+  const javascriptFiles = new Set();
+  const cssFiles = new Set();
+
+  function visit(key) {
+    const resolvedKey = resolveManifestKey(key);
+    if (visited.has(resolvedKey)) return;
+    const item = manifest[resolvedKey];
+    visited.add(resolvedKey);
+    if (item.file?.endsWith('.js')) javascriptFiles.add(item.file);
+    for (const cssFile of item.css || []) cssFiles.add(cssFile);
+    for (const importedKey of item.imports || []) visit(importedKey);
+  }
+
+  for (const entry of entries) visit(entry);
+  const totalSize = async files => {
+    const sizes = await Promise.all([...files].map(file => stat(join(distRoot, file))));
+    return sizes.reduce((sum, fileStat) => sum + fileStat.size, 0);
+  };
+  const initialJavascriptFiles = initialSummary.javascriptFiles;
+  const initialCssFiles = initialSummary.cssFiles;
+  const incrementalJavascriptFiles = new Set([...javascriptFiles].filter(file => !initialJavascriptFiles.has(file)));
+  const incrementalCssFiles = new Set([...cssFiles].filter(file => !initialCssFiles.has(file)));
+
+  return {
+    javascript: await totalSize(incrementalJavascriptFiles),
+    css: await totalSize(incrementalCssFiles),
+    manifestKeys: visited,
+    javascriptFiles: incrementalJavascriptFiles,
+    cssFiles: incrementalCssFiles
+  };
+}
+
+function collectRouteDynamicImports(manifest, routeSummary) {
+  const dynamicKeys = new Set();
+  const resolveManifestKey = createManifestResolver(manifest);
+  for (const manifestKey of routeSummary.manifestKeys) {
+    // index.html is a Vite registry entry whose dynamic imports list every
+    // route. Counting it would make every route appear to own every chunk.
+    if (manifestKey === 'index.html') continue;
+    for (const dynamicImport of manifest[manifestKey]?.dynamicImports || []) {
+      try {
+        dynamicKeys.add(resolveManifestKey(dynamicImport));
+      } catch (error) {
+        if (!String(dynamicImport).startsWith('node_modules/')) throw error;
+      }
+    }
+  }
+  return dynamicKeys;
 }
 
 try {
@@ -157,11 +240,26 @@ try {
   const javascript = summarize(await assetsByExtension('.js'), initialNames);
   const css = summarize(await assetsByExtension('.css'), initialNames);
   const atmosphereMedia = await summarizeAtmosphereMedia();
-  const routeSummaries = await Promise.all(Object.entries(budgets.routes).map(async ([name, routeBudget]) => ({
-    name,
-    budget: routeBudget,
-    ...(await summarizeManifestEntries(manifest, routeBudget.entries))
-  })));
+  const routeSummaries = await Promise.all(Object.entries(budgets.routes).map(async ([name, routeBudget]) => {
+    const summary = await summarizeManifestEntries(manifest, routeBudget.entries);
+    const dynamicImportKeys = collectRouteDynamicImports(manifest, summary);
+    let dynamic = null;
+    if (routeBudget.dynamicEntries?.length) {
+      const expectedDynamicKeys = routeBudget.dynamicEntries.map(entry => createManifestResolver(manifest)(entry));
+      const missingDynamic = expectedDynamicKeys.filter(key => !dynamicImportKeys.has(key));
+      if (missingDynamic.length) {
+        throw new Error(`${name} route does not lazy-load required preview entries: ${missingDynamic.join(', ')}`);
+      }
+      const staticDynamicFiles = expectedDynamicKeys
+        .map(key => manifest[key]?.file)
+        .filter(file => file && summary.javascriptFiles.has(file));
+      if (staticDynamicFiles.length) {
+        throw new Error(`${name} preview entries entered the initial route payload: ${staticDynamicFiles.join(', ')}`);
+      }
+      dynamic = await summarizeDynamicManifestEntries(manifest, routeBudget.dynamicEntries, summary);
+    }
+    return { name, budget: routeBudget, ...summary, dynamic, dynamicImportKeys };
+  }));
   const checks = [
     ['Initial JavaScript', javascript.initialTotal, budgets.initialJavascript],
     ['Largest lazy JavaScript', javascript.largestLazy?.bytes || 0, budgets.lazyJavascript],
@@ -172,7 +270,11 @@ try {
     ['Largest atmosphere video', atmosphereMedia.largestVideo?.bytes || 0, mediaBudgets.largestAtmosphereVideo],
     ...routeSummaries.flatMap(route => [
       [`${route.name} route JavaScript`, route.javascript, route.budget.javascript],
-      [`${route.name} route CSS`, route.css, route.budget.css]
+      [`${route.name} route CSS`, route.css, route.budget.css],
+      ...(route.dynamic ? [
+        [`${route.name} preview JavaScript`, route.dynamic.javascript, route.budget.dynamicJavascript],
+        [`${route.name} preview CSS`, route.dynamic.css, route.budget.dynamicCss]
+      ] : [])
     ])
   ];
   const failures = checks.filter(([, actual, budget]) => actual > budget);

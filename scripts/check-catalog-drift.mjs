@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createSupabaseHeaders, getSupabaseCredentials } from '../functions/_supabaseApi.js';
+import { progressionRewardKeys, readProgressionManifest } from './progression-manifest.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -17,8 +18,6 @@ const atmosphereReplacementMigrationPath = path.join(repoRoot, 'supabase/migrati
 const atelierExpressionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260809000000_atelier_expression_catalog.sql');
 const nameFontRefreshMigrationPath = path.join(repoRoot, 'supabase/migrations/20260816110000_name_font_catalog_refresh.sql');
 const silkscreenFontMigrationPath = path.join(repoRoot, 'supabase/migrations/20260816120000_add_silkscreen_name_font.sql');
-const progressionBaseMigrationPath = path.join(repoRoot, 'supabase/migrations/20260805150000_profile_progression_rewards.sql');
-const progressionGoalContractMigrationPath = path.join(repoRoot, 'supabase/migrations/20260819180000_progression_goal_contract.sql');
 
 function fail(message) {
   console.error(`Catalog drift detected: ${message}`);
@@ -117,52 +116,6 @@ function parseCatalog(sql, source) {
   return { columns, catalog };
 }
 
-function parseInsertRows(sql, tableName, source) {
-  const inserts = [...sql.matchAll(
-    new RegExp(`INSERT INTO public\\.${tableName}\\s*\\(([^)]+)\\)\\s*VALUES\\s*([\\s\\S]*?)(?=\\nON CONFLICT|\\nDO \\$|\\n;)`, 'g')
-  )];
-
-  const rows = [];
-  for (const insert of inserts) {
-    const columns = insert[1].split(',').map(column => column.trim());
-    const body = insert[2];
-    let rowStart = -1;
-    let depth = 0;
-    let quoted = false;
-
-    for (let index = 0; index < body.length; index += 1) {
-      const character = body[index];
-      if (character === "'") {
-        if (quoted && body[index + 1] === "'") index += 1;
-        else quoted = !quoted;
-        continue;
-      }
-      if (quoted) continue;
-      if (character === '(') {
-        if (depth === 0) rowStart = index + 1;
-        depth += 1;
-      } else if (character === ')') {
-        depth -= 1;
-        if (depth === 0) rows.push({ columns, values: splitSqlValues(body.slice(rowStart, index), source) });
-        if (depth < 0) fail(`unbalanced row delimiters in ${source}`);
-      }
-    }
-    if (quoted || depth !== 0) fail(`malformed ${tableName} insert in ${source}`);
-  }
-  return rows;
-}
-
-function getProgressionRewardKeys(sql, source) {
-  const rewardKeys = [];
-  for (const row of parseInsertRows(sql, 'progression_milestones', source)) {
-    const index = row.columns.indexOf('reward_item_key');
-    if (index === -1) continue;
-    const value = decodeSqlValue(row.values[index], source);
-    if (typeof value === 'string') rewardKeys.push(value);
-  }
-  return rewardKeys;
-}
-
 function applyCostUpdates(sql, catalog, source) {
   const update = sql.match(/UPDATE public\.shop_items\s+SET cost = CASE item_key([\s\S]*?)END;/);
   if (!update) return;
@@ -187,14 +140,29 @@ function applyCatalogStatusUpdates(sql, catalog) {
   }
 }
 
-function applyProfileExpressionFreeUpdates(sql, catalog, source) {
+function applyProfileExpressionFreeUpdates(sql, catalog, source, progressionKeys) {
   const update = sql.match(/UPDATE public\.shop_items\s+SET access_tier = 'free',\s+cost = 0,\s+entitlement_key = NULL\s+WHERE catalog_status = 'active'\s+AND slot IN\s*\(([^)]+)\)[\s\S]*?;/i);
   if (update) {
     const slots = [...update[1].matchAll(/'([a-z_]+)'/g)].map(([, slot]) => slot);
     if (!slots.length) fail(`profile expression free update has no slots in ${source}`);
     const slotSet = new Set(slots);
+    const updateSql = update[0];
+    const excludesProgressionRewards = /NOT EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+public\.progression_milestones\s+AS\s+milestone\s+WHERE\s+milestone\.reward_item_key\s*=\s*shop_items\.item_key\s*\)/i.test(updateSql);
+    if (/progression_milestones/i.test(updateSql) && !excludesProgressionRewards) {
+      fail(`profile expression free update lost its progression reward exclusion in ${source}`);
+    }
+    const excludedItemKeys = new Set(
+      [...updateSql.matchAll(/item_key\s+NOT\s+IN\s*\(([^)]+)\)/gi)]
+        .flatMap(([, values]) => [...values.matchAll(/'([a-z0-9_]+)'/gi)].map(([, itemKey]) => itemKey))
+    );
     for (const item of catalog.values()) {
-      if ((item.catalog_status || 'active') === 'active' && slotSet.has(item.slot)) {
+      const isProgressionReward = progressionKeys.has(item.item_key);
+      if (
+        (item.catalog_status || 'active') === 'active'
+        && slotSet.has(item.slot)
+        && (!excludesProgressionRewards || !isProgressionReward)
+        && !excludedItemKeys.has(item.item_key)
+      ) {
         item.access_tier = 'free';
         item.cost = '0';
         item.entitlement_key = null;
@@ -211,21 +179,29 @@ function applyProfileExpressionFreeUpdates(sql, catalog, source) {
   }
 }
 
-function applyProgressionRewardAccessUpdates(catalog, rewardKeys) {
-  for (const itemKey of rewardKeys) {
+function applyExplicitProgressionEarnedUpdate(sql, catalog, progressionKeys, source) {
+  const update = [...sql.matchAll(/UPDATE\s+public\.shop_items(?:\s+AS\s+\w+)?\s+SET\s+([\s\S]*?)\s+WHERE\s+([\s\S]*?)\s*;/gi)]
+    .find(match => /access_tier\s*=\s*'earned'/i.test(match[1]) && /progression_milestones/i.test(match[2]));
+  if (!update) return;
+
+  const [statement, setClause, whereClause] = update;
+  if (!/cost\s*=\s*0/i.test(setClause) || !/entitlement_key\s*=\s*NULL/i.test(setClause)) {
+    fail(`progression reward access update changed its zero-cost earned contract in ${source}`);
+  }
+  if (!/EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+public\.progression_milestones\s+AS\s+milestone\s+WHERE\s+milestone\.reward_item_key\s*=\s*item\.item_key\s*\)/i.test(`${statement}\n${whereClause}`)) {
+    fail(`progression reward access update no longer follows the authored milestone relationship in ${source}`);
+  }
+
+  // The statement has been structurally verified before this small evaluator
+  // applies its actual EXISTS relationship to the parsed catalog. If the
+  // statement disappears or targets a different relation, the final contract
+  // assertion sees the unmodified catalog and fails.
+  for (const itemKey of progressionKeys) {
     const item = catalog.get(itemKey);
     if (!item || (item.catalog_status || 'active') !== 'active') continue;
     item.access_tier = 'earned';
     item.cost = '0';
     item.entitlement_key = null;
-  }
-
-  for (const itemKey of ['name_prism_atelier', 'bg_prism_atmosphere']) {
-    const item = catalog.get(itemKey);
-    if (!item || (item.catalog_status || 'active') !== 'active') continue;
-    item.access_tier = 'premium';
-    item.cost = '0';
-    item.entitlement_key = 'chromadie_plus';
   }
 }
 
@@ -281,9 +257,35 @@ async function readLocalCatalog(filePath, progressionRewardKeys = []) {
   const parsed = parseCatalog(sql, source);
   applyCostUpdates(sql, parsed.catalog, source);
   applyCatalogStatusUpdates(sql, parsed.catalog);
-  applyProfileExpressionFreeUpdates(sql, parsed.catalog, source);
-  applyProgressionRewardAccessUpdates(parsed.catalog, progressionRewardKeys);
+  const progressionKeySet = new Set(progressionRewardKeys);
+  applyProfileExpressionFreeUpdates(sql, parsed.catalog, source, progressionKeySet);
+  applyExplicitProgressionEarnedUpdate(sql, parsed.catalog, progressionKeySet, source);
   return parsed;
+}
+
+function assertProgressionRewardContract(catalog, manifest, actualName) {
+  const rewardKeys = progressionRewardKeys(manifest);
+  if (!rewardKeys.length) fail(`${actualName} has no authored progression rewards`);
+
+  const invalid = rewardKeys.flatMap(itemKey => {
+    const item = catalog.get(itemKey);
+    if (!item) return [`${itemKey} is missing`];
+    const errors = [];
+    if ((item.catalog_status || 'active') !== 'active') errors.push(`${itemKey} is not active`);
+    if (item.access_tier !== 'earned') errors.push(`${itemKey} is ${item.access_tier || 'unset'}, not earned`);
+    if (String(item.cost) !== '0') errors.push(`${itemKey} costs ${item.cost}, not zero`);
+    if (item.entitlement_key !== null && item.entitlement_key !== undefined) errors.push(`${itemKey} has entitlement ${item.entitlement_key}`);
+    if (item.css_type !== 'renderer') errors.push(`${itemKey} has no canonical renderer`);
+    return errors;
+  });
+  if (invalid.length) fail(`${actualName} progression reward contract failed:\n  - ${invalid.join('\n  - ')}`);
+
+  const freeBaseline = [...catalog.values()].filter(item => (
+    (item.catalog_status || 'active') === 'active'
+      && item.access_tier === 'free'
+      && !rewardKeys.includes(item.item_key)
+  ));
+  if (!freeBaseline.length) fail(`${actualName} removed the free expression baseline`);
 }
 
 async function readRemoteCatalog(columns, url, key, projectKeyIsLegacy = false) {
@@ -303,13 +305,10 @@ async function readRemoteCatalog(columns, url, key, projectKeyIsLegacy = false) 
   };
 }
 
-const progressionBaseMigration = await readFile(progressionBaseMigrationPath, 'utf8');
-const progressionGoalContractMigration = await readFile(progressionGoalContractMigrationPath, 'utf8');
-const progressionRewardKeys = [...new Set([
-  ...getProgressionRewardKeys(progressionBaseMigration, path.relative(repoRoot, progressionBaseMigrationPath)),
-  ...getProgressionRewardKeys(progressionGoalContractMigration, path.relative(repoRoot, progressionGoalContractMigrationPath))
-])];
-const seed = await readLocalCatalog(seedPath, progressionRewardKeys);
+const progressionManifest = await readProgressionManifest();
+const progressionKeys = progressionRewardKeys(progressionManifest);
+const seed = await readLocalCatalog(seedPath, progressionKeys);
+assertProgressionRewardContract(seed.catalog, progressionManifest, 'seed');
 const resetMigration = await readFile(resetMigrationPath, 'utf8');
 const nameMotionCurationMigration = await readFile(nameMotionCurationMigrationPath, 'utf8');
 const nameMotionReferenceMigration = await readFile(nameMotionReferenceMigrationPath, 'utf8');

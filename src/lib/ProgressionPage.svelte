@@ -1,34 +1,38 @@
 <script>
   import { ACCOUNT_STATES } from './authState.js';
-  import { loadProfileContext } from './profileData.js';
+  import { loadProgressionData } from './progressionData.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import ProfileProgression from './ProfileProgression.svelte';
   import { getRankState } from './ranks.js';
   import { accountState, authInitialized, isAuthenticated, profile, session } from './stores.js';
   import { supabase } from './supabase.js';
 
-  let context = null;
+  let progression = null;
   let loading = true;
   let error = '';
   let loadedAccountId = '';
+  let progressionLoaded = false;
   let requestId = 0;
 
-  $: accountId = $session?.user?.id || '';
-  $: accountProfile = context?.targetProfile || $profile || {};
+  $: accountId = $session?.user?.id || $profile?.id || '';
+  $: accountProfile = $profile?.id && accountId && $profile.id === accountId ? $profile : {};
   $: featureFlags = resolveProfileFeatureFlags({
     userId: accountProfile?.id || accountId,
     isStaff: Boolean(accountProfile?.is_staff)
   });
-  $: progression = context?.progression || {};
   $: lifetimeEp = Math.max(0, Number(progression?.currentEp ?? accountProfile?.lifetime_ep) || 0);
   $: rankState = getRankState(lifetimeEp);
   $: nextExpression = progression?.nextJourney?.ritual || progression?.nextJourney?.discovery || null;
   $: journeyState = progression?.journeyState || 'unavailable';
   $: pageLoading = !$authInitialized
     || $accountState === ACCOUNT_STATES.PROFILE_LOADING
-    || ($accountState === ACCOUNT_STATES.AUTHENTICATED && loading && !context);
+    || ($accountState === ACCOUNT_STATES.AUTHENTICATED && loading && !progressionLoaded);
   $: signedOut = $authInitialized && $accountState === ACCOUNT_STATES.SIGNED_OUT;
   $: accountUnavailable = $authInitialized && $accountState === ACCOUNT_STATES.PROFILE_ERROR;
+  $: authenticatedWithoutProfile = $authInitialized
+    && $accountState === ACCOUNT_STATES.AUTHENTICATED
+    && progressionLoaded
+    && !accountProfile?.id;
 
   $: if ($authInitialized && $isAuthenticated && accountId && loadedAccountId !== accountId) {
     loadedAccountId = accountId;
@@ -40,8 +44,10 @@
   }
 
   function clearProgressionContext() {
+    requestId += 1;
     loadedAccountId = '';
-    context = null;
+    progression = null;
+    progressionLoaded = false;
     error = '';
     loading = false;
   }
@@ -50,29 +56,25 @@
     const currentRequestId = ++requestId;
     loading = true;
     error = '';
+    progressionLoaded = false;
 
     try {
-      const nextContext = await loadProfileContext({
+      const result = await loadProgressionData({
         supabaseClient: supabase,
-        isAuthenticated: true,
-        sessionUserId: userId,
-        currentUsername: $profile?.username || '',
-        profileUsername: null,
-        userId: null
+        userId,
+        fallbackEp: $profile?.lifetime_ep
       });
 
       if (currentRequestId !== requestId || userId !== $session?.user?.id) return;
 
-      if (nextContext.loadError && !nextContext.targetProfile) {
-        context = null;
-        error = nextContext.loadError;
-      } else {
-        context = nextContext;
-      }
+      progression = result.data || {};
+      error = result.error?.message || '';
+      progressionLoaded = true;
     } catch {
       if (currentRequestId === requestId) {
-        context = null;
+        progression = {};
         error = 'Progression could not be loaded. Please retry.';
+        progressionLoaded = true;
       }
     } finally {
       if (currentRequestId === requestId) loading = false;
@@ -122,34 +124,42 @@
         <div><strong>Your account is unavailable right now.</strong><p>We could not read the profile that owns this progression. Try again in a moment.</p></div>
         <button type="button" class="site-button site-button--secondary" on:click={() => window.location.reload()}>Retry</button>
       </section>
-    {:else if error && !context}
+    {:else if authenticatedWithoutProfile}
+      <section class="progression-page__state" role="alert">
+        <div><strong>Your profile is still loading.</strong><p>The progression record is ready, but the profile that owns it has not arrived yet. Try again in a moment.</p></div>
+        <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
+      </section>
+    {:else if error && !progressionLoaded}
       <section class="progression-page__state" role="alert">
         <div><strong>Progression unavailable</strong><p>{error}</p></div>
         <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
       </section>
-    {:else if context?.targetProfile}
-      {#if context.dataWarning}
-        <p class="progression-page__warning" role="status">{context.dataWarning}</p>
+    {:else if accountProfile?.id}
+      {#if error}
+        <div class="progression-page__warning" role="status">
+          <span>{error} Showing the profile record that is available.</span>
+          <button type="button" on:click={retry} disabled={loading} aria-busy={loading}>Retry</button>
+        </div>
       {/if}
 
       <section class="progression-page__account-bar" aria-label="Progression actions">
         <div class="progression-page__account-copy">
           <span class="progression-page__account-label">{accountProfile.display_name || accountProfile.username || 'Your profile'}</span>
           <strong>{rankState.next ? formatNumber(Math.max(0, rankState.next.min - lifetimeEp)) + ' EP to ' + rankState.next.name : 'Highest rank reached'}</strong>
-          {#if nextExpression}<small>Next expression: {nextExpression.name}</small>{:else if journeyState === 'empty'}<small>No journey goals are published yet.</small>{:else if journeyState === 'partial'}<small>Some journey goals are unavailable.</small>{:else if journeyState === 'unavailable'}<small>Journey goals are unavailable.</small>{:else}<small>All journey goals complete.</small>{/if}
+          {#if nextExpression}<small>Current focus: {nextExpression.name}</small>{:else if journeyState === 'empty'}<small>No journey goals are published yet.</small>{:else if journeyState === 'partial'}<small>Some journey goals are unavailable.</small>{:else if journeyState === 'unavailable'}<small>Journey goals are unavailable.</small>{:else}<small>All journey goals complete.</small>{/if}
         </div>
         <div class="progression-page__account-actions">
           <a class="site-button" href="/roll">Roll today</a>
-          <a class="site-button site-button--secondary" href="/profile/settings#customize-media">Equip expression</a>
+          <a class="site-button site-button--secondary" href="/profile/settings#customize-effects">Equip expression</a>
         </div>
       </section>
 
       <ProfileProgression
-        profile={context.targetProfile}
-        timelineEvents={context.timelineEvents}
-        collectionItems={context.collectionItems}
-        allAchievements={context.allAchievements}
-        unlockedAchievements={context.unlockedAchievements}
+        profile={accountProfile}
+        timelineEvents={[]}
+        collectionItems={[]}
+        allAchievements={[]}
+        unlockedAchievements={{}}
         {progression}
         {featureFlags}
         pageMode={true}
@@ -161,16 +171,16 @@
 
 <style>
   .progression-page {
-    --progression-line: var(--border, rgba(255, 255, 255, .09));
-    --progression-panel: var(--surface-2, #1e1e22);
-    --progression-text: var(--text, #f5f5f6);
-    --progression-muted: var(--text-muted, #8d8c92);
-    --progression-faint: var(--text-faint, #59585e);
+    --progression-line: var(--color-line-subtle);
+    --progression-panel: var(--surface-panel);
+    --progression-text: var(--color-ink-strong);
+    --progression-muted: var(--color-ink-muted);
+    --progression-faint: var(--color-ink-muted);
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: clamp(3rem, 7vw, 6rem) 0 5rem;
     color: var(--progression-text);
-    font-family: 'Inter', var(--font-body-stack, sans-serif);
+    font-family: var(--font-body-stack, sans-serif);
     color-scheme: dark;
   }
 
@@ -199,7 +209,7 @@
   .progression-page__intro h1 {
     margin: .8rem 0 0;
     color: var(--progression-text);
-    font: 750 clamp(3.4rem, 7vw, 5.8rem)/.94 'Manrope Variable', var(--font-display-stack, sans-serif);
+    font: 650 clamp(2.5rem, 7vw, 5.8rem)/.94 var(--font-display-stack, sans-serif);
     letter-spacing: -.06em;
   }
 
@@ -231,7 +241,7 @@
 
   .progression-page__state strong {
     color: var(--progression-text);
-    font: 600 1rem/1.2 'Inter', sans-serif;
+    font: 600 1rem/1.2 var(--font-body-stack, sans-serif);
   }
 
   .progression-page__state p {
@@ -252,7 +262,7 @@
     max-width: 36rem;
     margin: .7rem 0 0;
     color: var(--progression-text);
-    font: 600 clamp(1.8rem, 4vw, 3.3rem)/.98 'Manrope Variable', var(--font-display-stack, sans-serif);
+    font: 600 clamp(1.8rem, 4vw, 3.3rem)/.98 var(--font-display-stack, sans-serif);
     letter-spacing: -.045em;
   }
 
@@ -271,9 +281,35 @@
   }
 
   .progression-page__warning {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
     margin: 2rem 0 -1.7rem;
     color: var(--progression-muted);
     font-size: .76rem;
+  }
+
+  .progression-page__warning button {
+    flex: 0 0 auto;
+    min-height: 2.25rem;
+    padding: .35rem .65rem;
+    border: 1px solid var(--progression-line);
+    border-radius: .5rem;
+    background: transparent;
+    color: var(--progression-text);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .progression-page__warning button:focus-visible {
+    outline: 2px solid var(--progression-text);
+    outline-offset: 2px;
+  }
+
+  .progression-page__warning button:disabled {
+    cursor: wait;
+    opacity: .6;
   }
 
   .progression-page__account-bar {
@@ -333,6 +369,12 @@
     .progression-page__state-actions .site-button,
     .progression-page__account-actions .site-button {
       flex: 1 1 auto;
+    }
+
+    .progression-page__warning {
+      align-items: flex-start;
+      flex-direction: column;
+      margin-bottom: -1rem;
     }
   }
 
