@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-20 — Make the dedicated progression route scan-first
+
+The dedicated `/progression` route uses a density-first presentation without
+changing the shared Studio story. Its streak strip carries the daily action and
+today's color chip; Rank owns the focal ring and compact XP value; the four
+metrics are quiet supporting detail; and the weekly challenge is one factual
+line. The page-specific shell intentionally removes the Studio breadcrumbs and
+marketing copy while retaining the History handoff.
+
+Rank, Ritual, and Discovery are collapsed to one summary row each on first
+load. A single local accordion state expands one lane synchronously to show its
+short milestone sentence, canonical reward thumbnail, and completed/future
+links. This is presentation-only: the server remains authoritative for rank,
+streaks, milestones, rewards, inventory, and privacy boundaries.
+
 ## 2026-08-20 — Keep progression state neutral and expression data tangible
 
 Progression structural state uses dedicated grayscale tokens (`--color-state-active`,

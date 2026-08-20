@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-20 — Make Progression scan-first
+
+- Simplified the dedicated page to one daily streak strip, one Rank/XP focal
+  point, quiet supporting metrics, and a one-line weekly color challenge.
+- Removed the stray Rank color dot and kept rolled color as a data swatch only.
+- Collapsed Rank, Ritual, and Discovery into instant, one-at-a-time accordions;
+  expanded lanes retain their short next-step copy and real expression
+  thumbnail previews.
+- Kept the neutral vignette, glass edge treatment, CTA sheen, abbreviated
+  numbers, keyboard focus, and reduced-motion behavior consistent with the
+  existing site design.
+
 ## 2026-08-20 — Progression visual polish
 
 - Kept the progression page’s dark site language while adding a subtle grayscale

@@ -1,5 +1,20 @@
 # Chromadie 2.0 Progress
 
+## Progression density and accordion pass — 2026-08-20
+
+- Removed the dedicated-route breadcrumb/eyebrow clutter and the stray color
+  chip from the Rank label. The daily roll color now appears only beside the
+  streak strip, while Rank remains a neutral progress metric.
+- Made the Rank block the focal hero with a grayscale SVG ring, compact
+  display-scale XP, exact-value title text, and abbreviated secondary metrics.
+  Weekly color is a single swatch-and-bonus line.
+- Collapsed Rank, Ritual, and Discovery into keyboard-accessible, mobile-sized
+  accordion rows. Expansion is synchronous, one lane at a time, and retains
+  canonical reward thumbnails plus completed/future disclosures.
+- Rechecked the grayscale vignette, glass-card glow, CTA sheen, and reduced-
+  motion fallbacks. No schema, RPC, scoring, eligibility, inventory, or RLS
+  changes were needed.
+
 ## Progression visual polish — 2026-08-20
 
 - Split structural state from data color with neutral active-card tokens; the

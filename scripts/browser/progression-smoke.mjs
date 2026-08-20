@@ -313,13 +313,23 @@ async function inspectAuthenticatedProgression(width, height, label) {
     `${label} authenticated progression surface`,
     30000
   );
-  const futureButton = await chromium.page.evaluate("(() => { const lane = document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"]'); const button = [...(lane?.querySelectorAll('button') || [])].find(element => element.textContent?.trim() === 'See later goals'); if (!button) return { found: false, lane: Boolean(lane), text: lane?.textContent?.trim().replace(/\\s+/g, ' ') || '', buttons: [...(lane?.querySelectorAll('button') || [])].map(element => element.textContent?.trim() || '') }; button.scrollIntoView({ block: 'center', inline: 'nearest' }); const rect = button.getBoundingClientRect(); return { found: true, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, viewport: { width: innerWidth, height: innerHeight } }; })()");
-  assert(futureButton?.found, 'The Ritual lane did not expose its future goals control: ' + JSON.stringify(futureButton) + '.');
-  await chromium.page.command('Input.dispatchMouseEvent', { type: 'mouseMoved', x: futureButton.x, y: futureButton.y });
-  await chromium.page.command('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, x: futureButton.x, y: futureButton.y });
-  await chromium.page.command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: futureButton.x, y: futureButton.y });
-  const expandedRitualState = await chromium.page.waitFor("document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"] button[aria-expanded=\"true\"]') && document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"]')?.textContent?.includes('50 rolls')", 'expanded Ritual future goals', 5000);
-  assert(expandedRitualState, 'The Ritual lane did not expose a working future goals control after the CDP click.');
+  await chromium.page.waitFor(
+    `document.querySelector('#profile-progression-rank-title')?.textContent?.includes('Silver')`,
+    `${label} established rank data`,
+    30000
+  );
+  const initialAccordion = await chromium.page.evaluate("[...document.querySelectorAll('.profile-progression-lane__toggle')].every(toggle => toggle.getAttribute('aria-expanded') === 'false')");
+  assert(initialAccordion, `${label} did not start with collapsed progression paths.`);
+  const ritualToggle = await chromium.page.evaluate("Boolean(document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"] .profile-progression-lane__toggle'))");
+  assert(ritualToggle, 'The Ritual lane did not expose its accordion control.');
+  await chromium.page.click('[aria-labelledby="profile-progression-lane-ritual"] .profile-progression-lane__toggle', `${label} Ritual accordion`);
+  const expandedRitual = await chromium.page.waitFor("document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"] .profile-progression-lane__toggle[aria-expanded=\"true\"]')", 'expanded Ritual accordion', 5000);
+  assert(expandedRitual, 'The Ritual lane did not expand after the click.');
+  const futureButton = await chromium.page.evaluate("Boolean([...document.querySelectorAll('[aria-labelledby=\"profile-progression-lane-ritual\"] button')].find(element => element.textContent?.trim() === 'See later goals'))");
+  assert(futureButton, 'The expanded Ritual lane did not expose its future goals control.');
+  await chromium.page.evaluate("(() => { const lane = document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"]'); const button = [...(lane?.querySelectorAll('button') || [])].find(element => element.textContent?.trim() === 'See later goals'); if (!button) return false; button.scrollIntoView({ block: 'center', inline: 'nearest' }); button.click(); return true; })()");
+  const expandedRitualState = await chromium.page.waitFor("document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"]')?.textContent?.includes('50 rolls')", 'expanded Ritual future goals', 5000);
+  assert(expandedRitualState, 'The Ritual lane did not expose a working future goals control after the click.');
   await chromium.page.waitFor("document.querySelectorAll('.progression-reward-preview__thumbnail').length === 0 || document.querySelector('.progression-reward-preview__thumbnail .shop-preview-area')", 'canonical progression reward thumbnails', 30000);
   const state = await chromium.page.evaluate(`(() => {
     const root = document.documentElement;
@@ -330,10 +340,12 @@ async function inspectAuthenticatedProgression(width, height, label) {
       path: location.pathname,
       accountBar: Boolean(document.querySelector('.progression-page__account-bar')),
       profileProgression: Boolean(document.querySelector('.profile-progression-surface--page')),
+      streakText: document.querySelector('.progression-page__streak-strip')?.textContent?.trim().replace(/\\s+/g, ' ') || '',
       rank: document.querySelector('#profile-progression-rank-title')?.textContent?.trim() || '',
       stats,
-      direction: text.includes("Today's direction"),
-      activeGoal: text.includes('Your next milestone'),
+      streakStrip: Boolean(document.querySelector('.progression-page__streak-strip')),
+      paths: text.includes('Your paths'),
+      accordionExpanded: Boolean(document.querySelector('.profile-progression-lane__toggle[aria-expanded="true"]')),
       approachingRoll50: /42\\s*\\/\\s*50\\s+rolls/i.test(text),
       approachingGoalText: text.includes('50 rolls') ? text.slice(Math.max(0, text.indexOf('50 rolls') - 120), text.indexOf('50 rolls') + 180) : '',
       recentUnlocks: Boolean(document.querySelector('.profile-progression-unlocks')),
@@ -350,10 +362,10 @@ async function inspectAuthenticatedProgression(width, height, label) {
   })()`);
   assert(state.path === '/progression', `${label} did not settle at /progression.`);
   assert(state.accountBar && state.profileProgression, `${label} did not render the authenticated progression surface: ${JSON.stringify(state)}.`);
-  assert(state.rank === 'Silver', `${label} did not render the established Silver rank: ${JSON.stringify(state)}.`);
-  assert(state.stats.some(value => value.includes('42') && value.includes('Colors added')), `${label} did not render the established 42-roll history: ${JSON.stringify(state)}.`);
-  assert(state.stats.some(value => value.includes('9 days')), `${label} did not render the established streak history: ${JSON.stringify(state)}.`);
-  assert(state.direction && state.activeGoal && state.approachingRoll50, `${label} did not render the focused approaching 50-roll goal: ${JSON.stringify(state)}.`);
+  assert(/^Silver(?: rank)?$/.test(state.rank), `${label} did not render the established Silver rank: ${JSON.stringify(state)}.`);
+  assert(state.stats.some(value => value.includes('42')), `${label} did not render the established 42-roll history: ${JSON.stringify(state)}.`);
+  assert(state.stats.some(value => value.includes('9d')), `${label} did not render the established streak history: ${JSON.stringify(state)}.`);
+  assert(state.streakStrip && state.paths && state.accordionExpanded && state.approachingRoll50, `${label} did not render the focused progression hierarchy: ${JSON.stringify(state)}.`);
   assert(state.recentUnlocks, `${label} did not render historical progression rewards: ${JSON.stringify(state)}.`);
   assert(state.rankRing, `${label} did not render the rank progress ring: ${JSON.stringify(state)}.`);
   assert(state.pathIconCount >= 3, `${label} did not render the three path glyphs: ${JSON.stringify(state)}.`);
@@ -361,7 +373,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
   assert(!state.placeholderRewardText, `${label} still exposes placeholder reward copy: ${JSON.stringify(state)}.`);
   assert(state.radialBackground, `${label} progression page is missing its grayscale vignette: ${JSON.stringify(state)}.`);
   assert(!state.horizontalOverflow, `${label} progression surface overflows horizontally.`);
-  assert(state.stats.some(value => value.includes('Current: 5 days')), 'Established progression did not render the persisted next-day current streak state: ' + JSON.stringify(state) + '.');
+  assert(state.streakStrip && /5\s+of\s+14\s+days/i.test(state.streakText), 'Established progression did not render the persisted next-day current streak state: ' + JSON.stringify(state) + '.');
   return state;
 }
 

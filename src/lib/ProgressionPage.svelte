@@ -3,6 +3,7 @@
   import { loadProgressionData } from './progressionData.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import ProfileProgression from './ProfileProgression.svelte';
+  import ProgressionPathIcon from './ProgressionPathIcon.svelte';
   import { accountState, authInitialized, isAuthenticated, profile, session } from './stores.js';
   import { supabase } from './supabase.js';
 
@@ -22,6 +23,7 @@
   $: todayColor = /^#[0-9a-f]{6}$/i.test(accountProfile?.mood_color || '')
     ? accountProfile.mood_color.toUpperCase()
     : '';
+  $: currentStreak = Math.max(0, Number(progression?.currentStreak ?? accountProfile?.current_streak) || 0);
   $: focusGoal = resolveFocusGoal(progression);
   $: pageLoading = !$authInitialized
     || $accountState === ACCOUNT_STATES.PROFILE_LOADING
@@ -111,6 +113,24 @@
     if (node?.track === 'discovery') return 'Find it whenever it appears. Each discovery is independent.';
     return node.description || 'Keep rolling to move your profile forward.';
   }
+
+  function focusStreakLabel(node) {
+    const current = Number(node?.progress?.current);
+    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
+    if (node?.track === 'ritual' && Number.isFinite(target) && target > 0) {
+      const safeCurrent = currentStreak || (Number.isFinite(current) ? Math.max(0, current) : 0);
+      return `${formatNumber(safeCurrent)} of ${formatNumber(target)} days`;
+    }
+    return focusProgressLabel(node);
+  }
+
+  function focusStreakTitle(node) {
+    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
+    if (node?.track === 'ritual' && Number.isFinite(target) && target > 0) {
+      return `${formatNumber(target)}-day streak`;
+    }
+    return node?.name || `${currentStreak}-day streak`;
+  }
 </script>
 
 <svelte:head>
@@ -120,7 +140,6 @@
 <div class="progression-page">
   <div class="progression-page__shell">
     <header class="progression-page__intro" aria-labelledby="progression-page-title">
-      <p class="progression-page__eyebrow">Your profile / progression</p>
       <h1 id="progression-page-title">Progression</h1>
       <p class="progression-page__scope">Rolls, discoveries, and expressions that shape your profile.</p>
     </header>
@@ -164,18 +183,17 @@
         </div>
       {/if}
 
-      <section class="progression-page__account-bar" aria-label="Progression actions">
-        <div class="progression-page__account-copy">
-          <span class="progression-page__account-label">
-            Today's direction · {accountProfile.display_name || accountProfile.username || 'Your profile'}
-            {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
-          </span>
-          <strong>{focusGoal?.name || 'Keep building your profile'}</strong>
-          <small>{focusProgressLabel(focusGoal)}</small>
+      <section class="progression-page__account-bar progression-page__streak-strip" aria-label="Daily streak and roll action">
+        <div class="progression-page__streak-copy">
+          <ProgressionPathIcon track="ritual" state="active" />
+          <div>
+            <strong>{focusStreakTitle(focusGoal)}</strong>
+            <small>{focusGoal ? focusStreakLabel(focusGoal) : 'Keep rolling to stay on track.'}</small>
+          </div>
+          {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
         </div>
         <div class="progression-page__account-actions">
           <a class="site-button" href="/roll">{focusGoal?.track === 'discovery' ? 'Roll and explore' : 'Roll today'}</a>
-          <a class="site-button site-button--secondary" href="/profile/settings#customize-effects">Equip expression</a>
         </div>
       </section>
 
@@ -204,7 +222,7 @@
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: clamp(3rem, 7vw, 6rem) 0 5rem;
-    background: radial-gradient(circle at 50% 15%, var(--color-canvas-raised) 0%, var(--color-canvas) 55%, var(--color-canvas-deep) 100%);
+    background: radial-gradient(circle at 50% 15%, #141414 0%, #0a0a0a 55%, #050505 100%);
     color: var(--progression-text);
     font-family: var(--font-body-stack, sans-serif);
     color-scheme: dark;
@@ -222,9 +240,7 @@
     text-align: center;
   }
 
-  .progression-page__eyebrow,
-  .progression-page__state-eyebrow,
-  .progression-page__account-label {
+  .progression-page__state-eyebrow {
     margin: 0;
     color: var(--progression-faint);
     font: 600 .68rem/1 'Inter', sans-serif;
@@ -232,7 +248,6 @@
     text-transform: uppercase;
   }
 
-  .progression-page__account-label { display:inline-flex; align-items:center; gap:.5rem; }
   .progression-page__color-chip { display:inline-block; flex:0 0 .72rem; width:.72rem; height:.72rem; border:1px solid rgba(241,243,237,.55); border-radius:50%; background:var(--data-color); box-shadow:0 0 0 .18rem rgba(255,255,255,.06); }
 
   .progression-page__intro h1 {
@@ -350,18 +365,30 @@
     padding: 1rem 1.15rem;
   }
 
-  .progression-page__account-copy {
-    display: grid;
-    gap: .3rem;
+  .progression-page__streak-copy {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex: 1;
     min-width: 0;
   }
 
-  .progression-page__account-copy strong {
+  .progression-page__streak-copy > :global(.progression-path-icon) {
+    flex: 0 0 1.5rem;
+  }
+
+  .progression-page__streak-copy > div {
+    display: grid;
+    gap: .2rem;
+    min-width: 0;
+  }
+
+  .progression-page__streak-copy strong {
     color: var(--progression-text);
     font-size: .95rem;
   }
 
-  .progression-page__account-copy small {
+  .progression-page__streak-copy small {
     overflow: hidden;
     color: var(--progression-muted);
     font-size: .72rem;
@@ -419,17 +446,34 @@
     backdrop-filter: blur(var(--blur-panel));
   }
 
-  .progression-page__account-copy strong {
+  .progression-page__streak-copy strong {
     font: 650 1.12rem/1.15 var(--font-display-stack, sans-serif);
     letter-spacing: -.015em;
   }
 
-  .progression-page__account-copy small {
+  .progression-page__streak-copy small {
     max-width: 38rem;
     overflow: visible;
     white-space: normal;
     line-height: 1.45;
   }
+
+  .progression-page__streak-copy > :global(.progression-path-icon) { color: var(--progression-text); }
+  .progression-page__streak-copy .progression-page__color-chip { margin-left: .15rem; }
+
+  .progression-page__streak-strip {
+    margin-top: 2.35rem;
+    padding: .8rem 0;
+    border: 0;
+    border-bottom: 1px solid var(--progression-line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .progression-page__account-actions { flex: 0 0 auto; }
 
   .progression-page__account-actions .site-button {
     border:1px solid var(--color-state-active);
@@ -442,10 +486,6 @@
     color:var(--color-canvas-deep);
   }
 
-  .progression-page__account-actions .site-button--secondary {
-    background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
-  }
-
   .progression-page__account-actions .site-button:hover,
   .progression-page__account-actions .site-button:focus-visible {
     box-shadow:0 0 0 .3rem rgba(255,255,255,.1),0 .9rem 2rem rgba(0,0,0,.34);
@@ -453,5 +493,18 @@
 
   @media (prefers-reduced-motion: reduce) {
     .progression-page__account-actions .site-button { transition:none; }
+  }
+
+  @media (max-width: 620px) {
+    .progression-page__streak-strip {
+      align-items: center;
+      flex-direction: row;
+      gap: .65rem;
+    }
+
+    .progression-page__streak-copy { min-width: 0; }
+    .progression-page__streak-copy > div { min-width: 0; }
+    .progression-page__account-actions { width: auto; }
+    .progression-page__account-actions .site-button { flex: 0 0 auto; }
   }
 </style>
