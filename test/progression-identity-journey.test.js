@@ -259,8 +259,11 @@ test('progression visual treatment keeps state neutral and previews canonical ex
   const rankMarkup = progression.slice(progression.indexOf('Rank · Build mastery'), progression.indexOf('Rank · Build mastery') + 180);
   assert.doesNotMatch(rankMarkup, /profile-progression-color-chip/);
   assert.match(progression, /ProgressionPathIcon/);
-  assert.doesNotMatch(progression, /--progression-accent|var\(--progression-accent\)/);
-  assert.match(page, /radial-gradient\(circle at 50% 15%, #141414 0%, #0a0a0a 55%, #050505 100%\)/);
+  assert.match(progression, /profile-progression-rank__ring-value[^}]*var\(--progression-accent/);
+  assert.match(page, /--progression-accent/);
+  assert.match(page, /progression-page__composition/);
+  assert.match(page, /radial-gradient\(circle at 72% 42%, color-mix/);
+  assert.match(page, /--progression-accent-light/);
   assert.match(page, /progression-page__color-chip/);
   assert.match(page, /progression-page__streak-strip/);
   assert.match(page, /focusStreakTitle/);

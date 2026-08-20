@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-20 — Align Progression with Daily Roll
+
+- Rebalanced the authenticated page into a Roll-inspired split composition:
+  daily identity and action on the left, one focused glass progression board
+  on the right.
+- Let the saved profile color add personality to the Rank hero, streak chip,
+  CTA sheen, and subtle halo while keeping structural states grayscale.
+- Kept the existing server-authoritative data flow, accordion interactions,
+  reward previews, history handoff, mobile behavior, and reduced-motion support.
+
 ## 2026-08-20 — Make Progression scan-first
 
 - Simplified the dedicated page to one daily streak strip, one Rank/XP focal

@@ -410,7 +410,7 @@
         {#if pageMode}
         <div class="profile-progression-weekly__inline">
           <span class="profile-progression-weekly__swatch" style={`--weekly-color:${weeklyFocus.targetHex || '#ffffff'}`} aria-hidden="true"></span>
-          <span>Match <strong>{weeklyFocus.targetHex || 'this color'}</strong> this week</span>
+          <span class="profile-progression-weekly__copy" title={`Match ${weeklyFocus.targetHex || 'this color'} this week`}>Match <strong>{weeklyFocus.targetHex || 'this color'}</strong></span>
           <strong class="profile-progression-weekly__bonus">{weeklyFocus.completed ? 'Complete' : `+${formatCompactNumber(weeklyFocus.bonusEp)} pts`}</strong>
         </div>
         {:else}
@@ -754,10 +754,10 @@
   .profile-progression-rank__ring { position:absolute; inset:0; width:100%; height:100%; overflow:visible; transform:rotate(-90deg); }
   .profile-progression-rank__ring circle { fill:none; stroke-width:2.5; }
   .profile-progression-rank__ring-track { stroke:var(--color-line-subtle); }
-  .profile-progression-rank__ring-value { stroke:var(--color-ink-strong); stroke-linecap:round; transition:stroke-dashoffset .45s ease; }
-  .profile-progression-rank__mark { position:relative; z-index:1; flex-basis:auto; width:3.35rem; height:3.35rem; border-color:var(--color-state-active); background:var(--surface-inset); font-size:1.5rem; }
+  .profile-progression-rank__ring-value { stroke:var(--progression-accent,var(--color-ink-strong)); stroke-linecap:round; transition:stroke-dashoffset .45s ease; }
+  .profile-progression-rank__mark { position:relative; z-index:1; flex-basis:auto; width:3.35rem; height:3.35rem; border-color:var(--progression-accent,var(--color-state-active)); background:var(--surface-inset); font-size:1.5rem; }
   .profile-progression-rank__identity > div { gap:.15rem; }
-  .profile-progression-rank__ep { color:var(--color-ink-strong); font:700 clamp(1.7rem,3vw,2.8rem)/.95 var(--font-mono-stack); font-variant-numeric:tabular-nums; letter-spacing:-.055em; }
+  .profile-progression-rank__ep { color:var(--progression-accent,var(--color-ink-strong)); font:700 clamp(1.7rem,3vw,2.8rem)/.95 var(--font-mono-stack); font-variant-numeric:tabular-nums; letter-spacing:-.055em; }
   .profile-progression-rank__identity small { font-size:.72rem; }
   .profile-progression-rank__next { gap:.65rem; }
   .profile-progression-rank__next-copy strong { font-size:1rem; }
@@ -840,13 +840,14 @@
   }
 
   :global {
-  .profile-progression-surface--page { padding:0!important; border:0; background:transparent; box-shadow:none; }
+  .profile-progression-surface--page { padding:2rem!important; border-radius:24px; background:var(--surface,#161619); box-shadow:var(--shadow-card-glass); }
   .profile-progression-rank--page { grid-template-columns:1fr; }
   .profile-progression-rank--page .profile-progression-rank__ep { font:500 clamp(1.9rem,4vw,2.15rem)/1 var(--font-display-stack); font-variant-numeric:tabular-nums; }
   .profile-progression-page-mode .profile-progression-stats { grid-template-columns:repeat(auto-fit,minmax(7rem,1fr)); gap:1.2rem; }
   .profile-progression-page-mode .profile-progression-stats strong { font:500 1.5rem/1 var(--font-display-stack); }
   .profile-progression-page-mode .profile-progression-stats small { display:none; }
-  .profile-progression-weekly__inline { display:flex; align-items:center; width:100%; }
+  .profile-progression-weekly__inline { display:flex; align-items:center; width:100%; gap:.45rem; white-space:nowrap; }
+  .profile-progression-weekly__copy { min-width:0; overflow:hidden; text-overflow:ellipsis; }
   .profile-progression-weekly__bonus { margin-left:auto; }
   .profile-progression-weekly--page .profile-progression-weekly__swatch { width:1.2rem; height:1.2rem; }
   .profile-progression-page-mode .profile-progression-lanes { grid-template-columns:1fr; gap:.55rem; }

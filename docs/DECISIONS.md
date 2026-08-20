@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-20 — Make Progression feel like the Roll surface
+
+The authenticated `/progression` route now uses the Roll page's asymmetric
+composition: a quiet narrative rail for the page title, daily streak, and roll
+action beside one tall glass progression board. The board remains the existing
+`ProfileProgression` surface, so its RPC, page-mode, accordion, thumbnail, and
+History behavior stay intact.
+
+The saved profile color is the route accent (`--progression-accent`) only where
+it communicates the player's current color story: the streak swatch, Rank ring
+and XP hero, CTA sheen, and a restrained page halo. Structural state remains
+grayscale, and weekly/rarity colors remain their own data swatches. No schema,
+RPC, scoring, reward, inventory, or RLS contract changed.
+
 ## 2026-08-20 — Make the dedicated progression route scan-first
 
 The dedicated `/progression` route uses a density-first presentation without

@@ -6,6 +6,7 @@
   import ProgressionPathIcon from './ProgressionPathIcon.svelte';
   import { accountState, authInitialized, isAuthenticated, profile, session } from './stores.js';
   import { supabase } from './supabase.js';
+  import { normalizeHexColor } from './utils.js';
 
   let progression = null;
   let loading = true;
@@ -23,6 +24,8 @@
   $: todayColor = /^#[0-9a-f]{6}$/i.test(accountProfile?.mood_color || '')
     ? accountProfile.mood_color.toUpperCase()
     : '';
+  $: accentColor = normalizeHexColor(todayColor, '#FFFFFF');
+  $: accentInk = getReadableTextColor(accentColor);
   $: currentStreak = Math.max(0, Number(progression?.currentStreak ?? accountProfile?.current_streak) || 0);
   $: focusGoal = resolveFocusGoal(progression);
   $: pageLoading = !$authInitialized
@@ -102,7 +105,7 @@
   }
 
   function focusProgressLabel(node) {
-    if (!node) return 'Roll today to keep building your profile.';
+    if (!node) return 'Roll today';
     const current = Number(node?.progress?.current);
     const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
     if (Number.isFinite(current) && Number.isFinite(target) && target > 0) {
@@ -110,8 +113,8 @@
       const unit = String(rawUnit).toLowerCase() === 'ep' ? 'points' : rawUnit;
       return `${formatNumber(current)} / ${formatNumber(target)} ${unit}`;
     }
-    if (node?.track === 'discovery') return 'Find it whenever it appears. Each discovery is independent.';
-    return node.description || 'Keep rolling to move your profile forward.';
+    if (node?.track === 'discovery') return 'Discover a rare color';
+    return 'Keep rolling';
   }
 
   function focusStreakLabel(node) {
@@ -131,137 +134,154 @@
     }
     return node?.name || `${currentStreak}-day streak`;
   }
+
+  function getReadableTextColor(value) {
+    const hex = normalizeHexColor(value, '#FFFFFF').slice(1);
+    const channels = [0, 2, 4].map(offset => {
+      const channel = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+      return channel <= 0.03928
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    const luminance = (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
+    return luminance > 0.179 ? '#0E0E10' : '#FFFFFF';
+  }
 </script>
 
 <svelte:head>
   <title>Progression · ChromaDie</title>
 </svelte:head>
 
-<div class="progression-page">
+<div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-ink:${accentInk};--progression-accent-light:color-mix(in srgb,${accentColor} 76%,white);--progression-accent-glow:color-mix(in srgb,${accentColor} 24%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentColor} 40%,transparent)`}>
   <div class="progression-page__shell">
-    <header class="progression-page__intro" aria-labelledby="progression-page-title">
-      <h1 id="progression-page-title">Progression</h1>
-      <p class="progression-page__scope">Rolls, discoveries, and expressions that shape your profile.</p>
-    </header>
+    <div class="progression-page__composition">
+      <div class="progression-page__rail">
+        <header class="progression-page__intro" aria-labelledby="progression-page-title">
+          <h1 id="progression-page-title">Progression</h1>
+          <p class="progression-page__scope">Rolls, rank, and unlocks.</p>
+        </header>
 
-    {#if pageLoading}
-      <section class="progression-page__state" role="status" aria-live="polite" aria-busy="true">
-        <div><strong>Loading progression</strong><p>Reading the progression earned by your account.</p></div>
-      </section>
-    {:else if signedOut}
-      <section class="progression-page__state progression-page__state--guest" aria-labelledby="progression-guest-title">
-        <div>
-          <p class="progression-page__state-eyebrow">Personal record</p>
-          <h2 id="progression-guest-title">Progression belongs to your profile.</h2>
-          <p>Sign in to see your rank, streaks, discoveries, and expression rewards. You can still try today’s color ritual first.</p>
-        </div>
-        <div class="progression-page__state-actions">
-          <a class="site-button" href="/login?next=%2Fprogression">Sign in to continue</a>
-          <a class="site-button site-button--secondary" href="/roll">Try a roll</a>
-        </div>
-      </section>
-    {:else if accountUnavailable}
-      <section class="progression-page__state" role="alert">
-        <div><strong>Your account is unavailable right now.</strong><p>We could not read the profile that owns this progression. Try again in a moment.</p></div>
-        <button type="button" class="site-button site-button--secondary" on:click={() => window.location.reload()}>Retry</button>
-      </section>
-    {:else if authenticatedWithoutProfile}
-      <section class="progression-page__state" role="alert">
-        <div><strong>Your profile is still loading.</strong><p>The progression record is ready, but the profile that owns it has not arrived yet. Try again in a moment.</p></div>
-        <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
-      </section>
-    {:else if error && !progressionLoaded}
-      <section class="progression-page__state" role="alert">
-        <div><strong>Progression unavailable</strong><p>{error}</p></div>
-        <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
-      </section>
-    {:else if accountProfile?.id}
-      {#if error}
-        <div class="progression-page__warning" role="status">
-          <span>{error} Showing the profile record that is available.</span>
-          <button type="button" on:click={retry} disabled={loading} aria-busy={loading}>Retry</button>
-        </div>
-      {/if}
+        {#if accountProfile?.id}
+          {#if error}
+            <div class="progression-page__warning" role="status">
+              <span>{error} Showing the profile record that is available.</span>
+              <button type="button" on:click={retry} disabled={loading} aria-busy={loading}>Retry</button>
+            </div>
+          {/if}
 
-      <section class="progression-page__account-bar progression-page__streak-strip" aria-label="Daily streak and roll action">
-        <div class="progression-page__streak-copy">
-          <ProgressionPathIcon track="ritual" state="active" />
+          <section class="progression-page__account-bar progression-page__streak-strip" aria-label="Daily streak and roll action">
+            <div class="progression-page__streak-copy">
+              <ProgressionPathIcon track="ritual" state="active" />
+              <div>
+                <strong>{focusStreakTitle(focusGoal)}</strong>
+                <small>{focusGoal ? focusStreakLabel(focusGoal) : 'Keep rolling'}</small>
+              </div>
+              {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
+            </div>
+            <div class="progression-page__account-actions">
+              <a class="site-button" href="/roll">{focusGoal?.track === 'discovery' ? 'Roll and explore' : 'Roll today'}</a>
+            </div>
+          </section>
+        {/if}
+      </div>
+
+      {#if pageLoading}
+        <section class="progression-page__state" role="status" aria-live="polite" aria-busy="true">
+          <div><strong>Loading progression</strong><p>Reading the progression earned by your account.</p></div>
+        </section>
+      {:else if signedOut}
+        <section class="progression-page__state progression-page__state--guest" aria-labelledby="progression-guest-title">
           <div>
-            <strong>{focusStreakTitle(focusGoal)}</strong>
-            <small>{focusGoal ? focusStreakLabel(focusGoal) : 'Keep rolling to stay on track.'}</small>
+            <p class="progression-page__state-eyebrow">Personal record</p>
+            <h2 id="progression-guest-title">Progression belongs to your profile.</h2>
+            <p>Sign in to see your rank, streaks, discoveries, and expression rewards. You can still try today’s color ritual first.</p>
           </div>
-          {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
-        </div>
-        <div class="progression-page__account-actions">
-          <a class="site-button" href="/roll">{focusGoal?.track === 'discovery' ? 'Roll and explore' : 'Roll today'}</a>
-        </div>
+          <div class="progression-page__state-actions">
+            <a class="site-button" href="/login?next=%2Fprogression">Sign in to continue</a>
+            <a class="site-button site-button--secondary" href="/roll">Try a roll</a>
+          </div>
       </section>
-
-      <ProfileProgression
-        profile={accountProfile}
-        timelineEvents={[]}
-        collectionItems={[]}
-        allAchievements={[]}
-        unlockedAchievements={{}}
-        {progression}
-        {featureFlags}
-        pageMode={true}
-        analyticsSurface="progression"
-      />
-    {/if}
+      {:else if accountUnavailable}
+        <section class="progression-page__state" role="alert">
+          <div><strong>Your account is unavailable right now.</strong><p>We could not read the profile that owns this progression. Try again in a moment.</p></div>
+          <button type="button" class="site-button site-button--secondary" on:click={() => window.location.reload()}>Retry</button>
+      </section>
+      {:else if authenticatedWithoutProfile}
+        <section class="progression-page__state" role="alert">
+          <div><strong>Your profile is still loading.</strong><p>The progression record is ready, but the profile that owns it has not arrived yet. Try again in a moment.</p></div>
+          <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
+      </section>
+      {:else if error && !progressionLoaded}
+        <section class="progression-page__state" role="alert">
+          <div><strong>Progression unavailable</strong><p>{error}</p></div>
+          <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
+      </section>
+      {:else if accountProfile?.id}
+        <ProfileProgression
+          profile={accountProfile}
+          timelineEvents={[]}
+          collectionItems={[]}
+          allAchievements={[]}
+          unlockedAchievements={{}}
+          {progression}
+          {featureFlags}
+          pageMode={true}
+          analyticsSurface="progression"
+        />
+      {/if}
+    </div>
   </div>
 </div>
 
 <style>
   .progression-page {
     --progression-line: var(--color-line-subtle);
-    --progression-panel: var(--surface-panel);
     --progression-text: var(--color-ink-strong);
     --progression-muted: var(--color-ink-muted);
-    --progression-faint: var(--color-ink-muted);
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: clamp(3rem, 7vw, 6rem) 0 5rem;
-    background: radial-gradient(circle at 50% 15%, #141414 0%, #0a0a0a 55%, #050505 100%);
+    background: radial-gradient(circle at 72% 42%, color-mix(in srgb, var(--progression-accent) 14%, transparent), transparent 42rem), var(--bg, #0e0e10);
     color: var(--progression-text);
-    font-family: var(--font-body-stack, sans-serif);
+    font-family: var(--site-font, var(--font-body-stack, sans-serif));
     color-scheme: dark;
   }
 
   .progression-page__shell {
-    width: min(980px, calc(100% - 48px));
+    width: min(1040px, calc(100% - 48px));
     margin-inline: auto;
   }
 
+  .progression-page__composition { display:grid; grid-template-columns:minmax(13rem,.72fr) minmax(28rem,1.28fr); align-items:center; gap:clamp(2rem,6vw,5rem); }
   .progression-page__intro {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     flex-direction: column;
-    text-align: center;
+    text-align: left;
   }
 
   .progression-page__state-eyebrow {
     margin: 0;
-    color: var(--progression-faint);
+    color: var(--progression-muted);
     font: 600 .68rem/1 'Inter', sans-serif;
     letter-spacing: .14em;
     text-transform: uppercase;
   }
 
-  .progression-page__color-chip { display:inline-block; flex:0 0 .72rem; width:.72rem; height:.72rem; border:1px solid rgba(241,243,237,.55); border-radius:50%; background:var(--data-color); box-shadow:0 0 0 .18rem rgba(255,255,255,.06); }
+  .progression-page__color-chip { display:inline-block; flex:0 0 1rem; width:1rem; height:1rem; border:1px solid rgba(255,255,255,.55); border-radius:50%; background:var(--data-color); }
 
   .progression-page__intro h1 {
     margin: .8rem 0 0;
     color: var(--progression-text);
-    font: 650 clamp(2.5rem, 7vw, 5.8rem)/.94 var(--font-display-stack, sans-serif);
+    font: 700 clamp(2.6rem, 4vw, 3.5rem)/.96 var(--site-display, var(--font-display-stack, sans-serif));
     letter-spacing: -.06em;
   }
 
   .progression-page__scope {
-    max-width: 34rem;
-    margin: 1rem 0 0;
+    max-width: 20rem;
+    margin: .85rem 0 0;
     color: var(--progression-muted);
-    font-size: .82rem;
+    font-size: .85rem;
     line-height: 1.55;
   }
 
@@ -269,8 +289,7 @@
   .progression-page__account-bar {
     border: 1px solid var(--progression-line);
     border-radius: 18px;
-    background: var(--progression-panel);
-    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .18);
+    background: var(--surface, #161619);
   }
 
   .progression-page__state {
@@ -279,7 +298,8 @@
     justify-content: space-between;
     gap: 1rem;
     min-height: 10rem;
-    margin-top: 3.15rem;
+    grid-column:1 / -1;
+    margin-top: 0;
     padding: 1.4rem 1.5rem;
   }
 
@@ -298,7 +318,7 @@
 
   .progression-page__state--guest {
     align-items: flex-end;
-    margin-top: 3.15rem;
+    margin-top: 0;
     padding: clamp(1.5rem, 4vw, 3rem);
   }
 
@@ -361,7 +381,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1.25rem;
-    margin-top: 3.15rem;
+    margin-top: 1.25rem;
     padding: 1rem 1.15rem;
   }
 
@@ -397,7 +417,7 @@
   }
 
   .progression-page :global(.profile-progression-surface--page) {
-    margin-top: 1rem;
+    margin-top: 0;
   }
 
   @media (max-width: 620px) {
@@ -440,10 +460,13 @@
     }
   }
 
+  @media (max-width: 900px) {
+    .progression-page__composition { grid-template-columns:minmax(0, 620px); justify-content:center; gap:2rem; }
+  }
+
   .progression-page__account-bar {
     border-color: var(--color-state-active, var(--progression-line));
-    box-shadow: var(--shadow-card-glass, 0 1.5rem 4rem rgba(0, 0, 0, .18));
-    backdrop-filter: blur(var(--blur-panel));
+    box-shadow: var(--shadow-card-glass);
   }
 
   .progression-page__streak-copy strong {
@@ -462,37 +485,24 @@
   .progression-page__streak-copy .progression-page__color-chip { margin-left: .15rem; }
 
   .progression-page__streak-strip {
-    margin-top: 2.35rem;
-    padding: .8rem 0;
-    border: 0;
-    border-bottom: 1px solid var(--progression-line);
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    padding: 1rem;
   }
 
   .progression-page__account-actions { flex: 0 0 auto; }
 
   .progression-page__account-actions .site-button {
-    border:1px solid var(--color-state-active);
-    box-shadow:0 0 0 .2rem var(--color-state-active-soft),0 .7rem 1.5rem rgba(0,0,0,.24);
-    transition:box-shadow var(--motion-fast),opacity var(--motion-fast),background var(--motion-fast);
+    border:1px solid var(--progression-accent);
+    box-shadow:0 0 .85rem var(--progression-accent-glow);
   }
 
   .progression-page__account-actions .site-button:not(.site-button--secondary) {
-    background:linear-gradient(135deg,var(--color-ink-strong),#fff);
-    color:var(--color-canvas-deep);
+    background:linear-gradient(135deg,var(--progression-accent-light),var(--progression-accent));
+    color:var(--progression-accent-ink);
   }
 
   .progression-page__account-actions .site-button:hover,
   .progression-page__account-actions .site-button:focus-visible {
-    box-shadow:0 0 0 .3rem rgba(255,255,255,.1),0 .9rem 2rem rgba(0,0,0,.34);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .progression-page__account-actions .site-button { transition:none; }
+    box-shadow:0 0 1.2rem var(--progression-accent-glow-strong);
   }
 
   @media (max-width: 620px) {
