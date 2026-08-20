@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Progression visual polish — 2026-08-20
+
+- Split structural state from data color with neutral active-card tokens; the
+  daily roll and weekly target remain actual swatch chips only.
+- Added the grayscale vignette, glass-panel card treatment, neutral CTA glow/
+  sheen, and a responsive Rank hero with an SVG progress ring and display-scale
+  EP count. Journey paths now use the arc, pip-trail, and faceted glyphs.
+- Reward slots eagerly load the canonical expression renderer and dim locked
+  rewards instead of showing “Preview reward.” Browser smoke now verifies the
+  ring, canonical thumbnails, no placeholder copy, vignette, mobile overflow,
+  and reduced-motion behavior.
+- No schema, RPC, scoring, eligibility, inventory, or RLS changes were needed.
+
 ## CI usage controls — 2026-08-20
 
 - Split the fast application gate from the database/browser gate so ordinary

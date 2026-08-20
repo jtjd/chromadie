@@ -9,7 +9,7 @@
   export let unlocks = [];
   export let surface = 'roll';
   export let username = 'You';
-  export let displayColor = '#8B7CF6';
+  export let displayColor = '#FFFFFF';
   export let avatarSrc = '';
 
   const dispatch = createEventDispatcher();
@@ -231,6 +231,7 @@
           {username}
           {displayColor}
           {avatarSrc}
+          unlocked={true}
           milestoneId={featuredUnlock.id}
           track={featuredUnlock.track}
           analyticsSurface={analyticsSurfaceName(surface)}
@@ -271,7 +272,7 @@
   .progression-unlock-queue__copy p,
   .progression-unlock-queue__copy small { margin:0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
   .progression-unlock-queue__copy small { font-size:.7rem; }
-  .progression-unlock-queue__error { margin:0; color:var(--color-danger, #ff7b8d); font-size:var(--type-small); line-height:1.45; }
+  .progression-unlock-queue__error { margin:0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
   .progression-unlock-queue__actions { justify-content:flex-start; }
   .progression-unlock-queue__actions a,
   .progression-unlock-queue__actions button { display:inline-flex; align-items:center; justify-content:center; min-height:2.75rem; padding:.45rem .75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:transparent; color:var(--color-ink-strong); font:650 var(--type-small)/1 var(--font-body-stack); text-decoration:none; cursor:pointer; }

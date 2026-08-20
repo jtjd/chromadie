@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-20 — Keep progression state neutral and expression data tangible
+
+Progression structural state uses dedicated grayscale tokens (`--color-state-active`,
+`--color-state-active-soft`, and the glass-card shadows). The current rolled color
+is rendered only as a validated swatch chip or as data inside the canonical
+expression preview; it never controls a card border, progress bar, or glow.
+
+The Rank card is the story focal point with a neutral SVG progress ring and
+display-scale lifetime EP. Reward slots eagerly reuse `ShopItemPreview` so both
+earned and locked expressions show their real renderer; locked thumbnails are
+desaturated and dimmed. Journey lane glyphs are small inline SVGs built from the
+existing arc, pip-trail, and faceted-die vocabulary. The page vignette and CTA
+sheen remain grayscale and reduced-motion safe. No backend or authority contract
+changed.
+
 ## 2026-08-20 — Bound CI runner and evidence-storage usage
 
 - Keep the fast application checks on every `main` push and pull request, with

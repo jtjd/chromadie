@@ -19,6 +19,9 @@
     userId: accountProfile?.id || accountId,
     isStaff: Boolean(accountProfile?.is_staff)
   });
+  $: todayColor = /^#[0-9a-f]{6}$/i.test(accountProfile?.mood_color || '')
+    ? accountProfile.mood_color.toUpperCase()
+    : '';
   $: focusGoal = resolveFocusGoal(progression);
   $: pageLoading = !$authInitialized
     || $accountState === ACCOUNT_STATES.PROFILE_LOADING
@@ -163,7 +166,10 @@
 
       <section class="progression-page__account-bar" aria-label="Progression actions">
         <div class="progression-page__account-copy">
-          <span class="progression-page__account-label">Today's direction · {accountProfile.display_name || accountProfile.username || 'Your profile'}</span>
+          <span class="progression-page__account-label">
+            Today's direction · {accountProfile.display_name || accountProfile.username || 'Your profile'}
+            {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
+          </span>
           <strong>{focusGoal?.name || 'Keep building your profile'}</strong>
           <small>{focusProgressLabel(focusGoal)}</small>
         </div>
@@ -198,6 +204,7 @@
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: clamp(3rem, 7vw, 6rem) 0 5rem;
+    background: radial-gradient(circle at 50% 15%, var(--color-canvas-raised) 0%, var(--color-canvas) 55%, var(--color-canvas-deep) 100%);
     color: var(--progression-text);
     font-family: var(--font-body-stack, sans-serif);
     color-scheme: dark;
@@ -224,6 +231,9 @@
     letter-spacing: .14em;
     text-transform: uppercase;
   }
+
+  .progression-page__account-label { display:inline-flex; align-items:center; gap:.5rem; }
+  .progression-page__color-chip { display:inline-block; flex:0 0 .72rem; width:.72rem; height:.72rem; border:1px solid rgba(241,243,237,.55); border-radius:50%; background:var(--data-color); box-shadow:0 0 0 .18rem rgba(255,255,255,.06); }
 
   .progression-page__intro h1 {
     margin: .8rem 0 0;
@@ -404,8 +414,9 @@
   }
 
   .progression-page__account-bar {
-    border-color: var(--color-line-strong, var(--progression-line));
-    border-left: 3px solid var(--color-ink-strong, var(--progression-text));
+    border-color: var(--color-state-active, var(--progression-line));
+    box-shadow: var(--shadow-card-glass, 0 1.5rem 4rem rgba(0, 0, 0, .18));
+    backdrop-filter: blur(var(--blur-panel));
   }
 
   .progression-page__account-copy strong {
@@ -418,5 +429,29 @@
     overflow: visible;
     white-space: normal;
     line-height: 1.45;
+  }
+
+  .progression-page__account-actions .site-button {
+    border:1px solid var(--color-state-active);
+    box-shadow:0 0 0 .2rem var(--color-state-active-soft),0 .7rem 1.5rem rgba(0,0,0,.24);
+    transition:box-shadow var(--motion-fast),opacity var(--motion-fast),background var(--motion-fast);
+  }
+
+  .progression-page__account-actions .site-button:not(.site-button--secondary) {
+    background:linear-gradient(135deg,var(--color-ink-strong),#fff);
+    color:var(--color-canvas-deep);
+  }
+
+  .progression-page__account-actions .site-button--secondary {
+    background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
+  }
+
+  .progression-page__account-actions .site-button:hover,
+  .progression-page__account-actions .site-button:focus-visible {
+    box-shadow:0 0 0 .3rem rgba(255,255,255,.1),0 .9rem 2rem rgba(0,0,0,.34);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .progression-page__account-actions .site-button { transition:none; }
   }
 </style>

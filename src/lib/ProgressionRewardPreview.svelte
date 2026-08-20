@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { PROFILE_RENDER_CONTEXTS } from './profile-studio/previewContexts.js';
   import { trackProgressionEvent } from './productAnalytics.js';
@@ -6,8 +7,9 @@
   /** @type {any} */
   export let reward = null;
   export let username = 'You';
-  export let displayColor = '#8B7CF6';
+  export let displayColor = '#FFFFFF';
   export let avatarSrc = '';
+  export let unlocked = false;
   export let milestoneId = null;
   export let track = 'rank';
   export let analyticsSurface = 'progression';
@@ -62,9 +64,12 @@
   $: catalogItem = itemKey ? catalogItems[itemKey] || null : null;
   const previewPanelId = `progression-reward-preview-panel-${previewInstanceId}`;
 
-  async function loadPreview() {
-    previewOpen = true;
-    if (requestInFlight || (previewComponent && catalogItem)) return;
+  async function loadPreviewAsset(openPanel = false) {
+    if (openPanel) previewOpen = true;
+    if (requestInFlight || (previewComponent && catalogItem)) {
+      if (openPanel) recordPreviewEvent();
+      return;
+    }
 
     if (!itemKey) {
       catalogError = 'This reward does not have a previewable expression key yet.';
@@ -90,7 +95,7 @@
       if (!catalogError && !catalogItems[itemKey]) {
         catalogError = 'This expression is not available in the current catalog.';
       }
-      recordPreviewEvent();
+      if (openPanel) recordPreviewEvent();
     } catch {
       catalogError = 'The expression preview could not be loaded. Try again.';
     } finally {
@@ -98,6 +103,14 @@
       requestInFlight = false;
     }
   }
+
+  function loadPreview() {
+    return loadPreviewAsset(true);
+  }
+
+  onMount(() => {
+    void loadPreviewAsset(false);
+  });
 
   function closePreview() {
     previewOpen = false;
@@ -112,10 +125,27 @@
     aria-controls={previewPanelId}
     on:click={previewOpen ? closePreview : loadPreview}
   >
-    <span class="progression-reward-preview__status" aria-hidden="true"></span>
+    <span class={`progression-reward-preview__thumbnail${unlocked ? '' : ' progression-reward-preview__thumbnail--locked'}`} aria-hidden="true">
+      {#if previewComponent && catalogItem}
+        <svelte:component
+          this={previewComponent}
+          item={catalogItem}
+          {username}
+          {displayColor}
+          {avatarSrc}
+          active={false}
+          mode="static"
+          renderContext={PROFILE_RENDER_CONTEXTS.EFFECT_CARD}
+        />
+      {:else if catalogLoading}
+        <span class="progression-reward-preview__thumbnail-loader"></span>
+      {:else}
+        <span class="progression-reward-preview__thumbnail-fallback">{rewardName.slice(0, 1)}</span>
+      {/if}
+    </span>
     <span class="progression-reward-preview__trigger-copy">
       <strong>{rewardName}</strong>
-      <small>{previewOpen ? 'Hide preview' : 'Preview reward'}</small>
+      <small>{unlocked ? 'Earned' : 'Working toward it'}</small>
     </span>
   </button>
 
@@ -158,8 +188,8 @@
   .progression-reward-preview__retry {
     display:flex;
     align-items:center;
-    gap:.55rem;
-    min-height:2.75rem;
+    gap:.65rem;
+    min-height:3.2rem;
     width:100%;
     padding:.55rem .7rem;
     border:1px solid var(--color-line-subtle);
@@ -176,7 +206,12 @@
   .progression-reward-preview__retry:focus-visible { border-color:var(--color-line-strong); }
   .progression-reward-preview__trigger:focus-visible,
   .progression-reward-preview__retry:focus-visible { outline:2px solid var(--color-ink-strong); outline-offset:2px; }
-  .progression-reward-preview__status { flex:0 0 .55rem; width:.55rem; height:.55rem; border:1px solid var(--color-line-strong); border-radius:50%; background:var(--color-ink-strong); }
+  .progression-reward-preview__thumbnail { display:grid; place-items:center; flex:0 0 2.7rem; width:2.7rem; height:2.7rem; overflow:hidden; border:1px solid var(--color-line-strong); border-radius:var(--radius-sm); background:var(--surface-panel-soft); }
+  .progression-reward-preview__thumbnail--locked { filter:grayscale(1); opacity:.42; }
+  .progression-reward-preview__thumbnail :global(.shop-preview-area) { display:grid; place-items:center; width:100%; min-height:2.7rem; height:2.7rem; padding:0; border:0; border-radius:0; background:transparent; }
+  .progression-reward-preview__thumbnail :global(.shop-preview-area > *) { max-width:100%; max-height:100%; }
+  .progression-reward-preview__thumbnail-loader { width:.8rem; height:.8rem; border:1px solid var(--color-line-strong); border-top-color:var(--color-ink-strong); border-radius:50%; animation:progression-preview-spin .8s linear infinite; }
+  .progression-reward-preview__thumbnail-fallback { display:grid; place-items:center; width:1.7rem; height:1.7rem; border:1px solid var(--color-line-strong); border-radius:50%; color:var(--color-ink-muted); font:700 .8rem var(--font-mono-stack); }
   .progression-reward-preview__trigger-copy { display:grid; gap:.15rem; min-width:0; }
   .progression-reward-preview__trigger-copy strong { overflow-wrap:anywhere; font-size:var(--type-small); line-height:1.2; }
   .progression-reward-preview__trigger-copy small { color:var(--color-ink-muted); font-size:.7rem; line-height:1.25; }
@@ -187,5 +222,5 @@
   .progression-reward-preview__loader { flex:0 0 .7rem; width:.7rem; height:.7rem; border:1px solid var(--color-line-strong); border-top-color:var(--color-ink-strong); border-radius:50%; animation:progression-preview-spin .8s linear infinite; }
   .progression-reward-preview__caption { margin:0; padding:0 .7rem .65rem; color:var(--color-ink-muted); font-size:.68rem; }
   @keyframes progression-preview-spin { to { transform:rotate(360deg); } }
-  @media (prefers-reduced-motion:reduce) { .progression-reward-preview__loader { animation:none; } }
+  @media (prefers-reduced-motion:reduce) { .progression-reward-preview__loader, .progression-reward-preview__thumbnail-loader { animation:none; } }
 </style>

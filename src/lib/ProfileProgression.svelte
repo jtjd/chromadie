@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
   import Surface from './foundation/Surface.svelte';
+  import ProgressionPathIcon from './ProgressionPathIcon.svelte';
   import ProgressionRewardPreview from './ProgressionRewardPreview.svelte';
   import { getRankState } from './ranks.js';
   import { getProfileStoryUnlocks } from './profileStory.js';
@@ -21,6 +22,8 @@
   /** @type {any} */
   let account;
   let expandedSections = new SvelteSet();
+  const rankRingRadius = 31;
+  const rankRingCircumference = 2 * Math.PI * rankRingRadius;
 
   $: account = profile || {};
   $: lifetimeEp = Math.max(0, Number(progression?.currentEp ?? account.lifetime_ep) || 0);
@@ -34,6 +37,7 @@
     ? Object.keys(unlockedAchievements).length
     : 0;
   $: progressPercent = Math.round((rankState?.progress || 0) * 100);
+  $: rankRingDashOffset = rankRingCircumference * (1 - progressPercent / 100);
   $: journeyEnabled = featureFlags?.progressionJourney !== false;
   $: journeyState = progression?.journeyState || 'unavailable';
   $: milestoneTrack = Array.isArray(progression?.milestones) ? progression.milestones : [];
@@ -54,7 +58,11 @@
   $: safeCollectionItems = Array.isArray(collectionItems) ? collectionItems : [];
   $: safeTimelineEvents = Array.isArray(timelineEvents) ? timelineEvents : [];
   $: previewIdentity = account.display_name || account.username || 'You';
-  $: previewColor = /^#[0-9a-f]{6}$/i.test(account.mood_color || '') ? account.mood_color : '#8B7CF6';
+  $: hasTodayColor = /^#[0-9a-f]{6}$/i.test(account.mood_color || '');
+  $: todayColor = hasTodayColor ? account.mood_color.toUpperCase() : '';
+  // The canonical expression renderer accepts a color for data previews. A neutral
+  // fallback keeps the page grayscale when the profile has no current roll.
+  $: previewColor = todayColor || '#FFFFFF';
   $: previewAvatar = account.avatar_url || account.avatar_path || '';
   $: focusGoal = resolveFocusGoal(progression);
 
@@ -262,7 +270,7 @@
 </script>
 
 <Surface variant="panel" padding="lg" className={`profile-progression-surface${pageMode ? ' profile-progression-surface--page' : ''}`}>
-  <section aria-labelledby="profile-progression-title" style={`--progression-accent:${previewColor}`}>
+  <section aria-labelledby="profile-progression-title">
     <header class="profile-progression-heading">
       <div>
         <p class="profile-progression-label">Your profile / progression</p>
@@ -278,7 +286,10 @@
     {#if !pageMode}
       <section class="profile-progression-direction" aria-labelledby="profile-progression-direction-title">
         <div class="profile-progression-direction__copy">
-          <span class="profile-progression-label">Today's direction</span>
+          <span class="profile-progression-label profile-progression-label--with-chip">
+            Today's direction
+            {#if hasTodayColor}<span class="profile-progression-color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
+          </span>
           <h3 id="profile-progression-direction-title">{focusGoal?.name || 'Keep building your profile'}</h3>
           <p>{focusDescription(focusGoal)}</p>
           {#if focusGoal}<span class="profile-progression-direction__progress">{nodeProgressLabel(focusGoal)}</span>{/if}
@@ -294,11 +305,21 @@
 
     <section class="profile-progression-rank" aria-labelledby="profile-progression-rank-title">
       <div class="profile-progression-rank__identity">
-        <span class="profile-progression-rank__mark" aria-hidden="true">{(rankState.current?.name || 'U').slice(0, 1)}</span>
+        <div class="profile-progression-rank__badge" role="img" aria-label={`${rankState.current?.name || 'Unranked'} rank, ${progressPercent}% toward ${rankState.next?.name || 'the highest rank'}`}>
+          <svg class="profile-progression-rank__ring" viewBox="0 0 76 76" aria-hidden="true">
+            <circle class="profile-progression-rank__ring-track" cx="38" cy="38" r={rankRingRadius} />
+            <circle class="profile-progression-rank__ring-value" cx="38" cy="38" r={rankRingRadius} stroke-dasharray={rankRingCircumference} stroke-dashoffset={rankRingDashOffset} />
+          </svg>
+          <span class="profile-progression-rank__mark" aria-hidden="true">{(rankState.current?.name || 'U').slice(0, 1)}</span>
+        </div>
         <div>
-          <span class="profile-progression-label">Rank · Build mastery</span>
+          <span class="profile-progression-label profile-progression-label--with-chip">
+            Rank · Build mastery
+            {#if hasTodayColor}<span class="profile-progression-color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
+          </span>
           <h3 id="profile-progression-rank-title">{rankState.current?.name || 'Unranked'}</h3>
-          <small>{formatNumber(lifetimeEp)} experience points from rolls</small>
+          <strong class="profile-progression-rank__ep">{formatNumber(lifetimeEp)}</strong>
+          <small>experience points from rolls</small>
         </div>
       </div>
       <div class="profile-progression-rank__next">
@@ -354,16 +375,19 @@
         {#each laneModels as lane (lane.id)}
           <section class="profile-progression-lane" aria-labelledby={`profile-progression-lane-${lane.id}`}>
             <div class="profile-progression-lane__heading">
-              <div><span class="profile-progression-lane__kicker">{laneKicker(lane.id)}</span><h4 id={`profile-progression-lane-${lane.id}`}>{lane.label.replace(' / mastery', '')}</h4><p>{lane.description}</p></div>
+              <div class="profile-progression-lane__heading-copy">
+                <div class="profile-progression-lane__title"><ProgressionPathIcon track={lane.id} state={lane.featuredNode?.presentationState || (lane.completed.length ? 'complete' : 'future')} /><span><span class="profile-progression-lane__kicker">{laneKicker(lane.id)}</span><h4 id={`profile-progression-lane-${lane.id}`}>{lane.label.replace(' / mastery', '')}</h4></span></div>
+                <p>{lane.description}</p>
+              </div>
               <span>{lane.completed.length} of {lane.nodes.length}</span>
             </div>
 
             {#if lane.featuredNode}
               <div class="profile-progression-active">
                 <p class="profile-progression-subhead">{lane.id === 'discovery' ? 'Featured discovery' : 'Your next milestone'}</p>
-                <article use:observeJourneyNode={lane.featuredNode} class="profile-progression-node profile-progression-node--active" style={`--node-accent:${previewColor}`}>
+                <article use:observeJourneyNode={lane.featuredNode} class="profile-progression-node profile-progression-node--active">
                     <div class="profile-progression-node__head">
-                      <span class="profile-progression-node__status profile-progression-node__status--{lane.featuredNode.presentationState}" aria-hidden="true"></span>
+                      <ProgressionPathIcon track={lane.id} state={lane.featuredNode.presentationState} />
                       <div><strong>{lane.featuredNode.name || 'Published goal'}</strong><small>{nodeStateLabel(lane.featuredNode)}</small></div>
                       <span class="profile-progression-node__progress">{lane.featuredNode.reward?.name || 'Expression reward'}</span>
                     </div>
@@ -373,7 +397,7 @@
                     {/if}
                     <div class="profile-progression-node__meta">
                       <span>{nodeProgressLabel(lane.featuredNode)}</span>
-                      {#if lane.featuredNode.reward}<ProgressionRewardPreview reward={lane.featuredNode.reward} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={lane.featuredNode.id} track={lane.id} analyticsSurface={analyticsSurface} />{/if}
+                      {#if lane.featuredNode.reward}<ProgressionRewardPreview reward={lane.featuredNode.reward} unlocked={isUnlocked(lane.featuredNode)} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={lane.featuredNode.id} track={lane.id} analyticsSurface={analyticsSurface} />{/if}
                     </div>
                 </article>
                 {#if lane.additionalActive.length}
@@ -384,7 +408,7 @@
                   {#if isSectionExpanded(expandedSections, lane.id, 'active')}
                     <ol class="profile-progression-condensed-list profile-progression-condensed-list--active">
                       {#each lane.additionalActive as node (node.id)}
-                        <li><span class="profile-progression-node__status profile-progression-node__status--active" aria-hidden="true"></span><span><strong>{node.name || 'Active goal'}</strong><small>{node.description || 'Independent profile goal'}</small></span><em>{nodeProgressLabel(node)}</em></li>
+                        <li><ProgressionPathIcon track={lane.id} state="active" /><span><strong>{node.name || 'Active goal'}</strong><small>{node.description || 'Independent profile goal'}</small></span><em>{nodeProgressLabel(node)}</em></li>
                       {/each}
                     </ol>
                   {/if}
@@ -408,7 +432,7 @@
               {#if isSectionExpanded(expandedSections, lane.id, 'completed')}
                 <ol class="profile-progression-condensed-list">
                   {#each lane.completed as node (node.id)}
-                    <li><span class="profile-progression-node__status profile-progression-node__status--complete" aria-hidden="true"></span><span><strong>{node.name || 'Completed goal'}</strong><small>{node.reward?.name || 'Expression reward'}</small></span><em>Complete</em></li>
+                    <li><ProgressionPathIcon track={lane.id} state="complete" /><span><strong>{node.name || 'Completed goal'}</strong><small>{node.reward?.name || 'Expression reward'}</small></span><em>Complete</em></li>
                   {/each}
                 </ol>
               {/if}
@@ -422,7 +446,7 @@
               {#if isSectionExpanded(expandedSections, lane.id, 'future')}
                 <ol class="profile-progression-condensed-list">
                   {#each lane.future as node (node.id)}
-                    <li><span class="profile-progression-node__status" aria-hidden="true"></span><span><strong>{node.name || 'Future goal'}</strong><small>{node.reward?.name || 'Expression reward'}</small></span><em>{nodeProgressLabel(node)}</em></li>
+                    <li><ProgressionPathIcon track={lane.id} state="future" /><span><strong>{node.name || 'Future goal'}</strong><small>{node.reward?.name || 'Expression reward'}</small></span><em>{nodeProgressLabel(node)}</em></li>
                   {/each}
                 </ol>
               {/if}
@@ -440,7 +464,7 @@
         </div>
         <ol>
           {#each recentUnlocks.slice(0, 3) as unlock (unlock.id)}
-            <li><div><strong>{unlock.name || 'Milestone complete'}</strong><small>{unlock.reward?.name || 'Expression reward'}</small></div>{#if unlock.reward}<ProgressionRewardPreview reward={unlock.reward} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={unlock.id} track={unlock.track} analyticsSurface={analyticsSurface} />{/if}</li>
+            <li><div><strong>{unlock.name || 'Milestone complete'}</strong><small>{unlock.reward?.name || 'Expression reward'}</small></div>{#if unlock.reward}<ProgressionRewardPreview reward={unlock.reward} unlocked={true} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={unlock.id} track={unlock.track} analyticsSurface={analyticsSurface} />{/if}</li>
           {/each}
         </ol>
         </section>
@@ -494,7 +518,7 @@
   .profile-progression-rank h3 { margin:0; color:var(--color-ink-strong); font:600 1.2rem/1.1 var(--font-display-stack); }
   .profile-progression-rank small { color:var(--color-ink-muted); font-size:var(--type-small); }
   .profile-progression-rank__next { display:grid; gap:.55rem; min-width:0; }
-  .profile-progression-rank__next-copy { display:flex; justify-content:space-between; gap:1rem; color:var(--color-ink-muted); font-size:var(--type-small); }
+  .profile-progression-rank__next-copy { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem 1rem; color:var(--color-ink-muted); font-size:var(--type-small); }
   .profile-progression-rank__next-copy strong { color:var(--color-ink-strong); }
   .profile-progression-bar, .profile-progression-node__bar { height:.34rem; overflow:hidden; border-radius:999px; background:var(--color-line-subtle); }
   .profile-progression-bar span, .profile-progression-node__bar span { display:block; height:100%; border-radius:inherit; background:var(--color-ink-strong); transition:width .4s ease; }
@@ -526,8 +550,6 @@
   .profile-progression-node__head > div { display:grid; gap:.15rem; min-width:0; }
   .profile-progression-node__head strong { overflow:hidden; color:var(--color-ink-strong); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
   .profile-progression-node__head small { overflow:hidden; color:var(--color-ink-muted); font-size:.7rem; text-overflow:ellipsis; white-space:nowrap; }
-  .profile-progression-node__status { display:block; width:1.35rem; height:1.35rem; border:1px solid var(--color-line-strong); border-radius:50%; background:transparent; }
-  .profile-progression-node__status--complete { background:var(--color-ink-strong); }
   .profile-progression-node__progress { color:var(--color-ink-muted); font:600 .65rem/1 var(--font-mono-stack); text-align:right; white-space:nowrap; }
   .profile-progression-node > p { margin:0; color:var(--color-ink-muted); font-size:.72rem; line-height:1.45; }
   .profile-progression-node__bar { height:.25rem; }
@@ -568,9 +590,11 @@
 
   .profile-progression-heading { align-items:flex-start; margin-bottom:1.35rem; }
   .profile-progression-heading h2 { max-width:34rem; }
-  .profile-progression-heading__summary { align-self:flex-end; border-left-color:var(--progression-accent); }
-  .profile-progression-direction { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(10rem,.8fr) auto; align-items:center; gap:1rem; margin-bottom:1rem; padding:1rem 1.1rem; border:1px solid var(--progression-accent); border-radius:var(--radius-md); background:var(--surface-panel-soft); box-shadow:0 .75rem 2rem rgba(0,0,0,.12); }
+  .profile-progression-heading__summary { align-self:flex-end; border-left-color:var(--color-line-strong); }
+  .profile-progression-direction { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(10rem,.8fr) auto; align-items:center; gap:1rem; margin-bottom:1rem; padding:1rem 1.1rem; }
   .profile-progression-direction__copy, .profile-progression-direction__reward { display:grid; gap:.25rem; min-width:0; }
+  .profile-progression-label--with-chip { display:inline-flex; align-items:center; gap:.45rem; }
+  .profile-progression-color-chip { display:inline-block; flex:0 0 .72rem; width:.72rem; height:.72rem; border:1px solid rgba(241,243,237,.55); border-radius:50%; background:var(--data-color); box-shadow:0 0 0 .18rem rgba(255,255,255,.06); }
   .profile-progression-direction__copy h3 { margin:.25rem 0 0; color:var(--color-ink-strong); font:650 1.35rem/1.05 var(--font-display-stack); letter-spacing:-.025em; }
   .profile-progression-direction__copy p { max-width:34rem; margin:.25rem 0 0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
   .profile-progression-direction__progress { color:var(--color-ink-strong); font:650 .7rem/1.2 var(--font-mono-stack); }
@@ -578,41 +602,82 @@
   .profile-progression-direction__reward span, .profile-progression-direction__reward small { color:var(--color-ink-muted); font-size:.68rem; }
   .profile-progression-direction__reward strong { overflow-wrap:anywhere; color:var(--color-ink-strong); font-size:var(--type-small); }
   .profile-progression-direction .site-button { justify-content:center; white-space:nowrap; }
-  .profile-progression-rank { border-color:var(--color-line-strong); box-shadow:inset .18rem 0 0 var(--progression-accent); }
-  .profile-progression-rank__mark { border-color:var(--progression-accent); }
-  .profile-progression-bar span, .profile-progression-node__bar span { background:var(--progression-accent); }
+  .profile-progression-rank { grid-template-columns:minmax(18rem,1.1fr) minmax(18rem,1fr); min-height:10rem; }
+  .profile-progression-rank__identity { gap:1rem; }
+  .profile-progression-rank__badge { position:relative; display:grid; place-items:center; flex:0 0 5.6rem; width:5.6rem; height:5.6rem; }
+  .profile-progression-rank__ring { position:absolute; inset:0; width:100%; height:100%; overflow:visible; transform:rotate(-90deg); }
+  .profile-progression-rank__ring circle { fill:none; stroke-width:2.5; }
+  .profile-progression-rank__ring-track { stroke:var(--color-line-subtle); }
+  .profile-progression-rank__ring-value { stroke:var(--color-ink-strong); stroke-linecap:round; transition:stroke-dashoffset .45s ease; }
+  .profile-progression-rank__mark { position:relative; z-index:1; flex-basis:auto; width:3.35rem; height:3.35rem; border-color:var(--color-state-active); background:var(--surface-inset); font-size:1.5rem; }
+  .profile-progression-rank__identity > div { gap:.15rem; }
+  .profile-progression-rank__ep { color:var(--color-ink-strong); font:700 clamp(1.7rem,3vw,2.8rem)/.95 var(--font-mono-stack); font-variant-numeric:tabular-nums; letter-spacing:-.055em; }
+  .profile-progression-rank__identity small { font-size:.72rem; }
+  .profile-progression-rank__next { gap:.65rem; }
+  .profile-progression-rank__next-copy strong { font-size:1rem; }
+  .profile-progression-bar span, .profile-progression-node__bar span { background:var(--color-ink-strong); }
   .profile-progression-stats { margin-top:.8rem; }
   .profile-progression-stats > div { padding:.8rem .85rem; }
-  .profile-progression-stats strong { font-size:1.05rem; }
-  .profile-progression-weekly { margin-top:1rem; border-left:3px solid var(--progression-accent); }
+  .profile-progression-stats strong { font-size:1rem; }
+  .profile-progression-weekly { margin-top:1rem; }
   .profile-progression-section-heading { align-items:flex-start; }
   .profile-progression-section-heading__copy { max-width:34rem; margin:.45rem 0 0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
   .profile-progression-lanes { gap:.8rem; }
   .profile-progression-lane { gap:.65rem; padding:.9rem; }
-  .profile-progression-lane__heading h4 { margin:.2rem 0 0; font-size:1.3rem; }
+  .profile-progression-lane__heading-copy { min-width:0; }
+  .profile-progression-lane__title { display:flex; align-items:center; gap:.55rem; }
+  .profile-progression-lane__title h4 { margin:.2rem 0 0; font-size:1.3rem; }
   .profile-progression-lane__heading p { margin:.35rem 0 0; }
   .profile-progression-lane__kicker { color:var(--color-ink-muted); font:700 .62rem/1.1 var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
   .profile-progression-lane__heading > span { padding-top:.2rem; }
-  .profile-progression-subhead { color:var(--progression-accent)!important; }
-  .profile-progression-node--active { border-color:var(--progression-accent); box-shadow:0 .45rem 1.25rem rgba(0,0,0,.12); }
+  .profile-progression-subhead { color:var(--color-ink-muted)!important; }
+  .profile-progression-node--active { border-color:var(--color-state-active); box-shadow:var(--shadow-state-card); }
   .profile-progression-node__head { grid-template-columns:auto minmax(0,1fr) minmax(5rem,.7fr); }
   .profile-progression-node__head > div { min-width:0; }
   .profile-progression-node__head strong { overflow-wrap:anywhere; white-space:normal; }
   .profile-progression-node__head small { overflow-wrap:anywhere; white-space:normal; }
   .profile-progression-node__progress { overflow-wrap:anywhere; color:var(--color-ink-strong); font-size:.68rem; line-height:1.25; white-space:normal; }
-  .profile-progression-node__status--active, .profile-progression-node__status--new { border-color:var(--progression-accent); background:var(--progression-accent); }
-  .profile-progression-node__status--complete { border-color:var(--progression-accent); background:var(--progression-accent); }
   .profile-progression-node__bar { background:var(--color-line-strong); }
   .profile-progression-node__meta { grid-template-columns:minmax(0,1fr); gap:.6rem; }
   .profile-progression-node__meta > span { padding-top:.2rem; color:var(--color-ink-strong); }
   .profile-progression-more { display:flex; align-items:center; justify-content:space-between; gap:.5rem; color:var(--color-ink-muted); font-size:.7rem; }
   .profile-progression-more button { min-height:2.5rem; padding:.35rem .5rem; border:0; background:transparent; color:var(--color-ink-strong); font:650 .7rem var(--font-body-stack); text-decoration:underline; text-underline-offset:.2em; cursor:pointer; }
-  .profile-progression-more button:focus-visible { outline:2px solid var(--progression-accent); outline-offset:2px; }
+  .profile-progression-more button:focus-visible { outline:2px solid var(--color-state-active); outline-offset:2px; }
   .profile-progression-condensed-list--active { border-top:1px solid var(--color-line-subtle); padding-top:.25rem; }
   .profile-progression-history-note { display:grid; gap:.3rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--color-line-subtle); }
   .profile-progression-history-note p { margin:0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
   .profile-progression-history-note a { color:var(--color-ink-strong); font-size:var(--type-small); font-weight:650; text-underline-offset:.2em; }
+  .profile-progression-direction,
+  .profile-progression-rank,
+  .profile-progression-weekly,
+  .profile-progression-lane,
+  .profile-progression-node,
+  .profile-progression-unlocks li,
+  .profile-progression-history li {
+    border-color:var(--color-state-active);
+    border-radius:1.1rem;
+    background:rgba(255,255,255,.035);
+    box-shadow:var(--shadow-card-glass);
+    backdrop-filter:blur(var(--blur-panel));
+  }
+  .profile-progression-rank { box-shadow:var(--shadow-state-card), var(--shadow-card-glass); }
+  .profile-progression-lane,
+  .profile-progression-unlocks li,
+  .profile-progression-history li { border-color:var(--color-line-subtle); }
+  .profile-progression-stats > div { border-color:var(--color-line-subtle); border-radius:var(--radius-md); background:rgba(255,255,255,.018); }
+  .profile-progression-node { border-color:var(--color-line-subtle); border-radius:var(--radius-md); box-shadow:none; background:rgba(255,255,255,.025); }
+  .profile-progression-node--active { border-color:var(--color-state-active); box-shadow:var(--shadow-state-card); }
+  .profile-progression-direction .site-button {
+    border:1px solid var(--color-state-active);
+    background:linear-gradient(135deg,var(--color-ink-strong),#fff);
+    color:var(--color-canvas-deep);
+    box-shadow:0 0 0 .2rem var(--color-state-active-soft),0 .75rem 1.75rem rgba(0,0,0,.28);
+    transition:box-shadow var(--motion-fast),opacity var(--motion-fast),background var(--motion-fast);
+  }
+  .profile-progression-direction .site-button:hover,
+  .profile-progression-direction .site-button:focus-visible { background:linear-gradient(135deg,#fff,var(--color-ink-strong)); box-shadow:0 0 0 .3rem rgba(255,255,255,.1),0 .9rem 2rem rgba(0,0,0,.34); }
   @media (max-width:800px) {
+    .profile-progression-rank { grid-template-columns:1fr; }
     .profile-progression-direction { grid-template-columns:1fr auto; }
     .profile-progression-direction__reward { grid-column:1 / -1; padding:0; border:0; border-top:1px solid var(--color-line-subtle); padding-top:.7rem; }
   }
@@ -622,5 +687,9 @@
     .profile-progression-direction__reward { grid-column:auto; }
     .profile-progression-node__head { grid-template-columns:auto minmax(0,1fr); }
     .profile-progression-node__progress { grid-column:2; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    .profile-progression-rank__ring-value,
+    .profile-progression-direction .site-button { transition:none; }
   }
 </style>

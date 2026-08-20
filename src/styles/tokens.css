@@ -10,6 +10,10 @@
     --color-ink-faint: #737970;
     --color-line-subtle: rgba(241, 243, 237, 0.12);
     --color-line-strong: rgba(241, 243, 237, 0.24);
+    /* Structural state stays neutral. Roll and rarity colors are data-only. */
+    --color-state-active: rgba(255, 255, 255, 0.28);
+    --color-state-active-soft: rgba(255, 255, 255, 0.08);
+    --color-state-complete: var(--color-ink-strong);
     /* Cool interface accent; the daily roll keeps its own signal color. */
     --color-accent: #dbe7ef;
     --color-accent-bright: #f7fbff;
@@ -60,6 +64,8 @@
     --radius-xl: 1rem;
     --radius-pill: 999px;
     --shadow-panel: 0 1.5rem 4rem rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(241, 243, 237, 0.035);
+    --shadow-card-glass: 0 1.5rem 3.5rem rgba(0, 0, 0, 0.24), 0 0 24px rgba(255, 255, 255, 0.045), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    --shadow-state-card: 0 0 24px rgba(255, 255, 255, 0.08);
     --shadow-float: 0 1.25rem 3rem rgba(0, 0, 0, 0.34);
     --shadow-accent: 0 1rem 3rem color-mix(in srgb, var(--color-accent-cyan) 24%, transparent);
     --blur-panel: 1.25rem;

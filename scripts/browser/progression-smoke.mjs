@@ -320,6 +320,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
   await chromium.page.command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: futureButton.x, y: futureButton.y });
   const expandedRitualState = await chromium.page.waitFor("document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"] button[aria-expanded=\"true\"]') && document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"]')?.textContent?.includes('50 rolls')", 'expanded Ritual future goals', 5000);
   assert(expandedRitualState, 'The Ritual lane did not expose a working future goals control after the CDP click.');
+  await chromium.page.waitFor("document.querySelectorAll('.progression-reward-preview__thumbnail').length === 0 || document.querySelector('.progression-reward-preview__thumbnail .shop-preview-area')", 'canonical progression reward thumbnails', 30000);
   const state = await chromium.page.evaluate(`(() => {
     const root = document.documentElement;
     const stats = [...document.querySelectorAll('.profile-progression-stats > div')].map(item => item.textContent.trim().replace(/\\s+/g, ' '));
@@ -336,6 +337,12 @@ async function inspectAuthenticatedProgression(width, height, label) {
       approachingRoll50: /42\\s*\\/\\s*50\\s+rolls/i.test(text),
       approachingGoalText: text.includes('50 rolls') ? text.slice(Math.max(0, text.indexOf('50 rolls') - 120), text.indexOf('50 rolls') + 180) : '',
       recentUnlocks: Boolean(document.querySelector('.profile-progression-unlocks')),
+      rankRing: Boolean(document.querySelector('.profile-progression-rank__ring')),
+      pathIconCount: document.querySelectorAll('.progression-path-icon').length,
+      rewardThumbnailCount: document.querySelectorAll('.progression-reward-preview__thumbnail').length,
+      canonicalThumbnailCount: document.querySelectorAll('.progression-reward-preview__thumbnail .shop-preview-area').length,
+      placeholderRewardText: text.includes('Preview reward'),
+      radialBackground: getComputedStyle(document.querySelector('.progression-page')).backgroundImage.includes('radial-gradient'),
       progressbars,
       horizontalOverflow: root.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1,
       reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -348,6 +355,11 @@ async function inspectAuthenticatedProgression(width, height, label) {
   assert(state.stats.some(value => value.includes('9 days')), `${label} did not render the established streak history: ${JSON.stringify(state)}.`);
   assert(state.direction && state.activeGoal && state.approachingRoll50, `${label} did not render the focused approaching 50-roll goal: ${JSON.stringify(state)}.`);
   assert(state.recentUnlocks, `${label} did not render historical progression rewards: ${JSON.stringify(state)}.`);
+  assert(state.rankRing, `${label} did not render the rank progress ring: ${JSON.stringify(state)}.`);
+  assert(state.pathIconCount >= 3, `${label} did not render the three path glyphs: ${JSON.stringify(state)}.`);
+  assert(state.rewardThumbnailCount === 0 || state.canonicalThumbnailCount >= 1, `${label} did not render a canonical expression thumbnail: ${JSON.stringify(state)}.`);
+  assert(!state.placeholderRewardText, `${label} still exposes placeholder reward copy: ${JSON.stringify(state)}.`);
+  assert(state.radialBackground, `${label} progression page is missing its grayscale vignette: ${JSON.stringify(state)}.`);
   assert(!state.horizontalOverflow, `${label} progression surface overflows horizontally.`);
   assert(state.stats.some(value => value.includes('Current: 5 days')), 'Established progression did not render the persisted next-day current streak state: ' + JSON.stringify(state) + '.');
   return state;
@@ -443,7 +455,7 @@ try {
     assert(resultState.reward, 'First roll unlock queue did not expose its reward preview trigger: ' + JSON.stringify(resultState) + '.');
     assert(!resultState.horizontalOverflow, 'First roll result overflows horizontally: ' + JSON.stringify(resultState) + '.');
 
-    await chromium.page.clickText('Preview reward', { exact: false, description: 'first-roll reward preview' });
+    await chromium.page.click('.progression-reward-preview__trigger', 'first-roll reward preview');
     await chromium.page.waitFor("document.querySelector('.progression-reward-preview__panel') && (document.querySelector('.progression-reward-preview__caption') || document.querySelector('.progression-reward-preview__state[role=\"alert\"]'))", 'first-roll canonical reward preview', 30000);
     const previewState = await chromium.page.evaluate("(() => ({\n      panel: Boolean(document.querySelector('.progression-reward-preview__panel')),\n      canonicalRenderer: Boolean(document.querySelector('.progression-reward-preview__panel .shop-preview-area')),\n      error: document.querySelector('.progression-reward-preview__state[role=\"alert\"]')?.textContent?.trim() || ''\n    }))()");
     assert(previewState.panel && previewState.canonicalRenderer && !previewState.error, 'First-roll reward preview did not resolve the canonical renderer: ' + JSON.stringify(previewState) + '.');

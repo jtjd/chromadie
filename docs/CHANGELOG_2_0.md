@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-20 — Progression visual polish
+
+- Kept the progression page’s dark site language while adding a subtle grayscale
+  vignette, consistent glass-panel surfaces, and tactile neutral CTA sheen.
+- Made Rank the focal point with a circular progress ring and large lifetime EP;
+  summary stats now sit in a quieter secondary row. Journey lanes use the
+  existing die/pip vocabulary for distinct Rank, Ritual, and Discovery glyphs.
+- Replaced empty reward placeholders with real canonical expression thumbnails;
+  locked rewards stay visible in a dimmed grayscale state, while earned rewards
+  render normally. Rolled and weekly colors remain data-only swatches.
+
 ## 2026-08-20 — Bound continuous-integration usage
 
 - Kept fast code validation on every change while moving the local database and

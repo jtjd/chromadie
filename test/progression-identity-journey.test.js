@@ -235,3 +235,31 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(preferences, /90 days/);
   assert.doesNotMatch(game, /insert\(.*(?:progression|inventory)/s);
 });
+
+test('progression visual treatment keeps state neutral and previews canonical expressions', async () => {
+  const [progression, page, rewardPreview, pathIcon, tokens, smoke] = await Promise.all([
+    read('src/lib/ProfileProgression.svelte'),
+    read('src/lib/ProgressionPage.svelte'),
+    read('src/lib/ProgressionRewardPreview.svelte'),
+    read('src/lib/ProgressionPathIcon.svelte'),
+    read('src/styles/tokens.css'),
+    read('scripts/browser/progression-smoke.mjs')
+  ]);
+
+  assert.match(tokens, /--color-state-active/);
+  assert.match(tokens, /--shadow-state-card/);
+  assert.match(progression, /profile-progression-rank__ring/);
+  assert.match(progression, /profile-progression-color-chip/);
+  assert.match(progression, /ProgressionPathIcon/);
+  assert.doesNotMatch(progression, /--progression-accent|var\(--progression-accent\)/);
+  assert.match(page, /radial-gradient\(circle at 50% 15%/);
+  assert.match(page, /progression-page__color-chip/);
+  assert.match(rewardPreview, /onMount/);
+  assert.match(rewardPreview, /progression-reward-preview__thumbnail/);
+  assert.match(rewardPreview, /grayscale\(1\)/);
+  assert.doesNotMatch(rewardPreview, /Preview reward/);
+  assert.match(pathIcon, /normalizedTrack === 'rank'/);
+  assert.match(pathIcon, /normalizedTrack === 'ritual'/);
+  assert.match(pathIcon, /track === 'discovery'/);
+  assert.match(smoke, /progression-reward-preview__trigger/);
+});
