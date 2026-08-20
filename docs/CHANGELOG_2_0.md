@@ -17,8 +17,9 @@ Document user-visible redesign changes by milestone.
 - Rebalanced the authenticated page into a Roll-inspired split composition:
   daily identity and action on the left, one focused glass progression board
   on the right.
-- Let the saved profile color add personality to the Rank hero, streak chip,
-  CTA sheen, and subtle halo while keeping structural states grayscale.
+- Let the current server-owned roll color add personality to the Rank hero,
+  streak chip, CTA sheen, and subtle halo while keeping structural states
+  grayscale.
 - Kept the existing server-authoritative data flow, accordion interactions,
   reward previews, history handoff, mobile behavior, and reduced-motion support.
 

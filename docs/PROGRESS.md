@@ -18,7 +18,7 @@
 - Recomposed the authenticated page as a Roll-like split: a compact left rail
   for identity and the daily action, plus one tall glass progression board for
   Rank, metrics, weekly focus, paths, unlocks, and History.
-- Kept the visible copy intentionally short and made the saved profile color a
+- Kept the visible copy intentionally short and made the current roll color a
   restrained accent for the Rank hero, streak swatch, CTA sheen, and page halo;
   structural state remains grayscale.
 - Preserved the existing owner RPC and presentation semantics, including

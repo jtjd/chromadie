@@ -19,11 +19,12 @@ action beside one tall glass progression board. The board remains the existing
 `ProfileProgression` surface, so its RPC, page-mode, accordion, thumbnail, and
 History behavior stay intact.
 
-The saved profile color is the route accent (`--progression-accent`) only where
-it communicates the player's current color story: the streak swatch, Rank ring
-and XP hero, CTA sheen, and a restrained page halo. Structural state remains
-grayscale, and weekly/rarity colors remain their own data swatches. No schema,
-RPC, scoring, reward, inventory, or RLS contract changed.
+The current server-owned roll color is the route accent
+(`--progression-accent`) only where it communicates the player's current color
+story: the streak swatch, Rank ring and XP hero, CTA sheen, and a restrained
+page halo. A saved profile mood remains an appearance preference. Structural
+state remains grayscale, and weekly/rarity colors remain their own data
+swatches. No schema, RPC, scoring, reward, inventory, or RLS contract changed.
 
 ## 2026-08-20 — Make the dedicated progression route scan-first
 
