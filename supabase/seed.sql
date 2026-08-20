@@ -208,10 +208,9 @@ INSERT INTO public.meta (key, value) VALUES
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')
 ON CONFLICT (key) DO NOTHING;
 
--- Customize is the only active profile-expression surface for this phase.
--- Keep the reset seed aligned with the deployed catalog migration: every
--- active expression is available directly in Profile Studio, while utility
--- rows retain their separate progression semantics.
+-- Customize is the active profile-expression surface for this phase. Keep a
+-- generous free baseline, but preserve the acquisition contract for journey
+-- rewards and Plus-only Atelier expressions when the database is reset.
 UPDATE public.shop_items
 SET access_tier = 'free',
     cost = 0,
@@ -227,7 +226,31 @@ WHERE catalog_status = 'active'
     'profile_layout',
     'profile_atmosphere',
     'profile_motion'
+  )
+  AND NOT EXISTS (
+    SELECT 1
+    FROM public.progression_milestones AS milestone
+    WHERE milestone.reward_item_key = shop_items.item_key
+  )
+  AND shop_items.item_key NOT IN ('name_prism_atelier', 'bg_prism_atmosphere');
+
+UPDATE public.shop_items AS item
+SET access_tier = 'earned',
+    cost = 0,
+    entitlement_key = NULL
+WHERE item.catalog_status = 'active'
+  AND EXISTS (
+    SELECT 1
+    FROM public.progression_milestones AS milestone
+    WHERE milestone.reward_item_key = item.item_key
   );
+
+UPDATE public.shop_items
+SET access_tier = 'premium',
+    cost = 0,
+    entitlement_key = 'chromadie_plus'
+WHERE item_key IN ('name_prism_atelier', 'bg_prism_atmosphere')
+  AND catalog_status = 'active';
 
 UPDATE public.shop_items
 SET description = 'A centered glass profile card that leaves the user background in charge.'

@@ -17,7 +17,7 @@ const [page, game, reveal, app, routes, header, homepageHeader, footer] = await 
 
 test('the Roll experience has a canonical page and shared navigation entry', () => {
   assert.match(routes, /pathname === '\/roll'\) return 'game'/);
-  assert.match(app, /nextView === 'game'[\s\S]*'\/roll'/);
+  assert.match(app, /viewToCanonicalPath\(nextView,[\s\S]*'\/roll'/);
   assert.match(app, /view === 'game' && !challengeData[\s\S]*'\/roll'/);
   assert.match(header, /activeView === 'game'/);
   assert.match(header, /navigate\('game'\)/);

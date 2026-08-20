@@ -87,6 +87,7 @@
   });
 
   let reducedMotion = false;
+  let constrainedConnection = false;
   let visible = true;
   let inViewport = true;
   let mediaQuery;
@@ -111,7 +112,7 @@
     posterFallback = false;
     recovery?.ready();
   }
-  $: motionActive = Boolean(active && animated && visible && inViewport && !reducedMotion && !compact && media && !posterFallback);
+  $: motionActive = Boolean(active && animated && visible && inViewport && !reducedMotion && !constrainedConnection && !compact && media && !posterFallback);
   $: colors = [todayColor, ...(Array.isArray(recentColors) ? recentColors : []), ...FALLBACK_COLORS]
     .map(color => /^#[0-9a-f]{6}$/i.test(String(color || '')) ? String(color).toUpperCase() : null)
     .filter(Boolean)
@@ -134,13 +135,23 @@
     reducedMotion = Boolean(event?.matches ?? mediaQuery?.matches);
   }
 
+  function getNetworkConnection() {
+    const browserNavigator = /** @type {any} */ (navigator);
+    return browserNavigator.connection || browserNavigator.mozConnection || browserNavigator.webkitConnection || null;
+  }
+
+  function updateConnection() {
+    const network = getNetworkConnection();
+    constrainedConnection = Boolean(network?.saveData || ['slow-2g', '2g'].includes(network?.effectiveType));
+  }
+
   function updateVisibility() {
     visible = document.visibilityState === 'visible';
     if (visible && inViewport) recoverVideo();
   }
 
   function recoverVideo() {
-    if (!mounted || !media || !active || !animated || compact || reducedMotion || !visible || !inViewport) return;
+    if (!mounted || !media || !active || !animated || compact || reducedMotion || constrainedConnection || !visible || !inViewport) return;
     if (recovery) {
       recovery.recover();
       return;
@@ -192,16 +203,19 @@
     mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     updateReducedMotion();
     mediaQuery?.addEventListener?.('change', updateReducedMotion);
+    updateConnection();
+    const network = getNetworkConnection();
+    network?.addEventListener?.('change', updateConnection);
     document.addEventListener('visibilitychange', updateVisibility);
     window.addEventListener('pageshow', recoverVideo);
     import('./atmosphereRecovery.js').then(({ createAtmosphereRecovery }) => {
       if (!mounted) return;
       recovery = createAtmosphereRecovery({
-        canRecover: () => Boolean(mounted && media && active && animated && !compact && !reducedMotion && visible && inViewport),
+        canRecover: () => Boolean(mounted && media && active && animated && !compact && !reducedMotion && !constrainedConnection && visible && inViewport),
         getVideo: () => videoElement,
         setPosterFallback: value => { posterFallback = value; }
       });
-      if (media && active && animated && !reducedMotion && !compact) recoverVideo();
+      if (media && active && animated && !reducedMotion && !constrainedConnection && !compact) recoverVideo();
     }).catch(() => {
       // Atmosphere is decorative; a failed recovery helper must not break the
       // profile shell or the rest of the live preview.
@@ -230,6 +244,7 @@
       intersectionObserver?.disconnect();
       resizeObserver?.disconnect();
       mediaQuery?.removeEventListener?.('change', updateReducedMotion);
+      network?.removeEventListener?.('change', updateConnection);
       document.removeEventListener('visibilitychange', updateVisibility);
       window.removeEventListener('pageshow', recoverVideo);
     };

@@ -21,10 +21,9 @@ test('source-aware dirty state keeps sibling editor drafts independent', () => {
 });
 
 test('Profile Studio publishes identity and the complete expression-aware configuration through one server boundary', async () => {
-  const [settings, customize, workspace, appearance, identity, cosmetics, media, migration, expressionPublishMigration, security, ci] = await Promise.all([
+  const [settings, customize, appearance, identity, cosmetics, media, migration, expressionPublishMigration, security, ci] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
-    read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/IdentityEditor.svelte'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),

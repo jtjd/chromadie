@@ -5595,3 +5595,25 @@ The owner payload also reports `journey_state` (`ready`, `partial`, `empty`, or
 `unavailable`). The page hides empty lanes and uses an honest single fallback
 when the manifest is missing or a read fails. This preserves rank/history
 context without presenting an unavailable journey as complete.
+
+## 2026-08-19 — Separate earned progression expression access from the free baseline
+
+Progression milestone rewards are now active catalog items with `access_tier =
+'earned'` and zero cost. The catalog retains a meaningful free baseline, while
+the Atelier expression pair remains premium. The migration also backfills
+currently equipped progression rewards so existing profiles do not lose their
+appearance when access rules take effect.
+
+The migration and catalog-drift checker enforce this contract so a future global
+free-catalog update cannot silently make progression rewards available before
+they are earned. The Studio presents the same server-owned access state and
+blocks preview/equip of locked expressions.
+
+Navigation now has one canonical path resolver and one history mutation per
+user action. Reactive route synchronization repairs URLs with `replaceState`,
+while explicit navigation uses a single `pushState`, preventing duplicate
+header entries and legacy query URLs from becoming the primary navigation path.
+
+Progression analytics keeps aggregate bounded events, but separates goal views
+from unlock presentation, validates the declared account mode, and leaves
+retention cleanup to scheduled maintenance instead of the hot event path.

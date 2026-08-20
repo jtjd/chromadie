@@ -10,7 +10,7 @@ import {
   isReservedRouteSegment,
   normalizeUsernameSegment
 } from '../src/lib/routeContract.js';
-import { parseRouteLocation } from '../src/lib/routes.js';
+import { parseRouteLocation, viewToCanonicalPath } from '../src/lib/routes.js';
 import { getBrowserPublicOrigin, getServerPublicOrigin } from '../src/lib/siteOrigin.js';
 import { getSafeNextUrl } from '../src/lib/authUrls.js';
 import { isProtectedUsername } from '../src/lib/usernamePolicy.js';
@@ -44,6 +44,24 @@ test('root profile routing is case-normalized and /u remains compatible', () => 
   assert.equal(shortRoot.canonicalProfilePath, '/a');
   assert.equal(getCanonicalProfilePath('A'), '/a');
   assert.equal(getCompatibilityProfilePath('Z7'), '/u/Z7');
+});
+
+test('view navigation resolves to one canonical application path', () => {
+  assert.equal(viewToCanonicalPath('leaderboard'), '/leaderboard');
+  assert.equal(viewToCanonicalPath('leaderboard', { tab: 'monthly' }), '/leaderboard?tab=monthly');
+  assert.equal(viewToCanonicalPath('progression'), '/progression');
+  assert.equal(viewToCanonicalPath('prototype'), '/prototype/profile');
+  assert.equal(viewToCanonicalPath('profile-settings'), '/profile/settings');
+  assert.equal(viewToCanonicalPath('profile', { username: 'NeonUser' }), '/neonuser');
+  assert.equal(viewToCanonicalPath('profile', { username: 'NeonUser', legacyProfile: true }), '/u/NeonUser?legacy=1');
+  assert.equal(viewToCanonicalPath('profile', { userId: 'user-2' }), '/?view=profile&profile=user-2');
+});
+
+test('reactive route synchronization normalizes without adding browser history entries', async () => {
+  const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
+  const syncRoute = app.slice(app.indexOf('function syncRoute()'), app.indexOf('function setRoute('));
+  assert.match(syncRoute, /window\.history\.replaceState/);
+  assert.doesNotMatch(syncRoute, /window\.history\.pushState/);
 });
 
 test('aliases have an explicit route namespace and resolve only to canonical profile paths', async () => {

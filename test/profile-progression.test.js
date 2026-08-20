@@ -29,13 +29,15 @@ test('progression is a dedicated page backed by existing profile history', async
   assert.doesNotMatch(workspace, /activeSection === 'progression'/);
 });
 
-test('Customize is the complete profile expression surface while purchases stay retired', async () => {
+test('Customize is the complete profile expression surface with earned and Plus states', async () => {
   const cosmetics = await read('src/lib/ProfileCosmeticsEditor.svelte');
 
   assert.match(cosmetics, /Profile expression/);
   assert.match(cosmetics, /every profile expression layer/);
   assert.match(cosmetics, /availableCosmetics/);
-  assert.doesNotMatch(cosmetics, /hasShopEntitlement|ownedCosmetics|profile-cosmetics-plus-guide/);
+  assert.match(cosmetics, /hasShopEntitlement/);
+  assert.match(cosmetics, /getShopAccessLabel/);
+  assert.doesNotMatch(cosmetics, /ownedCosmetics|profile-cosmetics-plus-guide/);
   assert.match(cosmetics, /equip_item/);
   assert.doesNotMatch(cosmetics, /purchase_item/);
 });

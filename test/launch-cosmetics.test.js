@@ -62,6 +62,9 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   }
   assert.match(atmosphereSource, /pointer-events: none/);
   assert.match(atmosphereSource, /prefers-reduced-motion/);
+  assert.match(atmosphereSource, /saveData/);
+  assert.match(atmosphereSource, /effectiveType/);
+  assert.match(atmosphereSource, /constrainedConnection/);
   assert.match(atmosphereSource, /visibilitychange/);
   assert.match(atmosphereSource, /data-atmosphere=\{definition\.key\}/);
   assert.match(atmosphereSource, /#key definition\.key/);

@@ -3541,3 +3541,16 @@ direct route behavior.
   empty, and unavailable states, and shortened the visible goal copy.
 - Added a compact recent-unlocks section and corrected Studio’s next-expression
   summary so unavailable data is not reported as a completed journey.
+
+## Release audit remediation — 2026-08-19
+
+- Fixed exact-CI lint failures and unified header navigation on canonical paths
+  with one browser-history entry per action.
+- Changed progression milestone expressions from universally free cosmetics to
+  earned rewards, preserving a good free baseline and premium Atelier items.
+- Added access-contract checks, compatibility backfill, and Studio locked-state
+  handling so progression unlocks have a real acquisition effect.
+- Split progression goal-view analytics from unlock presentation, validated
+  account mode in the RPC, and removed retention cleanup from event recording.
+- Added atmosphere catalog/largest-file performance budgets and constrained
+  connection fallbacks that use poster media instead of decorative video.

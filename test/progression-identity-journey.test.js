@@ -61,12 +61,15 @@ test('progression normalization preserves server-published journey lanes and wee
 });
 
 test('the journey schema is additive, catalog-backed, and returned by the authoritative roll path', async () => {
-  const [journey, goalContract, analytics, destinationSurface, rollResponse] = await Promise.all([
+  const [journey, goalContract, analytics, destinationSurface, rollResponse, rewardAccess, rewardAnalytics, seed] = await Promise.all([
     read('supabase/migrations/20260819160000_progression_identity_journey.sql'),
     read('supabase/migrations/20260819180000_progression_goal_contract.sql'),
     read('supabase/migrations/20260819161000_progression_aggregate_analytics.sql'),
     read('supabase/migrations/20260819170000_progression_destination_surface.sql'),
-    read('supabase/migrations/20260819162000_progression_roll_response.sql')
+    read('supabase/migrations/20260819162000_progression_roll_response.sql'),
+    read('supabase/migrations/20260819200000_progression_reward_access_contract.sql'),
+    read('supabase/migrations/20260819210000_progression_analytics_semantics.sql'),
+    read('supabase/seed.sql')
   ]);
 
   for (const id of [
@@ -97,8 +100,16 @@ test('the journey schema is additive, catalog-backed, and returned by the author
   assert.match(analytics, /90/);
   assert.match(analytics, /record_progression_event/);
   assert.match(analytics, /GRANT EXECUTE ON FUNCTION public\.record_progression_event/);
-  assert.match(destinationSurface, /surface IN \('\', 'studio', 'progression'/);
+  assert.match(destinationSurface, /surface IN \('', 'studio', 'progression'/);
   assert.match(destinationSurface, /CREATE OR REPLACE FUNCTION public\.record_progression_event/);
+  assert.match(rewardAccess, /access_tier = 'earned'/);
+  assert.match(rewardAccess, /equipped_cosmetics/);
+  assert.match(rewardAccess, /free_baseline_count/);
+  assert.match(rewardAnalytics, /progression_goal_viewed/);
+  assert.doesNotMatch(rewardAnalytics, /PERFORM public\.cleanup_profile_view_daily/);
+  assert.match(rewardAnalytics, /auth\.role\(\) = 'anon'/);
+  assert.match(seed, /progression_milestones AS milestone/);
+  assert.match(seed, /item_key NOT IN \('name_prism_atelier', 'bg_prism_atmosphere'\)/);
 });
 
 test('progression presentation and guest claim copy keep authority and privacy boundaries visible', async () => {
@@ -120,6 +131,9 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.doesNotMatch(progression, /Discover the condition|Keep rolling/);
   assert.match(overview, /Some goals unavailable/);
   assert.match(progression, /Color of the Week/);
+  assert.match(progression, /IntersectionObserver/);
+  assert.match(progression, /progression_goal_viewed/);
+  assert.doesNotMatch(progression, /recordUnlockSeen/);
   assert.match(progression, /verified on the server/);
   assert.match(progression, /pageMode/);
   assert.match(page, /Your profile \/ progression/);

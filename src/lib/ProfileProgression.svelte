@@ -43,7 +43,7 @@
   $: journeyGoalComplete = visibleJourneyLanes.reduce((total, lane) => total + lane.nodes.filter(node => node.unlocked).length, 0);
   $: weeklyFocus = progression?.weeklyFocus || null;
   const weeklyFocusViewed = new SvelteSet();
-  const seenUnlocks = new SvelteSet();
+  const seenGoals = new SvelteSet();
 
   onMount(() => {
     if (journeyEnabled) trackProductEvent('progression_viewed', { surface: analyticsSurface, accountMode: 'authenticated' });
@@ -90,16 +90,25 @@
     return progression?.nextJourney?.[track]?.id === node?.id;
   }
 
-  function recordUnlockSeen(node) {
+  function recordGoalViewed(node) {
     if (!node?.track) return;
-    const key = `${node.id}:${node.unlocked ? 'unlocked' : 'locked'}`;
-    if (seenUnlocks.has(key)) return;
-    seenUnlocks.add(key);
-    trackProductEvent('progression_unlock_seen', {
+    const key = node.id;
+    if (seenGoals.has(key)) return;
+    seenGoals.add(key);
+    trackProductEvent('progression_goal_viewed', {
       surface: analyticsSurface,
       accountMode: 'authenticated',
       track: node.track
     });
+  }
+
+  function observeJourneyNode(element, node) {
+    if (!node?.track || typeof IntersectionObserver === 'undefined') return {};
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) recordGoalViewed(node);
+    }, { threshold: 0.5 });
+    observer.observe(element);
+    return { destroy: () => observer.disconnect() };
   }
 </script>
 
@@ -175,7 +184,7 @@
                 </div>
                 <ol>
                   {#each lane.nodes as node (node.id)}
-                    <li class:unlocked={node.unlocked} class:next={isNextNode(node, lane.id)} on:mouseenter={() => recordUnlockSeen(node)}>
+                    <li use:observeJourneyNode={node} class:unlocked={node.unlocked} class:next={isNextNode(node, lane.id)}>
                       <div class="profile-progression-node__head">
                         <span class="profile-progression-node__status" class:unlocked={node.unlocked} aria-hidden="true"></span>
                         <div><strong>{node.name}</strong><small>{node.reward?.name || 'Profile expression reward'}</small></div>

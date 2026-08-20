@@ -7,8 +7,10 @@
     addToast,
     equippedItems,
     profile,
+    profileEntitlements,
     refreshProfileState,
     session,
+    userInventory,
     loadCosmeticCatalog,
     cosmeticCatalogItems,
     cosmeticCatalogError,
@@ -18,7 +20,7 @@
   import { trackProductEvent } from './productAnalytics.js';
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer, getNamePreviewLoadoutForSlot } from './name/nameLoadout.js';
   import { isCustomNameFontKey } from './name/nameFonts.js';
-  import { SHOP_SLOT_LABELS, isShopCosmetic } from './shopCatalog.js';
+  import { createFittingRoom, getShopAccessLabel, hasShopEntitlement, SHOP_SLOT_LABELS, isShopCosmetic } from './shopCatalog.js';
   import { getProfileMediaUrl } from './profileMedia.js';
 
   export let accountProfile = null;
@@ -78,8 +80,9 @@
       || profileConfig.published?.avatar_path
     )) || ''
   );
-  // The studio is the expression catalog. Every active profile cosmetic is
-  // available to preview and equip while acquisition is being redesigned.
+  // Keep the full active catalog visible so a locked expression can be
+  // discovered, but let the server-owned inventory/entitlement state decide
+  // which rows can be previewed and applied.
   $: availableCosmetics = Object.values($cosmeticCatalogItems)
     .filter(item => isShopCosmetic(item) && item.catalog_status === 'active')
     .sort((left, right) => (SHOP_SLOT_LABELS[left.slot] || left.slot).localeCompare(SHOP_SLOT_LABELS[right.slot] || right.slot)
@@ -101,6 +104,11 @@
     || {};
   $: profileWideNameFontEnabled = profileAppearance.useNameFontAcrossProfile === true;
   $: hasCustomNameFontSelection = isCustomNameFontKey(previewLoadout.name_font);
+  $: fittingRoom = createFittingRoom({
+    userInventory: $userInventory,
+    equippedItems: $equippedItems,
+    entitlements: $profileEntitlements
+  });
   $: hasPendingChanges = COSMETIC_SLOTS.some(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: previewSourceKey = stagedLoadout === null
@@ -121,6 +129,10 @@
 
   function previewSlot(slot, itemKey) {
     const item = $cosmeticCatalogItems[itemKey] || null;
+    if (item && !hasShopEntitlement(item, fittingRoom)) {
+      error = `${item.name} is not unlocked for this profile yet.`;
+      return;
+    }
     previewLoadout = NAME_COMPOSABLE_SLOTS.includes(slot)
       ? applyNamePreviewLayer(previewLoadout, slot, item?.item_key || '')
       : { ...previewLoadout, ...(item ? { [slot]: item.item_key } : {}) };
@@ -162,6 +174,12 @@
     }[slot] || [];
   }
 
+  function itemOptionLabel(item) {
+    return hasShopEntitlement(item, fittingRoom)
+      ? item.name
+      : `${item.name} · ${getShopAccessLabel(item)}`;
+  }
+
   async function applyChanges() {
     if (loadingSlot || !hasPendingChanges) return;
     const changedSlots = COSMETIC_SLOTS.filter(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
@@ -171,6 +189,9 @@
     try {
       for (const slot of changedSlots) {
         const item = previewLoadout[slot] ? $cosmeticCatalogItems[previewLoadout[slot]] : null;
+        if (item && !hasShopEntitlement(item, fittingRoom)) {
+          throw new Error(`${item.name} is not unlocked for this profile yet.`);
+        }
         const { data, error: rpcError } = item
           ? await supabase.rpc('equip_item', { p_item_key: item.item_key })
           : await supabase.rpc('unequip_item', { p_slot: slot });
@@ -249,7 +270,7 @@
               >
                 <option value="">{definition.emptyLabel}</option>
                 {#each itemsForSlot(definition.slot) as item (item.item_key)}
-                  <option value={item.item_key}>{item.name}</option>
+                  <option value={item.item_key} disabled={!hasShopEntitlement(item, fittingRoom) && previewLoadout[definition.slot] !== item.item_key}>{itemOptionLabel(item)}</option>
                 {/each}
               </select>
             </div>
@@ -277,11 +298,11 @@
                 <div>
                   <label for={`cosmetic-${slot}`}>{NAME_SLOT_LABELS[slot]}</label>
                   <div class="profile-cosmetics-name-control">
-                    <select id={`cosmetic-${slot}`} value={previewLoadout[slot] || ''} disabled={!!loadingSlot} on:change={event => previewSlot(slot, event.currentTarget.value)}>
-                      <option value="">{NAME_DEFAULT_LABELS[slot]}</option>
-                      {#each availableCosmetics.filter(item => item.slot === slot) as item (item.item_key)}
-                        <option value={item.item_key}>{item.name}</option>
-                      {/each}
+                      <select id={`cosmetic-${slot}`} value={previewLoadout[slot] || ''} disabled={!!loadingSlot} on:change={event => previewSlot(slot, event.currentTarget.value)}>
+                        <option value="">{NAME_DEFAULT_LABELS[slot]}</option>
+                        {#each availableCosmetics.filter(item => item.slot === slot) as item (item.item_key)}
+                        <option value={item.item_key} disabled={!hasShopEntitlement(item, fittingRoom) && previewLoadout[slot] !== item.item_key}>{itemOptionLabel(item)}</option>
+                        {/each}
                     </select>
                     <div class="profile-cosmetics-name-preview" aria-label={`${NAME_SLOT_LABELS[slot]} preview`}>
                       <ShopItemPreview item={previewItems[slot]} nameLoadout={getNamePreviewLoadoutForSlot(previewLoadout, slot, previewItems[slot]?.css_value || '', namePreviewLayerValues)} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.NAME_CONTROL} />
@@ -306,7 +327,7 @@
                 <label for="cosmetic-avatar-effect">Avatar effect</label>
                 <select id="cosmetic-avatar-effect" value={previewLoadout['avatar_effect'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('avatar_effect', event.currentTarget.value)}>
                   <option value="">No avatar effect</option>
-                  {#each avatarItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+                  {#each avatarItems as item (item.item_key)}<option value={item.item_key} disabled={!hasShopEntitlement(item, fittingRoom) && previewLoadout.avatar_effect !== item.item_key}>{itemOptionLabel(item)}</option>{/each}
                 </select>
               </div>
             </div>
@@ -320,7 +341,7 @@
                 <select id="cosmetic-profile-border" value={previewLoadout['profile_border'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_border', event.currentTarget.value)}>
                   <option value="">No border</option>
                   {#each borderItems as item (item.item_key)}
-                    <option value={item.item_key}>{item.name}</option>
+                    <option value={item.item_key} disabled={!hasShopEntitlement(item, fittingRoom) && previewLoadout.profile_border !== item.item_key}>{itemOptionLabel(item)}</option>
                   {/each}
                 </select>
               </div>
@@ -334,7 +355,7 @@
                 <label for="cosmetic-cursor-trail">Cursor trail</label>
                 <select id="cosmetic-cursor-trail" value={previewLoadout['cursor_trail'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('cursor_trail', event.currentTarget.value)}>
                   <option value="">No cursor trail</option>
-                  {#each cursorItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+                  {#each cursorItems as item (item.item_key)}<option value={item.item_key} disabled={!hasShopEntitlement(item, fittingRoom) && previewLoadout.cursor_trail !== item.item_key}>{itemOptionLabel(item)}</option>{/each}
                 </select>
               </div>
             </div>
@@ -347,7 +368,7 @@
                 <label for="cosmetic-profile-atmosphere">Profile atmosphere</label>
                 <select id="cosmetic-profile-atmosphere" value={previewLoadout['profile_atmosphere'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_atmosphere', event.currentTarget.value)}>
                   <option value="">No atmosphere</option>
-                  {#each atmosphereItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+                  {#each atmosphereItems as item (item.item_key)}<option value={item.item_key} disabled={!hasShopEntitlement(item, fittingRoom) && previewLoadout.profile_atmosphere !== item.item_key}>{itemOptionLabel(item)}</option>{/each}
                 </select>
               </div>
             </div>
@@ -360,7 +381,7 @@
                 <label for="cosmetic-profile-motion">Profile motion</label>
                 <select id="cosmetic-profile-motion" value={previewLoadout.profile_motion || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_motion', event.currentTarget.value)}>
                   <option value="">No motion</option>
-                  {#each profileMotionItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+                  {#each profileMotionItems as item (item.item_key)}<option value={item.item_key} disabled={!hasShopEntitlement(item, fittingRoom) && previewLoadout.profile_motion !== item.item_key}>{itemOptionLabel(item)}</option>{/each}
                 </select>
               </div>
             </div>

@@ -11,13 +11,12 @@
   import RouteOutlet from './lib/RouteOutlet.svelte';
   import { loadChallengeLink } from './lib/challenges';
   import { getAppOrigin } from './lib/authUrls';
-  import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
+  import { VALID_VIEWS, parseRouteLocation, viewToCanonicalPath } from './lib/routes';
   import { getCanonicalProfilePath } from './lib/routeContract.js';
   import { resolveProfileAlias } from './lib/profileAliases.js';
   import { trackProductEvent } from './lib/productAnalytics.js';
   import { ACCOUNT_STATES } from './lib/authState';
   import { onMount, onDestroy, tick } from 'svelte';
-  import { SvelteURLSearchParams } from 'svelte/reactivity';
 
   const VALID_APP_ROUTES = new Set(['app', 'privacy', 'terms', 'how-to-play', 'auth', 'auth-callback', 'reset-password']);
   // Resolve the browser location before the first RouteOutlet pass. Starting
@@ -220,71 +219,32 @@
     if (view === 'game' && challengeData) {
       return;
     }
-    if (view === 'profile') {
-      const routeUsername = selectedProfileUsername
+    const routeUsername = view === 'profile'
+      ? (
+        selectedProfileUsername
         || ($selectedUserId && $session?.user?.id && $selectedUserId === $session.user.id ? currentProfileUsername : null)
-        || (!$selectedUserId ? currentProfileUsername : null);
-      const currentUrl = `${window.location.pathname}${window.location.search}`;
-      if (routeUsername) {
-        const canonicalProfilePath = getCanonicalProfilePath(routeUsername);
-        const nextPath = legacyProfile
-          ? `/u/${encodeURIComponent(routeUsername)}`
-          : canonicalProfilePath;
-        const legacySuffix = legacyProfile ? '?legacy=1' : '';
-        const nextUrl = `${nextPath || '/'}${legacySuffix}`;
-        if (nextUrl !== currentUrl) {
-          window.history.pushState({}, '', nextUrl);
-        }
-        return;
-      }
-    }
+        || (!$selectedUserId ? currentProfileUsername : null)
+      )
+      : null;
+    if (view === 'profile' && !routeUsername && !$selectedUserId) return;
 
-    if (view === 'home') {
-      if (`${window.location.pathname}${window.location.search}` !== '/') {
-        window.history.pushState({}, '', '/');
-      }
-      return;
-    }
-
-    if (view === 'profile-settings') {
-      const currentUrl = `${window.location.pathname}${window.location.search}`;
-      if (currentUrl !== '/profile/settings') {
-        window.history.pushState({}, '', '/profile/settings');
-      }
-      return;
-    }
-
-    if (view === 'progression') {
-      if (window.location.pathname !== '/progression') window.history.pushState({}, '', '/progression');
-      return;
-    }
-
-    if (view === 'pricing') {
-      const pricingPath = window.location.pathname === '/pricing/success' ? '/pricing/success' : '/pricing';
-      if (window.location.pathname !== pricingPath) window.history.pushState({}, '', pricingPath);
-      return;
-    }
-
-    if (view === 'game') {
-      const currentUrl = `${window.location.pathname}${window.location.search}`;
-      if (currentUrl !== '/roll') window.history.pushState({}, '', '/roll');
-      return;
-    }
-
-    const params = new SvelteURLSearchParams();
-    params.set('view', view);
-    if (view === 'leaderboard' && leaderboardTab !== 'today') {
-      params.set('tab', leaderboardTab);
-    }
-    if (view === 'profile' && $selectedUserId) {
-      params.set('profile', $selectedUserId);
-    }
-    if (view === 'profile' && legacyProfile) params.set('legacy', '1');
-    const nextSearch = params.toString();
-    const nextUrl = nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname;
+    // Pricing success is a valid sub-route. Preserve it during reactive
+    // synchronization, while explicit Pricing navigation still resolves to
+    // the canonical /pricing destination through setRoute().
+    const nextUrl = view === 'pricing' && window.location.pathname === '/pricing/success'
+      ? '/pricing/success'
+      : viewToCanonicalPath(view, {
+        tab: leaderboardTab,
+        username: routeUsername,
+        userId: $selectedUserId,
+        legacyProfile
+      });
+    if (!nextUrl) return;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
     if (nextUrl !== currentUrl) {
-      window.history.pushState({}, '', nextUrl);
+      // Reactive synchronization normalizes the address after state/data
+      // changes; it must not create another Back-stack entry.
+      window.history.replaceState({}, '', nextUrl);
     }
   }
 
@@ -345,43 +305,15 @@
     if (!VALID_VIEWS.includes(nextView)) return;
 
     updateHomepageHeaderTransition({ routeMode: 'app', view: nextView });
-    routeMode = 'app';
-    if (typeof window !== 'undefined') {
-      const nextPath = nextView === 'profile-settings'
-        ? '/profile/settings'
-        : nextView === 'progression'
-          ? '/progression'
-        : nextView === 'pricing'
-          ? '/pricing'
-          : nextView === 'game'
-            ? '/roll'
-            : '/';
-      if (window.location.pathname !== nextPath || window.location.search) {
-        window.history.pushState({}, '', nextPath);
-      }
+    const nextPath = viewToCanonicalPath(nextView, {
+      tab: options.tab || leaderboardTab,
+      username: options.username || options.profileUsername || $profile?.username || $authUser?.user_metadata?.username || null,
+      userId: options.userId || null,
+      legacyProfile: Boolean(options.legacyProfile)
+    });
+    if (nextPath) {
+      navigateToPath(nextPath, { navigation: { view: nextView, ...options } });
     }
-    view = nextView;
-    if (nextView !== 'leaderboard') {
-      leaderboardTab = options.tab && VALID_LEADERBOARD_TABS.includes(options.tab) ? options.tab : leaderboardTab;
-    } else if (options.tab && VALID_LEADERBOARD_TABS.includes(options.tab)) {
-      leaderboardTab = options.tab;
-    }
-
-    if (nextView === 'profile') {
-      selectedProfileUsername = options.username || options.profileUsername || $profile?.username || $authUser?.user_metadata?.username || null;
-      selectedUserId.set(options.userId || null);
-      legacyProfile = Boolean(options.legacyProfile);
-      profileRouteKind = legacyProfile ? 'compatibility' : 'root';
-    } else {
-      selectedProfileUsername = null;
-      profileRouteKind = null;
-      selectedUserId.set(null);
-      legacyProfile = false;
-    }
-
-    syncRoute();
-    trackCurrentRoute();
-    void focusRouteContent();
   }
 
   async function focusRouteContent() {
@@ -391,19 +323,22 @@
     mainContent.focus({ preventScroll: true });
   }
 
-  function navigateToPath(pathname) {
+  function navigateToPath(pathname, { navigation = null } = {}) {
     if (typeof window === 'undefined') return;
     const normalized = pathname || '/';
     const nextUrl = new URL(normalized, window.location.origin);
     const navigationGuard = new CustomEvent('chromadie:navigation-request', {
-      detail: { nextPath: `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}` },
+      detail: {
+        nextPath: `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+        ...(navigation ? { navigation } : {})
+      },
       cancelable: true
     });
     if (!window.dispatchEvent(navigationGuard)) return;
     if (routeMode === 'app' && view === 'game' && challengeData && !nextUrl.pathname.startsWith('/c/')) {
       clearChallengeState();
     }
-    window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}`);
+    window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
     parseRoute();
     void focusRouteContent();
   }
@@ -493,13 +428,6 @@
   }
 
   function handleNavigation(event) {
-    if (typeof window !== 'undefined') {
-      const navigationGuard = new CustomEvent('chromadie:navigation-request', {
-        detail: { navigation: event.detail || {} },
-        cancelable: true
-      });
-      if (!window.dispatchEvent(navigationGuard)) return;
-    }
     const { view: nextView, userId = null, username = null, tab = null } = event.detail || {};
     if (nextView) {
       if (routeMode === 'app' && view === 'game' && challengeData && nextView !== 'game') {

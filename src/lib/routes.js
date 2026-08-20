@@ -1,6 +1,7 @@
 import {
   decodeRouteSegment,
   getCanonicalProfilePath,
+  getCompatibilityProfilePath,
   isReservedRouteSegment,
   normalizeProfileAliasSegment,
   normalizeUsernameSegment
@@ -12,6 +13,48 @@ export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'monthly'])
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
 const VALID_LEADERBOARD_TAB_SET = new Set(VALID_LEADERBOARD_TABS)
 const CLEAN_APP_PATHS = new Set(['/', '/roll', '/shop', '/leaderboard', '/profile', '/profile/settings', '/progression', '/prototype/profile', '/pricing', '/pricing/success'])
+
+export function viewToCanonicalPath(view, {
+  tab = 'today',
+  username = null,
+  userId = null,
+  legacyProfile = false
+} = {}) {
+  switch (view) {
+    case 'home':
+      return '/';
+    case 'game':
+      return '/roll';
+    case 'leaderboard': {
+      const params = new URLSearchParams();
+      if (VALID_LEADERBOARD_TAB_SET.has(tab) && tab !== 'today') params.set('tab', tab);
+      const search = params.toString();
+      return `/leaderboard${search ? `?${search}` : ''}`;
+    }
+    case 'profile-settings':
+      return '/profile/settings';
+    case 'progression':
+      return '/progression';
+    case 'prototype':
+      return '/prototype/profile';
+    case 'pricing':
+      return '/pricing';
+    case 'profile': {
+      const profilePath = legacyProfile
+        ? getCompatibilityProfilePath(username)
+        : getCanonicalProfilePath(username);
+      if (profilePath) return legacyProfile ? `${profilePath}?legacy=1` : profilePath;
+
+      const params = new URLSearchParams({ view: 'profile' });
+      if (userId !== null && userId !== undefined && String(userId)) {
+        params.set('profile', String(userId).slice(0, 128));
+      }
+      return `/?${params.toString()}`;
+    }
+    default:
+      return null;
+  }
+}
 
 function getCleanPathView(pathname) {
   if (pathname === '/') return 'home'

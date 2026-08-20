@@ -4417,3 +4417,26 @@ responsive desktop two-column/mobile stacked composition.
   stopped at its initial local homepage hydration because Chromium reported
   `ERR_NETWORK_CHANGED` while Vite HMR modules were loading; no progression
   assertion ran in that smoke attempt.
+
+## Release audit remediation — 2026-08-19
+
+- Restored exact-repository ESLint cleanliness and added regression coverage for
+  canonical route mapping and single-entry history behavior.
+- Made progression rewards actual earned catalog access while preserving free
+  baseline expressions, premium Atelier expressions, and compatibility for
+  currently equipped rewards.
+- Corrected progression analytics semantics: goal impressions use a distinct
+  bounded event, unlock events are reserved for unlock presentation, account
+  mode is checked server-side, and retention cleanup is no longer on the hot
+  event path.
+- Added atmosphere media size budgets and a poster/static fallback for
+  Save-Data and constrained connections.
+- Local validation passed: build, Svelte check, full ESLint, 419 tests, links,
+  CSP, performance, username/balance/catalog/scoring drift, database security,
+  Supabase lint, and a fresh database reset. Advisory bundle headroom remains
+  tight on Dashboard and public-profile routes; the media budget passes.
+- Browser smoke reached the homepage, signup, authenticated Studio refresh,
+  stale-draft, alias, and live-preview checks. The default dev smoke cannot
+  exercise uploads because local R2 is intentionally disabled; the production
+  smoke was blocked before media assertions by the external Turnstile test
+  token. This remains an environment-dependent CI gate, not a claimed pass.

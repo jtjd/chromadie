@@ -19,7 +19,8 @@ test('Customize is the only profile-expression acquisition surface', async () =>
   assert.match(header, /export let isProfileSettings = false/);
   assert.match(app, /window\.location\.pathname === '\/shop'/);
   assert.match(cosmetics, /void loadCosmeticCatalog\(\)/);
-  assert.doesNotMatch(cosmetics, /purchase_item|hasShopEntitlement|ownedCosmetics/);
+  assert.doesNotMatch(cosmetics, /purchase_item|ownedCosmetics/);
+  assert.match(cosmetics, /hasShopEntitlement/);
   assert.match(stores, /export function loadCosmeticCatalog\(\)/);
 });
 

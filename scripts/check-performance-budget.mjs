@@ -6,6 +6,8 @@ const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const distRoot = join(projectRoot, 'dist');
 const assetsRoot = join(distRoot, 'assets');
 const manifestPath = join(distRoot, '.vite', 'manifest.json');
+const publicMediaRoot = join(projectRoot, 'public');
+const atmosphereMediaRoot = join(publicMediaRoot, 'atmospheres');
 
 // Blocking budgets describe payloads a visitor can actually load. Aggregate
 // totals remain advisory catalog-growth signals because mutually exclusive
@@ -38,6 +40,16 @@ const advisoryCatalogTargets = {
   css: 400 * 1024
 };
 
+// Decorative atmosphere media is intentionally outside the compiled asset
+// graph, so keep a separate source-media guardrail for the public-profile
+// acquisition surface. The per-video limit reflects the largest file a
+// visitor can be asked to download; the catalog limit prevents silent growth
+// from accumulating across fallback formats and authored scenes.
+const mediaBudgets = {
+  atmosphereCatalog: 90 * 1024 * 1024,
+  largestAtmosphereVideo: 12 * 1024 * 1024
+};
+
 function formatBytes(bytes) {
   return `${(bytes / 1024).toFixed(2)} kB`;
 }
@@ -49,6 +61,30 @@ async function assetsByExtension(extension) {
     name: entry.name,
     bytes: (await stat(join(assetsRoot, entry.name))).size
   })));
+}
+
+async function listFiles(root) {
+  const entries = await readdir(root, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const filePath = join(root, entry.name);
+    if (entry.isDirectory()) files.push(...await listFiles(filePath));
+    else files.push(filePath);
+  }
+  return files;
+}
+
+async function summarizeAtmosphereMedia() {
+  const files = await listFiles(atmosphereMediaRoot);
+  const media = await Promise.all(files.map(async filePath => ({
+    path: filePath,
+    bytes: (await stat(filePath)).size
+  })));
+  const videos = media.filter(file => /\.(?:webm|mp4)$/i.test(file.path));
+  return {
+    total: media.reduce((sum, file) => sum + file.bytes, 0),
+    largestVideo: videos.sort((left, right) => right.bytes - left.bytes)[0] || null
+  };
 }
 
 function assetNameFromUrl(value) {
@@ -120,6 +156,7 @@ try {
   const initialNames = getInitialAssetNames(html);
   const javascript = summarize(await assetsByExtension('.js'), initialNames);
   const css = summarize(await assetsByExtension('.css'), initialNames);
+  const atmosphereMedia = await summarizeAtmosphereMedia();
   const routeSummaries = await Promise.all(Object.entries(budgets.routes).map(async ([name, routeBudget]) => ({
     name,
     budget: routeBudget,
@@ -131,6 +168,8 @@ try {
     ['Initial CSS', css.initialTotal, budgets.initialCss],
     ['Largest lazy CSS', css.largestLazy?.bytes || 0, budgets.lazyCss],
     ['HTML shell', htmlBytes, budgets.html],
+    ['Atmosphere media catalog', atmosphereMedia.total, mediaBudgets.atmosphereCatalog],
+    ['Largest atmosphere video', atmosphereMedia.largestVideo?.bytes || 0, mediaBudgets.largestAtmosphereVideo],
     ...routeSummaries.flatMap(route => [
       [`${route.name} route JavaScript`, route.javascript, route.budget.javascript],
       [`${route.name} route CSS`, route.css, route.budget.css]
@@ -146,6 +185,9 @@ try {
   if (javascript.largestLazy) console.log(`Largest lazy JavaScript asset: ${javascript.largestLazy.name} (${formatBytes(javascript.largestLazy.bytes)}).`);
   if (css.largest) console.log(`Largest CSS asset: ${css.largest.name} (${formatBytes(css.largest.bytes)}).`);
   if (css.largestLazy) console.log(`Largest lazy CSS asset: ${css.largestLazy.name} (${formatBytes(css.largestLazy.bytes)}).`);
+  if (atmosphereMedia.largestVideo) {
+    console.log(`Largest atmosphere video: ${atmosphereMedia.largestVideo.path.replace(`${projectRoot}/`, '')} (${formatBytes(atmosphereMedia.largestVideo.bytes)}).`);
+  }
   const advisoryOverages = [
     ['JavaScript catalog', javascript.total, advisoryCatalogTargets.javascript],
     ['CSS catalog', css.total, advisoryCatalogTargets.css]

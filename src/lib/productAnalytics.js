@@ -14,6 +14,7 @@ export const PRODUCT_ANALYTICS_EVENTS = Object.freeze([
   'explore_clicked',
   'progression_viewed',
   'progression_roll_completed',
+  'progression_goal_viewed',
   'progression_unlock_seen',
   'progression_weekly_focus_viewed',
   'progression_weekly_focus_completed',
@@ -35,6 +36,7 @@ const EVENT_PROPERTY_KEYS = Object.freeze({
   explore_clicked: new Set(),
   progression_viewed: new Set(['surface', 'accountMode', 'rolloutStage']),
   progression_roll_completed: new Set(['surface', 'accountMode', 'rolloutStage']),
+  progression_goal_viewed: new Set(['surface', 'accountMode', 'rolloutStage', 'track']),
   progression_unlock_seen: new Set(['surface', 'accountMode', 'rolloutStage', 'track']),
   progression_weekly_focus_viewed: new Set(['surface', 'accountMode', 'rolloutStage']),
   progression_weekly_focus_completed: new Set(['surface', 'accountMode', 'rolloutStage']),
@@ -46,6 +48,7 @@ const CONSENT_VALUES = new Set(['granted', 'denied']);
 const PROGRESSION_ANALYTICS_EVENTS = new Set([
   'progression_viewed',
   'progression_roll_completed',
+  'progression_goal_viewed',
   'progression_unlock_seen',
   'progression_weekly_focus_viewed',
   'progression_weekly_focus_completed',

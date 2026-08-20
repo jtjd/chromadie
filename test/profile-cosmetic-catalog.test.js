@@ -31,7 +31,7 @@ test('the retired Shop surface has no runtime route or presentation files', asyn
   }
 });
 
-test('Customize exposes all active profile expression items without acquisition gates', async () => {
+test('Customize exposes active expressions with server-owned acquisition states', async () => {
   const [cosmetics, stores, analytics] = await Promise.all([
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/stores.js'),
@@ -40,7 +40,9 @@ test('Customize exposes all active profile expression items without acquisition 
 
   assert.match(cosmetics, /availableCosmetics/);
   assert.match(cosmetics, /item\.catalog_status === 'active'/);
-  assert.doesNotMatch(cosmetics, /hasShopEntitlement|ownedCosmetics|purchase_item/);
+  assert.match(cosmetics, /hasShopEntitlement/);
+  assert.match(cosmetics, /getShopAccessLabel/);
+  assert.doesNotMatch(cosmetics, /ownedCosmetics|purchase_item/);
   assert.match(cosmetics, /equip_item/);
   assert.match(cosmetics, /unequip_item/);
   assert.match(cosmetics, /loadCosmeticCatalog/);
@@ -52,7 +54,7 @@ test('Customize exposes all active profile expression items without acquisition 
   assert.doesNotMatch(analytics, /shop_try_on|shop_equip/);
 });
 
-test('the interim catalog migration makes profile expression free and resets only invalid borders', async () => {
+test('the catalog keeps a free expression baseline and reserves journey rewards', async () => {
   const [migration, seed, drift] = await Promise.all([
     read('supabase/migrations/20260815150000_profile_expression_catalog_free.sql'),
     read('supabase/seed.sql'),
@@ -65,8 +67,11 @@ test('the interim catalog migration makes profile expression free and resets onl
   assert.match(migration, /equipped_cosmetics - 'profile_border'/);
   assert.match(migration, /item\.catalog_status = 'active'/);
   assert.doesNotMatch(migration, /DELETE FROM public\.profiles/);
-  assert.match(seed, /Customize is the only active profile-expression surface/);
+  assert.match(seed, /Customize is the active profile-expression surface/);
   assert.match(seed, /SET access_tier = 'free'/);
+  assert.match(seed, /progression_milestones AS milestone/);
+  assert.match(seed, /SET access_tier = 'earned'/);
+  assert.match(seed, /name_prism_atelier/);
   assert.match(seed, /A centered glass profile card that leaves the user background in charge/);
   assert.match(drift, /applyProfileExpressionFreeUpdates/);
 });
