@@ -1,6 +1,6 @@
 <script>
   import { ACCOUNT_STATES } from './authState.js';
-  import { loadProgressionData } from './progressionData.js';
+  import { loadDailyRollColor, loadProgressionData } from './progressionData.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import ProfileProgression from './ProfileProgression.svelte';
   import ProgressionPathIcon from './ProgressionPathIcon.svelte';
@@ -13,6 +13,7 @@
   let error = '';
   let loadedAccountId = '';
   let progressionLoaded = false;
+  let dailyRollColor = '';
   let requestId = 0;
 
   $: accountId = $session?.user?.id || $profile?.id || '';
@@ -21,9 +22,7 @@
     userId: accountProfile?.id || accountId,
     isStaff: Boolean(accountProfile?.is_staff)
   });
-  $: todayColor = /^#[0-9a-f]{6}$/i.test(accountProfile?.mood_color || '')
-    ? accountProfile.mood_color.toUpperCase()
-    : '';
+  $: todayColor = dailyRollColor;
   $: accentColor = normalizeHexColor(todayColor, '#FFFFFF');
   $: accentInk = getReadableTextColor(accentColor);
   $: currentStreak = Math.max(0, Number(progression?.currentStreak ?? accountProfile?.current_streak) || 0);
@@ -52,6 +51,7 @@
     loadedAccountId = '';
     progression = null;
     progressionLoaded = false;
+    dailyRollColor = '';
     error = '';
     loading = false;
   }
@@ -63,15 +63,19 @@
     progressionLoaded = false;
 
     try {
-      const result = await loadProgressionData({
-        supabaseClient: supabase,
-        userId,
-        fallbackEp: $profile?.lifetime_ep
-      });
+      const [result, dailyRoll] = await Promise.all([
+        loadProgressionData({
+          supabaseClient: supabase,
+          userId,
+          fallbackEp: $profile?.lifetime_ep
+        }),
+        loadDailyRollColor(supabase, userId)
+      ]);
 
       if (currentRequestId !== requestId || userId !== $session?.user?.id) return;
 
       progression = result.data || {};
+      dailyRollColor = dailyRoll.color;
       error = result.error?.message || '';
       progressionLoaded = true;
     } catch {
@@ -146,6 +150,9 @@
     const luminance = (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
     return luminance > 0.179 ? '#0E0E10' : '#FFFFFF';
   }
+
+  // The route has no page-level animation; child glass/accordion surfaces and
+  // the shared button system own the prefers-reduced-motion fallbacks.
 </script>
 
 <svelte:head>
@@ -155,7 +162,7 @@
 <div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-ink:${accentInk};--progression-accent-light:color-mix(in srgb,${accentColor} 76%,white);--progression-accent-glow:color-mix(in srgb,${accentColor} 24%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentColor} 40%,transparent)`}>
   <div class="progression-page__shell">
     <div class="progression-page__composition">
-      <div class="progression-page__rail">
+      <div class="progression-page__rail" style="--progression-rail-offset:clamp(7rem,17vh,10rem);align-self:start">
         <header class="progression-page__intro" aria-labelledby="progression-page-title">
           <h1 id="progression-page-title">Progression</h1>
           <p class="progression-page__scope">Rolls, rank, and unlocks.</p>
@@ -225,6 +232,7 @@
           unlockedAchievements={{}}
           {progression}
           {featureFlags}
+          currentRollColor={todayColor}
           pageMode={true}
           analyticsSurface="progression"
         />
@@ -253,6 +261,7 @@
   }
 
   .progression-page__composition { display:grid; grid-template-columns:minmax(13rem,.72fr) minmax(28rem,1.28fr); align-items:center; gap:clamp(2rem,6vw,5rem); }
+  .progression-page__rail { padding-top:var(--progression-rail-offset); }
   .progression-page__intro {
     display: flex;
     align-items: flex-start;
@@ -297,9 +306,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    min-height: 10rem;
     grid-column:1 / -1;
-    margin-top: 0;
     padding: 1.4rem 1.5rem;
   }
 
@@ -318,7 +325,6 @@
 
   .progression-page__state--guest {
     align-items: flex-end;
-    margin-top: 0;
     padding: clamp(1.5rem, 4vw, 3rem);
   }
 
@@ -454,14 +460,9 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .progression-page {
-      scroll-behavior: auto;
-    }
-  }
-
   @media (max-width: 900px) {
     .progression-page__composition { grid-template-columns:minmax(0, 620px); justify-content:center; gap:2rem; }
+    .progression-page__rail { padding-top:0; }
   }
 
   .progression-page__account-bar {

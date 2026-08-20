@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-20 — Match Progression to the current roll
+
+- Progression now uses today's server-authoritative roll color, matching the
+  swatch and accent shown on Roll; the saved profile mood color no longer
+  masquerades as today's result.
+- The desktop title and streak rail is positioned against the top of the tall
+  progression board for a more balanced Roll-like composition. Mobile remains
+  a single-column stack.
+- No gameplay, scoring, reward, inventory, or database behavior changed.
+
 ## 2026-08-20 — Align Progression with Daily Roll
 
 - Rebalanced the authenticated page into a Roll-inspired split composition:

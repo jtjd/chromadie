@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-20 — Use the authoritative daily roll on Progression
+
+The dedicated `/progression` route now reads today's color through the same
+authenticated `get_my_daily_roll()` boundary used by Roll. A saved profile
+`mood_color` remains an appearance preference and must not stand in for a
+roll that may not exist or may have a different value. When no current roll is
+available, Progression stays neutral rather than inventing a color. The tall
+glass board's narrative rail is top-anchored with a measured offset so its
+title and streak action share the same visual rhythm as the Roll composition.
+No schema, scoring, reward, inventory, or RLS contract changed.
+
 ## 2026-08-20 — Make Progression feel like the Roll surface
 
 The authenticated `/progression` route now uses the Roll page's asymmetric

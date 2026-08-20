@@ -16,6 +16,7 @@
   export let unlockedAchievements = {};
   export let progression = {};
   export let featureFlags = {};
+  export let currentRollColor = null;
   export let pageMode = false;
   export let analyticsSurface = 'studio';
 
@@ -59,8 +60,9 @@
   $: safeCollectionItems = Array.isArray(collectionItems) ? collectionItems : [];
   $: safeTimelineEvents = Array.isArray(timelineEvents) ? timelineEvents : [];
   $: previewIdentity = account.display_name || account.username || 'You';
-  $: hasTodayColor = /^#[0-9a-f]{6}$/i.test(account.mood_color || '');
-  $: todayColor = hasTodayColor ? account.mood_color.toUpperCase() : '';
+  $: resolvedTodayColor = currentRollColor === null ? account.mood_color : currentRollColor;
+  $: hasTodayColor = /^#[0-9a-f]{6}$/i.test(resolvedTodayColor || '');
+  $: todayColor = hasTodayColor ? resolvedTodayColor.toUpperCase() : '';
   // The canonical expression renderer accepts a color for data previews. A neutral
   // fallback keeps the page grayscale when the profile has no current roll.
   $: previewColor = todayColor || '#FFFFFF';

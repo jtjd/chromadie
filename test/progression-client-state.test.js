@@ -6,6 +6,8 @@ import {
   normalizeProgressionData
 } from '../src/lib/progressionState.js';
 import {
+  DAILY_ROLL_RPC,
+  loadDailyRollColor,
   loadProgressionData,
   PROGRESSION_RPC
 } from '../src/lib/progressionData.js';
@@ -222,6 +224,24 @@ test('progression loader calls only the authenticated owner RPC and preserves co
   assert.equal(skipped.skipped, true);
   assert.equal(calls.length, 1);
   assert.deepEqual(createEmptyProgression().pendingUnlocks, []);
+});
+
+test('daily roll color loader uses the authenticated server roll and rejects appearance-only values', async () => {
+  const calls = [];
+  const supabaseClient = {
+    rpc(name) {
+      calls.push(name);
+      return Promise.resolve({ data: { hex_code: '#f9d9e8' }, error: null });
+    }
+  };
+
+  const loaded = await loadDailyRollColor(supabaseClient, 'user-id');
+  assert.equal(calls[0], DAILY_ROLL_RPC);
+  assert.equal(loaded.color, '#F9D9E8');
+  assert.equal(loaded.error, null);
+
+  const skipped = await loadDailyRollColor(supabaseClient, null);
+  assert.equal(skipped.skipped, true);
 });
 
 test('progression analytics require consent and authentication, then dedupe lifecycle events', async () => {

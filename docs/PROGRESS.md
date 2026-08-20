@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Current-roll color and composition correction — 2026-08-20
+
+- Progression now consumes the server-owned `get_my_daily_roll()` color, so
+  the streak chip, Rank hero, preview data, and restrained halo match the
+  color shown by Roll instead of the profile's saved mood preference.
+- Kept the page neutral before a roll and when the authenticated daily read is
+  unavailable; the progression record remains usable without a fabricated
+  accent.
+- Top-anchored the left narrative rail against the tall glass board to remove
+  the large empty upper-left gap on desktop while preserving the mobile stack.
+- Added client coverage for the daily-roll boundary and rechecked the browser
+  route, reduced-motion behavior, and performance budget.
+
 ## Roll-aligned Progression composition — 2026-08-20
 
 - Recomposed the authenticated page as a Roll-like split: a compact left rail

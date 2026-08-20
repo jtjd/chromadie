@@ -2,8 +2,10 @@ import {
   createEmptyProgression,
   normalizeProgressionData
 } from './progressionState.js';
+import { normalizeHexColor } from './utils.js';
 
 export const PROGRESSION_RPC = 'get_my_progression';
+export const DAILY_ROLL_RPC = 'get_my_daily_roll';
 
 const UNAVAILABLE_MESSAGE = 'Progression data is unavailable.';
 
@@ -80,6 +82,30 @@ export async function loadProgressionData(clientOrOptions, userOrOptions = null,
       error: normalizeError(error),
       skipped: false
     };
+  }
+}
+
+/**
+ * Read the server-owned roll for the current UTC day. The profile mood color
+ * is an appearance preference, not proof of the color rolled today, so the
+ * dedicated progression route uses this boundary for its live accent.
+ */
+export async function loadDailyRollColor(supabaseClient, userId) {
+  if (!supabaseClient || !userId || typeof supabaseClient.rpc !== 'function') {
+    return { color: '', data: null, error: null, skipped: true };
+  }
+
+  try {
+    const { data, error } = await supabaseClient.rpc(DAILY_ROLL_RPC);
+    if (error) return { color: '', data: null, error: normalizeError(error), skipped: false };
+    return {
+      color: normalizeHexColor(data?.hex_code || data?.hex, ''),
+      data: data || null,
+      error: null,
+      skipped: false
+    };
+  } catch (error) {
+    return { color: '', data: null, error: normalizeError(error), skipped: false };
   }
 }
 
