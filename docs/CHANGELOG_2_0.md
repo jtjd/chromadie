@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-20 — Call profile visual layers cosmetics
+
+- Updated player-facing labels and reward copy to use “cosmetics” consistently
+  across progression, roll unlocks, Customize, Profile Studio, Premium, and
+  pricing.
+- Preserved existing internal compatibility names and server contracts.
+
 ## 2026-08-20 — Match Progression to the current roll
 
 - Progression now uses today's server-authoritative roll color, matching the
@@ -29,7 +36,7 @@ Document user-visible redesign changes by milestone.
   point, quiet supporting metrics, and a one-line weekly color challenge.
 - Removed the stray Rank color dot and kept rolled color as a data swatch only.
 - Collapsed Rank, Ritual, and Discovery into instant, one-at-a-time accordions;
-  expanded lanes retain their short next-step copy and real expression
+  expanded lanes retain their short next-step copy and real cosmetic
   thumbnail previews.
 - Kept the neutral vignette, glass edge treatment, CTA sheen, abbreviated
   numbers, keyboard focus, and reduced-motion behavior consistent with the
@@ -42,7 +49,7 @@ Document user-visible redesign changes by milestone.
 - Made Rank the focal point with a circular progress ring and large lifetime EP;
   summary stats now sit in a quieter secondary row. Journey lanes use the
   existing die/pip vocabulary for distinct Rank, Ritual, and Discovery glyphs.
-- Replaced empty reward placeholders with real canonical expression thumbnails;
+- Replaced empty reward placeholders with real canonical cosmetic thumbnails;
   locked rewards stay visible in a dimmed grayscale state, while earned rewards
   render normally. Rolled and weekly colors remain data-only swatches.
 
@@ -65,7 +72,7 @@ Document user-visible redesign changes by milestone.
   “See later goals” controls. Discovery remains explicitly independent, while
   Weekly color is presented as a secondary challenge.
 - Corrected dedicated-route empty-state messaging so roll history, goals, and
-  earned expressions are never reported as zero merely because a private
+  earned cosmetics are never reported as zero merely because a private
   detail feed is unavailable. Long reward names now wrap on mobile.
 - Preserved the existing near-black canvas, quiet rules, typography, buttons,
   server-owned progression data, and reduced-motion behavior.
@@ -78,14 +85,14 @@ Document user-visible redesign changes by milestone.
 - Completed the server-authoritative manifest, roll-transaction grant path,
   idempotent account reconciliation, owner read boundary, live presentation/
   acknowledgement transitions, and bounded public progression proof.
-- Made progression rewards genuine zero-cost earned expressions using active
+- Made progression rewards genuine zero-cost earned cosmetics using active
   canonical renderers, while preserving the generous free baseline and keeping
-  Premium as expression rather than gameplay prestige. Added earned 730- and
+  Premium as cosmetics rather than gameplay prestige. Added earned 730- and
   1,095-roll capstones and retired greyscale from the published future journey
   without deleting historical ownership.
 - Kept the route narrow and lazy, reused the canonical reward preview on
   demand, shared the unlock queue across both roll surfaces, and handed earned
-  expressions to Profile Studio. Corrected future-goal and independent
+  cosmetics to Profile Studio. Corrected future-goal and independent
   Discovery visibility.
 - Defined progression analytics as consented, authenticated-only daily
   aggregates with explicit lifecycle semantics, no hover proxy or raw

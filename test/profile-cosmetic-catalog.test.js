@@ -31,7 +31,7 @@ test('the retired Shop surface has no runtime route or presentation files', asyn
   }
 });
 
-test('Customize exposes active expressions with server-owned acquisition states', async () => {
+test('Customize exposes active cosmetics with server-owned acquisition states', async () => {
   const [cosmetics, stores, analytics] = await Promise.all([
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/stores.js'),
@@ -54,7 +54,7 @@ test('Customize exposes active expressions with server-owned acquisition states'
   assert.doesNotMatch(analytics, /shop_try_on|shop_equip/);
 });
 
-test('the catalog keeps a free expression baseline and reserves journey rewards', async () => {
+test('the catalog keeps a free cosmetic baseline and reserves journey rewards', async () => {
   const [migration, seed, drift] = await Promise.all([
     read('supabase/migrations/20260815150000_profile_expression_catalog_free.sql'),
     read('supabase/seed.sql'),

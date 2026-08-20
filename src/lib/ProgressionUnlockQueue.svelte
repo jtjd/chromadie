@@ -211,7 +211,7 @@
     <div class="progression-unlock-queue__heading">
       <div>
         <p class="progression-unlock-queue__eyebrow">New in your profile</p>
-        <h3 id={queueTitleId}>Expression earned</h3>
+        <h3 id={queueTitleId}>Cosmetic earned</h3>
       </div>
       <span class="progression-unlock-queue__count">{remainingCount ? `${remainingCount + 1} rewards` : '1 reward'}</span>
     </div>
@@ -219,7 +219,7 @@
     <div class="progression-unlock-queue__body">
       <div class="progression-unlock-queue__copy">
         <strong>{featuredUnlock.reward?.name || featuredUnlock.name}</strong>
-        <p>{featuredUnlock.track === 'discovery' ? 'A discovery has become part of your profile history.' : featuredUnlock.track === 'ritual' ? 'Your continued practice earned a new expression.' : 'Your rank earned a new expression.'}</p>
+        <p>{featuredUnlock.track === 'discovery' ? 'A discovery has become part of your profile history.' : featuredUnlock.track === 'ritual' ? 'Your continued practice earned a new cosmetic.' : 'Your rank earned a new cosmetic.'}</p>
         {#if remainingCount}
           <small>{remainingCount} more unlock{remainingCount === 1 ? '' : 's'} waiting here.</small>
         {/if}

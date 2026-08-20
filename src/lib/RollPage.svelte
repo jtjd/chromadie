@@ -111,7 +111,7 @@
           <div class="roll-page__proof" role="status" aria-live="polite">
             {#if rollContext.newProgressionUnlocks?.length}
               <div class="roll-page__proof-block">
-                <span class="roll-page__proof-label">NEW EXPRESSION</span>
+                <span class="roll-page__proof-label">NEW COSMETIC</span>
                 <strong>{rollContext.newProgressionUnlocks.map(unlock => unlock.reward?.name || unlock.name).join(' · ')}</strong>
               </div>
             {/if}

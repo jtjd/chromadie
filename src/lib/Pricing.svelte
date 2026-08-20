@@ -108,12 +108,12 @@
   <div class="pricing-page__shell">
     <header class="pricing-hero">
       <div class="pricing-hero__heading">
-        <p class="pricing-page__eyebrow">Chromadie Plus / expression, once</p>
+        <p class="pricing-page__eyebrow">Chromadie Plus / cosmetics, once</p>
         <h1 id="pricing-title">Make more <span>of your profile.</span></h1>
       </div>
       <div class="pricing-hero__side">
         <p>Keep the daily ritual, the color history, and everything you earn. Plus gives the page around your identity more room to become yours.</p>
-        <div class="pricing-hero__signal" aria-label="Lifetime profile expression">
+        <div class="pricing-hero__signal" aria-label="Lifetime profile cosmetics">
           <span>01</span>
           <strong>one identity / lifetime access</strong>
         </div>
@@ -150,15 +150,15 @@
       <article class="pricing-card pricing-card--plus">
         <div class="pricing-card__head">
           <p class="pricing-card__label"><span>02</span> Chromadie Plus / lifetime</p>
-          <h2>More room for expression.</h2>
+          <h2>More room for cosmetics.</h2>
           <p class="pricing-card__price">$7.99 <span>USD, one time</span></p>
         </div>
         <p class="pricing-card__summary">A single purchase for the tools that help your profile hold more of your story.</p>
         <ul>
           <li>Everything in the complete free profile</li>
-          <li>Premium structured templates and expression catalog</li>
+          <li>Premium structured templates and cosmetics catalog</li>
           <li>Lifetime access on one Chromadie identity</li>
-          <li>Future Plus profile-expression capacity as it launches</li>
+          <li>Future Plus profile-cosmetic capacity as it launches</li>
           <li>No paid rank, rewards, achievements, or prestige</li>
         </ul>
         <button type="button" class="pricing-card__primary" on:click={beginCheckout} disabled={busy || plusActive || !commerceEnabled}>

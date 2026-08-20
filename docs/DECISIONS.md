@@ -1,5 +1,12 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-20 — Use cosmetics as the product language
+
+Player-facing copy now calls profile appearance layers, earned rewards, and
+premium visual additions “cosmetics.” The compatibility names for existing
+RPCs, database fields, events, and renderer components remain unchanged so
+stored profiles and server contracts do not need a risky rename.
+
 ## 2026-08-20 — Use the authoritative daily roll on Progression
 
 The dedicated `/progression` route now reads today's color through the same
@@ -41,16 +48,16 @@ short milestone sentence, canonical reward thumbnail, and completed/future
 links. This is presentation-only: the server remains authoritative for rank,
 streaks, milestones, rewards, inventory, and privacy boundaries.
 
-## 2026-08-20 — Keep progression state neutral and expression data tangible
+## 2026-08-20 — Keep progression state neutral and cosmetic data tangible
 
 Progression structural state uses dedicated grayscale tokens (`--color-state-active`,
 `--color-state-active-soft`, and the glass-card shadows). The current rolled color
 is rendered only as a validated swatch chip or as data inside the canonical
-expression preview; it never controls a card border, progress bar, or glow.
+cosmetic preview; it never controls a card border, progress bar, or glow.
 
 The Rank card is the story focal point with a neutral SVG progress ring and
 display-scale lifetime EP. Reward slots eagerly reuse `ShopItemPreview` so both
-earned and locked expressions show their real renderer; locked thumbnails are
+earned and locked cosmetics show their real renderer; locked thumbnails are
 desaturated and dimmed. Journey lane glyphs are small inline SVGs built from the
 existing arc, pip-trail, and faceted-die vocabulary. The page vignette and CTA
 sheen remain grayscale and reduced-motion safe. No backend or authority contract

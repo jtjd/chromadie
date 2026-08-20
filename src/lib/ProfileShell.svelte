@@ -669,7 +669,7 @@
           </div>
         {/if}
         {#if showLowerExpression && hasProfileContent}
-          <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition data-profile-continuation="content" aria-label={username + ' expression'}>
+          <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition data-profile-continuation="content" aria-label={username + ' cosmetics'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="content">
               <ProfileContent content={profileContent} onEntryClick={recordProfileClick} />
             </div>

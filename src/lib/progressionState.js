@@ -266,7 +266,7 @@ function normalizeReward(value, fallback = null) {
 
   const reward = {
     itemKey,
-    name: normalizeText(source?.name || fallbackSource?.name, 'Profile expression', 100),
+    name: normalizeText(source?.name || fallbackSource?.name, 'Profile cosmetic', 100),
     slot: normalizeText(source?.slot || fallbackSource?.slot, 'expression', 60)
   };
   const category = normalizeText(source?.category || source?.kind, '', 60);

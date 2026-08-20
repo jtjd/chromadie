@@ -369,7 +369,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
   assert(state.recentUnlocks, `${label} did not render historical progression rewards: ${JSON.stringify(state)}.`);
   assert(state.rankRing, `${label} did not render the rank progress ring: ${JSON.stringify(state)}.`);
   assert(state.pathIconCount >= 3, `${label} did not render the three path glyphs: ${JSON.stringify(state)}.`);
-  assert(state.rewardThumbnailCount === 0 || state.canonicalThumbnailCount >= 1, `${label} did not render a canonical expression thumbnail: ${JSON.stringify(state)}.`);
+  assert(state.rewardThumbnailCount === 0 || state.canonicalThumbnailCount >= 1, `${label} did not render a canonical cosmetic thumbnail: ${JSON.stringify(state)}.`);
   assert(!state.placeholderRewardText, `${label} still exposes placeholder reward copy: ${JSON.stringify(state)}.`);
   assert(state.radialBackground, `${label} progression page is missing its grayscale vignette: ${JSON.stringify(state)}.`);
   assert(!state.horizontalOverflow, `${label} progression surface overflows horizontally.`);
@@ -463,7 +463,7 @@ try {
     const resultState = await chromium.page.evaluate("(() => ({\n      path: location.pathname,\n      result: document.querySelector('.roll-stage--results #roll-result-title')?.textContent?.trim() || '',\n      score: document.querySelector('.roll-stage--results .roll-score-total')?.textContent?.trim() || '',\n      queue: Boolean(document.querySelector('.progression-unlock-queue')),\n      queueTitle: document.querySelector('.progression-unlock-queue h3')?.textContent?.trim() || '',\n      reward: document.querySelector('.progression-unlock-queue .progression-reward-preview__trigger strong')?.textContent?.trim() || '',\n      reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,\n      horizontalOverflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1\n    }))()");
     assert(resultState.path === '/roll', 'First roll settled at ' + resultState.path + '.');
     assert(resultState.result && resultState.score, 'First roll result surface is incomplete: ' + JSON.stringify(resultState) + '.');
-    assert(resultState.queue && resultState.queueTitle === 'Expression earned', 'First roll did not render the progression unlock queue: ' + JSON.stringify(resultState) + '.');
+    assert(resultState.queue && resultState.queueTitle === 'Cosmetic earned', 'First roll did not render the progression unlock queue: ' + JSON.stringify(resultState) + '.');
     assert(resultState.reward, 'First roll unlock queue did not expose its reward preview trigger: ' + JSON.stringify(resultState) + '.');
     assert(!resultState.horizontalOverflow, 'First roll result overflows horizontally: ' + JSON.stringify(resultState) + '.');
 

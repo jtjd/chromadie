@@ -201,7 +201,7 @@
           <div>
             <p class="progression-page__state-eyebrow">Personal record</p>
             <h2 id="progression-guest-title">Progression belongs to your profile.</h2>
-            <p>Sign in to see your rank, streaks, discoveries, and expression rewards. You can still try today’s color ritual first.</p>
+            <p>Sign in to see your rank, streaks, discoveries, and cosmetic rewards. You can still try today’s color ritual first.</p>
           </div>
           <div class="progression-page__state-actions">
             <a class="site-button" href="/login?next=%2Fprogression">Sign in to continue</a>

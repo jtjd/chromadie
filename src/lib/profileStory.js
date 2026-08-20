@@ -129,11 +129,11 @@ export function normalizeProfileProgressionProof(value) {
         return {
           id,
           name: safeText(item.name, id, 100),
-          description: safeText(item.description, 'A profile expression earned through play.', 220),
+          description: safeText(item.description, 'A profile cosmetic earned through play.', 220),
           track: ['rank', 'ritual', 'discovery'].includes(item.track) ? item.track : 'rank',
           unlockedAt: safeDate(item.unlockedAt || item.unlocked_at),
           reward: {
-            name: safeText(reward.name, 'Profile expression', 100),
+            name: safeText(reward.name, 'Profile cosmetic', 100),
             slot: safeText(reward.slot, 'expression', 60)
           }
         };

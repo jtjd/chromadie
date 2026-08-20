@@ -96,7 +96,7 @@ export function getShopAccessTier(item) {
 export function getShopAccessLabel(item) {
   const tier = getShopAccessTier(item);
   if (tier === 'free') return 'Free baseline';
-  if (tier === 'premium') return 'Premium expression';
+  if (tier === 'premium') return 'Premium cosmetic';
   return Number(item?.cost) > 0 ? 'Earned with EP' : 'Earned milestone';
 }
 
@@ -190,7 +190,7 @@ export function getShopItemState(item, equippedItems = {}, fittingRoom = createF
   if (accessTier === 'premium') {
     return hasShopEntitlement(item, fittingRoom)
       ? { label: 'Premium unlocked', tone: 'premium', ownedCount }
-      : { label: 'Premium expression', tone: 'premium-locked', ownedCount };
+      : { label: 'Premium cosmetic', tone: 'premium-locked', ownedCount };
   }
   if (ownedCount > 0) {
     return { label: item?.slot === 'consumable' ? `${ownedCount} owned` : 'Owned', tone: 'owned', ownedCount };

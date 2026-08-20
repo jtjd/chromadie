@@ -1346,7 +1346,7 @@
         <div class="studio-onboarding">
           <div>
             <div class="studio-onboarding-title">Make it yours</div>
-            <div class="studio-onboarding-copy">Customize your profile surface and expression.</div>
+            <div class="studio-onboarding-copy">Customize your profile surface and cosmetics.</div>
           </div>
           <button type="button" class="chroma-btn studio-onboarding-btn" on:click={() => dispatch('navigate', { view: 'profile-settings' })}>
             Customize

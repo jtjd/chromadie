@@ -259,7 +259,7 @@
       p_spotify_url: spotifyUrlFromParts(next.spotify_type, next.spotify_id) || null
     });
     if (rpcError || !data?.success) {
-      throw new Error(rpcError?.message || data?.error || 'The profile expression could not be saved.');
+      throw new Error(rpcError?.message || data?.error || 'The profile cosmetics could not be saved.');
     }
 
     expression = normalizeProfileExpression({ ...expression, ...data });
@@ -837,7 +837,7 @@
       <ProfileRichMediaEditor profileId={profileId} {config} {staff} {entitlements} on:expressionchange={(event) => dispatch('expressionchange', event.detail)} />
     {:else if !compact}
       <div class="profile-expression-editor__rollout-notice" role="status">
-        Rich media expression is temporarily paused while this rollout is verified. Your image-based profile remains available.
+        Rich media cosmetics are temporarily paused while this rollout is verified. Your image-based profile remains available.
       </div>
     {/if}
   </div>

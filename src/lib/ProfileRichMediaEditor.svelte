@@ -353,7 +353,7 @@
 </script>
 
 {#if hasAccess}
-  <Module size="wide" tone="quiet" className={compact ? 'rich-media-editor--compact' : ''} title="Rich media" description="Premium expression stays bounded, reusable, and server-verified.">
+  <Module size="wide" tone="quiet" className={compact ? 'rich-media-editor--compact' : ''} title="Rich media" description="Premium cosmetics stay bounded, reusable, and server-verified.">
     {#if compact}
       {#if compactKinds.includes('audio')}
         <article class="rich-media-editor__compact-card rich-media-editor__compact-card--audio">
@@ -516,7 +516,7 @@
   </article>
 {:else}
   <Module size="wide" tone="quiet" title="Rich media" description="Make the profile yours with a deeper media library.">
-    <p class="rich-media-editor__hint">Chromadie Plus adds bounded video, audio, banner, and cursor expression. Your free profile keeps the full image, atmosphere, Spotify, and earned-cosmetic experience.</p>
+    <p class="rich-media-editor__hint">Chromadie Plus adds bounded video, audio, banner, and cursor cosmetics. Your free profile keeps the full image, atmosphere, Spotify, and earned-cosmetic experience.</p>
   </Module>
 {/if}
 

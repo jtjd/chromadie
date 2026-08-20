@@ -89,7 +89,7 @@
         <p>
           {initialTab === 'signup'
             ? 'Claim a public identity that grows with every daily color roll.'
-            : 'Keep your rolls, history, cosmetics, and profile expression connected wherever you sign in.'}
+            : 'Keep your rolls, history, cosmetics, and profile customization connected wherever you sign in.'}
         </p>
         <div class="auth-page__promise" aria-label="Account benefits">
           <span>Daily color history</span>

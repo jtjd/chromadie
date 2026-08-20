@@ -214,7 +214,7 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(progression, /Build mastery/);
   assert.match(progression, /Find rare colors/);
   assert.match(progression, /Each discovery is independent/);
-  assert.match(progression, /Expressions earned/);
+  assert.match(progression, /Cosmetics earned/);
   assert.doesNotMatch(progression, /No history yet/);
   assert.match(overview, /Some goals unavailable/);
   assert.match(progression, /Weekly color/);
@@ -236,7 +236,7 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.doesNotMatch(game, /insert\(.*(?:progression|inventory)/s);
 });
 
-test('progression visual treatment keeps state neutral and previews canonical expressions', async () => {
+test('progression visual treatment keeps state neutral and previews canonical cosmetics', async () => {
   const [progression, page, rewardPreview, pathIcon, tokens, smoke] = await Promise.all([
     read('src/lib/ProfileProgression.svelte'),
     read('src/lib/ProgressionPage.svelte'),

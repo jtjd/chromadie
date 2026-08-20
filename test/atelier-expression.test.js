@@ -6,7 +6,7 @@ import { getAtmosphereDefinition } from '../src/lib/profile-atmosphere/atmospher
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Atelier expression is restored as two canonical Plus renderer rows', async () => {
+test('Atelier cosmetics are restored as two canonical Plus renderer rows', async () => {
   const [seed, migration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260809000000_atelier_expression_catalog.sql')
@@ -28,13 +28,13 @@ test('Atelier expression is restored as two canonical Plus renderer rows', async
   assert.equal(getAtmosphereDefinition('bg_prism_atmosphere')?.key, 'silk-folds');
 });
 
-test('Customize exposes the Atelier-backed expression layers without a Shop surface', async () => {
+test('Customize exposes the Atelier-backed cosmetic layers without a Shop surface', async () => {
   const [editor, workspace] = await Promise.all([
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileStudioWorkspace.svelte')
   ]);
 
-  assert.match(editor, /Profile expression/);
+  assert.match(editor, /Profile cosmetics/);
   assert.doesNotMatch(editor, /Atelier expression is ready|Chromadie Plus/);
   assert.match(editor, /slot: 'name_motion'/);
   assert.match(editor, /slot: 'profile_atmosphere'/);

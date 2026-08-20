@@ -158,7 +158,7 @@ test('public progression proof preserves a bounded server milestone count', () =
     completed_count: '7',
     recent_unlocks: [{
       id: 'rank_ep_100',
-      name: 'First expression',
+      name: 'First cosmetic',
       track: 'rank',
       reward: { name: 'Linework', slot: 'font' }
     }]

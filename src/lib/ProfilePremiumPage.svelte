@@ -10,7 +10,7 @@
 <section class="profile-premium-page" aria-labelledby="profile-premium-title">
   <header class="profile-premium-page__hero">
     <div>
-      <p class="profile-premium-page__eyebrow">Chromadie Plus / expression, once</p>
+      <p class="profile-premium-page__eyebrow">Chromadie Plus / cosmetics, once</p>
       <h2 id="profile-premium-title">More room for your profile.</h2>
       <p>Keep the daily ritual and everything you earn. Plus gives the page around your identity more room to become yours.</p>
     </div>
@@ -23,7 +23,7 @@
     <div class="profile-premium-page__upsell">
       <div>
         <p class="profile-premium-page__eyebrow">Unlock the full studio</p>
-        <h3>One identity. More expression.</h3>
+        <h3>One identity. More cosmetics.</h3>
         <p>Premium adds creative capacity without changing rolls, rank, rewards, or earned prestige.</p>
       </div>
       <a href="/pricing">See Plus · $7.99 lifetime</a>
@@ -43,13 +43,13 @@
     </article>
     <article>
       <span>03</span>
-      <h3>Expression layers</h3>
-      <p>Atelier templates, name motion, atmospheres, and the complete premium expression catalog.</p>
+      <h3>Cosmetic layers</h3>
+      <p>Atelier templates, name motion, atmospheres, and the complete premium cosmetics catalog.</p>
     </article>
   </div>
 
   <footer class="profile-premium-page__footer">
-    <span>Premium buys expression. Gameplay earns prestige.</span>
+    <span>Premium buys cosmetics. Gameplay earns prestige.</span>
     <a href="/pricing">Compare Free and Plus</a>
   </footer>
 </section>

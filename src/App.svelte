@@ -758,9 +758,9 @@
       : routeMode === 'app' && view === 'profile'
         ? `View ${profileTitle}'s public ChromaDie profile, progress, achievements, and recent rolls.`
         : routeMode === 'app' && view === 'profile-settings'
-          ? 'Shape your ChromaDie identity, collection, expression, public canvas, and privacy from one profile studio.'
+          ? 'Shape your ChromaDie identity, collection, cosmetics, public canvas, and privacy from one profile studio.'
         : routeMode === 'app' && view === 'progression'
-          ? 'Follow the rolls, streaks, discoveries, and expression rewards that make your ChromaDie profile yours.'
+          ? 'Follow the rolls, streaks, discoveries, and cosmetic rewards that make your ChromaDie profile yours.'
         : routeMode === 'app' && view === 'home'
           ? 'Roll one color each day and build a personal profile that grows through rarity, conditions, collections, and time.'
         : routeMode === 'app' && view === 'prototype'
@@ -768,7 +768,7 @@
         : routeMode === 'app' && view === 'leaderboard'
           ? 'Explore ChromaDie players, public color stories, exceptional rolls, and leaderboard results.'
         : routeMode === 'app' && view === 'pricing'
-          ? 'Compare the complete free profile with Chromadie Plus lifetime profile expression.'
+          ? 'Compare the complete free profile with Chromadie Plus lifetime profile cosmetics.'
           : 'Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score.';
   $: canonicalPath = routeMode === 'not-found'
     ? '/'

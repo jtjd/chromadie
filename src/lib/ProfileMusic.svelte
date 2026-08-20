@@ -195,14 +195,14 @@
     <button type="button" class="profile-music__load" on:click={() => spotifyActive = true}>Load player</button>
   </div>
 {:else if PROFILE_MUSIC_ENABLED}
-  <div class:profile-music--compact={compact} class="profile-music profile-music--configured" data-music-state="configured" aria-label="Profile expression">
+  <div class:profile-music--compact={compact} class="profile-music profile-music--configured" data-music-state="configured" aria-label="Profile cosmetics">
     <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
-    <div class="profile-music__copy"><span>Expression</span><strong>Profile atmosphere</strong></div>
+    <div class="profile-music__copy"><span>Cosmetics</span><strong>Profile atmosphere</strong></div>
     <span class="profile-music__status">configured</span>
   </div>
 {:else if showVisualFixture}
   <!-- Development-only composition fixture. It contains no playback or mock track data. -->
-  <div class:profile-music--compact={compact} class="profile-music profile-music--expression" data-music-state="fixture" aria-label="Expression preview">
+  <div class:profile-music--compact={compact} class="profile-music profile-music--expression" data-music-state="fixture" aria-label="Cosmetics preview">
     <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true"></span>
     <div class="profile-music__copy"><span>Color trace</span><strong>Daily atmosphere</strong><span class="profile-music__trace" aria-hidden="true"><span style={'background: ' + safeColor + ';'}></span></span></div>
     <span class="profile-music__status">preview</span>

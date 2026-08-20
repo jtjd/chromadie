@@ -80,7 +80,7 @@
       || profileConfig.published?.avatar_path
     )) || ''
   );
-  // Keep the full active catalog visible so a locked expression can be
+  // Keep the full active catalog visible so a locked cosmetic can be
   // discovered, but let the server-owned inventory/entitlement state decide
   // which rows can be previewed and applied.
   $: availableCosmetics = Object.values($cosmeticCatalogItems)
@@ -225,8 +225,8 @@
   <section aria-labelledby="profile-cosmetics-title">
     <div class="profile-cosmetics-heading">
       <div>
-        <h2 id="profile-cosmetics-title">Profile expression</h2>
-        <p>Preview and equip every profile expression layer.</p>
+        <h2 id="profile-cosmetics-title">Profile cosmetics</h2>
+        <p>Preview and equip every profile cosmetic layer.</p>
       </div>
     </div>
 
@@ -281,14 +281,14 @@
       <div class="profile-cosmetics-layout">
         <div class="profile-cosmetics-controls">
           <div class="profile-cosmetics-controls__heading">
-            <span>Expression</span>
+            <span>Cosmetics</span>
             <strong>Profile effects</strong>
-            <p>Preview each layer, then apply the complete expression together.</p>
+            <p>Preview each layer, then apply your cosmetics together.</p>
           </div>
 
           <div class="profile-cosmetics-section-heading">
             <h3>{presentation === 'studio' ? 'Profile effects' : 'Name effects'}</h3>
-            <p>{presentation === 'studio' ? 'These are the current cosmetic slots. Choose an effect, preview it, then update the equipped expression.' : 'These effects are applied to your username.'}</p>
+            <p>{presentation === 'studio' ? 'These are the current cosmetic slots. Choose an effect, preview it, then update your equipped cosmetics.' : 'These effects are applied to your username.'}</p>
             <button type="button" on:click={resetNameEffects}>Reset name effects</button>
           </div>
 
@@ -415,7 +415,7 @@
     --cosmetics-neutral: var(--customize-accent-secondary, #89dceb);
     --cosmetics-save: var(--customize-accent-save, #a6e3a1);
     --cosmetics-danger: var(--customize-accent-danger, #f38ba8);
-    --cosmetics-expression: var(--customize-accent-premium, #cba6f7);
+    --cosmetics-accent: var(--customize-accent-premium, #cba6f7);
     --cosmetics-body: var(--customize-font-body, var(--font-body-stack, var(--site-font, sans-serif)));
     --cosmetics-mono: var(--customize-font-mono, var(--font-mono-stack, var(--site-mono, monospace)));
     --cosmetics-label-size: var(--customize-label-size, .76rem);
@@ -467,7 +467,7 @@
   .profile-cosmetics-studio-grid .profile-cosmetics-apply { grid-column: 1 / -1; justify-self: end; margin-top: 2px; }
   .profile-cosmetics-controls { display: grid; gap: .65rem; min-width: 0; padding: .25rem 0; border: 0; border-radius: 0; background: transparent; font-family: var(--cosmetics-body); }
   .profile-cosmetics-controls__heading { display: grid; gap: .3rem; padding-bottom: .15rem; }
-  .profile-cosmetics-controls__heading span { color: var(--cosmetics-expression); font: 700 var(--cosmetics-label-size) / 1.2 var(--cosmetics-mono); letter-spacing: .12em; text-transform: uppercase; }
+  .profile-cosmetics-controls__heading span { color: var(--cosmetics-accent); font: 700 var(--cosmetics-label-size) / 1.2 var(--cosmetics-mono); letter-spacing: .12em; text-transform: uppercase; }
   .profile-cosmetics-controls__heading strong { color: var(--cosmetics-text); font-size: var(--customize-subheading-size, .88rem); line-height: 1.25; }
   .profile-cosmetics-controls__heading p { margin: 0; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); line-height: 1.45; }
   .profile-cosmetics-section-heading { position: relative; display: grid; gap: .1rem; padding: .2rem 0 .08rem; border-bottom: 1px solid var(--cosmetics-border); }

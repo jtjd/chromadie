@@ -60,7 +60,7 @@
       : '';
   $: rewardName = typeof reward?.name === 'string' && reward.name.trim()
     ? reward.name
-    : 'Expression reward';
+    : 'Cosmetic reward';
   $: catalogItem = itemKey ? catalogItems[itemKey] || null : null;
   const previewPanelId = `progression-reward-preview-panel-${previewInstanceId}`;
 
@@ -72,7 +72,7 @@
     }
 
     if (!itemKey) {
-      catalogError = 'This reward does not have a previewable expression key yet.';
+      catalogError = 'This reward does not have a previewable cosmetic key yet.';
       return;
     }
 
@@ -93,11 +93,11 @@
       catalogItems = get(stores.cosmeticCatalogItems) || {};
       catalogError = get(stores.cosmeticCatalogError) || '';
       if (!catalogError && !catalogItems[itemKey]) {
-        catalogError = 'This expression is not available in the current catalog.';
+        catalogError = 'This cosmetic is not available in the current catalog.';
       }
       if (openPanel) recordPreviewEvent();
     } catch {
-      catalogError = 'The expression preview could not be loaded. Try again.';
+      catalogError = 'The cosmetic preview could not be loaded. Try again.';
     } finally {
       catalogLoading = false;
       requestInFlight = false;
@@ -154,7 +154,7 @@
       {#if catalogLoading}
         <div class="progression-reward-preview__state" role="status">
           <span class="progression-reward-preview__loader" aria-hidden="true"></span>
-          <span>Loading the canonical expression preview…</span>
+          <span>Loading the canonical cosmetic preview…</span>
         </div>
       {:else if catalogError}
         <div class="progression-reward-preview__state" role="alert">
@@ -172,7 +172,7 @@
           mode="static"
           renderContext={PROFILE_RENDER_CONTEXTS.EFFECT_CARD}
         />
-        <p class="progression-reward-preview__caption">The same expression used in Profile Studio.</p>
+        <p class="progression-reward-preview__caption">The same cosmetic used in Profile Studio.</p>
       {:else}
         <div class="progression-reward-preview__state" role="status">
           <span>Preview unavailable for this reward.</span>

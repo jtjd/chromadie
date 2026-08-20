@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Cosmetics terminology pass — 2026-08-20
+
+- Replaced player-facing “expression” labels with “cosmetics” across Roll,
+  Progression, Customize, Profile Studio, Premium, Pricing, FAQ, and auth
+  copy.
+- Kept legacy component names, RPCs, event names, data slots, and migration
+  identifiers stable for compatibility.
+
 ## Current-roll color and composition correction — 2026-08-20
 
 - Progression now consumes the server-owned `get_my_daily_roll()` color, so
@@ -99,7 +107,7 @@
   boundary; owner-only presentation and acknowledgement RPCs close the live
   unlock state; public story proof remains bounded.
 - Published progression rewards are real zero-cost `earned` items backed by
-  active canonical renderers. The free baseline and Premium expression
+  active canonical renderers. The free baseline and Premium cosmetic
   boundaries remain intact. The 730- and 1,095-roll Ritual capstones are
   earned; greyscale remains historical but is retired from the published
   journey because of its approximately 179-year expected wait.

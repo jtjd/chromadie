@@ -119,7 +119,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(customize, /--studio-border:/);
   assert.match(customize, /--studio-accent: var\(--site-brand-accent, var\(--white, #ffffff\)\)/);
   assert.doesNotMatch(customize, /profile-customize-page__surface-note/);
-  assert.doesNotMatch(customize, /Shape the profile canvas|Set your bio and choose|Preview your palette here|Preview owned expression layers|Choose the profile structure|Tell more of your story|Use official HTTPS provider URLs/);
+  assert.doesNotMatch(customize, /Shape the profile canvas|Set your bio and choose|Preview your palette here|Preview owned cosmetic layers|Choose the profile structure|Tell more of your story|Use official HTTPS provider URLs/);
   assert.doesNotMatch(expression, /Unlock richer expression/);
   assert.doesNotMatch(richMedia, /Unlock richer expression/);
   assert.match(expression, /Chromadie Plus/);
@@ -138,7 +138,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
     assert.match(referenceLayout, new RegExp(`data-layout=\\{key\\}|['"]${layout}['"]`));
   }
   assert.match(premium, /\$7\.99 lifetime/);
-  assert.match(premium, /Premium buys expression\. Gameplay earns prestige\./);
+  assert.match(premium, /Premium buys cosmetics\. Gameplay earns prestige\./);
   assert.match(shell, /profile-studio-shell__brand/);
   assert.match(studio, /id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize'/);
   assert.match(contract, /PROFILE_STUDIO_PRIMARY_SECTION_IDS/);

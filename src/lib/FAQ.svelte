@@ -2,7 +2,7 @@
   const steps = [
     ['01', 'Build your page', 'Claim a username and shape a public profile with your background, avatar, links, bio, and cosmetics.'],
     ['02', 'Roll once each day', 'Your daily color is scored from its RGB values and the special conditions it meets.'],
-    ['03', 'Earn EP', 'Strong rolls earn more EP. EP helps you unlock and equip profile expression.'],
+    ['03', 'Earn EP', 'Strong rolls earn more EP. EP helps you unlock and equip profile cosmetics.'],
     ['04', 'Get discovered', 'Your leaderboard position gives more people a path to your profile and links.']
   ];
 </script>

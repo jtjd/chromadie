@@ -56,14 +56,14 @@
   ].map(lane => buildLaneModel(lane, progression));
   $: journeyGoalTotal = laneModels.reduce((total, lane) => total + lane.nodes.length, 0);
   $: journeyGoalComplete = laneModels.reduce((total, lane) => total + lane.completed.length, 0);
-  $: earnedExpressionCount = laneModels.reduce((total, lane) => total + lane.completed.filter(node => node.reward).length, 0);
+  $: earnedCosmeticCount = laneModels.reduce((total, lane) => total + lane.completed.filter(node => node.reward).length, 0);
   $: safeCollectionItems = Array.isArray(collectionItems) ? collectionItems : [];
   $: safeTimelineEvents = Array.isArray(timelineEvents) ? timelineEvents : [];
   $: previewIdentity = account.display_name || account.username || 'You';
   $: resolvedTodayColor = currentRollColor === null ? account.mood_color : currentRollColor;
   $: hasTodayColor = /^#[0-9a-f]{6}$/i.test(resolvedTodayColor || '');
   $: todayColor = hasTodayColor ? resolvedTodayColor.toUpperCase() : '';
-  // The canonical expression renderer accepts a color for data previews. A neutral
+  // The canonical cosmetic renderer accepts a color for data previews. A neutral
   // fallback keeps the page grayscale when the profile has no current roll.
   $: previewColor = todayColor || '#FFFFFF';
   $: previewAvatar = account.avatar_url || account.avatar_path || '';
@@ -321,7 +321,7 @@
       <div>
         <p class="profile-progression-label">Your profile / progression</p>
         <h2 id="profile-progression-title">Your profile story.</h2>
-        <p>Every roll adds a color, a milestone, or an expression to the profile you are building.</p>
+        <p>Every roll adds a color, a milestone, or a cosmetic to the profile you are building.</p>
       </div>
       <div class="profile-progression-heading__summary" aria-label="Progression completion">
         <strong>{formatNumber(journeyGoalComplete)}</strong>
@@ -342,8 +342,8 @@
           {#if focusGoal}<span class="profile-progression-direction__progress">{nodeProgressLabel(focusGoal)}</span>{/if}
         </div>
         <div class="profile-progression-direction__reward">
-          <span>Next expression</span>
-          <strong>{focusGoal?.reward?.name || 'Your next expression'}</strong>
+          <span>Next cosmetic</span>
+          <strong>{focusGoal?.reward?.name || 'Your next cosmetic'}</strong>
           <small>{focusGoal?.reward ? 'Preview what you can earn.' : 'Keep rolling to reveal it.'}</small>
         </div>
         <a class="site-button" href="/roll">{focusActionLabel(focusGoal)}</a>
@@ -391,12 +391,12 @@
         <div><span>Rolls</span><strong title={`${formatNumber(totalRolls)} rolls`}>{formatCompactNumber(totalRolls)}</strong></div>
         <div><span>Longest streak</span><strong title={`${formatNumber(longestStreak)} days`}>{formatCompactNumber(longestStreak)}d</strong></div>
         <div><span>Goals</span><strong title={`${formatNumber(journeyGoalComplete)} of ${formatNumber(journeyGoalTotal)} goals complete`}>{journeyGoalTotal ? `${formatCompactNumber(journeyGoalComplete)}/${formatCompactNumber(journeyGoalTotal)}` : formatCompactNumber(journeyGoalComplete)}</strong></div>
-        <div><span>Unlocks</span><strong title={`${formatNumber(earnedExpressionCount)} expressions earned`}>{formatCompactNumber(earnedExpressionCount)}</strong></div>
+        <div><span>Unlocks</span><strong title={`${formatNumber(earnedCosmeticCount)} cosmetics earned`}>{formatCompactNumber(earnedCosmeticCount)}</strong></div>
       {:else}
       <div><span>Rolls</span><strong>{formatNumber(totalRolls)}</strong><small>Colors added</small></div>
       <div><span>Longest streak</span><strong>{formatNumber(longestStreak)} days</strong><small>Current: {formatNumber(currentStreak)} days</small></div>
       <div><span>Goals complete</span><strong>{formatNumber(journeyGoalComplete)}</strong><small>Of {formatNumber(journeyGoalTotal)} journey goals</small></div>
-      <div><span>Expressions earned</span><strong>{formatNumber(earnedExpressionCount)}</strong><small>Profile rewards</small></div>
+      <div><span>Cosmetics earned</span><strong>{formatNumber(earnedCosmeticCount)}</strong><small>Profile rewards</small></div>
       {#if !pageMode && achievementTotal}
         <div><span>Achievements</span><strong>{formatNumber(achievementCount)} / {formatNumber(achievementTotal)}</strong><small>Unlocked</small></div>
       {/if}
@@ -500,7 +500,7 @@
                 {#if isSectionExpanded(expandedSections, lane.id, 'completed')}
                   <ol class="profile-progression-condensed-list">
                     {#each lane.completed as node (node.id)}
-                      <li><ProgressionPathIcon track={lane.id} state="complete" /><span><strong>{node.name || 'Completed goal'}</strong><small>{node.reward?.name || 'Expression reward'}</small></span><em>Complete</em></li>
+                      <li><ProgressionPathIcon track={lane.id} state="complete" /><span><strong>{node.name || 'Completed goal'}</strong><small>{node.reward?.name || 'Cosmetic reward'}</small></span><em>Complete</em></li>
                     {/each}
                   </ol>
                 {/if}
@@ -514,7 +514,7 @@
                 {#if isSectionExpanded(expandedSections, lane.id, 'future')}
                   <ol class="profile-progression-condensed-list">
                     {#each lane.future as node (node.id)}
-                      <li><ProgressionPathIcon track={lane.id} state="future" /><span><strong>{node.name || 'Future goal'}</strong><small>{node.reward?.name || 'Expression reward'}</small></span><em>{nodeProgressLabel(node)}</em></li>
+                      <li><ProgressionPathIcon track={lane.id} state="future" /><span><strong>{node.name || 'Future goal'}</strong><small>{node.reward?.name || 'Cosmetic reward'}</small></span><em>{nodeProgressLabel(node)}</em></li>
                     {/each}
                   </ol>
                 {/if}
@@ -536,7 +536,7 @@
                     <div class="profile-progression-node__head">
                       <ProgressionPathIcon track={lane.id} state={lane.featuredNode.presentationState} />
                       <div><strong>{lane.featuredNode.name || 'Published goal'}</strong><small>{nodeStateLabel(lane.featuredNode)}</small></div>
-                      <span class="profile-progression-node__progress">{lane.featuredNode.reward?.name || 'Expression reward'}</span>
+                      <span class="profile-progression-node__progress">{lane.featuredNode.reward?.name || 'Cosmetic reward'}</span>
                     </div>
                     <p>{lane.featuredNode.description || 'A server-published goal for your profile.'}{lane.id === 'discovery' ? ' You can find this in any order.' : ''}</p>
                     {#if nodeTarget(lane.featuredNode)}
@@ -579,7 +579,7 @@
               {#if isSectionExpanded(expandedSections, lane.id, 'completed')}
                 <ol class="profile-progression-condensed-list">
                   {#each lane.completed as node (node.id)}
-                    <li><ProgressionPathIcon track={lane.id} state="complete" /><span><strong>{node.name || 'Completed goal'}</strong><small>{node.reward?.name || 'Expression reward'}</small></span><em>Complete</em></li>
+                    <li><ProgressionPathIcon track={lane.id} state="complete" /><span><strong>{node.name || 'Completed goal'}</strong><small>{node.reward?.name || 'Cosmetic reward'}</small></span><em>Complete</em></li>
                   {/each}
                 </ol>
               {/if}
@@ -593,7 +593,7 @@
               {#if isSectionExpanded(expandedSections, lane.id, 'future')}
                 <ol class="profile-progression-condensed-list">
                   {#each lane.future as node (node.id)}
-                    <li><ProgressionPathIcon track={lane.id} state="future" /><span><strong>{node.name || 'Future goal'}</strong><small>{node.reward?.name || 'Expression reward'}</small></span><em>{nodeProgressLabel(node)}</em></li>
+                    <li><ProgressionPathIcon track={lane.id} state="future" /><span><strong>{node.name || 'Future goal'}</strong><small>{node.reward?.name || 'Cosmetic reward'}</small></span><em>{nodeProgressLabel(node)}</em></li>
                   {/each}
                 </ol>
               {/if}
@@ -607,12 +607,12 @@
       {#if recentUnlocks.length}
         <section class="profile-progression-unlocks" aria-labelledby="profile-progression-unlocks-title">
         <div class="profile-progression-section-heading">
-          <div><span class="profile-progression-label">Recent unlocks</span><h3 id="profile-progression-unlocks-title">Expressions added to your record</h3></div>
+          <div><span class="profile-progression-label">Recent unlocks</span><h3 id="profile-progression-unlocks-title">Cosmetics added to your record</h3></div>
           <span>{recentUnlocks.length} recent</span>
         </div>
         <ol>
           {#each recentUnlocks.slice(0, 3) as unlock (unlock.id)}
-            <li><div><strong>{unlock.name || 'Milestone complete'}</strong><small>{unlock.reward?.name || 'Expression reward'}</small></div>{#if unlock.reward}<ProgressionRewardPreview reward={unlock.reward} unlocked={true} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={unlock.id} track={unlock.track} analyticsSurface={analyticsSurface} />{/if}</li>
+            <li><div><strong>{unlock.name || 'Milestone complete'}</strong><small>{unlock.reward?.name || 'Cosmetic reward'}</small></div>{#if unlock.reward}<ProgressionRewardPreview reward={unlock.reward} unlocked={true} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={unlock.id} track={unlock.track} analyticsSurface={analyticsSurface} />{/if}</li>
           {/each}
         </ol>
         </section>
@@ -645,7 +645,7 @@
 
     <footer class="profile-progression-footer">
       <p>Rewards and progress are verified on the server.</p>
-      <a href={pageMode ? '/profile/settings#customize-effects' : '#customize-effects'}>Equip an expression</a>
+      <a href={pageMode ? '/profile/settings#customize-effects' : '#customize-effects'}>Equip a cosmetic</a>
     </footer>
   </section>
 </Surface>
