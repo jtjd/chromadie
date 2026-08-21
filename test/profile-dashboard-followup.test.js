@@ -82,6 +82,7 @@ test('Customize previews the draft card appearance and media', async () => {
   assert.match(preview, /ProfileReferenceCard/);
   assert.match(preview, /ProfileFullBleedLayout/);
   assert.match(preview, /inputSurface="container"/);
+  assert.doesNotMatch(preview, /ProfileEnvironmentLayer/);
   assert.doesNotMatch(preview, /studio-profile-card|studio-atmosphere-layer|studio-cursor-layer/);
 });
 
@@ -106,6 +107,7 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(settings, /previewRenderSnapshot=\{previewRenderSnapshot\}/);
   assert.match(preview, /ProfileReferenceCard/);
   assert.match(preview, /inputSurface="container"/);
+  assert.doesNotMatch(preview, /ProfileEnvironmentLayer/);
   assert.doesNotMatch(preview, /ProfileShell|profile-shell-page|overflow-y:\s*auto/);
   assert.match(environment, /backgroundImageUrl/);
   assert.match(environment, /<img class="profile-environment__image" src=\{backgroundSrc\}/);

@@ -98,6 +98,7 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(shell, /profile-shell-page--preview-mobile/);
   assert.match(shell, /ProfileEnvironmentLayer/);
   assert.match(preview, /ProfileReferenceCard/);
+  assert.doesNotMatch(preview, /ProfileEnvironmentLayer/);
   assert.doesNotMatch(preview, /ProfileShell|overflow-y:\s*auto/);
   assert.match(identity, /profile-reference-card--studio/);
   assert.match(cursor, /inputMode = 'window'/);

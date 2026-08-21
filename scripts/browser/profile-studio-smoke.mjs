@@ -416,7 +416,7 @@ async function assertPublishedExpressionVisible(description) {
   })()`, `${description} media load`, 15000);
   const state = await page.evaluate(`(() => {
     const avatar = document.querySelector('.profile-studio-preview .profile-reference-card__avatar, .profile-studio-preview .profile-full-bleed__avatar');
-    const background = document.querySelector('.profile-studio-preview .profile-environment__image, .profile-environment--studio .profile-environment__image');
+    const background = document.querySelector('.profile-environment--studio .profile-environment__image');
     const video = document.querySelector('.profile-environment--studio .profile-environment__video');
     return {
       avatar: avatar ? { complete: avatar.complete, naturalWidth: avatar.naturalWidth, src: avatar.currentSrc || avatar.src } : null,
@@ -1156,13 +1156,13 @@ try {
       select.value = 'profile_atmosphere_rain_window';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]') && document.querySelector('.profile-studio-preview [data-atmosphere="rain-window"]')`, 'atmosphere renderer in card and live preview');
+    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]') && document.querySelector('.profile-environment--studio [data-atmosphere="rain-window"]')`, 'atmosphere renderer in fitting room and full-page preview');
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-studio-profile_atmosphere');
       select.value = 'profile_atmosphere_silk_folds';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]') && document.querySelector('.profile-studio-preview [data-atmosphere="silk-folds"]') && [...document.querySelectorAll('[data-atmosphere="silk-folds"] video')].every(video => video.currentSrc.includes('/atmospheres/silk-folds/'))`, 'atmosphere renderer changes in card and live preview');
+    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]') && document.querySelector('.profile-environment--studio [data-atmosphere="silk-folds"]') && [...document.querySelectorAll('[data-atmosphere="silk-folds"] video')].every(video => video.currentSrc.includes('/atmospheres/silk-folds/'))`, 'atmosphere renderer changes in fitting room and full-page preview');
     const beforeTabSwitch = await page.evaluate(`(() => {
       const cursorCanvas = document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer canvas');
       const atmosphere = document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]');
@@ -1247,29 +1247,34 @@ try {
       try {
         await page.waitFor(`(() => {
           const preview = document.querySelector('.profile-studio-preview');
+          const environment = document.querySelector('.profile-environment--studio');
           return Boolean(
             preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
               && preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
               && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
               && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
-              && preview?.querySelector('[data-atmosphere="prism-dust"] canvas')
-              && preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
+              && environment?.querySelector('[data-atmosphere="prism-dust"] canvas')
+              && environment?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
               && preview?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')
+              && document.querySelectorAll('.profile-environment').length === 1
           );
         })()`, 'approved effects in Customize live preview');
       } catch (error) {
         const approvedPreviewState = await page.evaluate(`(() => {
           const preview = document.querySelector('.profile-studio-preview');
+          const environment = document.querySelector('.profile-environment--studio');
           const selectors = {
             preview: Boolean(preview),
+            environment: Boolean(environment),
+            environmentCount: document.querySelectorAll('.profile-environment').length,
             name: Boolean(preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')),
             border: Boolean(preview?.querySelector('[data-profile-border="elastic"]')),
             borderPath: Boolean(preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')),
             avatar: preview?.querySelectorAll('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas').length || 0,
-            atmosphere: Boolean(preview?.querySelector('[data-atmosphere="prism-dust"]')),
-            atmosphereCanvas: Boolean(preview?.querySelector('[data-atmosphere="prism-dust"] canvas')),
-            cursor: Boolean(preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"]')),
-            cursorCanvas: Boolean(preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),
+            atmosphere: Boolean(environment?.querySelector('[data-atmosphere="prism-dust"]')),
+            atmosphereCanvas: Boolean(environment?.querySelector('[data-atmosphere="prism-dust"] canvas')),
+            cursor: Boolean(environment?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"]')),
+            cursorCanvas: Boolean(environment?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),
             motion: Boolean(preview?.querySelector('[data-profile-motion="halo-offset"]')),
             motionShell: Boolean(preview?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')),
             staged: Object.fromEntries([...document.querySelectorAll('[id^="cosmetic-studio-"]')].map(select => [select.id, select.value]))
@@ -1315,28 +1320,32 @@ try {
     if (approvedEffectSmoke) {
       await page.waitFor(`(() => {
         const preview = document.querySelector('.profile-studio-preview');
+        const environment = document.querySelector('.profile-environment--studio');
         return Boolean(
           preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
             && preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
             && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
             && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
-            && preview?.querySelector('[data-atmosphere="prism-dust"] canvas')
-            && preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
+            && environment?.querySelector('[data-atmosphere="prism-dust"] canvas')
+            && environment?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
             && preview?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')
+            && document.querySelectorAll('.profile-environment').length === 1
         );
       })()`, 'approved effects in live Studio preview');
       approvedStudioEffects = await page.evaluate(`(() => {
         const preview = document.querySelector('.profile-studio-preview');
+        const environment = document.querySelector('.profile-environment--studio');
         return {
           name: Boolean(preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')),
           border: Boolean(preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')),
           avatarLayers: preview?.querySelectorAll('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas').length || 0,
-          atmosphere: Boolean(preview?.querySelector('[data-atmosphere="prism-dust"] canvas')),
-          cursor: Boolean(preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),
+          atmosphere: Boolean(environment?.querySelector('[data-atmosphere="prism-dust"] canvas')),
+          cursor: Boolean(environment?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),
+          environmentCount: document.querySelectorAll('.profile-environment').length,
           motion: Boolean(preview?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three'))
         };
       })()`);
-      assert(approvedStudioEffects.name && approvedStudioEffects.border && approvedStudioEffects.avatarLayers === 2 && approvedStudioEffects.atmosphere && approvedStudioEffects.cursor && approvedStudioEffects.motion, `Approved effects did not mount completely in Studio: ${JSON.stringify(approvedStudioEffects)}.`);
+      assert(approvedStudioEffects.name && approvedStudioEffects.border && approvedStudioEffects.avatarLayers === 2 && approvedStudioEffects.atmosphere && approvedStudioEffects.cursor && approvedStudioEffects.environmentCount === 1 && approvedStudioEffects.motion, `Approved effects did not mount completely in Studio: ${JSON.stringify(approvedStudioEffects)}.`);
     }
     const studioNameEffect = await page.evaluate(`(() => {
       const card = document.querySelector('.profile-studio-preview .profile-reference-card');

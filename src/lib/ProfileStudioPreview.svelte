@@ -1,6 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
-  import ProfileEnvironmentLayer from './ProfileEnvironmentLayer.svelte';
+  import { createEventDispatcher } from 'svelte';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileReferenceCard from './ProfileReferenceCard.svelte';
   import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
@@ -15,20 +14,6 @@
 
   const dispatch = createEventDispatcher();
   let previewStage;
-  let prefersReducedMotion = false;
-
-  onMount(() => {
-    if (typeof globalThis.matchMedia !== 'function') return undefined;
-    const query = globalThis.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = event => { prefersReducedMotion = Boolean(event.matches); };
-    update(query);
-    if (query.addEventListener) query.addEventListener('change', update);
-    else query.addListener?.(update);
-    return () => {
-      if (query.removeEventListener) query.removeEventListener('change', update);
-      else query.removeListener?.(update);
-    };
-  });
 
   $: previewReady = Boolean(previewRenderSnapshot?.profile);
   $: identity = previewRenderSnapshot?.identity || {};
@@ -102,11 +87,6 @@
   </header>
 
   {#if previewReady}
-    <ProfileEnvironmentLayer
-      snapshot={previewRenderSnapshot}
-      mode="preview"
-      reducedMotion={prefersReducedMotion}
-    />
     <div class="profile-studio-preview__canvas" class:profile-studio-preview__canvas--mobile={previewDevice === 'mobile'}>
       <div class="profile-studio-preview__viewport" data-preview-device={previewDevice}>
         <div
