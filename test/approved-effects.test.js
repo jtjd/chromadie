@@ -12,6 +12,7 @@ import { getProfileMotionDefinition, getProfileMotionRendererKey } from '../src/
 import { getAtmosphereDefinition } from '../src/lib/profile-atmosphere/atmospheres.js';
 import { getCursorTrailKey } from '../src/lib/cursor-trail/cursorTrails.js';
 import { getAvatarEffectDefinition } from '../src/lib/avatar-effect/avatarEffects.js';
+import { createAvatarOrbitController } from '../src/lib/avatar-effect/avatarOrbitRenderer.js';
 import { buildProfileRenderSnapshot } from '../src/lib/profileRenderModel.js';
 import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
 
@@ -263,6 +264,31 @@ test('new interaction controllers clean up local listeners, RAF work, and transf
   }
 });
 
+test('avatar orbit layers stay centered when the canvas overscans the real avatar host', () => {
+  const browser = installBrowserFakes();
+  try {
+    const host = new FakeEventTarget({ left: 40, top: 20, width: 86, height: 86 });
+    const back = createCanvas(createRecordingContext(), { left: 40, top: 20, width: 86, height: 134.15625 });
+    const front = createCanvas(createRecordingContext(), { left: 40, top: 20, width: 86, height: 134.15625 });
+    const controller = createAvatarOrbitController({ host, backCanvas: back, frontCanvas: front, effectKey: 'butterfly-orbit', enabled: false });
+    const expectedWidth = 86 * 1.56;
+    const expectedOffset = (86 - expectedWidth) / 2;
+    const center = canvas => Number.parseFloat(canvas.style.left) + Number.parseFloat(canvas.style.width) / 2;
+
+    assert.equal(Number.parseFloat(back.style.width), expectedWidth);
+    assert.equal(Number.parseFloat(back.style.height), expectedWidth);
+    assert.equal(Number.parseFloat(front.style.width), expectedWidth);
+    assert.equal(Number.parseFloat(front.style.height), expectedWidth);
+    assert.equal(Number.parseFloat(back.style.left), expectedOffset);
+    assert.equal(Number.parseFloat(back.style.top), expectedOffset);
+    assert.equal(center(back), 43);
+    assert.equal(center(front), 43);
+    controller.destroy();
+  } finally {
+    browser.restore();
+  }
+});
+
 test('reduced motion blocks pointer displacement in the new controllers', () => {
   const browser = installBrowserFakes({ reduced: true });
   try {
@@ -298,6 +324,7 @@ test('avatar orbit uses real DOM avatar occlusion with separate front/back canva
   assert.match(avatar, /avatar-effect__orbit-canvas--back/);
   assert.match(avatar, /avatar-effect__slot/);
   assert.match(avatar, /avatar-effect__orbit-canvas--front/);
+  assert.match(avatar, /avatar-effect__orbit-canvas \{[\s\S]*?max-width: none;/);
   assert.match(orbit, /context\.back/);
   assert.match(orbit, /context\.front/);
   assert.doesNotMatch(orbit, /drawImage/);

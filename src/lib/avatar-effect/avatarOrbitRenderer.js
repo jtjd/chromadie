@@ -1,5 +1,6 @@
 const TAU = Math.PI * 2;
 const FOCAL_LENGTH = 5.6;
+const ORBIT_OVERSCAN = 1.56;
 const BUTTERFLY_LATITUDES = Object.freeze([0.18, -0.10, 0.08, -0.18, 0.14, -0.06, 0.04, -0.14]);
 const BAT_PLANES = Object.freeze([
   Object.freeze({ tiltX: -0.65, tiltZ: 0.20, node: 0.10, speed: 0.296 }),
@@ -436,15 +437,23 @@ export function createAvatarOrbitController({ host, backCanvas, frontCanvas, eff
   };
 
   const resize = () => {
-    const rect = backCanvas.getBoundingClientRect?.() || host.getBoundingClientRect?.() || {};
-    width = Math.max(1, Number(rect.width) || 1);
-    height = Math.max(1, Number(rect.height) || 1);
+    const rect = host.getBoundingClientRect?.() || {};
+    const hostWidth = Math.max(1, Number(host.clientWidth) || Number(rect.width) || 1);
+    const hostHeight = Math.max(1, Number(host.clientHeight) || Number(rect.height) || 1);
+    width = hostWidth * ORBIT_OVERSCAN;
+    height = hostHeight * ORBIT_OVERSCAN;
+    const offsetX = (hostWidth - width) / 2;
+    const offsetY = (hostHeight - height) / 2;
     dpr = Math.min(2, Math.max(1, Number(window.devicePixelRatio) || 1));
     [backCanvas, frontCanvas].forEach(canvas => {
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
+      canvas.style.left = `${offsetX}px`;
+      canvas.style.top = `${offsetY}px`;
+      canvas.style.right = 'auto';
+      canvas.style.bottom = 'auto';
     });
     back.setTransform(dpr, 0, 0, dpr, 0, 0);
     front.setTransform(dpr, 0, 0, dpr, 0, 0);

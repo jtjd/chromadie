@@ -213,13 +213,14 @@
   }
 
   .avatar-effect__orbit-canvas {
-    top: -28%;
-    left: -28%;
+    top: 0;
+    left: 0;
     right: auto;
     bottom: auto;
     display: block;
-    width: 156%;
-    height: 156%;
+    width: 100%;
+    height: 100%;
+    max-width: none;
     overflow: visible;
   }
 
