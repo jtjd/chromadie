@@ -18,7 +18,8 @@ const definitions = {
   'color-memory': { key: 'color-memory', label: 'Color Memory', collection: 'Prism', rarity: 'Anomaly' },
   'marker-stroke': { key: 'marker-stroke', label: 'Marker Stroke', collection: 'Archive', rarity: 'Epic' },
   'solar-sparks': { key: 'solar-sparks', label: 'Solar Sparks', collection: 'Ember', rarity: 'Anomaly' },
-  'void-lensing': { key: 'void-lensing', label: 'Void Lensing', collection: 'Nocturne', rarity: 'Mythic' }
+  'void-lensing': { key: 'void-lensing', label: 'Void Lensing', collection: 'Nocturne', rarity: 'Mythic' },
+  'plasma-swarm': { key: 'plasma-swarm', label: 'Plasma Swarm', collection: 'Signal', rarity: 'Anomaly' }
 };
 
 const normalizedDefinitions = Object.fromEntries(

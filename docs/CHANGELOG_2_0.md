@@ -3657,3 +3657,18 @@ direct route behavior.
   account mode in the RPC, and removed retention cleanup from event recording.
 - Added atmosphere catalog/largest-file performance budgets and constrained
   connection fallbacks that use poster media instead of decorative video.
+
+## Approved cosmetic effects — 2026-08-21
+
+- Added Kinetic Echo, Magnetic Type, Neon Particle, and Raster Signal as
+  composable Name motions.
+- Added Elastic Frame, Halo Offset, Wavefront, Prism Dust, and Plasma Swarm to
+  the current Profile Studio/Profile renderer surfaces.
+- Added Butterfly Orbit and Bat Orbit with separate back/front decoration
+  canvases around the real user avatar, preserving natural DOM occlusion.
+- Wired all eleven effects through the existing catalog, inventory, entitlement,
+  equip, preview, publish, and public-profile contracts with an additive
+  migration and no Shop route revival.
+- Added lifecycle, reduced-motion, mobile, offscreen, cleanup, refresh, and
+  public/Studio regression coverage; all 446 automated tests and the approved
+  browser smoke pass.

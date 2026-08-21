@@ -15,11 +15,11 @@ import { PROFILE_ATMOSPHERE_KEYS, getAtmosphereDefinition } from '../src/lib/pro
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('launch renderer registries contain exactly the requested finite keys', () => {
-  assert.equal(CURSOR_TRAIL_KEYS.length, 16);
-  assert.deepEqual(AVATAR_EFFECT_KEYS, ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud']);
-  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 12);
-  assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
-  assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 4);
+  assert.equal(CURSOR_TRAIL_KEYS.length, 17);
+  assert.deepEqual(AVATAR_EFFECT_KEYS, ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'bat-orbit']);
+  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 13);
+  assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 17);
+  assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 6);
   assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed', 'framed']);
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
   assert.equal(isAvatarEffectKey('avatar_effect_cyber_hud'), true);
@@ -38,12 +38,13 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(getAtmosphereDefinition('profile_atmosphere_paper_shadow')?.key, 'paper-shadow');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_smoke_spiral')?.key, 'smoke-spiral');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_lumen_flare')?.key, 'lumen-flare');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_prism_dust')?.key, 'prism-dust');
 });
 
 test('reference avatar effects are code-owned, image-aware, and motion-safe', async () => {
   const avatarSource = await read('src/lib/avatar-effect/AvatarEffect.svelte');
 
-  assert.deepEqual(Object.keys(AVATAR_EFFECT_DEFINITIONS), ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud']);
+  assert.deepEqual(Object.keys(AVATAR_EFFECT_DEFINITIONS), ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'bat-orbit']);
   assert.match(avatarSource, /data-avatar-effect=\{activeDefinitionKey\}/);
   assert.match(avatarSource, /avatar-effect__glitch-layer--red/);
   assert.match(avatarSource, /avatar-effect__hud-ring--one/);
@@ -51,12 +52,16 @@ test('reference avatar effects are code-owned, image-aware, and motion-safe', as
   assert.match(avatarSource, /@keyframes avatar-effect-morph/);
   assert.match(avatarSource, /colorizeLiquidBlob/);
   assert.match(avatarSource, /avatar-effect--colorize-liquid-blob/);
+  assert.match(avatarSource, /avatar-effect__orbit-canvas--back/);
+  assert.match(avatarSource, /avatar-effect__orbit-canvas--front/);
+  assert.match(avatarSource, /createAvatarOrbitController/);
   assert.match(avatarSource, /prefers-reduced-motion/);
   assert.doesNotMatch(avatarSource, /AvatarParticles|authoredOverlay|particle-atlas|avatar-effect--(?:signal-ring|neon-halo|prism-orbit|ghost-double)/);
 });
 
 test('atmosphere scenes are finite, authored, and safe to mount repeatedly', async () => {
   const atmosphereSource = await read('src/lib/profile-atmosphere/AtmosphereLayer.svelte');
+  const prismDustSource = await read('src/lib/profile-atmosphere/PrismDustLayer.svelte');
   for (const key of PROFILE_ATMOSPHERE_KEYS) {
     assert.equal(getAtmosphereDefinition(key)?.key, key);
   }
@@ -85,6 +90,10 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /lumen-flare-loop-v1\.webm/);
   assert.match(atmosphereSource, /autoplay muted loop playsinline/);
   assert.match(atmosphereSource, /mix-blend-mode: screen/);
+  assert.match(atmosphereSource, /PrismDustLayer/);
+  assert.match(prismDustSource, /180/);
+  assert.match(prismDustSource, /ResizeObserver/);
+  assert.match(prismDustSource, /prefers-reduced-motion/);
   assert.doesNotMatch(atmosphereSource, /mix-blend-mode:soft-light/);
 
   const rainVideo = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2.webm', import.meta.url));
@@ -170,10 +179,10 @@ test('seed and migrations contain the launch products and version bumps', async 
     read('supabase/migrations/20260804120000_launch_cosmetic_expansion.sql'),
     read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql')
   ]);
-  assert.equal((seed.match(/^\s+\('cursor_trail_[a-z0-9_]+'/gm) || []).length, 16);
-  assert.equal((seed.match(/^\s+\('avatar_effect_[a-z0-9_]+'/gm) || []).length, 4);
+  assert.equal((seed.match(/^\s+\('cursor_trail_[a-z0-9_]+'/gm) || []).length, 17);
+  assert.equal((seed.match(/^\s+\('avatar_effect_[a-z0-9_]+'/gm) || []).length, 6);
   assert.equal((seed.match(/^\s+\('profile_layout_[a-z0-9_]+'/gm) || []).length, 3);
-  assert.equal((seed.match(/^\s+\('profile_atmosphere_[a-z0-9_]+'/gm) || []).length, 12);
+  assert.equal((seed.match(/^\s+\('profile_atmosphere_[a-z0-9_]+'/gm) || []).length, 13);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');
   const atmosphereExpansionMigration = await read('supabase/migrations/20260804210000_atmosphere_expansion.sql');

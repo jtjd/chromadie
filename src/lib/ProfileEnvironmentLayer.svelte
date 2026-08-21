@@ -1,6 +1,6 @@
 <script>
   import AtmosphereLayer from './profile-atmosphere/LazyAtmosphereLayer.svelte';
-  import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
+  import CursorTrailLayer from './cursor-trail/LazyCursorTrailLayer.svelte';
 
   /** @type {any} */
   export let snapshot = null;

@@ -4,6 +4,18 @@ const PROFILE_MOTIONS = Object.freeze({
     slot: 'profile_motion',
     key: 'perspective-tilt',
     name: '3D Tilt'
+  }),
+  profile_motion_halo_offset: Object.freeze({
+    itemKey: 'profile_motion_halo_offset',
+    slot: 'profile_motion',
+    key: 'halo-offset',
+    name: 'Halo Offset'
+  }),
+  profile_motion_wavefront: Object.freeze({
+    itemKey: 'profile_motion_wavefront',
+    slot: 'profile_motion',
+    key: 'wavefront',
+    name: 'Wavefront'
   })
 });
 

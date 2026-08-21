@@ -29,6 +29,8 @@
   let pointer = null;
   let history = [];
   let particles = [];
+  let plasmaNodes = [];
+  let plasmaParticles = [];
   let mounted = false;
   let demoCycle = 0;
 
@@ -53,6 +55,35 @@
       .map(color => safeColor(color, ''))
       .filter(Boolean);
     return [...new Set(colors)].slice(0, 6);
+  }
+
+  function plasmaNoise(index, channel = 0) {
+    let hash = 2166136261;
+    for (const character of `${resolvedKey}:${index}:${channel}`) {
+      hash ^= character.codePointAt(0);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0) / 4294967295;
+  }
+
+  function resetPlasmaState() {
+    plasmaNodes = Array.from({ length: 4 }, (_, index) => ({
+      phase: plasmaNoise(index, 1) * Math.PI * 2,
+      radius: 18 + plasmaNoise(index, 2) * 28,
+      speed: 0.0007 + plasmaNoise(index, 3) * 0.0006,
+      x: width * (0.28 + index * 0.15),
+      y: height * (0.45 + Math.sin(index * 1.7) * 0.2)
+    }));
+    plasmaParticles = Array.from({ length: 130 }, (_, index) => ({
+      x: width * (0.16 + plasmaNoise(index, 11) * 0.68),
+      y: height * (0.18 + plasmaNoise(index, 12) * 0.64),
+      vx: 0,
+      vy: 0,
+      node: index % 4,
+      size: 0.7 + plasmaNoise(index, 13) * 2.6,
+      hot: plasmaNoise(index, 14) > 0.82,
+      phase: plasmaNoise(index, 15) * Math.PI * 2
+    }));
   }
 
   function updateReducedMotion(event) {
@@ -88,6 +119,7 @@
     canvas.style.height = `${height}px`;
     context.setTransform(dpr, 0, 0, dpr, 0, 0);
     context.clearRect(0, 0, width, height);
+    resetPlasmaState();
   }
 
   function pointForEvent(event) {
@@ -235,6 +267,98 @@
     });
   }
 
+  function drawPlasmaSwarm(multiplier = 1, staticFrame = false) {
+    if (!context || !pointer) return;
+    const colors = getColors();
+    const time = staticFrame ? 0 : (pointer.time || performance.now());
+    const headX = pointer.x;
+    const headY = pointer.y;
+    const nodes = plasmaNodes.map((node, index) => {
+      const phase = time * node.speed + node.phase;
+      const offsetX = Math.cos(phase * (1 + index * 0.08)) * node.radius;
+      const offsetY = Math.sin(phase * (1.18 + index * 0.05)) * node.radius * 0.72;
+      const anchorX = headX + (index - 1.5) * 22;
+      const anchorY = headY + Math.sin(index * 1.4) * 18;
+      return { x: anchorX + offsetX, y: anchorY + offsetY };
+    });
+
+    nodes.forEach((node, index) => {
+      const gradient = context.createRadialGradient(node.x, node.y, 0, node.x, node.y, 48 + index * 8);
+      const color = colors[index % colors.length];
+      gradient.addColorStop(0, `${color}8C`);
+      gradient.addColorStop(0.28, `${color}3D`);
+      gradient.addColorStop(1, `${color}00`);
+      context.save();
+      context.globalAlpha = 0.74;
+      context.fillStyle = gradient;
+      context.fillRect(node.x - 64, node.y - 64, 128, 128);
+      context.restore();
+    });
+
+    context.save();
+    context.lineWidth = 0.7;
+    nodes.forEach((node, index) => {
+      nodes.slice(index + 1).forEach((other, otherIndex) => {
+        const distance = Math.hypot(other.x - node.x, other.y - node.y);
+        if (distance >= 170) return;
+        context.globalAlpha = (1 - distance / 170) * 0.38;
+        context.strokeStyle = colors[(index + otherIndex + 1) % colors.length];
+        context.beginPath();
+        context.moveTo(node.x, node.y);
+        const controlX = (node.x + other.x) / 2 + Math.sin(time * 0.001 + index) * 12;
+        const controlY = (node.y + other.y) / 2 + Math.cos(time * 0.0012 + otherIndex) * 12;
+        context.quadraticCurveTo(controlX, controlY, other.x, other.y);
+        context.stroke();
+      });
+    });
+    context.restore();
+
+    plasmaParticles.forEach((particle, index) => {
+      const node = nodes[particle.node];
+      if (!node) return;
+      if (!staticFrame) {
+        const noiseX = Math.sin(time * 0.002 + particle.phase + index) * 0.18;
+        const noiseY = Math.cos(time * 0.0017 + particle.phase * 1.3 + index) * 0.18;
+        particle.vx = (particle.vx + (node.x - particle.x) * 0.00135 + noiseX) * 0.93;
+        particle.vy = (particle.vy + (node.y - particle.y) * 0.00135 + noiseY) * 0.93;
+        particle.x += particle.vx * multiplier;
+        particle.y += particle.vy * multiplier;
+      }
+      const color = particle.hot ? '#F7FBFF' : colors[index % colors.length];
+      const alpha = particle.hot ? 0.82 : 0.26 + plasmaNoise(index, 21) * 0.46;
+      context.save();
+      context.globalAlpha = alpha;
+      context.fillStyle = color;
+      context.shadowColor = color;
+      context.shadowBlur = particle.hot ? 7 : 2.5;
+      context.beginPath();
+      context.arc(particle.x, particle.y, particle.size * (particle.hot ? 1.18 : 1), 0, Math.PI * 2);
+      context.fill();
+      if (particle.hot) {
+        context.globalAlpha = 0.48;
+        context.strokeStyle = color;
+        context.lineWidth = 0.55;
+        context.beginPath();
+        context.moveTo(particle.x - particle.size * 3, particle.y);
+        context.lineTo(particle.x + particle.size * 3, particle.y);
+        context.moveTo(particle.x, particle.y - particle.size * 3);
+        context.lineTo(particle.x, particle.y + particle.size * 3);
+        context.stroke();
+      }
+      context.restore();
+    });
+
+    context.save();
+    context.globalAlpha = 0.7;
+    context.fillStyle = '#FFFFFF';
+    context.shadowColor = colors[0];
+    context.shadowBlur = 8;
+    context.beginPath();
+    context.arc(headX, headY, 1.5, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+
   function drawFrame(multiplier = 1, staticFrame = false) {
     if (!context) return;
     clear();
@@ -244,7 +368,8 @@
     const head = points[points.length - 1];
     const tail = points.slice(-18);
 
-    if (resolvedKey === 'signal-trace') drawPath(tail, colors[0], 1.5, 0.82);
+    if (resolvedKey === 'plasma-swarm') drawPlasmaSwarm(multiplier, staticFrame);
+    else if (resolvedKey === 'signal-trace') drawPath(tail, colors[0], 1.5, 0.82);
     else if (resolvedKey === 'pixel-wake') drawParticles(multiplier);
     else if (resolvedKey === 'chroma-ribbon') {
       drawPath(tail, colors[0], 1.3, 0.7, -1, 0);

@@ -46,17 +46,17 @@ test('the curated renderer registries contain the approved active layers and fre
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 11,
     materials: 8,
-    motions: 11,
+    motions: 15,
     paidFonts: 10,
     paidMaterials: 7,
-    paidMotions: 10,
-    paidTotal: 27
+    paidMotions: 14,
+    paidTotal: 31
   });
   assert.equal(NAME_MATERIALS.plain.composable, true);
   assert.equal(NAME_MOTIONS.none.composable, true);
   assert.equal(new Set(Object.keys(NAME_FONTS)).size, 10);
   assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 8);
-  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 11);
+  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 15);
 });
 
 test('all supported combinations resolve through finite code-owned registries', () => {

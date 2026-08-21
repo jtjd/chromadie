@@ -3,6 +3,7 @@
   import { normalizeHexColor } from './utils.js';
   import { PROFILE_IDENTITY_DESCRIPTION_MODES, PROFILE_IDENTITY_ENTRY_ANIMATIONS } from './profileIdentityPresentation.js';
   import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
+  import { getAvatarEffectDefinition } from './avatar-effect/avatarEffects.js';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileDailyRoll from './ProfileDailyRoll.svelte';
@@ -51,6 +52,7 @@
   $: safeNameBaseColor = normalizeHexColor(nameBaseColor, '#FFFFFF');
   $: safeDescriptionMode = PROFILE_IDENTITY_DESCRIPTION_MODES.includes(descriptionMode) ? descriptionMode : 'plain';
   $: safeEntryAnimation = PROFILE_IDENTITY_ENTRY_ANIMATIONS.includes(entryAnimation) ? entryAnimation : 'none';
+  $: avatarEffectCanonicalKey = getAvatarEffectDefinition(avatarEffectKey)?.key || '';
   $: framedLayout = layoutVariant === 'framed' || presentation === 'framed';
   $: visibleLinks = (Array.isArray(links) ? links : [])
     .filter(link => link && typeof link.url === 'string' && link.url)
@@ -61,6 +63,7 @@
     'profile-reference-card',
     `profile-reference-card--${presentation}`,
     framedLayout ? 'profile-reference-card--framed' : '',
+    ['butterfly-orbit', 'bat-orbit'].includes(avatarEffectCanonicalKey) ? 'profile-reference-card--avatar-orbit' : '',
     `profile-reference-card--description-${safeDescriptionMode}`,
     `profile-reference-card--entry-${safeEntryAnimation}`,
     className
@@ -201,6 +204,8 @@
     color: var(--profile-text, #f8f8f8);
     text-align: center;
   }
+
+  .profile-reference-card--avatar-orbit { overflow: visible; }
 
   .profile-reference-card--homepage {
     padding: 51px 28px 29px;

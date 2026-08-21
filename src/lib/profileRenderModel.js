@@ -15,6 +15,8 @@ import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js'
 import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
 import { isAvatarEffectKey } from './avatar-effect/avatarEffects.js';
 import { isProfileBorderKey } from './profile-border/profileBorders.js';
+import { isAtmosphereKey } from './profile-atmosphere/atmospheres.js';
+import { isProfileMotionKey } from './profile-motion/profileMotions.js';
 import { getNameRendererLoadout } from './name/nameLoadout.js';
 import { getNameFontCssFamily, isCustomNameFontKey, resolveNameFontKey } from './name/nameFonts.js';
 import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
@@ -351,6 +353,8 @@ export function buildProfileRenderSnapshot(input = {}) {
     ? new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(profile.created_at))
     : '';
   const cursorTrailKey = getCursorTrailKey(cosmetics.cursor_trail);
+  const atmosphereKey = isAtmosphereKey(cosmetics.profile_atmosphere) ? String(cosmetics.profile_atmosphere) : '';
+  const profileMotionKey = isProfileMotionKey(cosmetics.profile_motion) ? String(cosmetics.profile_motion) : '';
   const nameRendererRecentColors = scores.slice(0, 6).map(score => score?.hex_code).filter(Boolean);
   const signatureColor = appearance.colors.accent;
   const nameRendererTodayColor = latestRoll?.hex_code || '#8B7CF6';
@@ -416,7 +420,7 @@ export function buildProfileRenderSnapshot(input = {}) {
       backgroundVideoUrl: media.backgroundVideoUrl,
       backgroundImageOpacity: appearance.background.imageOpacity,
       backgroundBlur: appearance.background.blur,
-      atmosphereKey: cosmetics.profile_atmosphere || '',
+      atmosphereKey,
       cursorTrailKey,
       cursorUrl: media.cursorUrl,
       pointerCursorUrl: media.pointerCursorUrl,
@@ -433,8 +437,8 @@ export function buildProfileRenderSnapshot(input = {}) {
       // Keep the persisted item key intact for the renderer contract while
       // failing closed for retired or malformed border values.
       borderKey: isProfileBorderKey(cosmetics.profile_border) ? String(cosmetics.profile_border) : '',
-      atmosphereKey: cosmetics.profile_atmosphere || '',
-      profileMotionKey: cosmetics.profile_motion || '',
+      atmosphereKey,
+      profileMotionKey,
       cursorTrailKey
     },
     links: {

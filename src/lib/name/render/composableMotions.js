@@ -10,6 +10,8 @@ import {
   mixColors,
   rgba,
   seededNoise,
+  setTextContext,
+  strokeText,
   withTextMask
 } from './primitives.js';
 
@@ -204,6 +206,209 @@ function drawFuzzyMotion(ctx, model, drawBase) {
     0.28);
 }
 
+function drawKineticEcho(ctx, model, drawBase) {
+  const time = Number.isFinite(model.time) ? model.time : 0;
+  const angle = time * 0.0014;
+  // The rear echo is deliberately slower and wider than the nearer echo. The
+  // two controlled afterimages stay attached to the name instead of becoming
+  // a generic blur field.
+  drawBaseVariant(ctx, model, drawBase, {
+    alpha: 0.34,
+    offsetX: Math.cos(angle * 0.82) * 15,
+    offsetY: Math.sin(angle * 1.3) * 2.4,
+    blur: 1.2,
+    shadowColor: '#B78BFF'
+  });
+  drawBaseVariant(ctx, model, drawBase, {
+    alpha: 0.48,
+    offsetX: Math.sin(angle) * 9,
+    offsetY: Math.cos(angle * 1.15) * 1.5,
+    blur: 0.8,
+    shadowColor: model.todayColor
+  });
+  drawBase(ctx, model);
+}
+
+function drawMagneticType(ctx, model) {
+  if (!ctx?.fillText) return;
+  const characters = Array.from(model.displayText || '');
+  if (!characters.length) return;
+  const { metrics } = model;
+  const characterWidth = metrics.width / Math.max(1, characters.length);
+  const pointer = model.pointer && Number.isFinite(model.pointer.x) && Number.isFinite(model.pointer.y)
+    ? model.pointer
+    : null;
+  const time = Number.isFinite(model.time) ? model.time : 0;
+
+  ctx.save?.();
+  setTextContext(ctx, model);
+  ctx.fillStyle = getReadableMotionColor(model.todayColor);
+  ctx.shadowColor = rgba(model.todayColor, 0.42);
+  ctx.shadowBlur = 3;
+  characters.forEach((character, index) => {
+    const homeX = metrics.x - metrics.width / 2 + characterWidth * (index + 0.5);
+    const homeY = metrics.y;
+    const dx = pointer ? homeX - pointer.x : 0;
+    const dy = pointer ? homeY - pointer.y : 0;
+    const distance = Math.hypot(dx, dy);
+    const influence = pointer && distance < 130 ? 1 - distance / 130 : 0;
+    const directionX = distance > 0.001 ? dx / distance : 0;
+    const directionY = distance > 0.001 ? dy / distance : 0;
+    const breathing = 0.86 + Math.sin(time * 0.002 + index * 0.7) * 0.14;
+    const offsetX = directionX * influence * 20 * breathing;
+    const offsetY = directionY * influence * 13 * breathing;
+    ctx.globalAlpha = 0.82 + influence * 0.18;
+    ctx.fillText(character, homeX + offsetX, homeY + offsetY);
+  });
+  ctx.restore?.();
+}
+
+function drawNeonParticleName(ctx, model, drawBase) {
+  const { metrics } = model;
+  const time = Number.isFinite(model.time) ? model.time : 0;
+  const left = metrics.x - metrics.width / 2;
+  const top = metrics.y - metrics.fontSize * 0.52;
+  const colors = ['#45E8FF', '#B6F7FF', '#FF4FA3', '#A878FF'];
+
+  drawBaseVariant(ctx, model, drawBase, {
+    alpha: 0.44,
+    blur: 8,
+    shadowColor: '#45E8FF'
+  });
+  drawBase(ctx, model);
+
+  const field = createLinearGradient(
+    ctx,
+    ['rgba(69,232,255,.16)', 'rgba(182,247,255,.74)', 'rgba(255,79,163,.46)'],
+    left,
+    0,
+    left + metrics.width,
+    0,
+    '#B6F7FF'
+  );
+  withTextMask(ctx, model, target => {
+    target.fillStyle = field;
+    target.globalAlpha = 0.78;
+    target.fillRect?.(0, 0, model.width, model.height);
+    for (let index = 0; index < 13; index += 1) {
+      const seed = seededNoise(model.seed, index + 201);
+      const streakPhase = time * (0.00045 + seed * 0.00025) + seed * 8;
+      const x = left - metrics.width * 0.12 + fract(streakPhase) * metrics.width * 1.24;
+      const y = top + seededNoise(model.seed, index + 221) * metrics.fontSize;
+      const length = metrics.fontSize * (0.45 + seededNoise(model.seed, index + 241) * 1.4);
+      target.globalAlpha = 0.18 + seededNoise(model.seed, index + 261) * 0.46;
+      target.strokeStyle = colors[index % colors.length];
+      target.lineWidth = 0.45 + seed * 0.8;
+      target.beginPath?.();
+      target.moveTo?.(x, y);
+      target.lineTo?.(x + length, y + Math.sin(streakPhase) * 1.6);
+      target.stroke?.();
+    }
+    for (let index = 0; index < 72; index += 1) {
+      const particlePhase = fract(time * (0.00012 + seededNoise(model.seed, index + 281) * 0.00014) + seededNoise(model.seed, index + 301));
+      const x = left + seededNoise(model.seed, index + 321) * metrics.width + Math.sin(particlePhase * Math.PI * 2 + index) * 1.6;
+      const y = top + seededNoise(model.seed, index + 341) * metrics.fontSize + Math.cos(particlePhase * Math.PI * 2) * 1.6;
+      const size = 0.45 + seededNoise(model.seed, index + 361) * 1.25;
+      target.globalAlpha = 0.26 + Math.sin(particlePhase * Math.PI) * 0.58;
+      target.fillStyle = colors[index % colors.length];
+      if (target.beginPath && target.arc && target.fill) {
+        target.beginPath();
+        target.arc(x, y, size, 0, Math.PI * 2);
+        target.fill();
+      } else {
+        target.fillRect?.(x, y, size, size);
+      }
+    }
+  });
+
+  const outline = createLinearGradient(
+    ctx,
+    ['#45E8FF', '#F7FBFF', '#FF4FA3'],
+    left,
+    0,
+    left + metrics.width,
+    0,
+    '#F7FBFF'
+  );
+  strokeText(ctx, model, outline, 0.72, 0.72);
+
+  // Emission particles live just outside the text boundary. They are sparse,
+  // deterministic, and stay small enough for compact Customize cards.
+  for (let index = 0; index < 28; index += 1) {
+    const seed = seededNoise(model.seed, index + 401);
+    const phase = fract(model.progress * (0.7 + seed * 0.8) + seed);
+    const side = index % 4;
+    const x = side === 0 ? left - 2 - seed * 5 : side === 1 ? left + metrics.width + 2 + seed * 5 : left + seed * metrics.width;
+    const y = side === 2 ? top - 2 - seed * 4 : side === 3 ? top + metrics.fontSize + 2 + seed * 4 : top + seed * metrics.fontSize;
+    const size = 0.45 + seededNoise(model.seed, index + 421) * 1.35;
+    ctx.save?.();
+    ctx.globalAlpha = Math.sin(phase * Math.PI) * 0.72;
+    ctx.fillStyle = colors[index % colors.length];
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 3;
+    if (ctx.beginPath && ctx.arc && ctx.fill) {
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    } else ctx.fillRect?.(x, y, size, size);
+    if (index % 9 === 0 && ctx.moveTo && ctx.lineTo && ctx.stroke) {
+      ctx.strokeStyle = '#F7FBFF';
+      ctx.lineWidth = 0.65;
+      ctx.beginPath?.();
+      ctx.moveTo(x - size * 3, y);
+      ctx.lineTo(x + size * 3, y);
+      ctx.moveTo(x, y - size * 3);
+      ctx.lineTo(x, y + size * 3);
+      ctx.stroke();
+    }
+    ctx.restore?.();
+  }
+}
+
+function drawRasterSignal(ctx, model, drawBase) {
+  const { metrics } = model;
+  const time = Number.isFinite(model.time) ? model.time : 0;
+  const rowHeight = Math.max(1.5, metrics.fontSize * 0.025);
+  const rows = Math.min(36, Math.max(8, Math.ceil(model.height / rowHeight)));
+
+  drawBaseVariant(ctx, model, drawBase, {
+    alpha: 0.18,
+    offsetX: Math.sin(time * 0.0012) * 2.4,
+    blur: 2.5,
+    shadowColor: '#F7FBFF'
+  });
+  drawTextSlices(ctx, model, index => {
+    const seed = seededNoise(model.seed, index + 501);
+    const cluster = Math.sin(time * 0.0017 + index * 0.78) * (1.1 + seed * 2.9);
+    const fine = Math.sin(time * 0.008 + index * 2.7) * 0.9;
+    const jump = index % 11 === Math.floor((time * 0.002) % 11) ? (seed - 0.5) * 8 : 0;
+    ctx.save?.();
+    ctx.globalAlpha = 0.63 + seed * 0.28;
+    ctx.translate?.(cluster + fine + jump, 0);
+    drawBase(ctx, model);
+    ctx.restore?.();
+  }, rows);
+  drawBaseVariant(ctx, model, drawBase, { alpha: 0.34 });
+
+  withTextMask(ctx, model, target => {
+    target.fillStyle = '#08090D';
+    target.globalAlpha = 0.44;
+    const firstRow = metrics.y - metrics.fontSize * 0.52;
+    for (let y = firstRow; y < metrics.y + metrics.fontSize * 0.54; y += rowHeight * 2.05) {
+      target.fillRect?.(0, y, model.width, Math.max(0.7, rowHeight * 0.42));
+    }
+    target.fillStyle = '#FFFFFF';
+    for (let index = 0; index < 34; index += 1) {
+      const seed = seededNoise(model.seed, index + 551);
+      if (seed < 0.58) continue;
+      const x = metrics.x - metrics.width / 2 + seededNoise(model.seed, index + 571) * metrics.width;
+      const y = firstRow + seededNoise(model.seed, index + 591) * metrics.fontSize;
+      target.globalAlpha = 0.26 + seed * 0.6;
+      target.fillRect?.(x, y, 0.7 + seed * 1.4, Math.max(0.7, rowHeight * 0.38));
+    }
+  });
+}
+
 export function drawComposableMotion(ctx, model, drawBase) {
   const { progress, metrics } = model;
   const phase = progress * Math.PI * 2;
@@ -380,6 +585,18 @@ export function drawComposableMotion(ctx, model, drawBase) {
       }
       return true;
     }
+    case 'kinetic-echo':
+      drawKineticEcho(ctx, model, drawBase);
+      return true;
+    case 'magnetic-type':
+      drawMagneticType(ctx, model);
+      return true;
+    case 'neon-particle':
+      drawNeonParticleName(ctx, model, drawBase);
+      return true;
+    case 'raster-signal':
+      drawRasterSignal(ctx, model, drawBase);
+      return true;
     default:
       drawBase(ctx, model);
       return false;

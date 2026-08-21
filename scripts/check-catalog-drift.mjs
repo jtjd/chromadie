@@ -18,6 +18,7 @@ const atmosphereReplacementMigrationPath = path.join(repoRoot, 'supabase/migrati
 const atelierExpressionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260809000000_atelier_expression_catalog.sql');
 const nameFontRefreshMigrationPath = path.join(repoRoot, 'supabase/migrations/20260816110000_name_font_catalog_refresh.sql');
 const silkscreenFontMigrationPath = path.join(repoRoot, 'supabase/migrations/20260816120000_add_silkscreen_name_font.sql');
+const approvedEffectsMigrationPath = path.join(repoRoot, 'supabase/migrations/20260821090000_approved_cosmetic_effects.sql');
 
 function fail(message) {
   console.error(`Catalog drift detected: ${message}`);
@@ -314,6 +315,7 @@ const nameMotionCurationMigration = await readFile(nameMotionCurationMigrationPa
 const nameMotionReferenceMigration = await readFile(nameMotionReferenceMigrationPath, 'utf8');
 const nameMaterialCurationMigration = await readFile(nameMaterialCurationMigrationPath, 'utf8');
 const nameFontRefreshMigration = await readFile(nameFontRefreshMigrationPath, 'utf8');
+const approvedEffectsMigration = await readFile(approvedEffectsMigrationPath, 'utf8');
 const validSlots = new Set([
   'consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border',
   'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'
@@ -322,14 +324,14 @@ const validCatalogStatuses = new Set(['active', 'legacy', 'retired']);
 const rendererKeys = Object.freeze({
   name_font: new Set(['industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins', 'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit']),
   name_material: new Set(['glass-emboss', 'carbon-cut', 'neon-tube', 'velvet-ink', 'engraved-stone', 'crt-phosphor', 'blueprint-ink']),
-  name_motion: new Set(['haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles', 'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal', 'haunt-split', 'haunt-flash']),
-  cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing']),
-  avatar_effect: new Set(['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud']),
+  name_motion: new Set(['haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles', 'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal', 'haunt-split', 'haunt-flash', 'kinetic-echo', 'magnetic-type', 'neon-particle', 'raster-signal']),
+  cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing', 'plasma-swarm']),
+  avatar_effect: new Set(['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'bat-orbit']),
   profile_layout: new Set(['compact', 'full-bleed', 'framed']),
-  profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare']),
-  profile_motion: new Set(['perspective-tilt'])
+  profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare', 'prism-dust']),
+  profile_motion: new Set(['perspective-tilt', 'halo-offset', 'wavefront'])
 });
-const expectedCounts = Object.freeze({ name_font: 10, name_material: 7, name_motion: 11, profile_border: 9, cursor_trail: 16, avatar_effect: 4, profile_layout: 3, profile_atmosphere: 13, profile_motion: 1 });
+const expectedCounts = Object.freeze({ name_font: 10, name_material: 7, name_motion: 15, profile_border: 10, cursor_trail: 17, avatar_effect: 6, profile_layout: 3, profile_atmosphere: 14, profile_motion: 3 });
 const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0, profile_motion: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
@@ -338,7 +340,7 @@ for (const item of seed.catalog.values()) {
   if (!Number.isSafeInteger(Number(item.cost)) || Number(item.cost) < 0) fail(`${item.item_key} has invalid cost ${item.cost}`);
   if (item.css_type === 'renderer') {
     const allowedRendererKeys = item.slot === 'profile_border'
-      ? new Set(['celestial', 'chroma', 'crystal', 'glitch', 'gold', 'neon', 'prism', 'void', 'signal'])
+      ? new Set(['celestial', 'chroma', 'crystal', 'glitch', 'gold', 'neon', 'prism', 'void', 'signal', 'elastic'])
       : rendererKeys[item.slot];
     if (!allowedRendererKeys?.has(item.css_value)) fail(`${item.item_key} references an unknown ${item.slot} renderer ${item.css_value}`);
     if (!['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'].includes(item.slot)) {
@@ -357,14 +359,24 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 76) {
-  fail(`expected 76 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 87) {
+  fail(`expected 87 active catalog rows, found ${seed.catalog.size}`);
 }
 if ([...seed.catalog.values()].some(item => obsoleteSlots.includes(item.slot))) {
   fail('the seed still contains an obsolete cosmetic slot');
 }
 if (seed.catalog.has('name_material_plain') || seed.catalog.has('name_motion_none')) {
   fail('Plain and Still must not be purchasable catalog rows');
+}
+if (!approvedEffectsMigration.includes("'name_motion_kinetic_echo'")
+  || !approvedEffectsMigration.includes("'border_elastic'")
+  || !approvedEffectsMigration.includes("'profile_atmosphere_prism_dust'")
+  || !approvedEffectsMigration.includes("'cursor_trail_plasma_swarm'")
+  || !approvedEffectsMigration.includes("'avatar_effect_butterfly_orbit'")
+  || !approvedEffectsMigration.includes("'avatar_effect_bat_orbit'")
+  || !approvedEffectsMigration.includes("'profile_motion_halo_offset'")
+  || !approvedEffectsMigration.includes("'profile_motion_wavefront'")) {
+  fail('the approved-effects migration is missing one or more catalog rows');
 }
 const expansionMigration = await readFile(expansionMigrationPath, 'utf8');
 if (!expansionMigration.includes("'cursor_trail', 'avatar_effect', 'profile_layout'")) {

@@ -50,6 +50,10 @@ const definitions = {
   'lumen-flare': {
     key: 'lumen-flare', label: 'Lumen Flare', collection: 'Signal', rarity: 'Mythic',
     description: 'A distant lens flare blooms and recedes like a signal arriving through the dark.'
+  },
+  'prism-dust': {
+    key: 'prism-dust', label: 'Prism Dust', collection: 'Prism', rarity: 'Epic',
+    description: 'Refractive shards drift at varied depths, catching light in small clustered constellations.'
   }
 };
 

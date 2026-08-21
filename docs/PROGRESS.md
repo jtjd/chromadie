@@ -4573,3 +4573,27 @@ responsive desktop two-column/mobile stacked composition.
   exercise uploads because local R2 is intentionally disabled; the production
   smoke was blocked before media assertions by the external Turnstile test
   token. This remains an environment-dependent CI gate, not a claimed pass.
+
+## Approved cosmetic effects — 2026-08-21
+
+- Implemented the eleven approved effects from the handoff through the existing
+  finite renderer registries and real Profile Studio loadout flow.
+- Added the four composable Name motions, Elastic Frame, Halo Offset, Wavefront,
+  Prism Dust, Plasma Swarm, Butterfly Orbit, and Bat Orbit without changing
+  the five approved regression baselines.
+- Added true DOM-avatar occlusion for the two orbit effects with shared-state
+  front/back canvas decorations, plus bounded pointer, resize, offscreen,
+  reduced-motion, and teardown behavior across the new controllers.
+- Extended the additive catalog/seed migration to 87 active rows and preserved
+  inventory, entitlement, equip, publish, cache, RLS, and RPC contracts.
+- Added the same atmosphere/cursor environment layer to the live Studio preview
+  so every approved effect is exercised in Customize, persisted reload, and the
+  public profile.
+- Targeted approved-effect tests pass, the full Node suite passes (446 tests),
+  and the focused browser smoke passes with:
+  `PROFILE_STUDIO_SMOKE_SKIP_MEDIA=1 PROFILE_STUDIO_SMOKE_EFFECTS=approved npm run test:browser`.
+- Full validation passes: build, Svelte check, ESLint, links, CSP, performance,
+  username/balance/catalog/scoring drift, database security, Supabase lint, and
+  a fresh database reset. The default browser smoke still requires local R2 for
+  its separate upload regression; that environment-dependent limitation is not
+  part of the approved-effects path.

@@ -3,6 +3,7 @@
   import { registerNameAnimation } from './nameAnimationClock.js';
   import { shouldAnimateNameFrame, createNameCanvasRenderer } from './nameRenderer.js';
   import { getNameRendererDefinition, hasComposableNameInput, resolveNameRendererKey } from './nameCatalog.js';
+  import { resolveNameMotionKey } from './nameMotions.js';
   import { loadCodeOwnedNameRenderers } from './nameComposableRenderer.js';
   import { DEFAULT_NAME_FONT_KEY, getNameFont, requestNameFontLoad, resolveNameFontKey } from './nameFonts.js';
 
@@ -60,6 +61,7 @@
   let requestedFontLoadKey = '';
   let fontRequestId = 0;
   let lastHostSize = { width: 220, height: 44 };
+  let pointer = null;
 
   // Motion layers intentionally extend beyond the glyphs. Keep that visual
   // bleed outside the semantic line box so glow, flash, and split entry do not
@@ -81,6 +83,7 @@
   $: explicitMotionKey = typeof motionKey === 'string' && motionKey.trim()
     ? motionKey
     : loadoutValue(loadout, 'motionKey', 'name_motion');
+  $: magneticMotion = resolveNameMotionKey(explicitMotionKey) === 'magnetic-type';
   $: hasComposableKeys = hasComposableNameInput({
     fontKey: explicitFontKey,
     materialKey: explicitMaterialKey,
@@ -121,13 +124,18 @@
     compact,
     size,
     mode: effectiveMode,
-    reducedMotion
+    reducedMotion,
+    pointer: magneticMotion ? pointer : null
   };
+  // Pointer movement is intentionally excluded from this signature. Magnetic
+  // Type can redraw against the shared clock without tearing down and
+  // re-registering that clock on every local pointer event.
+  $: rendererAnimationSignature = `${safeMode}:${effectiveMode}:${visible}:${reducedMotion}:${safeRendererKey}:${fontLoadKey}`;
   $: if (mounted && renderer) {
     renderer.setOptions(rendererOptions);
     renderer.draw(lastDrawTime);
-    syncAnimationLoop();
   }
+  $: if (mounted && renderer && rendererAnimationSignature) syncAnimationLoop();
   function requestFontLoad(requestKey = fontLoadKey, requestFontKey = resolvedFontKey, requestText = text) {
     if (!renderer || !renderer.supported || !requestKey || requestKey === requestedFontLoadKey) return;
     const requestId = ++fontRequestId;
@@ -202,6 +210,20 @@
     syncAnimationLoop();
   }
 
+  function handlePointerMove(event) {
+    if (!magneticMotion || !host || event.pointerType === 'touch') return;
+    const rect = host.getBoundingClientRect?.();
+    if (!rect || !rect.width || !rect.height) return;
+    pointer = {
+      x: event.clientX - rect.left + CANVAS_BLEED_X,
+      y: event.clientY - rect.top + CANVAS_BLEED_Y
+    };
+  }
+
+  function handlePointerLeave() {
+    pointer = null;
+  }
+
   function getSemanticFontSize() {
     if (!semantic || typeof globalThis.getComputedStyle !== 'function') return 0;
     const value = Number.parseFloat(globalThis.getComputedStyle(semantic).fontSize);
@@ -273,6 +295,8 @@
       applyResize();
     }
     updateHostVisibility();
+    host?.addEventListener?.('pointermove', handlePointerMove, { passive: true });
+    host?.addEventListener?.('pointerleave', handlePointerLeave, { passive: true });
 
     if (typeof globalThis.matchMedia === 'function') {
       mediaQuery = globalThis.matchMedia('(prefers-reduced-motion: reduce)');
@@ -312,6 +336,8 @@
       rendererReady = false;
       fontReady = false;
       mounted = false;
+      host?.removeEventListener?.('pointermove', handlePointerMove);
+      host?.removeEventListener?.('pointerleave', handlePointerLeave);
     };
   });
 

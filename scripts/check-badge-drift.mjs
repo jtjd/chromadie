@@ -238,7 +238,8 @@ const expectedBorderPrices = Object.freeze({
   border_neon: 180000,
   border_prism: 300000,
   border_void: 550000,
-  border_signal: 160000
+  border_signal: 160000,
+  border_elastic: 0
 });
 const expectedBorderKeys = new Set(Object.values(profileBorders.PROFILE_BORDER_DEFINITIONS).map(definition => definition.itemKey));
 const borderKeySet = new Set(borderRows.map(row => row.itemKey));
@@ -250,7 +251,7 @@ const borderInvalidRows = borderRows.filter(row => (
     || !row.description.trim()
     || !row.collection.trim()
 ));
-if (borderRows.length !== 9 || borderKeySet.size !== 9 || borderInvalidRows.length > 0) {
+if (borderRows.length !== 10 || borderKeySet.size !== 10 || borderInvalidRows.length > 0) {
   console.error('Profile Border balance/drift check failed.');
   console.error(JSON.stringify({
     rowCount: borderRows.length,
@@ -277,23 +278,37 @@ const launchExpectedCosts = Object.freeze({
   cursor_trail_ink_drops: 220000, cursor_trail_orbit_dust: 350000, cursor_trail_static_echo: 320000,
   cursor_trail_rain_trace: 230000, cursor_trail_gold_fleck: 370000, cursor_trail_ghost_tail: 320000,
   cursor_trail_color_memory: 540000, cursor_trail_marker_stroke: 360000, cursor_trail_solar_sparks: 520000,
-  cursor_trail_void_lensing: 700000, avatar_effect_3d_parallax: 350000, avatar_effect_glitch_slicer: 340000,
-  avatar_effect_liquid_blob: 380000, avatar_effect_cyber_hud: 520000, profile_layout_compact: 0,
+  cursor_trail_void_lensing: 700000, cursor_trail_plasma_swarm: 0,
+  avatar_effect_3d_parallax: 350000, avatar_effect_glitch_slicer: 340000,
+  avatar_effect_liquid_blob: 380000, avatar_effect_cyber_hud: 520000,
+  avatar_effect_butterfly_orbit: 0, avatar_effect_bat_orbit: 0,
+  profile_layout_compact: 0,
   profile_layout_full_bleed: 0, profile_layout_framed: 0,
-  profile_motion_perspective_tilt: 0,
+  profile_motion_perspective_tilt: 0, profile_motion_halo_offset: 0, profile_motion_wavefront: 0,
   profile_atmosphere_rain_window: 260000, profile_atmosphere_droplets_glass: 240000,
   profile_atmosphere_dust_light: 280000, profile_atmosphere_ink_bloom: 520000,
   profile_atmosphere_snowfall: 300000, profile_atmosphere_silk_folds: 320000,
   profile_atmosphere_glass_caustics: 460000, profile_atmosphere_cinder_drift: 430000,
   profile_atmosphere_night_pollen: 340000, profile_atmosphere_paper_shadow: 300000,
-  profile_atmosphere_smoke_spiral: 580000, profile_atmosphere_lumen_flare: 640000
+  profile_atmosphere_smoke_spiral: 580000, profile_atmosphere_lumen_flare: 640000,
+  profile_atmosphere_prism_dust: 0
 });
+const launchFreeKeys = new Set([
+  'cursor_trail_plasma_swarm',
+  'avatar_effect_butterfly_orbit',
+  'avatar_effect_bat_orbit',
+  'profile_atmosphere_prism_dust',
+  'profile_motion_halo_offset',
+  'profile_motion_wavefront'
+]);
 const launchExpectedRenderers = new Set([
   ...cursorTrails.CURSOR_TRAIL_KEYS.map(key => `cursor_trail_${key.replaceAll('-', '_')}`),
   ...avatarEffects.AVATAR_EFFECT_KEYS.map(key => `avatar_effect_${key.replaceAll('-', '_')}`),
   ...profileLayouts.PROFILE_LAYOUT_KEYS.map(key => `profile_layout_${key.replaceAll('-', '_')}`),
   ...profileAtmospheres.PROFILE_ATMOSPHERE_KEYS.map(key => `profile_atmosphere_${key.replaceAll('-', '_')}`),
-  'profile_motion_perspective_tilt'
+  'profile_motion_perspective_tilt',
+  'profile_motion_halo_offset',
+  'profile_motion_wavefront'
 ]);
 const launchInvalidRows = launchRows.filter(row => (
   !launchExpectedRenderers.has(row.itemKey)
@@ -305,7 +320,7 @@ const launchInvalidRows = launchRows.filter(row => (
   || row.accessTier !== (
     progressionRewardKeys.has(row.itemKey)
       ? 'earned'
-      : (row.slot === 'profile_layout' || row.slot === 'profile_motion' ? 'free' : 'earned')
+      : (launchFreeKeys.has(row.itemKey) || row.slot === 'profile_layout' || row.slot === 'profile_motion' ? 'free' : 'earned')
   )
 ));
 const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'].map(slot => [
@@ -313,10 +328,10 @@ const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profi
   launchRows.filter(row => row.slot === slot).length
 ]));
 if (
-    launchRows.length !== 36
-    || new Set(launchRows.map(row => row.itemKey)).size !== 36
+    launchRows.length !== 42
+    || new Set(launchRows.map(row => row.itemKey)).size !== 42
     || launchInvalidRows.length > 0
-    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 16, avatar_effect: 4, profile_layout: 3, profile_atmosphere: 12, profile_motion: 1 })
+    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 17, avatar_effect: 6, profile_layout: 3, profile_atmosphere: 13, profile_motion: 3 })
 ) {
   console.error('Launch cosmetic catalog balance/drift check failed.');
   console.error(JSON.stringify({

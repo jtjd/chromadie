@@ -5736,3 +5736,24 @@ header entries and legacy query URLs from becoming the primary navigation path.
 Progression analytics keeps aggregate bounded events, but separates goal views
 from unlock presentation, validates the declared account mode, and leaves
 retention cleanup to scheduled maintenance instead of the hot event path.
+
+## 2026-08-21 — Integrate the approved effects into the existing renderer system
+
+The approved cosmetic handoff is implemented as additive entries in the finite
+name, border, profile-motion, atmosphere, cursor, and avatar registries. The
+new layers are Kinetic Echo, Magnetic Type, Neon Particle, Raster Signal,
+Elastic Frame, Halo Offset, Wavefront, Prism Dust, Plasma Swarm, Butterfly
+Orbit, and Bat Orbit. The approved 3D Parallax Tilt, Liquid Blob, 3D Tilt,
+Scramble, and Type In baselines remain on their existing code paths.
+
+Butterfly Orbit and Bat Orbit keep the user avatar in the DOM and render only
+code-owned ornaments on separate back/front canvases. Shared lifecycle guards
+cover resize, visibility, reduced motion, pointer input, and cleanup. The
+Studio preview now consumes the same render-model environment layer as the
+public profile, so atmosphere and cursor cosmetics are visible in the actual
+Customize preview rather than only in catalog specimens.
+
+The catalog and seed changes are additive and preserve the existing inventory,
+entitlement, equip RPC, RLS, cache, publish, and persisted-loadout contracts.
+Large new renderer modules are lazy-loaded at route boundaries to keep the
+public and dashboard performance budgets within their existing limits.

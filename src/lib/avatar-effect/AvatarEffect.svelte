@@ -1,4 +1,5 @@
 <script>
+  import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { getAvatarEffectDefinition } from './avatarEffects.js';
 
   export let effectKey = '';
@@ -14,10 +15,18 @@
 
   /** @type {any} */
   let definition;
+  let orbitBackCanvas;
+  let orbitFrontCanvas;
+  let orbitController;
+  let orbitRendererModule;
+  let orbitRendererPromise;
+  let orbitLoadVersion = 0;
+  let mounted = false;
   $: definition = getAvatarEffectDefinition(effectKey);
   $: activeDefinitionKey = definition?.key || 'none';
   $: compact = mode === 'compact' || mode === 'card';
   $: motionActive = Boolean(animated && (active || !compact));
+  $: isOrbit = activeDefinitionKey === 'butterfly-orbit' || activeDefinitionKey === 'bat-orbit';
   $: colors = [accentColor, ...(Array.isArray(recentColors) ? recentColors : [])]
     .filter(color => /^#[0-9a-f]{6}$/i.test(String(color || '')))
     .slice(0, 4);
@@ -37,9 +46,64 @@
   ].join(';');
   $: showGlitchLayers = activeDefinitionKey === 'glitch-slicer' && Boolean(avatarSrc || fallbackText);
   $: showHudLayers = activeDefinitionKey === 'cyber-hud';
+
+  function syncOrbitController() {
+    if (!mounted) return;
+    const requestVersion = ++orbitLoadVersion;
+    if (!isOrbit || !orbitBackCanvas || !orbitFrontCanvas) {
+      orbitController?.destroy();
+      orbitController = null;
+      return;
+    }
+    const install = renderer => {
+      if (!mounted || requestVersion !== orbitLoadVersion || !isOrbit || !orbitBackCanvas || !orbitFrontCanvas) return;
+      if (!orbitController) {
+        orbitController = renderer.createAvatarOrbitController({
+          host: orbitBackCanvas.parentElement,
+          backCanvas: orbitBackCanvas,
+          frontCanvas: orbitFrontCanvas,
+          effectKey: activeDefinitionKey,
+          accentColor: colors[0],
+          enabled: motionActive
+        });
+        return;
+      }
+      orbitController.update({
+        effectKey: activeDefinitionKey,
+        accentColor: colors[0],
+        enabled: motionActive
+      });
+    };
+    if (orbitRendererModule) {
+      install(orbitRendererModule);
+      return;
+    }
+    orbitRendererPromise ||= import('./avatarOrbitRenderer.js');
+    orbitRendererPromise.then(renderer => {
+      orbitRendererModule = renderer;
+      install(renderer);
+    }).catch(() => {});
+  }
+
+  onMount(() => {
+    mounted = true;
+    syncOrbitController();
+  });
+
+  afterUpdate(syncOrbitController);
+
+  onDestroy(() => {
+    mounted = false;
+    orbitController?.destroy();
+    orbitController = null;
+  });
 </script>
 
 <div class={effectClass} style={effectStyle} data-avatar-effect={activeDefinitionKey}>
+  {#if isOrbit}
+    <canvas bind:this={orbitBackCanvas} class="avatar-effect__orbit-canvas avatar-effect__orbit-canvas--back" aria-hidden="true"></canvas>
+  {/if}
+
   {#if showGlitchLayers}
     <span class="avatar-effect__glitch-layers" aria-hidden="true">
       {#if avatarSrc}
@@ -62,6 +126,10 @@
   {/if}
 
   <span class="avatar-effect__slot"><slot /></span>
+
+  {#if isOrbit}
+    <canvas bind:this={orbitFrontCanvas} class="avatar-effect__orbit-canvas avatar-effect__orbit-canvas--front" aria-hidden="true"></canvas>
+  {/if}
 </div>
 
 <style>
@@ -98,7 +166,8 @@
   }
 
   .avatar-effect__glitch-layers,
-  .avatar-effect__hud-layers {
+  .avatar-effect__hud-layers,
+  .avatar-effect__orbit-canvas {
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -137,6 +206,25 @@
   .avatar-effect__hud-layers {
     z-index: 1;
   }
+
+  .avatar-effect--butterfly-orbit,
+  .avatar-effect--bat-orbit {
+    overflow: visible;
+  }
+
+  .avatar-effect__orbit-canvas {
+    top: -28%;
+    left: -28%;
+    right: auto;
+    bottom: auto;
+    display: block;
+    width: 156%;
+    height: 156%;
+    overflow: visible;
+  }
+
+  .avatar-effect__orbit-canvas--back { z-index: 1; }
+  .avatar-effect__orbit-canvas--front { z-index: 3; }
 
   .avatar-effect__hud-ring,
   .avatar-effect__hud-tick {

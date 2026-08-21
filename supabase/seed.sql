@@ -57,6 +57,7 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('border_prism', 'Prism Border', 'profile_border', 300000, 'renderer', 'prism', NULL, NULL, 'Epic', 'Refracted light travels around the profile edge in a compact spectrum.', 'Prism', false),
 ('border_void', 'Void Border', 'profile_border', 550000, 'renderer', 'void', NULL, NULL, 'Mythic', 'A dark violet edge that absorbs light around the card.', 'Nocturne', false),
 ('border_signal', 'Signal Border', 'profile_border', 0, 'renderer', 'signal', NULL, NULL, 'Rare', 'A quiet lime edge with a bounded signal pulse.', 'Signal', false),
+('border_elastic', 'Elastic Frame', 'profile_border', 0, 'renderer', 'elastic', NULL, NULL, 'Epic', 'A tensioned perimeter bends toward the pointer while keeping the profile boundary in place.', 'Signal', false),
 ('streak_freeze', 'Streak Freeze', 'consumable', 50000, 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL, true),
 ('title_founder', 'Founder Title', 'title', 0, 'text', '✦ FOUNDER ✦', NULL, '2026-07-10', 'Mythic', 'Reserved for people whose early contributions helped shape ChromaDie.', 'Project Legacy', false)
 ON CONFLICT (item_key) DO NOTHING;
@@ -91,7 +92,11 @@ INSERT INTO public.shop_items (
   ('name_motion_haunt_fuzzy', 'Fuzzy', 'name_motion', 460000, 'renderer', 'haunt-fuzzy', NULL, NULL, 'Anomaly', 'The name resolves through soft signal noise and brief chromatic separation.', 'Static Bloom', false, 'earned', NULL, 'active'),
   ('name_motion_haunt_reveal', 'Reveal', 'name_motion', 0, 'renderer', 'haunt-reveal', NULL, NULL, 'Rare', 'A clean light curtain unveils the name from left to right.', 'Archive', false, 'earned', NULL, 'active'),
   ('name_motion_haunt_split', 'Split Reveal', 'name_motion', 540000, 'renderer', 'haunt-split', NULL, NULL, 'Epic', 'Two halves of the name enter on separate planes and meet on the centerline.', 'Archive', false, 'earned', NULL, 'active'),
-  ('name_motion_haunt_flash', 'Flash', 'name_motion', 0, 'renderer', 'haunt-flash', NULL, NULL, 'Rare', 'A sharp white exposure rolls over the name before the color settles.', 'Signal', false, 'earned', NULL, 'active')
+  ('name_motion_haunt_flash', 'Flash', 'name_motion', 0, 'renderer', 'haunt-flash', NULL, NULL, 'Rare', 'A sharp white exposure rolls over the name before the color settles.', 'Signal', false, 'earned', NULL, 'active'),
+  ('name_motion_kinetic_echo', 'Kinetic Echo', 'name_motion', 0, 'renderer', 'kinetic-echo', NULL, NULL, 'Epic', 'Controlled afterimages follow the name in two offset, color-separated echoes.', 'Signal', false, 'free', NULL, 'active'),
+  ('name_motion_magnetic_type', 'Magnetic Type', 'name_motion', 0, 'renderer', 'magnetic-type', NULL, NULL, 'Epic', 'Each glyph responds to the pointer as if the name were suspended in a magnetic field.', 'Prism', false, 'free', NULL, 'active'),
+  ('name_motion_neon_particle', 'Neon Particle', 'name_motion', 0, 'renderer', 'neon-particle', NULL, NULL, 'Anomaly', 'A masked internal energy field, edge emission, and micro-particles keep the name electrically alive.', 'Signal', false, 'free', NULL, 'active'),
+  ('name_motion_raster_signal', 'Raster Signal', 'name_motion', 0, 'renderer', 'raster-signal', NULL, NULL, 'Epic', 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.', 'Static Bloom', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,
@@ -126,14 +131,19 @@ INSERT INTO public.shop_items (
   ('cursor_trail_marker_stroke', 'Marker Stroke', 'cursor_trail', 360000, 'renderer', 'marker-stroke', NULL, NULL, 'Epic', 'A pressure-like hand-drawn stroke has a dry marker edge and bounded width.', 'Archive', false, 'earned', NULL, 'active'),
   ('cursor_trail_solar_sparks', 'Solar Sparks', 'cursor_trail', 520000, 'renderer', 'solar-sparks', NULL, NULL, 'Anomaly', 'Fine sparks and an occasional restrained flare respond to pointer speed.', 'Ember', false, 'earned', NULL, 'active'),
   ('cursor_trail_void_lensing', 'Void Lensing', 'cursor_trail', 700000, 'renderer', 'void-lensing', NULL, NULL, 'Mythic', 'A dark lens ring separates violet and cyan around a narrow spectral wake.', 'Nocturne', false, 'earned', NULL, 'active'),
+  ('cursor_trail_plasma_swarm', 'Plasma Swarm', 'cursor_trail', 0, 'renderer', 'plasma-swarm', NULL, NULL, 'Anomaly', 'Charged clusters, hot nodes, and electrical links gather around the moving pointer.', 'Signal', false, 'free', NULL, 'active'),
   ('avatar_effect_3d_parallax', '3D Parallax Tilt', 'avatar_effect', 0, 'renderer', '3d-parallax', NULL, NULL, 'Epic', 'A softly tilted portrait lifts away from the profile surface with a deep shadow.', 'Signal', false, 'earned', NULL, 'active'),
   ('avatar_effect_glitch_slicer', 'Glitch Slicer', 'avatar_effect', 340000, 'renderer', 'glitch-slicer', NULL, NULL, 'Epic', 'Crisp red and cyan slices interrupt the portrait in short controlled bursts.', 'Static Bloom', false, 'earned', NULL, 'active'),
   ('avatar_effect_liquid_blob', 'Liquid Blob', 'avatar_effect', 380000, 'renderer', 'liquid-blob', NULL, NULL, 'Epic', 'A bright organic silhouette slowly morphs around the portrait.', 'Prism', false, 'earned', NULL, 'active'),
   ('avatar_effect_cyber_hud', 'Cyber HUD', 'avatar_effect', 0, 'renderer', 'cyber-hud', NULL, NULL, 'Anomaly', 'Precision rings and corner ticks frame the portrait like a clean instrument readout.', 'Signal', false, 'earned', NULL, 'active'),
+  ('avatar_effect_butterfly_orbit', 'Butterfly Orbit', 'avatar_effect', 0, 'renderer', 'butterfly-orbit', NULL, NULL, 'Epic', 'A ring of glowing butterflies orbits the real avatar through a projected 3D depth field.', 'Prism', false, 'free', NULL, 'active'),
+  ('avatar_effect_bat_orbit', 'Bat Orbit', 'avatar_effect', 0, 'renderer', 'bat-orbit', NULL, NULL, 'Anomaly', 'A flock of dark bats sweeps around the real avatar with curved wings and true front-back depth.', 'Nocturne', false, 'free', NULL, 'active'),
   ('profile_layout_compact', 'Compact', 'profile_layout', 0, 'renderer', 'compact', NULL, NULL, 'Uncommon', 'A small centered identity surface that leaves the user background in charge.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_layout_full_bleed', 'Immersive', 'profile_layout', 0, 'renderer', 'full-bleed', NULL, NULL, 'Uncommon', 'A full-viewport identity scene with a large avatar, bio, and icon links.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_layout_framed', 'Framed', 'profile_layout', 0, 'renderer', 'framed', NULL, NULL, 'Uncommon', 'A left-aligned identity card with an overlapping avatar and icon links.', 'Layouts', false, 'earned', NULL, 'active'),
-  ('profile_motion_perspective_tilt', '3D Tilt', 'profile_motion', 0, 'renderer', 'perspective-tilt', NULL, NULL, 'Uncommon', 'A restrained perspective shift follows the pointer across the profile surface.', 'Layouts', false, 'free', NULL, 'active')
+  ('profile_motion_perspective_tilt', '3D Tilt', 'profile_motion', 0, 'renderer', 'perspective-tilt', NULL, NULL, 'Uncommon', 'A restrained perspective shift follows the pointer across the profile surface.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_motion_halo_offset', 'Halo Offset', 'profile_motion', 0, 'renderer', 'halo-offset', NULL, NULL, 'Epic', 'Detached profile shells lag the card motion in three measured layers.', 'Prism', false, 'free', NULL, 'active'),
+  ('profile_motion_wavefront', 'Wavefront', 'profile_motion', 0, 'renderer', 'wavefront', NULL, NULL, 'Epic', 'A physical-looking wave crosses the profile once, displaces nearby elements, and settles exactly.', 'Signal', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,
@@ -163,7 +173,8 @@ INSERT INTO public.shop_items (
   ('profile_atmosphere_night_pollen', 'Starlight Tunnel', 'profile_atmosphere', 340000, 'renderer', 'night-pollen', NULL, NULL, 'Rare', 'A dense field of suspended lights folds through a deep nocturnal tunnel.', 'Nocturne', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_paper_shadow', 'Chromatic Tangle', 'profile_atmosphere', 300000, 'renderer', 'paper-shadow', NULL, NULL, 'Rare', 'Bright colored trails knot and release across a black field like a living light study.', 'Prism', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_smoke_spiral', 'Smoke Spiral', 'profile_atmosphere', 0, 'renderer', 'smoke-spiral', NULL, NULL, 'Anomaly', 'A slow, sculptural spiral of smoke turns the background into a living study of air and light.', 'Prism', false, 'earned', NULL, 'active'),
-  ('profile_atmosphere_lumen_flare', 'Lumen Flare', 'profile_atmosphere', 0, 'renderer', 'lumen-flare', NULL, NULL, 'Mythic', 'A distant lens flare blooms and recedes like a signal arriving through the dark.', 'Signal', false, 'earned', NULL, 'active')
+  ('profile_atmosphere_lumen_flare', 'Lumen Flare', 'profile_atmosphere', 0, 'renderer', 'lumen-flare', NULL, NULL, 'Mythic', 'A distant lens flare blooms and recedes like a signal arriving through the dark.', 'Signal', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_prism_dust', 'Prism Dust', 'profile_atmosphere', 0, 'renderer', 'prism-dust', NULL, NULL, 'Epic', 'Refractive shards drift at varied depths, catching light in small clustered constellations.', 'Prism', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,

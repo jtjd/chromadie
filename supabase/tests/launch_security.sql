@@ -369,17 +369,17 @@ SELECT pg_temp.audit_assert(
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.shop_items'::regclass AND conname = 'shop_items_catalog_status_check'
   )
-  AND (SELECT count(*) = 28 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
+  AND (SELECT count(*) = 32 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
   AND (SELECT count(*) = 10 FROM public.shop_items WHERE slot = 'name_font' AND catalog_status = 'active')
   AND (SELECT count(*) = 7 FROM public.shop_items WHERE slot = 'name_material' AND catalog_status = 'active')
-  AND (SELECT count(*) = 11 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 9 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
-  AND (SELECT count(*) = 16 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
-  AND (SELECT count(*) = 4 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
+  AND (SELECT count(*) = 15 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
+  AND (SELECT count(*) = 10 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
+  AND (SELECT count(*) = 17 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
+  AND (SELECT count(*) = 6 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
   AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
-  AND (SELECT count(*) = 13 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
-  AND (SELECT count(*) = 1 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 76 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 14 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
+  AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
+  AND (SELECT count(*) = 87 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -393,7 +393,7 @@ SELECT pg_temp.audit_assert(
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 74
+    AND (SELECT count(*) = 85
          FROM public.get_shop_catalog()
          WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),

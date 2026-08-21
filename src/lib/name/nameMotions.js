@@ -37,7 +37,11 @@ export const NAME_MOTIONS = Object.freeze({
   'haunt-fuzzy': composableMotion('haunt-fuzzy', 3000, { label: 'Fuzzy', collection: 'Static Bloom', rarity: 'Anomaly', description: 'The name resolves through soft signal noise and brief chromatic separation.' }),
   'haunt-reveal': composableMotion('haunt-reveal', 3000, { label: 'Reveal', collection: 'Archive', rarity: 'Rare', description: 'A clean light curtain unveils the name from left to right.' }),
   'haunt-split': composableMotion('haunt-split', 3200, { label: 'Split Reveal', collection: 'Archive', rarity: 'Epic', description: 'Two halves of the name enter on separate planes and meet on the centerline.' }),
-  'haunt-flash': composableMotion('haunt-flash', 2600, { label: 'Flash', collection: 'Signal', rarity: 'Rare', description: 'A sharp white exposure rolls over the name before the color settles.' })
+  'haunt-flash': composableMotion('haunt-flash', 2600, { label: 'Flash', collection: 'Signal', rarity: 'Rare', description: 'A sharp white exposure rolls over the name before the color settles.' }),
+  'kinetic-echo': composableMotion('kinetic-echo', 3200, { label: 'Kinetic Echo', collection: 'Signal', rarity: 'Epic', description: 'Controlled afterimages follow the name in two offset, color-separated echoes.' }),
+  'magnetic-type': composableMotion('magnetic-type', 3000, { label: 'Magnetic Type', collection: 'Prism', rarity: 'Epic', description: 'Each glyph responds to the pointer as if the name were suspended in a magnetic field.' }),
+  'neon-particle': composableMotion('neon-particle', 3600, { label: 'Neon Particle', collection: 'Signal', rarity: 'Anomaly', description: 'A masked internal energy field, edge emission, and micro-particles keep the name electrically alive.' }),
+  'raster-signal': composableMotion('raster-signal', 2800, { label: 'Raster Signal', collection: 'Static Bloom', rarity: 'Epic', description: 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.' })
 });
 
 // Removed catalog rows remain valid historical values. They resolve to the

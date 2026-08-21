@@ -67,10 +67,11 @@ function installMotionWindow({ fine = true, reduced = false, width = 1440, heigh
   return () => { globalThis.window = previousWindow; };
 }
 
-test('the profile motion catalog exposes one free perspective tilt renderer', async () => {
-  const [seed, migration, editor] = await Promise.all([
+test('the profile motion catalog keeps 3D Tilt and adds the approved Halo and Wavefront renderers', async () => {
+  const [seed, migration, approvedMigration, editor] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260814050000_profile_motion_perspective_tilt.sql'),
+    read('supabase/migrations/20260821090000_approved_cosmetic_effects.sql'),
     read('src/lib/ProfileCosmeticsEditor.svelte')
   ]);
   const definition = getProfileMotionDefinition('profile_motion_perspective_tilt');
@@ -82,10 +83,16 @@ test('the profile motion catalog exposes one free perspective tilt renderer', as
     name: '3D Tilt'
   });
   assert.equal(PROFILE_MOTION_DEFINITIONS.profile_motion_perspective_tilt.slot, 'profile_motion');
+  assert.equal(getProfileMotionDefinition('profile_motion_halo_offset')?.key, 'halo-offset');
+  assert.equal(getProfileMotionDefinition('profile_motion_wavefront')?.key, 'wavefront');
   assert.equal(getProfileMotionRendererKey('perspective-tilt'), 'perspective-tilt');
+  assert.equal(getProfileMotionRendererKey('halo-offset'), 'halo-offset');
+  assert.equal(getProfileMotionRendererKey('wavefront'), 'wavefront');
   assert.equal(isProfileMotionKey('not-a-motion'), false);
   assert.match(seed, /'profile_motion_perspective_tilt', '3D Tilt', 'profile_motion', 0, 'renderer', 'perspective-tilt'/);
   assert.match(migration, /slot = 'profile_motion' AND css_value IN \('perspective-tilt'\)/);
+  assert.match(approvedMigration, /'profile_motion_halo_offset'/);
+  assert.match(approvedMigration, /'profile_motion_wavefront'/);
   assert.match(editor, /id="cosmetic-profile-motion"/);
   assert.match(editor, /<option value="">No motion<\/option>/);
 });
@@ -136,7 +143,7 @@ test('homepage, public profiles, and Studio consume one motion renderer with sep
   assert.match(stores, /isProfileMotionKey/);
   assert.match(motion, /\{#if motionEnabled\}/);
   assert.match(motion, /\{:else\}[\s\S]*<slot><\/slot>/);
-  assert.match(motion, /if \(!motionEnabled \|\| !motionElement\) \{/);
+  assert.match(motion, /if \(!effectEnabled\) \{/);
   assert.doesNotMatch(demo, /ProfileMotionEffect|ProfileShell|ProfileLayoutFrame/);
 });
 
@@ -210,7 +217,8 @@ test('motion owns rotation while the inner card owns roll scale, with no bundled
   assert.match(motion, /transform: rotateY\(-4deg\) rotateX\(2deg\)/);
   assert.match(motion, /transition: transform 0\.2s cubic-bezier\(\.23, 1, \.32, 1\)/);
   assert.match(motion, /will-change: transform/);
-  assert.doesNotMatch(motion, /requestAnimationFrame|lerp|spring|radial-gradient|box-shadow|glare|halo|avatar/);
+  assert.doesNotMatch(motion, /requestAnimationFrame|lerp|spring|radial-gradient|glare/);
+  assert.match(motion, /createHaloOffsetController/);
   assert.match(homepage, /<ProfileMotionEffect[\s\S]*<div class="homepage-profile-pop"/);
   assert.match(shell, /<ProfileMotionEffect[\s\S]*<div class="profile-shell__card-scale"/);
   assert.doesNotMatch(homepage, /homepage-profile-pop--active|profileImpactActive|homepage-roll-particles/);

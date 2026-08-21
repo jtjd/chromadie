@@ -10,21 +10,21 @@ import { NAME_MOTIONS } from '../src/lib/name/nameMotions.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the curated catalog keeps the approved active Name rows and nine Profile Border rows', async () => {
+test('the curated catalog keeps the approved active Name rows and ten Profile Border rows', async () => {
   const seed = await read('supabase/seed.sql');
   assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 10);
   assert.equal((seed.match(/^\s*\('name_material_[a-z0-9_]+'/gm) || []).length, 7);
-  assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 10);
-  assert.equal((seed.match(/^\s*\('border_(?:celestial|chroma|crystal|glitch|gold|neon|prism|void|signal)'/gm) || []).length, 9);
+  assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 14);
+  assert.equal((seed.match(/^\s*\('border_(?:celestial|chroma|crystal|glitch|gold|neon|prism|void|signal|elastic)'/gm) || []).length, 10);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 11,
     materials: 8,
-    motions: 11,
+    motions: 15,
     paidFonts: 10,
     paidMaterials: 7,
-    paidMotions: 10,
-    paidTotal: 27
+    paidMotions: 14,
+    paidTotal: 31
   });
   assert.deepEqual(Object.keys(NAME_FONTS), [
     'industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins',
@@ -35,25 +35,27 @@ test('the curated catalog keeps the approved active Name rows and nine Profile B
   assert.deepEqual(Object.keys(NAME_MOTIONS).filter(key => key !== 'none'), [
     'haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles',
     'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal',
-    'haunt-split', 'haunt-flash'
+    'haunt-split', 'haunt-flash', 'kinetic-echo', 'magnetic-type',
+    'neon-particle', 'raster-signal'
   ]);
 });
 
 test('the active Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
-  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration] = await Promise.all([
+  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
     read('supabase/migrations/20260803130000_use_reference_font_family_names.sql'),
     read('supabase/migrations/20260805140000_replace_name_motions_with_haunt_reference_set.sql'),
     read('supabase/migrations/20260816110000_name_font_catalog_refresh.sql'),
-    read('supabase/migrations/20260816120000_add_silkscreen_name_font.sql')
+    read('supabase/migrations/20260816120000_add_silkscreen_name_font.sql'),
+    read('supabase/migrations/20260821090000_approved_cosmetic_effects.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
   )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }))
     .filter(row => row.itemKey !== 'name_prism_atelier');
 
-  assert.equal(rows.length, 27);
+  assert.equal(rows.length, 31);
   assert.equal(new Set(rows.map(row => row.name)).size, rows.length);
 
   const registries = {
@@ -66,7 +68,7 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
     assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
     assert.equal(
-      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
+      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
       true,
       `${row.itemKey} label is missing from the production migrations`
     );

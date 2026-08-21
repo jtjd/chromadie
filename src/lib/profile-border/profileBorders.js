@@ -68,6 +68,13 @@ const definitions = {
     label: 'Signal',
     collection: 'Signal',
     rarity: 'Rare'
+  },
+  elastic: {
+    key: 'elastic',
+    itemKey: 'border_elastic',
+    label: 'Elastic Frame',
+    collection: 'Signal',
+    rarity: 'Epic'
   }
 };
 

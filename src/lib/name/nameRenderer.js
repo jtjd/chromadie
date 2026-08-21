@@ -186,6 +186,13 @@ export function getNameFrameModel(options = {}) {
   const todayColor = normalizeHexColor(options.todayColor, DEFAULT_TODAY_COLOR);
   const baseColor = normalizeHexColor(options.baseColor, '#FFFFFF');
   const recentColors = normalizeRecentColors(options.recentColors);
+  const rawPointer = options.pointer && typeof options.pointer === 'object' ? options.pointer : null;
+  const pointer = rawPointer && Number.isFinite(Number(rawPointer.x)) && Number.isFinite(Number(rawPointer.y))
+    ? Object.freeze({
+        x: clamp(Number(rawPointer.x), 0, width),
+        y: clamp(Number(rawPointer.y), 0, height)
+      })
+    : null;
   const font = getNameFont(definition.font);
   const material = getNameMaterial(definition.material);
   const displayText = definition.smallCaps ? text.toUpperCase() : text;
@@ -214,6 +221,7 @@ export function getNameFrameModel(options = {}) {
     progress,
     todayColor,
     baseColor,
+    pointer,
     recentColors: Object.freeze(recentColors),
     font,
     material,

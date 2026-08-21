@@ -15,6 +15,14 @@ const definitions = {
   'cyber-hud': {
     key: 'cyber-hud',
     label: 'Cyber HUD'
+  },
+  'butterfly-orbit': {
+    key: 'butterfly-orbit',
+    label: 'Butterfly Orbit'
+  },
+  'bat-orbit': {
+    key: 'bat-orbit',
+    label: 'Bat Orbit'
   }
 };
 

@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { getAtmosphereDefinition } from './atmospheres.js';
+  import PrismDustLayer from './PrismDustLayer.svelte';
 
   export let atmosphereKey = '';
   export let todayColor = '#8B7CF6';
@@ -103,6 +104,7 @@
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: media = definition ? MEDIA[definition.key] : null;
+  $: isProcedural = definition?.key === 'prism-dust';
   $: compact = mode === 'card' || mode === 'compact';
   $: if ((definition?.key || '') !== renderedDefinitionKey) {
     // This value is consumed on the next reactive pass to detect a scene
@@ -112,7 +114,7 @@
     posterFallback = false;
     recovery?.ready();
   }
-  $: motionActive = Boolean(active && animated && visible && inViewport && !reducedMotion && !constrainedConnection && !compact && media && !posterFallback);
+  $: motionActive = Boolean(active && animated && visible && inViewport && !reducedMotion && !constrainedConnection && !compact && (media || isProcedural) && !posterFallback);
   $: colors = [todayColor, ...(Array.isArray(recentColors) ? recentColors : []), ...FALLBACK_COLORS]
     .map(color => /^#[0-9a-f]{6}$/i.test(String(color || '')) ? String(color).toUpperCase() : null)
     .filter(Boolean)
@@ -251,7 +253,10 @@
   });
 </script>
 
-{#if definition && media}
+{#if definition && (media || isProcedural)}
+  {#if isProcedural}
+    <PrismDustLayer {todayColor} {recentColors} {mode} {active} {animated} {className} />
+  {:else}
   <div bind:this={host} class={classes} style={style} aria-hidden="true" data-atmosphere={definition.key} data-atmosphere-state={motionActive ? 'animated' : 'poster'}>
     {#key definition.key}
       {#if motionActive}
@@ -264,6 +269,7 @@
       {/if}
     {/key}
   </div>
+  {/if}
 {/if}
 
 <style>

@@ -1,5 +1,5 @@
 <script>
-  import { onDestroy, onMount } from 'svelte';
+  import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { getProfileBorderDefinition, getProfileBorderKey } from './profileBorders.js';
 
   export let borderKey = '';
@@ -13,10 +13,14 @@
   let reducedMotion = false;
   let mediaQuery;
   let observer;
+  let mounted = false;
+  let ElasticFrameEffect;
+  let elasticComponentPromise;
 
   $: definition = getProfileBorderDefinition(borderKey);
   $: resolvedKey = getProfileBorderKey(borderKey);
   $: shouldAnimate = Boolean(definition && animated && visible && !reducedMotion);
+  $: elasticActive = resolvedKey === 'elastic' && shouldAnimate;
   $: hostClass = [
     'profile-border-effect',
     `profile-border-effect--${resolvedKey || 'none'}`,
@@ -29,7 +33,16 @@
     reducedMotion = Boolean(event?.matches ?? mediaQuery?.matches);
   }
 
+  function loadElasticComponent() {
+    if (!mounted || resolvedKey !== 'elastic' || ElasticFrameEffect || elasticComponentPromise) return;
+    elasticComponentPromise = import('./ElasticFrameEffect.svelte')
+      .then(module => { ElasticFrameEffect = module.default; })
+      .catch(() => {});
+  }
+
   onMount(() => {
+    mounted = true;
+    loadElasticComponent();
     mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     updateReducedMotion();
     mediaQuery?.addEventListener?.('change', updateReducedMotion);
@@ -42,22 +55,30 @@
     }
 
     return () => {
+      mounted = false;
       mediaQuery?.removeEventListener?.('change', updateReducedMotion);
       observer?.disconnect();
       observer = null;
     };
   });
 
+  afterUpdate(loadElasticComponent);
+
   onDestroy(() => {
+    mounted = false;
     mediaQuery?.removeEventListener?.('change', updateReducedMotion);
     observer?.disconnect();
   });
 </script>
 
 <div bind:this={host} class={hostClass} style={surfaceStyle} data-profile-border={resolvedKey || 'none'} data-profile-surface="true">
-  <div class="profile-border-effect__content">
-    <slot />
-  </div>
+  {#if resolvedKey === 'elastic' && ElasticFrameEffect}
+    <svelte:component this={ElasticFrameEffect} {host} enabled={elasticActive}>
+      <slot />
+    </svelte:component>
+  {:else}
+    <div class="profile-border-effect__content"><slot /></div>
+  {/if}
 </div>
 
 <style>
@@ -126,6 +147,14 @@
   }
 
   .profile-border-effect__content { overflow: visible; }
+
+  .profile-border-effect--elastic {
+    border-color: transparent;
+  }
+
+  .profile-border-effect--elastic::before {
+    box-shadow: none;
+  }
 
   .profile-border-effect:not(.profile-border-effect--none)::before {
     content: '';

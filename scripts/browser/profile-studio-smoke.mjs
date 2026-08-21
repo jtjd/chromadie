@@ -36,6 +36,22 @@ const supabaseUrl = assertLocalSupabaseUrl(environment.url);
 const evidenceDir = await mkdtemp(join(tmpdir(), 'chromadie-profile-studio-smoke-'));
 const smokeMode = process.env.PROFILE_STUDIO_SMOKE_MODE === 'preview' ? 'preview' : 'dev';
 const smokeServer = process.env.PROFILE_STUDIO_SMOKE_SERVER || 'vite';
+const skipMediaMutation = process.env.PROFILE_STUDIO_SMOKE_SKIP_MEDIA === '1';
+const approvedEffectSmoke = process.env.PROFILE_STUDIO_SMOKE_EFFECTS === 'approved';
+const activeEffectFixture = approvedEffectSmoke
+  ? {
+      ...RICH_PROFILE_FIXTURE,
+      effects: {
+        ...RICH_PROFILE_FIXTURE.effects,
+        nameMotion: 'name_motion_kinetic_echo',
+        avatar: 'avatar_effect_butterfly_orbit',
+        border: 'border_elastic',
+        atmosphere: 'profile_atmosphere_prism_dust',
+        cursor: 'cursor_trail_plasma_swarm',
+        profileMotion: 'profile_motion_halo_offset'
+      }
+    }
+  : RICH_PROFILE_FIXTURE;
 
 const results = {
   status: 'running',
@@ -253,13 +269,17 @@ async function seedRichProfileFixture() {
   await serviceRest(`/rest/v1/inventory?on_conflict=user_id,item_key`, {
     method: 'POST',
     headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: Object.values(RICH_PROFILE_FIXTURE.effects)
+    body: [...new Set([
+      ...Object.values(RICH_PROFILE_FIXTURE.effects),
+      ...Object.values(activeEffectFixture.effects),
+      'profile_atmosphere_silk_folds'
+    ])]
       .filter(Boolean)
       .map(itemKey => ({ user_id: session, item_key: itemKey, quantity: 1 }))
   });
 
   if (smokeMode === 'preview') {
-    for (const itemKey of Object.values(RICH_PROFILE_FIXTURE.effects).filter(Boolean)) {
+    for (const itemKey of Object.values(activeEffectFixture.effects).filter(Boolean)) {
       const equipped = await callAuthenticatedRpc('equip_item', { p_item_key: itemKey });
       assert(equipped?.success === true, `Production preview fixture could not equip ${itemKey}: ${JSON.stringify(equipped)}`);
     }
@@ -366,12 +386,29 @@ async function publishRichProfileDraft() {
     await delay(750);
   }
   const publishedExpression = published?.published?.base || published?.published || {};
-  assert(expressionMediaReference(publishedExpression, 'avatar', 'avatar_path') && expressionMediaReference(publishedExpression, 'background', 'background_path'), `Publish response omitted persisted avatar/background expression fields: ${JSON.stringify(published)}`);
+  if (!skipMediaMutation) {
+    assert(expressionMediaReference(publishedExpression, 'avatar', 'avatar_path') && expressionMediaReference(publishedExpression, 'background', 'background_path'), `Publish response omitted persisted avatar/background expression fields: ${JSON.stringify(published)}`);
+  }
   assert(Array.isArray(published?.published?.links) && published.published.links.length >= links.length, `Publish response omitted the complete V2 link projection: ${JSON.stringify(published)}`);
   return { links: links.length, updatedAt: published?.updated_at || expectedUpdatedAt };
 }
 
 async function assertPublishedExpressionVisible(description) {
+  if (skipMediaMutation) {
+    const configuration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+    const published = configuration?.published || configuration?.configuration_v2?.published;
+    const expression = published?.base || published || {};
+    return {
+      state: { avatar: null, background: null, video: null },
+      expression: {
+        avatar: expressionMediaReference(expression, 'avatar', 'avatar_path'),
+        background: expressionMediaReference(expression, 'background', 'background_path'),
+        video: expressionMediaReference(expression, 'background_video', 'background_video_path'),
+        audio: expressionMediaReference(expression, 'audio', 'audio_path'),
+        cursor: expressionMediaReference(expression, 'cursor', 'cursor_path')
+      }
+    };
+  }
   await page.waitFor(`(() => {
     const avatar = document.querySelector('.profile-studio-preview .profile-reference-card__avatar, .profile-studio-preview .profile-full-bleed__avatar');
     const background = document.querySelector('.profile-environment--studio .profile-environment__image');
@@ -495,6 +532,20 @@ async function capturePublishedLayouts() {
   await page.setViewport(1440, 900);
   await page.navigate(`${appUrl}/${canonicalUsername}`, 'published reference profile evidence');
   await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-reference-card], .profile-shell-page[aria-busy="false"] [data-profile-layout-content="full-bleed"]')`, 'published profile evidence');
+  if (approvedEffectSmoke) {
+    await page.waitFor(`(() => {
+      const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
+      return Boolean(
+        shell?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
+          && shell?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+          && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
+          && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
+          && shell?.querySelector('[data-atmosphere="prism-dust"] canvas')
+          && shell?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
+          && shell?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')
+      );
+    })()`, 'approved effects on public profile');
+  }
   const publicState = await page.evaluate(`(() => {
     const shell = document.querySelector('.profile-shell-page');
     const image = shell?.querySelector('.profile-environment__image');
@@ -802,24 +853,28 @@ try {
     assert(Math.abs(background.top - avatar.top) <= 2 && audio.top > background.top && Math.abs(audio.top - cursor.top) <= 2, `Media cards are not arranged as the reference two-by-two grid: ${JSON.stringify(mediaRail)}.`);
     assert(background.left < avatar.left && audio.left < cursor.left, `Media cards do not preserve the reference column order: ${JSON.stringify(mediaRail)}.`);
     assert(mediaRail.options.top >= audio.bottom - 2, `Background options does not follow the media card grid: ${JSON.stringify(mediaRail)}.`);
-    const backgroundUpload = await uploadGeneratedImage('input[aria-label="Choose background image"]', { ...RICH_PROFILE_FIXTURE.background, kind: 'background' });
-    await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Background saved'))`, 'persisted uploaded background');
-    try {
-      await page.waitFor(`(() => { const image = document.querySelector('.profile-environment--studio .profile-environment__image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded background in live preview');
-    } catch (error) {
-      const previewState = await page.evaluate(`(() => ({
-        images: [...document.querySelectorAll('.profile-studio-preview img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
-        editorImages: [...document.querySelectorAll('.profile-expression-editor img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
-        previewCard: document.querySelector('.profile-studio-preview .profile-reference-card')?.className || '',
-        previewEnvironment: document.querySelector('.profile-environment--studio')?.getAttribute('style') || '',
-        messages: [...document.querySelectorAll('.profile-expression-editor__message[role="status"]')].map(node => node.textContent.trim())
-      }))()`);
-      throw new Error(`${error.message} State: ${JSON.stringify(previewState)}`, { cause: error });
-    }
-    const avatarUpload = await uploadGeneratedImage('input[aria-label="Choose avatar image"]', { ...RICH_PROFILE_FIXTURE.avatar, kind: 'avatar' });
-    await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Avatar saved'))`, 'persisted uploaded avatar');
-    await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .profile-reference-card__avatar'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded avatar in live preview');
-    const mediaRequestsBeforeDraftChange = stableProfileMediaRequests();
+    let backgroundUpload = null;
+    let avatarUpload = null;
+    let mediaPublishRegression = null;
+    if (!skipMediaMutation) {
+      backgroundUpload = await uploadGeneratedImage('input[aria-label="Choose background image"]', { ...RICH_PROFILE_FIXTURE.background, kind: 'background' });
+      await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Background saved'))`, 'persisted uploaded background');
+      try {
+        await page.waitFor(`(() => { const image = document.querySelector('.profile-environment--studio .profile-environment__image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded background in live preview');
+      } catch (error) {
+        const previewState = await page.evaluate(`(() => ({
+          images: [...document.querySelectorAll('.profile-studio-preview img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
+          editorImages: [...document.querySelectorAll('.profile-expression-editor img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
+          previewCard: document.querySelector('.profile-studio-preview .profile-reference-card')?.className || '',
+          previewEnvironment: document.querySelector('.profile-environment--studio')?.getAttribute('style') || '',
+          messages: [...document.querySelectorAll('.profile-expression-editor__message[role="status"]')].map(node => node.textContent.trim())
+        }))()`);
+        throw new Error(`${error.message} State: ${JSON.stringify(previewState)}`, { cause: error });
+      }
+      avatarUpload = await uploadGeneratedImage('input[aria-label="Choose avatar image"]', { ...RICH_PROFILE_FIXTURE.avatar, kind: 'avatar' });
+      await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Avatar saved'))`, 'persisted uploaded avatar');
+      await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .profile-reference-card__avatar'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded avatar in live preview');
+      const mediaRequestsBeforeDraftChange = stableProfileMediaRequests();
     const mediaSourcesBeforeDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')]
       .map(element => element.currentSrc || element.src || '')
       .filter(Boolean))()`);
@@ -851,15 +906,16 @@ try {
     await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === false`, 'publish control after immediate media mutation');
     await page.clickText('Publish profile', { description: 'publish after immediate media mutation' });
     await page.waitFor(`document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'`, 'publish after immediate media mutation');
-    const mediaPublishExpression = await assertPublishedExpressionVisible('media mutation publish');
-    const mediaPublishConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
-    assert(mediaPublishConfiguration?.updated_at && mediaPublishExpression.expression.avatar && mediaPublishExpression.expression.background, `Media mutation publish did not preserve the current token and expression: ${JSON.stringify({ mediaPublishExpression, mediaPublishConfiguration })}`);
-    const mediaPublishRegression = { upload: { background: backgroundUpload, avatar: avatarUpload }, expression: mediaPublishExpression.expression, updatedAt: mediaPublishConfiguration.updated_at };
-    const musicInputAvailable = await page.evaluate(`Boolean(document.querySelector('#profile-media-music input[type="url"]'))`);
-    if (musicInputAvailable) {
-      await page.setInputValue('#profile-media-music input[type="url"]', RICH_PROFILE_FIXTURE.musicUrl, ['input', 'change']);
-      await page.clickText('Save Spotify', { description: 'save rich profile music' });
-      await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Spotify saved'))`, 'persisted profile music');
+      const mediaPublishExpression = await assertPublishedExpressionVisible('media mutation publish');
+      const mediaPublishConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+      assert(mediaPublishConfiguration?.updated_at && mediaPublishExpression.expression.avatar && mediaPublishExpression.expression.background, `Media mutation publish did not preserve the current token and expression: ${JSON.stringify({ mediaPublishExpression, mediaPublishConfiguration })}`);
+      mediaPublishRegression = { upload: { background: backgroundUpload, avatar: avatarUpload }, expression: mediaPublishExpression.expression, updatedAt: mediaPublishConfiguration.updated_at };
+      const musicInputAvailable = await page.evaluate(`Boolean(document.querySelector('#profile-media-music input[type="url"]'))`);
+      if (musicInputAvailable) {
+        await page.setInputValue('#profile-media-music input[type="url"]', RICH_PROFILE_FIXTURE.musicUrl, ['input', 'change']);
+        await page.clickText('Save Spotify', { description: 'save rich profile music' });
+        await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Spotify saved'))`, 'persisted profile music');
+      }
     }
     const richFixture = await seedRichProfileFixture();
     // Rehydrate the editor after the fixture's authenticated V2 writes. This
@@ -944,6 +1000,7 @@ try {
       const publicEvidence = await capturePublishedLayouts();
       return { layoutState, mediaRail, backgroundUpload, avatarUpload, richFixture, publicEvidence, productionPreview: true };
     }
+    if (!approvedEffectSmoke) {
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'visible Appearance editor');
     // Keep Immersive mounted while changing the font. This catches the
@@ -959,7 +1016,20 @@ try {
       const { userInventory } = await import('/src/lib/stores.js');
       userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'name_material_blueprint_ink', 'name_motion_typewriter_name', 'avatar_effect_cyber_hud', 'border_celestial', 'cursor_trail_pixel_wake', 'profile_atmosphere_rain_window', 'profile_atmosphere_silk_folds'])]);
     })()`);
-    await page.waitFor(`document.querySelector('#cosmetic-name_font option[value="name_font_marker_tag"]') && document.querySelector('#cosmetic-name_material option[value="name_material_blueprint_ink"]') && document.querySelector('#cosmetic-name_motion option[value="name_motion_typewriter_name"]') && document.querySelector('#cosmetic-avatar-effect option[value="avatar_effect_cyber_hud"]') && document.querySelector('#cosmetic-profile-border option[value="border_celestial"]') && document.querySelector('#cosmetic-cursor-trail option[value="cursor_trail_pixel_wake"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_rain_window"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_silk_folds"]')`, 'owned cosmetic preview fixtures');
+    try {
+      await page.waitFor(`document.querySelector('#cosmetic-studio-name_font option[value="name_font_marker_tag"]') && document.querySelector('#cosmetic-studio-name_material option[value="name_material_blueprint_ink"]') && document.querySelector('#cosmetic-studio-name_motion option[value="name_motion_typewriter_name"]') && document.querySelector('#cosmetic-studio-avatar_effect option[value="avatar_effect_cyber_hud"]') && document.querySelector('#cosmetic-studio-profile_border option[value="border_celestial"]') && document.querySelector('#cosmetic-studio-cursor_trail option[value="cursor_trail_pixel_wake"]') && document.querySelector('#cosmetic-studio-profile_atmosphere option[value="profile_atmosphere_rain_window"]') && document.querySelector('#cosmetic-studio-profile_atmosphere option[value="profile_atmosphere_silk_folds"]')`, 'owned cosmetic preview fixtures');
+    } catch (error) {
+      const fixtureState = await page.evaluate(`(() => Object.fromEntries([
+        'cosmetic-studio-name_font',
+        'cosmetic-studio-name_material',
+        'cosmetic-studio-name_motion',
+        'cosmetic-studio-avatar_effect',
+        'cosmetic-studio-profile_border',
+        'cosmetic-studio-cursor_trail',
+        'cosmetic-studio-profile_atmosphere'
+      ].map(id => [id, [...(document.getElementById(id)?.options || [])].map(option => option.value)])))()`);
+      throw new Error(`${error.message} State: ${JSON.stringify(fixtureState)}`, { cause: error });
+    }
     await page.waitFor(`document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelectorAll('.profile-cosmetics-name-preview > span').length === 0`, 'composed default name previews');
     const defaultNamePreviewState = await page.evaluate(`(() => ({
       renderers: document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length,
@@ -968,7 +1038,7 @@ try {
     }))()`);
     assert(defaultNamePreviewState.renderers === 3 && defaultNamePreviewState.fallbackPreviews === 0 && new Set(defaultNamePreviewState.rendererKeys).size === 1, `Default name previews are not using one composed renderer: ${JSON.stringify(defaultNamePreviewState)}.`);
     await page.evaluate(`(() => {
-      const select = document.querySelector('#cosmetic-name_font');
+      const select = document.querySelector('#cosmetic-studio-name_font');
       select.value = 'name_font_marker_tag';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
@@ -980,7 +1050,7 @@ try {
     const fontCardState = await page.evaluate(`(() => ({
       preview: Boolean(document.querySelector('.profile-cosmetics-name-preview')),
       renderer: Boolean(document.querySelector('.profile-cosmetics-name-preview .name-effect-canvas')),
-      selected: document.querySelector('#cosmetic-name_font')?.value || ''
+      selected: document.querySelector('#cosmetic-studio-name_font')?.value || ''
     }))()`);
     assert(fontCardState.preview && fontCardState.renderer, `Font card did not mount the production renderer: ${JSON.stringify(fontCardState)}.`);
     await page.click('#profile-customize-tab-layout', 'Immersive font verification tab');
@@ -994,20 +1064,20 @@ try {
     await page.click('#profile-customize-tab-appearance', 'Appearance after font verification');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'Appearance after Immersive font verification');
     await page.evaluate(`(() => {
-      for (const [id, value] of [
-        ['cosmetic-name_material', 'name_material_blueprint_ink'],
-        ['cosmetic-name_motion', 'name_motion_typewriter_name'],
-        ['cosmetic-avatar-effect', 'avatar_effect_cyber_hud'],
-        ['cosmetic-profile-border', 'border_celestial'],
-        ['cosmetic-cursor-trail', 'cursor_trail_pixel_wake'],
-        ['cosmetic-profile-atmosphere', 'profile_atmosphere_rain_window']
+      for (const [slot, value] of [
+        ['name_material', 'name_material_blueprint_ink'],
+        ['name_motion', 'name_motion_typewriter_name'],
+        ['avatar_effect', 'avatar_effect_cyber_hud'],
+        ['profile_border', 'border_celestial'],
+        ['cursor_trail', 'cursor_trail_pixel_wake'],
+        ['profile_atmosphere', 'profile_atmosphere_rain_window']
       ]) {
-        const select = document.getElementById(id);
+        const select = document.getElementById('cosmetic-studio-' + slot);
         select.value = value;
         select.dispatchEvent(new Event('change', { bubbles: true }));
       }
     })()`);
-    await page.waitFor(`document.querySelector('#cosmetic-name_material')?.value === 'name_material_blueprint_ink' && document.querySelector('#cosmetic-name_motion')?.value === 'name_motion_typewriter_name' && document.querySelector('#cosmetic-avatar-effect')?.value === 'avatar_effect_cyber_hud' && document.querySelector('#cosmetic-profile-border')?.value === 'border_celestial' && document.querySelector('#cosmetic-cursor-trail')?.value === 'cursor_trail_pixel_wake' && document.querySelector('#cosmetic-profile-atmosphere')?.value === 'profile_atmosphere_rain_window' && document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelector('[aria-label="Avatar effect preview"] .avatar-effect--cyber-hud') && document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer[data-input-mode="demo"][data-trail-key="pixel-wake"]') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]')`, 'all cosmetic renderers in the fitting room');
+    await page.waitFor(`document.querySelector('#cosmetic-studio-name_material')?.value === 'name_material_blueprint_ink' && document.querySelector('#cosmetic-studio-name_motion')?.value === 'name_motion_typewriter_name' && document.querySelector('#cosmetic-studio-avatar_effect')?.value === 'avatar_effect_cyber_hud' && document.querySelector('#cosmetic-studio-profile_border')?.value === 'border_celestial' && document.querySelector('#cosmetic-studio-cursor_trail')?.value === 'cursor_trail_pixel_wake' && document.querySelector('#cosmetic-studio-profile_atmosphere')?.value === 'profile_atmosphere_rain_window' && document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelector('[aria-label="Avatar effect preview"] .avatar-effect--cyber-hud') && document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer[data-input-mode="demo"][data-trail-key="pixel-wake"]') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]')`, 'all cosmetic renderers in the fitting room');
     await page.waitFor(`(() => {
       const previews = [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')];
       return previews.length === 3
@@ -1076,19 +1146,19 @@ try {
     assert(cursorPreviewState?.cursorInputMode === 'demo' && cursorPreviewState.cursorKey === 'pixel-wake', `Pixel Wake cursor preview did not mount the production demo renderer: ${JSON.stringify(visualPreviewState)}.`);
     assert((nameEffectsLayout.grid?.height || 0) >= 80 && (nameEffectsLayout.grid?.height || 0) <= 104, `Name effect row is outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
     await page.evaluate(`(() => {
-      const select = document.querySelector('#cosmetic-profile-border');
+      const select = document.querySelector('#cosmetic-studio-profile_border');
       select.value = 'border_celestial';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
     await page.waitFor(`document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('.profile-studio-preview [data-profile-border="celestial"]')`, 'border renderer in card and live preview');
     await page.evaluate(`(() => {
-      const select = document.querySelector('#cosmetic-profile-atmosphere');
+      const select = document.querySelector('#cosmetic-studio-profile_atmosphere');
       select.value = 'profile_atmosphere_rain_window';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
     await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]') && document.querySelector('.profile-studio-preview [data-atmosphere="rain-window"]')`, 'atmosphere renderer in card and live preview');
     await page.evaluate(`(() => {
-      const select = document.querySelector('#cosmetic-profile-atmosphere');
+      const select = document.querySelector('#cosmetic-studio-profile_atmosphere');
       select.value = 'profile_atmosphere_silk_folds';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
@@ -1145,6 +1215,71 @@ try {
     assert(afterTabSwitch.atmosphereState === 'animated' && !afterTabSwitch.videoPaused, `Atmosphere did not resume after tab switching: ${JSON.stringify({ beforeTabSwitch, afterTabSwitch })}.`);
     assert(afterTabSwitch.cursorFrame && afterTabSwitch.cursorFrame !== beforeTabSwitch.cursorFrame, 'Cursor trail demo frame did not advance after tab switching.');
     await capture('05-effects-live-preview');
+    } else {
+      await page.click('#profile-customize-tab-appearance', 'approved effects Appearance tab');
+      await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'approved effects Appearance editor');
+      const approvedSelections = {
+        name_font: activeEffectFixture.effects.nameFont,
+        name_material: activeEffectFixture.effects.nameMaterial,
+        name_motion: activeEffectFixture.effects.nameMotion,
+        avatar_effect: activeEffectFixture.effects.avatar,
+        profile_border: activeEffectFixture.effects.border,
+        cursor_trail: activeEffectFixture.effects.cursor,
+        profile_atmosphere: activeEffectFixture.effects.atmosphere,
+        profile_motion: activeEffectFixture.effects.profileMotion
+      };
+      await page.waitFor(`(() => {
+        const selections = ${JSON.stringify(approvedSelections)};
+        return Object.entries(selections).every(([slot, itemKey]) => document.querySelector('#cosmetic-studio-' + slot + ' option[value="' + itemKey + '"]'));
+      })()`, 'approved cosmetic controls');
+      await page.evaluate(`(() => {
+        const selections = ${JSON.stringify(approvedSelections)};
+        for (const [slot, value] of Object.entries(selections)) {
+          const select = document.getElementById('cosmetic-studio-' + slot);
+          select.value = value;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      })()`);
+      await page.waitFor(`(() => {
+        const selections = ${JSON.stringify(approvedSelections)};
+        return Object.entries(selections).every(([slot, itemKey]) => document.getElementById('cosmetic-studio-' + slot)?.value === itemKey);
+      })()`, 'approved cosmetic controls staged');
+      try {
+        await page.waitFor(`(() => {
+          const preview = document.querySelector('.profile-studio-preview');
+          return Boolean(
+            preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
+              && preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+              && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
+              && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
+              && preview?.querySelector('[data-atmosphere="prism-dust"] canvas')
+              && preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
+              && preview?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')
+          );
+        })()`, 'approved effects in Customize live preview');
+      } catch (error) {
+        const approvedPreviewState = await page.evaluate(`(() => {
+          const preview = document.querySelector('.profile-studio-preview');
+          const selectors = {
+            preview: Boolean(preview),
+            name: Boolean(preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')),
+            border: Boolean(preview?.querySelector('[data-profile-border="elastic"]')),
+            borderPath: Boolean(preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')),
+            avatar: preview?.querySelectorAll('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas').length || 0,
+            atmosphere: Boolean(preview?.querySelector('[data-atmosphere="prism-dust"]')),
+            atmosphereCanvas: Boolean(preview?.querySelector('[data-atmosphere="prism-dust"] canvas')),
+            cursor: Boolean(preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"]')),
+            cursorCanvas: Boolean(preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),
+            motion: Boolean(preview?.querySelector('[data-profile-motion="halo-offset"]')),
+            motionShell: Boolean(preview?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')),
+            staged: Object.fromEntries([...document.querySelectorAll('[id^="cosmetic-studio-"]')].map(select => [select.id, select.value]))
+          };
+          return selectors;
+        })()`);
+        throw new Error(`${error.message} State: ${JSON.stringify(approvedPreviewState)}`, { cause: error });
+      }
+      await capture('05-approved-effects-live-preview');
+    }
     await page.clickText('Update equipped effects', { description: 'apply rich cosmetic fixture' });
     await page.waitFor(`document.querySelector('.profile-cosmetics-apply')?.disabled === true`, 'rich cosmetic fixture applied');
     let persistedCosmetics = await callAuthenticatedRpc('get_my_profile');
@@ -1155,12 +1290,12 @@ try {
     const expectedEquipped = {
       name_font: RICH_PROFILE_FIXTURE.effects.nameFont,
       name_material: RICH_PROFILE_FIXTURE.effects.nameMaterial,
-      name_motion: RICH_PROFILE_FIXTURE.effects.nameMotion,
-      avatar_effect: RICH_PROFILE_FIXTURE.effects.avatar,
-      profile_border: RICH_PROFILE_FIXTURE.effects.border,
-      profile_atmosphere: RICH_PROFILE_FIXTURE.effects.atmosphere,
-      cursor_trail: RICH_PROFILE_FIXTURE.effects.cursor,
-      profile_motion: RICH_PROFILE_FIXTURE.effects.profileMotion
+      name_motion: activeEffectFixture.effects.nameMotion,
+      avatar_effect: activeEffectFixture.effects.avatar,
+      profile_border: activeEffectFixture.effects.border,
+      profile_atmosphere: activeEffectFixture.effects.atmosphere,
+      cursor_trail: activeEffectFixture.effects.cursor,
+      profile_motion: activeEffectFixture.effects.profileMotion
     };
     for (const [slot, itemKey] of Object.entries(expectedEquipped)) {
       if (persistedCosmetics?.equipped_cosmetics?.[slot] === itemKey) continue;
@@ -1175,7 +1310,34 @@ try {
     // persisted-loadout path users get after a refresh.
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=effects-${Date.now()}#customize-appearance` });
     await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'rehydrated active cosmetic Studio preview');
-    await waitForStudioReferenceCard('rehydrated active Studio reference card');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card, .profile-studio-preview [data-profile-layout-content="full-bleed"]')`, 'rehydrated active Studio reference card');
+    let approvedStudioEffects = null;
+    if (approvedEffectSmoke) {
+      await page.waitFor(`(() => {
+        const preview = document.querySelector('.profile-studio-preview');
+        return Boolean(
+          preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
+            && preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+            && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
+            && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
+            && preview?.querySelector('[data-atmosphere="prism-dust"] canvas')
+            && preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
+            && preview?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')
+        );
+      })()`, 'approved effects in live Studio preview');
+      approvedStudioEffects = await page.evaluate(`(() => {
+        const preview = document.querySelector('.profile-studio-preview');
+        return {
+          name: Boolean(preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')),
+          border: Boolean(preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')),
+          avatarLayers: preview?.querySelectorAll('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas').length || 0,
+          atmosphere: Boolean(preview?.querySelector('[data-atmosphere="prism-dust"] canvas')),
+          cursor: Boolean(preview?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),
+          motion: Boolean(preview?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three'))
+        };
+      })()`);
+      assert(approvedStudioEffects.name && approvedStudioEffects.border && approvedStudioEffects.avatarLayers === 2 && approvedStudioEffects.atmosphere && approvedStudioEffects.cursor && approvedStudioEffects.motion, `Approved effects did not mount completely in Studio: ${JSON.stringify(approvedStudioEffects)}.`);
+    }
     const studioNameEffect = await page.evaluate(`(() => {
       const card = document.querySelector('.profile-studio-preview .profile-reference-card');
       const name = card?.querySelector('.profile-reference-card__name');
@@ -1190,6 +1352,15 @@ try {
       };
     })()`);
     assert(studioNameEffect.card && studioNameEffect.name && studioNameEffect.avatar && studioNameEffect.cardWidth >= 300, `Active Studio reference card is incomplete: ${JSON.stringify(studioNameEffect)}.`);
+    if (approvedEffectSmoke) {
+      const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`);
+      if (publishPending) {
+        await page.clickText('Publish profile', { description: 'publish approved effects fixture' });
+        await page.waitFor(`document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'`, 'published approved effects fixture');
+      }
+      const publicEvidence = await capturePublishedLayouts();
+      return { studioNameEffect, approvedStudioEffects, publicEvidence, approvedEffects: true };
+    }
     await page.evaluate(`(() => {
       document.querySelector('#customize-identity')?.scrollIntoView({ block: 'start' });
     })()`);
@@ -1341,7 +1512,7 @@ try {
     }))()`);
     assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount && !visitorPreviewState.oldRenderer, `Studio did not use the focused reference-card preview path: ${JSON.stringify(visitorPreviewState)}.`);
     const publicEvidence = await capturePublishedLayouts();
-    return { draftState, publishedState, immediatePublishedMedia, mediaPublishRegression, identityLayout, publishRequests, mediaRail, studioNameEffect, richFixture, richPublished, publicEvidence };
+    return { draftState, publishedState, immediatePublishedMedia, mediaPublishRegression, identityLayout, publishRequests, mediaRail, studioNameEffect, approvedStudioEffects, richFixture, richPublished, publicEvidence };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {
@@ -1885,6 +2056,52 @@ try {
     await page.command('Page.reload', { ignoreCache: true });
     await delay(350);
     await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-reference-card], .profile-shell-page[aria-busy="false"] [data-profile-layout-content="full-bleed"]')`, 'public profile after direct refresh');
+    if (approvedEffectSmoke) {
+      await page.waitFor(`(() => {
+        const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
+        return Boolean(
+          shell?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
+            && shell?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+            && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
+            && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
+            && shell?.querySelector('[data-atmosphere="prism-dust"] canvas')
+            && shell?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
+            && shell?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')
+        );
+      })()`, 'approved effects after public refresh');
+      await capture('07-approved-public-profile');
+      await page.setViewport(390, 844);
+      await page.command('Page.reload', { ignoreCache: true });
+      await page.waitFor(`(() => {
+        const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
+        return Boolean(
+          shell?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
+            && shell?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+            && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
+            && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
+            && shell?.querySelector('[data-atmosphere="prism-dust"] canvas')
+            && shell?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')
+            && shell?.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three')
+        );
+      })()`, 'approved effects after mobile public refresh');
+      const approvedPublic = await page.evaluate(`(() => ({
+        path: location.pathname,
+        viewport: innerWidth,
+        effectLayers: {
+          name: Boolean(document.querySelector('[data-name-motion="name_motion_kinetic_echo"]')),
+          border: Boolean(document.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')),
+          avatarLayers: document.querySelectorAll('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas').length,
+          atmosphere: Boolean(document.querySelector('[data-atmosphere="prism-dust"] canvas')),
+          cursor: Boolean(document.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),
+          motion: Boolean(document.querySelector('[data-profile-motion="halo-offset"] .profile-motion-effect__halo-shell--three'))
+        },
+        contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
+      }))()`);
+      assert(approvedPublic.path === `/${canonicalUsername}` && approvedPublic.viewport === 390 && approvedPublic.contained && approvedPublic.effectLayers.avatarLayers === 2 && Object.values(approvedPublic.effectLayers).every(Boolean), `Approved effects did not survive the mobile public refresh: ${JSON.stringify(approvedPublic)}.`);
+      await capture('07-approved-public-profile-mobile');
+      await page.setViewport(1440, 900);
+      return { approvedPublic };
+    }
     const state = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');
       const card = document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]');
