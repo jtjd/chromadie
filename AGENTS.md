@@ -52,6 +52,16 @@ Before beginning a new milestone, read:
   visual errors or interaction jank—not as a muted or desaturated color
   direction. Cosmetics should default to vivid, expressive color unless a
   specific concept calls for restraint.
+- When a visual reference, source implementation, screenshot, or design spec is
+  provided, treat it as the binding source of truth. Reproduce the result 1:1:
+  geometry, palette, typography, spacing, layering, compositing, texture,
+  animation, timing, and responsive behavior must match. Do not replace a
+  reference with an approximation, generic effect, inferred styling, or an
+  “inspired by” interpretation. Inspect the supplied source and compare the
+  rendered result against the reference at the relevant viewport and states
+  before declaring the work complete. If a platform constraint makes an exact
+  match impossible, identify the specific deviation and get approval before
+  proceeding.
 - Never make free profiles intentionally ugly, empty, or socially inferior.
 - Keep public profile rendering performant and safe because profile links are the product's acquisition surface.
 

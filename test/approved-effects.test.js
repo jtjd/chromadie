@@ -218,17 +218,23 @@ test('the three approved reference effects keep their authored visual primitives
   const neon = motions.slice(neonStart, rasterStart);
   const raster = motions.slice(rasterStart, rasterEnd);
 
-  assert.match(neon, /getReferenceTextMask\(ctx, model\)/);
-  assert.match(neon, /createRadialGradient\(\s*fieldContext/);
-  assert.match(neon, /const particleCount = Math\.min\(680/);
-  assert.match(neon, /const edgeCount = Math\.min\(240/);
-  assert.match(neon, /strokeText\(ctx, model, outline/);
-  assert.doesNotMatch(neon, /drawBase\(ctx, model\);\s*\n\s*\n\s*const field/);
+  assert.match(neon, /getReferenceState\(ctx, model, 'neon'\)/);
+  assert.match(motions, /function buildReferenceMaskState/);
+  assert.match(neon, /fieldContext\.globalCompositeOperation = 'destination-in'/);
+  assert.match(neon, /fieldContext\.drawImage\(state\.maskCanvas, 0, 0\)/);
+  assert.match(neon, /state\.textParticles\.forEach/);
+  assert.match(neon, /state\.edgeParticles\.forEach/);
+  assert.match(neon, /state\.glints\.push/);
+  assert.match(neon, /shadowBlur = 24/);
 
-  assert.match(raster, /drawText\(ctx, model, MOTION_TEXT_LIGHT/);
+  assert.match(raster, /getReferenceState\(ctx, model, 'raster'\)/);
+  assert.match(motions, /function buildReferenceRasterState/);
+  assert.match(raster, /sourceCanvas/);
+  assert.match(raster, /drawImage\?\.\(state\.sourceCanvas, 0, sourceY/);
+  assert.match(raster, /state\.noiseCanvas/);
   assert.match(raster, /globalCompositeOperation = 'destination-out'/);
-  assert.match(raster, /const noiseCount = Math\.min\(320/);
-  assert.match(raster, /const pixelCount = Math\.min\(140/);
+  assert.match(raster, /globalCompositeOperation = 'source-atop'/);
+  assert.match(raster, /const brightPixelCount = Math\.floor\(55/);
   assert.doesNotMatch(raster, /#00EFFF|#6E5CFF|#FF4AD4/);
 
   assert.match(cursorTrail, /const color = particle\.hot \? '#7CFFFA' : '#7A4DFF'/);
@@ -245,6 +251,16 @@ test('Elastic Frame keeps the content box stable while bending only code-owned p
   assert.notEqual(bent.outer, neutral.outer);
   assert.notEqual(bent.inner, neutral.inner);
   assert.equal(neutral.outer.includes('translate'), false);
+
+  for (const paths of [neutral, bent]) {
+    for (const path of [paths.outer, paths.inner]) {
+      const coordinates = path.match(/-?\d+(?:\.\d+)?/g).map(Number);
+      for (let index = 0; index < coordinates.length; index += 1) {
+        const limit = index % 2 === 0 ? 320 : 180;
+        assert.ok(coordinates[index] >= 0 && coordinates[index] <= limit, `Elastic Frame path escaped its ${limit}px viewBox: ${path}`);
+      }
+    }
+  }
 });
 
 test('new interaction controllers clean up local listeners, RAF work, and transforms', () => {

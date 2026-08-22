@@ -3701,3 +3701,22 @@ direct route behavior.
 - Added lifecycle, reduced-motion, mobile, offscreen, cleanup, refresh, and
   public/Studio regression coverage; all 446 automated tests and the approved
   browser smoke pass.
+
+## Source-faithful approved name effects — 2026-08-22
+
+- Ported the supplied Neon Particle source behavior directly into the
+  production renderer: glyph mask, masked plasma field, edge glow, internal
+  particles, edge emission, glints, and pointer response.
+- Ported the supplied Raster Signal source behavior directly: offscreen glyph
+  source, row slicing, signal displacement, scan gaps, tiled noise, and sparse
+  bright pixels.
+- Removed the procedural approximations that made the two effects visually
+  converge, while retaining deterministic seeded variation and the existing
+  transparent profile-canvas contract.
+
+## Elastic Frame mobile bounds — 2026-08-22
+
+- Fixed the Elastic Frame's closed spline so narrow mobile previews no longer
+  report horizontal overflow from Bézier control-handle overshoot.
+- Preserved the existing pointer-responsive bend and added bounded-path
+  regression coverage for neutral and bent states.

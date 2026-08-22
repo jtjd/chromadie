@@ -4625,3 +4625,28 @@ responsive desktop two-column/mobile stacked composition.
   a fresh database reset. The default browser smoke still requires local R2 for
   its separate upload regression; that environment-dependent limitation is not
   part of the approved-effects path.
+
+## Source-faithful Neon/Raster correction — 2026-08-22
+
+- Replaced the earlier Neon Particle approximation with the approved
+  offscreen-mask/field implementation, including stateful glyph particles,
+  edge respawns, glints, exact field compositing, and local pointer response.
+- Replaced the earlier Raster Signal approximation with the approved source
+  canvas, deterministic noise canvas, row-slice displacement, scan gaps,
+  tiled texture, and sparse bright-pixel passes.
+- Kept the production name canvas transparent while preserving the reference's
+  full-field raster texture without adding an opaque profile rectangle.
+- Updated targeted source-primitive regression coverage and verified both
+  effects in Chromium at the renderer canvas scale.
+
+## Elastic Frame mobile overflow correction — 2026-08-22
+
+- Reworked Elastic Frame perimeter sampling to include straight edge points,
+  preventing Catmull-Rom handles from crossing the opposite corner.
+- Clamped generated Bézier handles to each path's viewBox so neutral and
+  pointer-bent frames remain inside their host on narrow previews.
+- Added regression coverage for neutral and pointer-bent path coordinates.
+- The approved-effects browser smoke now passes the narrow mobile overflow
+  assertion. That run later stops at an independent public-refresh fixture
+  check where the persisted effect layers are empty; the Elastic Frame step is
+  green.

@@ -5788,3 +5788,31 @@ The catalog and seed changes are additive and preserve the existing inventory,
 entitlement, equip RPC, RLS, cache, publish, and persisted-loadout contracts.
 Large new renderer modules are lazy-loaded at route boundaries to keep the
 public and dashboard performance budgets within their existing limits.
+
+## 2026-08-22 — Port the approved Neon and Raster references as source-faithful renderers
+
+The approved `DigifyEffect` and `SignalText` implementations are the binding
+rendering source for Neon Particle and Raster Signal. Neon uses the reference's
+offscreen glyph mask, destination-in energy field, perimeter glow, stateful
+internal particles, edge emission, and glints. Raster uses the reference's
+offscreen source glyph, deterministic 128px noise canvas, row-by-row `drawImage`
+slices, scan gaps, tiled texture, and sparse bright pixels. The two effects do
+not share a generic glow or particle approximation.
+
+The production name canvas remains transparent so the renderer can sit on the
+existing profile surfaces; the reference's full-stage raster grain is preserved
+as a transparent ambient texture rather than introducing an opaque rectangular
+background. Neon also receives the reference pointer interaction through the
+existing local name-host listener. Any future reference-driven visual change
+must be validated against the supplied source and rendered comparison before it
+is considered complete.
+
+## 2026-08-22 — Keep Elastic Frame geometry inside its host bounds
+
+The Elastic Frame now samples its straight edges explicitly before generating
+the closed spline. The previous corner-only sampling made the first Catmull-
+Rom handles span across a full edge, which caused the SVG path to overshoot the
+mobile preview by roughly 3px on both sides. Bézier handles are also clamped to
+the renderer's viewBox, so pointer bending can never create layout overflow.
+The frame keeps its existing pointer behavior and visual layering; only invalid
+geometry was removed.

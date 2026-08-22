@@ -4,28 +4,44 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, Number.isFinite(value) ? value : min));
 }
 
-function roundedRectPoints(width, height, padding, radius, segments = 5) {
+function roundedRectPoints(width, height, padding, radius, segments = 12) {
   const left = padding;
   const top = padding;
   const right = Math.max(left, width - padding);
   const bottom = Math.max(top, height - padding);
   const safeRadius = Math.min(radius, (right - left) / 2, (bottom - top) / 2);
-  const corners = [
-    [right - safeRadius, top + safeRadius, -Math.PI / 2],
-    [right - safeRadius, bottom - safeRadius, 0],
-    [left + safeRadius, bottom - safeRadius, Math.PI / 2],
-    [left + safeRadius, top + safeRadius, Math.PI]
-  ];
   const points = [];
-  corners.forEach(([centerX, centerY, startAngle]) => {
-    for (let index = 0; index < segments; index += 1) {
-      const angle = startAngle + (index / segments) * Math.PI / 2;
+  const line = (startX, startY, endX, endY, count = segments) => {
+    for (let index = 0; index < count; index += 1) {
+      const progress = index / count;
+      points.push({
+        x: startX + (endX - startX) * progress,
+        y: startY + (endY - startY) * progress
+      });
+    }
+  };
+  const arc = (centerX, centerY, startAngle, endAngle, count = Math.max(2, Math.ceil(segments / 2))) => {
+    for (let index = 0; index < count; index += 1) {
+      const progress = index / count;
+      const angle = startAngle + (endAngle - startAngle) * progress;
       points.push({
         x: centerX + Math.cos(angle) * safeRadius,
         y: centerY + Math.sin(angle) * safeRadius
       });
     }
-  });
+  };
+
+  // Keep straight edges explicitly sampled. With only corner samples, the
+  // first Catmull-Rom handle sees the previous corner as its tangent and can
+  // curve outside the SVG viewBox on narrow profile surfaces.
+  line(left + safeRadius, top, right - safeRadius, top);
+  arc(right - safeRadius, top + safeRadius, -Math.PI / 2, 0);
+  line(right, top + safeRadius, right, bottom - safeRadius);
+  arc(right - safeRadius, bottom - safeRadius, 0, Math.PI / 2);
+  line(right - safeRadius, bottom, left + safeRadius, bottom);
+  arc(left + safeRadius, bottom - safeRadius, Math.PI / 2, Math.PI);
+  line(left, bottom - safeRadius, left, top + safeRadius);
+  arc(left + safeRadius, top + safeRadius, Math.PI, Math.PI * 1.5);
   return points;
 }
 
@@ -51,21 +67,25 @@ function constrainPoints(points, width, height, padding) {
   }));
 }
 
-function closedSpline(points) {
+function closedSpline(points, bounds = null) {
   if (!points.length) return '';
+  const bound = point => bounds ? {
+    x: clamp(point.x, bounds.left, bounds.right),
+    y: clamp(point.y, bounds.top, bounds.bottom)
+  } : point;
   const commands = [`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`];
   points.forEach((point, index) => {
     const previous = points[(index - 1 + points.length) % points.length];
     const next = points[(index + 1) % points.length];
     const nextNext = points[(index + 2) % points.length];
-    const controlOne = {
+    const controlOne = bound({
       x: point.x + (next.x - previous.x) / 6,
       y: point.y + (next.y - previous.y) / 6
-    };
-    const controlTwo = {
+    });
+    const controlTwo = bound({
       x: next.x - (nextNext.x - point.x) / 6,
       y: next.y - (nextNext.y - point.y) / 6
-    };
+    });
     commands.push(
       `C ${controlOne.x.toFixed(2)} ${controlOne.y.toFixed(2)} `
       + `${controlTwo.x.toFixed(2)} ${controlTwo.y.toFixed(2)} `
@@ -79,19 +99,34 @@ function closedSpline(points) {
 export function createElasticFramePaths(width = DEFAULT_SIZE.width, height = DEFAULT_SIZE.height, pointer = null) {
   const safeWidth = Math.max(1, Number(width) || DEFAULT_SIZE.width);
   const safeHeight = Math.max(1, Number(height) || DEFAULT_SIZE.height);
+  const outerPadding = 4;
+  const innerPadding = 7;
   const outer = constrainPoints(bendPoints(
-    roundedRectPoints(safeWidth, safeHeight, 4, Math.min(24, safeHeight * 0.16)),
+    roundedRectPoints(safeWidth, safeHeight, outerPadding, Math.min(24, safeHeight * 0.16)),
     pointer,
     112,
     0.2
-  ), safeWidth, safeHeight, 4);
+  ), safeWidth, safeHeight, outerPadding);
   const inner = constrainPoints(bendPoints(
-    roundedRectPoints(safeWidth, safeHeight, 7, Math.min(19, safeHeight * 0.13)),
+    roundedRectPoints(safeWidth, safeHeight, innerPadding, Math.min(19, safeHeight * 0.13)),
     pointer,
     104,
     0.11
-  ), safeWidth, safeHeight, 7);
-  return Object.freeze({ outer: closedSpline(outer), inner: closedSpline(inner) });
+  ), safeWidth, safeHeight, innerPadding);
+  return Object.freeze({
+    outer: closedSpline(outer, {
+      left: outerPadding,
+      top: outerPadding,
+      right: Math.max(outerPadding, safeWidth - outerPadding),
+      bottom: Math.max(outerPadding, safeHeight - outerPadding)
+    }),
+    inner: closedSpline(inner, {
+      left: innerPadding,
+      top: innerPadding,
+      right: Math.max(innerPadding, safeWidth - innerPadding),
+      bottom: Math.max(innerPadding, safeHeight - innerPadding)
+    })
+  });
 }
 
 /**
