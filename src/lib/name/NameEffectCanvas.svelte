@@ -84,7 +84,6 @@
     ? motionKey
     : loadoutValue(loadout, 'motionKey', 'name_motion');
   $: magneticMotion = resolveNameMotionKey(explicitMotionKey) === 'magnetic-type';
-  $: neonMotion = resolveNameMotionKey(explicitMotionKey) === 'neon-particle';
   $: hasComposableKeys = hasComposableNameInput({
     fontKey: explicitFontKey,
     materialKey: explicitMaterialKey,
@@ -126,7 +125,7 @@
     size,
     mode: effectiveMode,
     reducedMotion,
-    pointer: magneticMotion || neonMotion ? pointer : null
+    pointer: magneticMotion ? pointer : null
   };
   // Pointer movement is intentionally excluded from this signature. Magnetic
   // Type can redraw against the shared clock without tearing down and
@@ -212,7 +211,7 @@
   }
 
   function handlePointerMove(event) {
-    if (!(magneticMotion || neonMotion) || !host || event.pointerType === 'touch') return;
+    if (!magneticMotion || !host || event.pointerType === 'touch') return;
     const rect = host.getBoundingClientRect?.();
     if (!rect || !rect.width || !rect.height) return;
     pointer = {
