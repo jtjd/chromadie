@@ -2,6 +2,24 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-22 — Clarify the cosmetic color direction
+
+- Defined Premium as clean, intentional execution rather than a muted color
+  scheme.
+- Kept structural UI restrained while making vivid, expressive color the
+  default direction for cosmetics.
+
+## 2026-08-22 — Match the approved cosmetic effect references
+
+- Neon Particle now reads as energized text: masked internal color bands,
+  dense particles, edge emission, and crisp glints.
+- Raster Signal now constructs the name from displaced horizontal rows with
+  scan gaps and sparse signal texture instead of stacked blur copies.
+- Plasma Swarm now uses vivid cyan/violet charged clusters, ion clouds, hot
+  nodes, and short electrical links instead of recoloring a generic trail with
+  profile colors.
+- Kept the existing cosmetic IDs and server/data contracts unchanged.
+
 ## 2026-08-20 — Call profile visual layers cosmetics
 
 - Updated player-facing labels and reward copy to use “cosmetics” consistently

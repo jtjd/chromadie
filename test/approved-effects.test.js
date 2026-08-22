@@ -206,6 +206,23 @@ test('all four approved name motions draw bounded deterministic frames, includin
   assert.notDeepEqual(attractedGlyphs.map(call => call.args.slice(1)), neutralGlyphs.map(call => call.args.slice(1)));
 });
 
+test('the three approved reference effects keep their authored visual primitives', async () => {
+  const [motions, cursorTrail] = await Promise.all([
+    read('src/lib/name/render/composableMotions.js'),
+    read('src/lib/cursor-trail/CursorTrailLayer.svelte')
+  ]);
+
+  assert.match(motions, /const particleCount = Math\.min\(680/);
+  assert.match(motions, /createLinearGradient\(target/);
+  assert.match(motions, /strokeText\(ctx, model, outline/);
+  assert.match(motions, /const textTop = metrics\.y - metrics\.fontSize \* 0\.47/);
+  assert.match(motions, /const pixelCount = Math\.min\(120/);
+  assert.match(cursorTrail, /const color = particle\.hot \? '#7CFFFA' : '#7A4DFF'/);
+  assert.match(cursorTrail, /createRadialGradient\(node\.x, node\.y/);
+  assert.match(cursorTrail, /context\.quadraticCurveTo\(controlX, controlY, other\.x, other\.y\)/);
+  assert.doesNotMatch(cursorTrail, /const colors = getColors\(\);\n\s*const time = staticFrame/);
+});
+
 test('Elastic Frame keeps the content box stable while bending only code-owned paths', () => {
   const neutral = createElasticFramePaths(320, 180);
   const bent = createElasticFramePaths(320, 180, { x: 286, y: 88 });

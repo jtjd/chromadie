@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Premium color-direction clarification — 2026-08-22
+
+- Clarified that “premium” means clean execution and freedom from visual
+  errors or interaction jank, not a muted or desaturated palette.
+- Established vivid, expressive color as the default for cosmetics; quiet and
+  restrained language applies to structural UI, surfaces, and composition.
+
+## Approved three-effect renderer correction — 2026-08-22
+
+- Replaced the Neon Particle approximation with text-masked plasma energy,
+  dense deterministic micro-particles, edge emission, and bright glints.
+- Rebuilt Raster Signal around compact clipped text rows, independent row
+  displacement, dark scan gaps, and sparse deterministic signal pixels.
+- Rebuilt Plasma Swarm around vivid cyan/violet charged nodes, radial ion
+  clouds, hot particle cores, and short deterministic electrical links.
+- Preserved the existing catalog IDs, structured renderer contracts,
+  reduced-motion behavior, responsive bounds, and transparent cursor layer.
+
 ## Cosmetics terminology pass — 2026-08-20
 
 - Replaced player-facing “expression” labels with “cosmetics” across Roll,

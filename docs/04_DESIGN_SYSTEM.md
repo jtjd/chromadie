@@ -2,7 +2,22 @@
 
 ## Visual Goal
 
-Chromadie should feel seamless, modern, immersive, and expensive without becoming visually noisy.
+Chromadie should feel seamless, modern, immersive, and refined without
+becoming visually noisy. Here, premium means clean execution: coherent
+hierarchy, crisp rendering, responsive behavior, and no visual errors or
+interaction jank. It is a quality bar, not a prescribed color scheme.
+
+### Color direction
+
+Chromadie is a color-first product. Default cosmetics should use vivid,
+intentional chromatic color with clear hue, saturation, and value relationships.
+Muted, washed-out, pastel, gray, or beige treatments are not the default
+meaning of polish and should be used only when a specific cosmetic concept,
+owner choice, or accessibility requirement calls for them.
+
+Neutrals and restrained surfaces belong primarily to structural UI: layout,
+controls, text hierarchy, and supporting chrome. They should give the player's
+colors room to lead rather than flattening the cosmetic palette.
 
 Reference qualities—not literal copies—from guns.lol and catchii:
 
@@ -78,10 +93,12 @@ Cabinet Grotesk, and Geist Mono are not the reference authority for the
 homepage or Profile Studio.
 
 The visual reference is typographic and atmospheric: near-black canvas, thin
-rules, quiet capsule controls, restrained surfaces, subtle grain, and one
-profile-derived accent. Chromadie retains its own daily color response and
-earned progression so the reference informs the composition without turning
-the product into a copy of a personal portfolio site.
+rules, quiet capsule controls, restrained structural surfaces, subtle grain,
+and profile-derived color moments. “Quiet” and “restrained” describe chrome,
+spacing, and layering—not a requirement to desaturate cosmetics. Chromadie
+retains its own daily color response and earned progression so the reference
+informs the composition without turning the product into a copy of a personal
+portfolio site.
 
 ## Customization Boundaries
 

@@ -50,6 +50,11 @@
     return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? String(value).toUpperCase() : fallback;
   }
 
+  function lerp(first, second, amount) {
+    const t = Math.max(0, Math.min(1, Number(amount) || 0));
+    return first + (second - first) * t;
+  }
+
   function getColors() {
     const colors = [...(Array.isArray(recentColors) ? recentColors : []), todayColor, ...FALLBACK_COLORS]
       .map(color => safeColor(color, ''))
@@ -57,9 +62,9 @@
     return [...new Set(colors)].slice(0, 6);
   }
 
-  function plasmaNoise(index, channel = 0) {
+  function plasmaNoise(index, channel = 0, tick = 0) {
     let hash = 2166136261;
-    for (const character of `${resolvedKey}:${index}:${channel}`) {
+    for (const character of `${resolvedKey}:${index}:${channel}:${tick}`) {
       hash ^= character.codePointAt(0);
       hash = Math.imul(hash, 16777619);
     }
@@ -69,20 +74,20 @@
   function resetPlasmaState() {
     plasmaNodes = Array.from({ length: 4 }, (_, index) => ({
       phase: plasmaNoise(index, 1) * Math.PI * 2,
-      radius: 18 + plasmaNoise(index, 2) * 28,
-      speed: 0.0007 + plasmaNoise(index, 3) * 0.0006,
-      x: width * (0.28 + index * 0.15),
-      y: height * (0.45 + Math.sin(index * 1.7) * 0.2)
+      x: width * (0.25 + index * 0.16),
+      y: height * (0.35 + (index % 2) * 0.18),
+      driftX: 0.45 + plasmaNoise(index, 2) * 0.35,
+      driftY: 0.38 + plasmaNoise(index, 3) * 0.3
     }));
     plasmaParticles = Array.from({ length: 130 }, (_, index) => ({
-      x: width * (0.16 + plasmaNoise(index, 11) * 0.68),
-      y: height * (0.18 + plasmaNoise(index, 12) * 0.64),
-      vx: 0,
-      vy: 0,
+      x: plasmaNodes[index % plasmaNodes.length].x + (plasmaNoise(index, 11) - 0.5) * 80,
+      y: plasmaNodes[index % plasmaNodes.length].y + (plasmaNoise(index, 12) - 0.5) * 80,
+      vx: (plasmaNoise(index, 13) - 0.5) * 1.6,
+      vy: (plasmaNoise(index, 14) - 0.5) * 1.6,
       node: index % 4,
-      size: 0.7 + plasmaNoise(index, 13) * 2.6,
-      hot: plasmaNoise(index, 14) > 0.82,
-      phase: plasmaNoise(index, 15) * Math.PI * 2
+      size: 1.2 + plasmaNoise(index, 15) * 2.4,
+      hot: plasmaNoise(index, 16) > 0.78,
+      phase: plasmaNoise(index, 17) * Math.PI * 2
     }));
   }
 
@@ -130,7 +135,8 @@
       x: Math.max(0, Math.min(width, event.clientX - rect.left)),
       y: Math.max(0, Math.min(height, event.clientY - rect.top)),
       speed: Math.min(2.4, Math.max(0.2, Math.hypot(event.movementX || 0, event.movementY || 0) / 8)),
-      time: performance.now()
+      time: performance.now(),
+      active: true
     };
   }
 
@@ -180,7 +186,8 @@
       x: width * (0.12 + eased * 0.76),
       y: height * (0.76 - eased * 0.52 + Math.sin(phase * 2) * 0.035),
       speed: 1.1 + Math.abs(Math.sin(phase)) * 0.8,
-      time: timestamp
+      time: timestamp,
+      active: true
     };
   }
 
@@ -269,93 +276,103 @@
 
   function drawPlasmaSwarm(multiplier = 1, staticFrame = false) {
     if (!context || !pointer) return;
-    const colors = getColors();
-    const time = staticFrame ? 0 : (pointer.time || performance.now());
-    const headX = pointer.x;
-    const headY = pointer.y;
-    const nodes = plasmaNodes.map((node, index) => {
-      const phase = time * node.speed + node.phase;
-      const offsetX = Math.cos(phase * (1 + index * 0.08)) * node.radius;
-      const offsetY = Math.sin(phase * (1.18 + index * 0.05)) * node.radius * 0.72;
-      const anchorX = headX + (index - 1.5) * 22;
-      const anchorY = headY + Math.sin(index * 1.4) * 18;
-      return { x: anchorX + offsetX, y: anchorY + offsetY };
+    const time = staticFrame
+      ? 0
+      : (typeof performance !== 'undefined' ? performance.now() : pointer.time || 0);
+    const pointerActive = !staticFrame && (resolvedInputMode === 'demo' || pointer.active === true);
+    const targetX = pointer.x;
+    const targetY = pointer.y;
+
+    // Keep the field alive at rest, then pull the charged clusters toward the
+    // local pointer when the profile is being explored. This is the same
+    // charge-buildup behavior as the approved reference, rather than a plain
+    // line trail recolored with the player's palette.
+    plasmaNodes.forEach((node, index) => {
+      if (!staticFrame) {
+        node.phase += (0.012 + index * 0.002) * multiplier;
+        node.x += Math.sin(node.phase + index) * node.driftX * multiplier;
+        node.y += Math.cos(node.phase * 0.8 + index) * node.driftY * multiplier;
+        if (pointerActive) {
+          node.x = lerp(node.x, targetX + Math.cos(index * 1.57) * 65, 0.02 * multiplier);
+          node.y = lerp(node.y, targetY + Math.sin(index * 1.57) * 55, 0.02 * multiplier);
+        }
+      }
     });
 
+    const nodes = plasmaNodes;
+    context.save();
+    context.globalCompositeOperation = 'lighter';
+
     nodes.forEach((node, index) => {
-      const gradient = context.createRadialGradient(node.x, node.y, 0, node.x, node.y, 48 + index * 8);
-      const color = colors[index % colors.length];
+      const gradient = context.createRadialGradient(node.x, node.y, 0, node.x, node.y, 54);
+      const color = index % 2 ? '#00FFFF' : '#824DFF';
       gradient.addColorStop(0, `${color}8C`);
-      gradient.addColorStop(0.28, `${color}3D`);
+      gradient.addColorStop(0.45, `${color}3D`);
       gradient.addColorStop(1, `${color}00`);
-      context.save();
-      context.globalAlpha = 0.74;
+      context.globalAlpha = 0.42;
       context.fillStyle = gradient;
       context.fillRect(node.x - 64, node.y - 64, 128, 128);
-      context.restore();
     });
-
-    context.save();
-    context.lineWidth = 0.7;
-    nodes.forEach((node, index) => {
-      nodes.slice(index + 1).forEach((other, otherIndex) => {
-        const distance = Math.hypot(other.x - node.x, other.y - node.y);
-        if (distance >= 170) return;
-        context.globalAlpha = (1 - distance / 170) * 0.38;
-        context.strokeStyle = colors[(index + otherIndex + 1) % colors.length];
-        context.beginPath();
-        context.moveTo(node.x, node.y);
-        const controlX = (node.x + other.x) / 2 + Math.sin(time * 0.001 + index) * 12;
-        const controlY = (node.y + other.y) / 2 + Math.cos(time * 0.0012 + otherIndex) * 12;
-        context.quadraticCurveTo(controlX, controlY, other.x, other.y);
-        context.stroke();
-      });
-    });
-    context.restore();
 
     plasmaParticles.forEach((particle, index) => {
       const node = nodes[particle.node];
       if (!node) return;
       if (!staticFrame) {
-        const noiseX = Math.sin(time * 0.002 + particle.phase + index) * 0.18;
-        const noiseY = Math.cos(time * 0.0017 + particle.phase * 1.3 + index) * 0.18;
-        particle.vx = (particle.vx + (node.x - particle.x) * 0.00135 + noiseX) * 0.93;
-        particle.vy = (particle.vy + (node.y - particle.y) * 0.00135 + noiseY) * 0.93;
+        const distanceX = node.x - particle.x;
+        const distanceY = node.y - particle.y;
+        const distance = Math.hypot(distanceX, distanceY) || 1;
+        const tick = Math.floor(time / 120);
+        const noiseX = (plasmaNoise(index, 31, tick) - 0.5) * 0.08;
+        const noiseY = (plasmaNoise(index, 32, tick) - 0.5) * 0.08;
+        particle.vx = (particle.vx + (distanceX / distance) * 0.06 * multiplier + noiseX) * 0.94;
+        particle.vy = (particle.vy + (distanceY / distance) * 0.06 * multiplier + noiseY) * 0.94;
         particle.x += particle.vx * multiplier;
         particle.y += particle.vy * multiplier;
+        if (distance < 14) {
+          particle.vx += (plasmaNoise(index, 33, tick) - 0.5) * 2.4;
+          particle.vy += (plasmaNoise(index, 34, tick) - 0.5) * 2.4;
+          particle.hot = plasmaNoise(index, 35, tick) > 0.64;
+        }
       }
-      const color = particle.hot ? '#F7FBFF' : colors[index % colors.length];
-      const alpha = particle.hot ? 0.82 : 0.26 + plasmaNoise(index, 21) * 0.46;
-      context.save();
+      const color = particle.hot ? '#7CFFFA' : '#7A4DFF';
+      const alpha = particle.hot ? 0.84 : 0.38 + plasmaNoise(index, 21) * 0.32;
       context.globalAlpha = alpha;
       context.fillStyle = color;
       context.shadowColor = color;
-      context.shadowBlur = particle.hot ? 7 : 2.5;
+      context.shadowBlur = particle.hot ? 5 : 2;
       context.beginPath();
       context.arc(particle.x, particle.y, particle.size * (particle.hot ? 1.18 : 1), 0, Math.PI * 2);
       context.fill();
       if (particle.hot) {
-        context.globalAlpha = 0.48;
-        context.strokeStyle = color;
-        context.lineWidth = 0.55;
+        context.globalAlpha = 0.95;
+        context.fillStyle = '#FFFFFF';
         context.beginPath();
-        context.moveTo(particle.x - particle.size * 3, particle.y);
-        context.lineTo(particle.x + particle.size * 3, particle.y);
-        context.moveTo(particle.x, particle.y - particle.size * 3);
-        context.lineTo(particle.x, particle.y + particle.size * 3);
-        context.stroke();
+        context.arc(particle.x, particle.y, particle.size * 0.35, 0, Math.PI * 2);
+        context.fill();
       }
-      context.restore();
     });
 
-    context.save();
-    context.globalAlpha = 0.7;
-    context.fillStyle = '#FFFFFF';
-    context.shadowColor = colors[0];
-    context.shadowBlur = 8;
-    context.beginPath();
-    context.arc(headX, headY, 1.5, 0, Math.PI * 2);
-    context.fill();
+    // Short electrical links appear only while clusters are close enough to
+    // read as one charged system. The control-point drift is deterministic,
+    // so the arcs shimmer without noisy frame-to-frame jumps.
+    context.lineCap = 'round';
+    context.lineWidth = 1.2;
+    nodes.forEach((node, index) => {
+      nodes.slice(index + 1).forEach((other, otherIndex) => {
+        const distance = Math.hypot(other.x - node.x, other.y - node.y);
+        if (distance >= 170) return;
+        const tick = Math.floor(time / 180);
+        context.globalAlpha = (1 - distance / 170) * 0.24;
+        context.strokeStyle = index % 2 ? 'rgba(120,255,255,.9)' : 'rgba(160,100,255,.9)';
+        context.beginPath();
+        context.moveTo(node.x, node.y);
+        const controlX = (node.x + other.x) / 2 + (plasmaNoise(index * 7 + otherIndex, 41, tick) - 0.5) * 32;
+        const controlY = (node.y + other.y) / 2 + (plasmaNoise(index * 11 + otherIndex, 42, tick) - 0.5) * 32;
+        context.quadraticCurveTo(controlX, controlY, other.x, other.y);
+        context.stroke();
+      });
+    });
+
     context.restore();
   }
 

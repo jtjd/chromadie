@@ -48,6 +48,10 @@ Before beginning a new milestone, read:
 - Respect `prefers-reduced-motion`.
 - Build beautiful defaults before premium customization.
 - Gameplay earns prestige; premium buys expression.
+- Treat premium as a quality bar—clean, intentional, responsive, and free of
+  visual errors or interaction jank—not as a muted or desaturated color
+  direction. Cosmetics should default to vivid, expressive color unless a
+  specific concept calls for restraint.
 - Never make free profiles intentionally ugly, empty, or socially inferior.
 - Keep public profile rendering performant and safe because profile links are the product's acquisition surface.
 

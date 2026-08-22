@@ -1,5 +1,26 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-22 — Treat premium as execution quality, not muted color
+
+“Premium” describes clean, intentional, responsive execution with no visual
+errors or interaction jank. It does not prescribe muted, washed-out, or
+desaturated cosmetics. Structural UI may remain restrained so the player's
+color identity leads, but vivid and expressive color is the default for
+cosmetics unless a specific concept, owner choice, or accessibility need calls
+for restraint.
+
+## 2026-08-22 — Use the approved references as the authority for three effects
+
+The supplied references are the visual authority for the Neon Particle name
+motion, Raster Signal name motion, and Plasma Swarm cursor trail. Neon Particle
+uses text-masked energy, dense micro-particles, edge emission, and glints;
+Raster Signal uses clipped row displacement, scan gaps, and sparse signal
+pixels; Plasma Swarm uses fixed vivid cyan/violet charged nodes, ion clouds,
+hot particles, and short electrical links. The effects remain deterministic,
+bounded, reduced-motion-aware, and behind the existing catalog keys and
+renderer contracts. No schema, catalog, scoring, or authority boundary
+changed.
+
 ## 2026-08-20 — Use cosmetics as the product language
 
 Player-facing copy now calls profile appearance layers, earned rewards, and
