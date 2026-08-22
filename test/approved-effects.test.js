@@ -212,11 +212,25 @@ test('the three approved reference effects keep their authored visual primitives
     read('src/lib/cursor-trail/CursorTrailLayer.svelte')
   ]);
 
-  assert.match(motions, /const particleCount = Math\.min\(680/);
-  assert.match(motions, /createLinearGradient\(target/);
-  assert.match(motions, /strokeText\(ctx, model, outline/);
-  assert.match(motions, /const textTop = metrics\.y - metrics\.fontSize \* 0\.47/);
-  assert.match(motions, /const pixelCount = Math\.min\(120/);
+  const neonStart = motions.indexOf('function drawNeonParticleName');
+  const rasterStart = motions.indexOf('function drawRasterSignal');
+  const rasterEnd = motions.indexOf('export function drawComposableMotion');
+  const neon = motions.slice(neonStart, rasterStart);
+  const raster = motions.slice(rasterStart, rasterEnd);
+
+  assert.match(neon, /getReferenceTextMask\(ctx, model\)/);
+  assert.match(neon, /createRadialGradient\(\s*fieldContext/);
+  assert.match(neon, /const particleCount = Math\.min\(680/);
+  assert.match(neon, /const edgeCount = Math\.min\(240/);
+  assert.match(neon, /strokeText\(ctx, model, outline/);
+  assert.doesNotMatch(neon, /drawBase\(ctx, model\);\s*\n\s*\n\s*const field/);
+
+  assert.match(raster, /drawText\(ctx, model, MOTION_TEXT_LIGHT/);
+  assert.match(raster, /globalCompositeOperation = 'destination-out'/);
+  assert.match(raster, /const noiseCount = Math\.min\(320/);
+  assert.match(raster, /const pixelCount = Math\.min\(140/);
+  assert.doesNotMatch(raster, /#00EFFF|#6E5CFF|#FF4AD4/);
+
   assert.match(cursorTrail, /const color = particle\.hot \? '#7CFFFA' : '#7A4DFF'/);
   assert.match(cursorTrail, /createRadialGradient\(node\.x, node\.y/);
   assert.match(cursorTrail, /context\.quadraticCurveTo\(controlX, controlY, other\.x, other\.y\)/);

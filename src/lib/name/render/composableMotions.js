@@ -183,6 +183,138 @@ function drawParticleTrail(ctx, model, count = 32) {
   }
 }
 
+const REFERENCE_TEXT_MASKS = new WeakMap();
+
+function createReferenceCanvas(ctx, width, height) {
+  const ownerDocument = ctx?.canvas?.ownerDocument
+    || (typeof document !== 'undefined' ? document : null);
+  if (ownerDocument?.createElement) {
+    const canvas = ownerDocument.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
+  }
+  if (typeof OffscreenCanvas !== 'undefined') {
+    try {
+      return new OffscreenCanvas(width, height);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function getReferenceTextMask(ctx, model) {
+  if (!ctx || (typeof ctx !== 'object' && typeof ctx !== 'function')) return null;
+  const key = [
+    model.displayText,
+    model.width,
+    model.height,
+    model.font.key,
+    model.metrics.fontSize,
+    model.metrics.width,
+    model.metrics.x,
+    model.metrics.y
+  ].join('|');
+  const cached = REFERENCE_TEXT_MASKS.get(ctx);
+  if (cached?.key === key) return cached;
+
+  const width = Math.max(1, Math.round(model.width));
+  const height = Math.max(1, Math.round(model.height));
+  const maskCanvas = createReferenceCanvas(ctx, width, height);
+  const maskContext = maskCanvas?.getContext?.('2d');
+  if (!maskCanvas || !maskContext?.getImageData || !maskContext.fillText) return null;
+
+  maskContext.clearRect(0, 0, width, height);
+  setTextContext(maskContext, model);
+  maskContext.fillStyle = '#FFFFFF';
+  maskContext.fillText(model.displayText, model.metrics.x, model.metrics.y);
+  maskContext.lineWidth = Math.max(2, model.metrics.fontSize * 0.018);
+  maskContext.strokeStyle = '#FFFFFF';
+  maskContext.strokeText?.(model.displayText, model.metrics.x, model.metrics.y);
+
+  let pixels;
+  try {
+    pixels = maskContext.getImageData(0, 0, width, height).data;
+  } catch {
+    return null;
+  }
+
+  const left = Math.max(0, Math.floor(model.metrics.x - model.metrics.width / 2 - model.metrics.fontSize * 0.12));
+  const right = Math.min(width, Math.ceil(model.metrics.x + model.metrics.width / 2 + model.metrics.fontSize * 0.12));
+  const top = Math.max(0, Math.floor(model.metrics.y - model.metrics.fontSize * 0.54));
+  const bottom = Math.min(height, Math.ceil(model.metrics.y + model.metrics.fontSize * 0.54));
+  const alphaAt = (x, y) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return 0;
+    return pixels[(y * width + x) * 4 + 3] || 0;
+  };
+  const solidPoints = [];
+  const edgePoints = [];
+  for (let y = top; y < bottom; y += 2) {
+    for (let x = left; x < right; x += 2) {
+      if (alphaAt(x, y) <= 20) continue;
+      const edge = alphaAt(x - 2, y) <= 20
+        || alphaAt(x + 2, y) <= 20
+        || alphaAt(x, y - 2) <= 20
+        || alphaAt(x, y + 2) <= 20;
+      const point = { x, y };
+      solidPoints.push(point);
+      if (edge) edgePoints.push(point);
+    }
+  }
+  if (!solidPoints.length) return null;
+
+  const fieldCanvas = createReferenceCanvas(ctx, width, height);
+  const fieldContext = fieldCanvas?.getContext?.('2d') || null;
+  const state = { key, canvas: maskCanvas, solidPoints, edgePoints, fieldCanvas, fieldContext };
+  REFERENCE_TEXT_MASKS.set(ctx, state);
+  return state;
+}
+
+function drawReferenceCircle(ctx, x, y, radius, color, alpha) {
+  if (ctx?.beginPath && ctx.arc && ctx.fill) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(0.1, radius), 0, Math.PI * 2);
+    ctx.fill();
+  } else if (ctx?.fillRect) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    ctx.fillStyle = color;
+    ctx.fillRect(x - radius / 2, y - radius / 2, Math.max(0.5, radius), Math.max(0.5, radius));
+  }
+}
+
+function drawNeonParticleFallback(ctx, model, drawBase) {
+  const { metrics } = model;
+  const left = metrics.x - metrics.width / 2;
+  const top = metrics.y - metrics.fontSize * 0.52;
+  const field = createLinearGradient(ctx,
+    ['rgba(0,220,255,.26)', 'rgba(55,110,255,.12)', 'rgba(255,45,215,.26)'],
+    left,
+    0,
+    left + metrics.width,
+    0,
+    '#B6F7FF');
+  drawBaseVariant(ctx, model, drawBase, { alpha: 0.16, blur: 3, shadowColor: '#5F82FF' });
+  drawBase(ctx, model);
+  withTextMask(ctx, model, target => {
+    target.fillStyle = field;
+    target.globalAlpha = 0.86;
+    target.fillRect?.(0, 0, model.width, model.height);
+  });
+  strokeText(ctx, model, field, Math.max(1.2, metrics.fontSize * 0.01), 0.75);
+  const particleCount = Math.min(680, Math.max(110, Math.round(metrics.width * metrics.fontSize * 0.045)));
+  withTextMask(ctx, model, target => {
+    for (let index = 0; index < particleCount; index += 1) {
+      const seed = seededNoise(model.seed, index + 281);
+      const x = left + seededNoise(model.seed, index + 321) * metrics.width;
+      const y = top + seededNoise(model.seed, index + 341) * metrics.fontSize;
+      drawReferenceCircle(target, x, y, 0.45 + seed * 1.25, index % 9 === 0 ? '#FFFFFF' : '#00EFFF', 0.35 + seed * 0.45);
+    }
+  });
+}
+
 function drawFuzzyMotion(ctx, model, drawBase) {
   const { progress, metrics } = model;
   drawBase(ctx, model);
@@ -267,81 +399,167 @@ function drawNeonParticleName(ctx, model, drawBase) {
   const { metrics } = model;
   const time = Number.isFinite(model.time) ? model.time : 0;
   const left = metrics.x - metrics.width / 2;
-  const top = metrics.y - metrics.fontSize * 0.52;
+  const top = metrics.y - metrics.fontSize * 0.43;
   const colors = ['#00EFFF', '#6E5CFF', '#FF4AD4'];
 
-  // The reference is a text-bound energy system: a soft ghost sits behind the
-  // glyphs, while the color field, particles, and glints are all clipped to
-  // the actual name. Keep the base material only as the mask foundation.
-  drawBaseVariant(ctx, model, drawBase, {
-    alpha: 0.12,
-    blur: 3,
-    shadowColor: '#00EFFF'
-  });
-  drawBase(ctx, model);
+  const mask = getReferenceTextMask(ctx, model);
+  if (!mask?.fieldCanvas || !mask.fieldContext || !mask.canvas) {
+    drawNeonParticleFallback(ctx, model, drawBase);
+    return;
+  }
 
-  const field = createLinearGradient(ctx,
-    ['rgba(0,220,255,.26)', 'rgba(55,110,255,.12)', 'rgba(255,45,215,.26)'],
-    left,
+  // Build the same separate field/mask stack as the reference. This keeps the
+  // energy inside the glyph shape rather than letting a source-atop gradient
+  // become a smooth rectangle or a material-colored text fill.
+  const fieldContext = mask.fieldContext;
+  const fieldCanvas = mask.fieldCanvas;
+  fieldContext.clearRect(0, 0, model.width, model.height);
+  const fieldPad = Math.max(28, metrics.fontSize * 0.42);
+  const fieldLeft = left - fieldPad;
+  const fieldTop = top - fieldPad;
+  const fieldWidth = metrics.width + fieldPad * 2;
+  const fieldHeight = metrics.fontSize * 0.86 + fieldPad * 2;
+  const atmosphereA = createRadialGradient(
+    fieldContext,
+    ['rgba(0,220,255,.26)', 'rgba(55,110,255,.12)', 'rgba(0,0,0,0)'],
+    left + metrics.width * 0.25,
+    top + metrics.fontSize * 0.3,
     0,
-    left + metrics.width,
+    left + metrics.width * 0.25,
+    top + metrics.fontSize * 0.3,
+    metrics.fontSize * 0.8,
+    'rgba(0,0,0,0)'
+  );
+  fieldContext.fillStyle = atmosphereA;
+  fieldContext.fillRect(fieldLeft, fieldTop, fieldWidth, fieldHeight);
+  const atmosphereB = createRadialGradient(
+    fieldContext,
+    ['rgba(255,45,215,.26)', 'rgba(148,40,255,.12)', 'rgba(0,0,0,0)'],
+    left + metrics.width * 0.74,
+    top + metrics.fontSize * 0.48,
     0,
-    '#B6F7FF');
-  withTextMask(ctx, model, target => {
-    target.fillStyle = field;
-    target.globalAlpha = 0.9;
-    target.fillRect?.(0, 0, model.width, model.height);
-    // Moving plasma bands are the internal energy, not an exterior gradient.
-    for (let index = 0; index < 13; index += 1) {
-      const seed = seededNoise(model.seed, index + 201);
-      const streakPhase = time * (0.00006 + seed * 0.000025) + index * 0.12;
-      const bandX = left + metrics.width * fract(streakPhase);
-      const band = createLinearGradient(target,
-        ['rgba(0,0,0,0)', 'rgba(40,225,255,.14)', index % 2 ? 'rgba(255,60,230,.18)' : 'rgba(80,100,255,.16)', 'rgba(255,255,255,.11)', 'rgba(0,0,0,0)'],
-        bandX - metrics.fontSize * 1.2,
-        0,
-        bandX + metrics.fontSize * 1.2,
-        0,
-        'rgba(255,255,255,.1)');
-      target.fillStyle = band;
-      target.globalAlpha = 0.72;
-      target.fillRect?.(bandX - metrics.fontSize * 1.35,
-        top - metrics.fontSize * 0.2 + Math.sin(time * 0.0012 + index) * 2,
-        metrics.fontSize * 2.7,
-        metrics.fontSize * 1.25);
-    }
-  });
+    left + metrics.width * 0.74,
+    top + metrics.fontSize * 0.48,
+    metrics.fontSize * 0.9,
+    'rgba(0,0,0,0)'
+  );
+  fieldContext.fillStyle = atmosphereB;
+  fieldContext.fillRect(fieldLeft, fieldTop, fieldWidth, fieldHeight);
 
-  // Dense micro-particles make the field read as energized text instead of a
-  // smooth color fill. Their home positions are deterministic, so compact
-  // previews do not reshuffle every time they redraw.
-  withTextMask(ctx, model, target => {
-    const particleCount = Math.min(680, Math.max(110, Math.round(metrics.width * metrics.fontSize * 0.045)));
-    for (let index = 0; index < particleCount; index += 1) {
-      const seed = seededNoise(model.seed, index + 281);
-      const particlePhase = fract(time * (0.00012 + seededNoise(model.seed, index + 301) * 0.00014) + seed);
-      const x = left + seededNoise(model.seed, index + 321) * metrics.width
-        + Math.sin(particlePhase * Math.PI * 2 + index) * 1.6;
-      const y = top + seededNoise(model.seed, index + 341) * metrics.fontSize
-        + Math.cos(particlePhase * Math.PI * 2) * 1.6;
-      const size = 0.45 + seededNoise(model.seed, index + 361) * 1.25;
-      const pulse = 0.5 + Math.sin(particlePhase * Math.PI) * 0.5;
-      const color = index % 9 === 0 ? '#FFFFFF' : colors[index % colors.length];
-      target.globalAlpha = (index % 9 === 0 ? 0.8 : 0.35 + pulse * 0.5);
-      target.fillStyle = color;
-      if (target.beginPath && target.arc && target.fill) {
-        target.beginPath();
-        target.arc(x, y, size, 0, Math.PI * 2);
-        target.fill();
-      } else {
-        target.fillRect?.(x, y, size, size);
+  fieldContext.save?.();
+  fieldContext.globalCompositeOperation = 'lighter';
+  const bandWidth = Math.max(44, metrics.fontSize * 0.65);
+  for (let index = 0; index < 13; index += 1) {
+    const progress = fract(time * 0.00006 + index * 0.12);
+    const bandX = left + metrics.width * progress;
+    const band = createLinearGradient(
+      fieldContext,
+      ['rgba(0,0,0,0)', 'rgba(40,225,255,.14)', index % 2 ? 'rgba(255,60,230,.18)' : 'rgba(80,100,255,.16)', 'rgba(255,255,255,.11)', 'rgba(0,0,0,0)'],
+      bandX - bandWidth,
+      0,
+      bandX + bandWidth,
+      0,
+      'rgba(255,255,255,.1)'
+    );
+    fieldContext.fillStyle = band;
+    const waveY = Math.sin(time * 0.0012 + index) * Math.max(3, metrics.fontSize * 0.07);
+    fieldContext.fillRect(bandX - bandWidth * 1.14, top - metrics.fontSize * 0.1 + waveY, bandWidth * 2.28, metrics.fontSize * 0.86 + metrics.fontSize * 0.2);
+  }
+  fieldContext.restore?.();
+  fieldContext.globalCompositeOperation = 'destination-in';
+  fieldContext.drawImage(mask.canvas, 0, 0);
+  fieldContext.globalCompositeOperation = 'source-over';
+
+  ctx.save?.();
+  ctx.shadowColor = 'rgba(95,130,255,.34)';
+  ctx.shadowBlur = 24;
+  ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
+  ctx.restore?.();
+
+  // A faint mask and its blurred duplicate lift the perimeter without filling
+  // the name with the solid material used by the other motions.
+  ctx.save?.();
+  ctx.globalAlpha = 0.16;
+  ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.filter = 'blur(7px)';
+  ctx.globalAlpha = 0.55;
+  ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
+  ctx.restore?.();
+
+  const solidPoints = mask.solidPoints;
+  const particleCount = Math.min(680, solidPoints.length);
+  ctx.save?.();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let index = 0; index < particleCount; index += 1) {
+    const sample = solidPoints[Math.floor(seededNoise(model.seed, index + 281) * solidPoints.length) % solidPoints.length];
+    const tw = time * 0.0015 + seededNoise(model.seed, index + 301) * Math.PI * 2;
+    const size = 0.9 + seededNoise(model.seed, index + 361) * 1.5;
+    const hot = seededNoise(model.seed, index + 371) > 0.82;
+    let x = sample.x + Math.sin(tw + index) * 1.3 + Math.cos(tw * 1.2 + index) * 0.6;
+    let y = sample.y + Math.cos(tw * 1.2 + index) * 1.3 + Math.sin(tw + index) * 0.6;
+    if (model.pointer && Number.isFinite(model.pointer.x) && Number.isFinite(model.pointer.y)) {
+      const dx = model.pointer.x - x;
+      const dy = model.pointer.y - y;
+      const distance = Math.hypot(dx, dy) || 1;
+      if (distance < 90) {
+        const force = (1 - distance / 90) * 0.12;
+        x += dx * force;
+        y += dy * force;
       }
     }
-  });
+    const pulse = (Math.sin(tw * 1.4 + index) + 1) / 2;
+    const color = hot ? '#FFFFFF' : colors[index % colors.length];
+    drawReferenceCircle(ctx, x, y, size * 3.6, color, 0.04 * (0.5 + pulse * 0.5));
+    drawReferenceCircle(ctx, x, y, size, color, (hot ? 0.88 : 0.52) * (0.5 + pulse * 0.5));
+    if (hot) drawReferenceCircle(ctx, x, y, size * 0.35, '#FFFFFF', 0.98 * (0.6 + pulse * 0.4));
+  }
 
-  // Edge emission lives just beyond the glyph bounds. The outline and the
-  // small escaping particles create the bright perimeter behavior from the
-  // reference while staying bounded in the name canvas bleed.
+  // Edge particles are sampled from the actual glyph perimeter, then drift
+  // outward. This is what makes Neon Particle emit from letters rather than
+  // decorate the rectangular canvas bounds.
+  const edgeCount = Math.min(240, mask.edgePoints.length);
+  for (let index = 0; index < edgeCount; index += 1) {
+    const seed = seededNoise(model.seed, index + 401);
+    const edge = mask.edgePoints[Math.floor(seededNoise(model.seed, index + 411) * mask.edgePoints.length) % mask.edgePoints.length];
+    const life = fract(seed + time * 0.00045);
+    const vx = (seededNoise(model.seed, index + 421) - 0.5) * 1.6;
+    const vy = (seededNoise(model.seed, index + 431) - 0.5) * 1.6;
+    const x = edge.x + vx * life * 4;
+    const y = edge.y + vy * life * 4;
+    const size = 0.9 + seededNoise(model.seed, index + 441) * 1.5;
+    const alpha = life * 0.55;
+    drawReferenceCircle(ctx, x, y, size * 2.5, '#00EFFF', alpha * 0.08);
+    drawReferenceCircle(ctx, x, y, size, '#FF4FD7', alpha * 0.22);
+    drawReferenceCircle(ctx, x, y, size * 0.55, '#FFFFFF', alpha * 0.6);
+  }
+
+  // Keep a few sharp, deterministic star glints alive directly on the edge.
+  for (let index = 0; index < 14; index += 1) {
+    const phase = fract(time * 0.00025 + seededNoise(model.seed, index + 451));
+    if (phase > 0.2 || !mask.edgePoints.length) continue;
+    const edge = mask.edgePoints[Math.floor(seededNoise(model.seed, index + 461) * mask.edgePoints.length) % mask.edgePoints.length];
+    const size = 4 + seededNoise(model.seed, index + 471) * 5;
+    const alpha = (0.2 - phase) / 0.2;
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1;
+    ctx.beginPath?.();
+    ctx.moveTo?.(edge.x - size, edge.y);
+    ctx.lineTo?.(edge.x + size, edge.y);
+    ctx.moveTo?.(edge.x, edge.y - size);
+    ctx.lineTo?.(edge.x, edge.y + size);
+    ctx.stroke?.();
+    ctx.strokeStyle = `rgba(0,238,255,${alpha * 0.36})`;
+    ctx.beginPath?.();
+    ctx.moveTo?.(edge.x - size * 1.6, edge.y);
+    ctx.lineTo?.(edge.x + size * 1.6, edge.y);
+    ctx.moveTo?.(edge.x, edge.y - size * 1.6);
+    ctx.lineTo?.(edge.x, edge.y + size * 1.6);
+    ctx.stroke?.();
+  }
+  ctx.restore?.();
+
   const outline = createLinearGradient(
     ctx,
     ['rgba(0,236,255,.62)', 'rgba(255,255,255,.4)', 'rgba(255,80,214,.62)'],
@@ -352,47 +570,13 @@ function drawNeonParticleName(ctx, model, drawBase) {
     '#F7FBFF'
   );
   strokeText(ctx, model, outline, Math.max(1.2, metrics.fontSize * 0.01), 0.75);
-
-  for (let index = 0; index < 34; index += 1) {
-    const seed = seededNoise(model.seed, index + 401);
-    const phase = fract(time * (0.00018 + seed * 0.00018) + seed);
-    const side = index % 4;
-    const x = side === 0
-      ? left - 2 - seed * metrics.fontSize * 0.16
-      : side === 1
-        ? left + metrics.width + 2 + seed * metrics.fontSize * 0.16
-        : left + seed * metrics.width;
-    const y = side === 2
-      ? top - 2 - seed * metrics.fontSize * 0.16
-      : side === 3
-        ? top + metrics.fontSize + 2 + seed * metrics.fontSize * 0.16
-        : top + seed * metrics.fontSize;
-    const size = 0.45 + seededNoise(model.seed, index + 421) * 1.35;
-    ctx.save?.();
-    ctx.globalAlpha = Math.sin(phase * Math.PI) * 0.72;
-    ctx.fillStyle = index % 7 === 0 ? '#FFFFFF' : colors[index % colors.length];
-    ctx.shadowColor = ctx.fillStyle;
-    ctx.shadowBlur = 3;
-    if (ctx.beginPath && ctx.arc && ctx.fill) {
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fill();
-    } else ctx.fillRect?.(x, y, size, size);
-    if (index % 8 === 0 && ctx.moveTo && ctx.lineTo && ctx.stroke) {
-      ctx.strokeStyle = '#F7FBFF';
-      ctx.lineWidth = 0.65;
-      ctx.beginPath?.();
-      ctx.moveTo(x - size * 3, y);
-      ctx.lineTo(x + size * 3, y);
-      ctx.moveTo(x, y - size * 3);
-      ctx.lineTo(x, y + size * 3);
-      ctx.stroke();
-    }
-    ctx.restore?.();
-  }
 }
 
 function drawRasterSignal(ctx, model, drawBase) {
+  if (!ctx?.fillText) {
+    drawBase(ctx, model);
+    return;
+  }
   const { metrics } = model;
   const time = Number.isFinite(model.time) ? model.time : 0;
   const rowHeight = Math.max(1.5, metrics.fontSize * 0.025);
@@ -400,56 +584,79 @@ function drawRasterSignal(ctx, model, drawBase) {
   const textBottom = metrics.y + metrics.fontSize * 0.47;
   const rows = Math.min(64, Math.max(8, Math.ceil((textBottom - textTop) / rowHeight)));
 
-  drawBaseVariant(ctx, model, drawBase, {
-    alpha: 0.12,
-    offsetX: Math.sin(time * 0.0012) * 1.7,
-    blur: 3,
-    shadowColor: '#F7FBFF'
-  });
+  // Raster Signal is intentionally monochrome. It constructs the name from
+  // white glyph rows, so a vivid material cannot collapse it into Neon's
+  // colored energy fill.
+  ctx.save?.();
+  ctx.shadowColor = 'rgba(255,255,255,.42)';
+  ctx.shadowBlur = 3;
+  drawText(ctx, model, MOTION_TEXT_LIGHT, 0.12);
+  ctx.restore?.();
 
-  // Render actual horizontal glyph rows instead of repeatedly stacking full
-  // text copies. This keeps the word white, dense, and signal-like at compact
-  // preview sizes while allowing each row to drift independently.
+  const distortion = Math.min(1.4, Math.max(0.8, metrics.fontSize / 54));
   for (let index = 0; index < rows; index += 1) {
     const seed = seededNoise(model.seed, index + 501);
-    const cluster = Math.sin(time * 0.0017 + index * 0.78) * (1.1 + seed * 2.9);
-    const fine = Math.sin(time * 0.008 + index * 2.7) * 0.9;
-    const jump = index % 11 === Math.floor((time * 0.002) % 11) ? (seed - 0.5) * 8 : 0;
+    const slow = Math.sin(time * 0.004 + index * 0.64) * 1.7;
+    const fine = Math.sin(time * 0.011 + index * 1.83) * 0.55;
+    const cluster = Math.sin(index * 0.29 + time * 0.0015) * 1.15;
+    const jump = ((index + Math.floor(time / 170)) % 17 === 0 ? Math.sin(time * 0.05 + index) * 2.2 : 0);
+    const offset = (slow + fine + cluster + jump) * distortion;
     const top = textTop + index * rowHeight;
     const height = Math.min(rowHeight + 0.4, textBottom - top);
     if (height <= 0) continue;
     ctx.save?.();
-    ctx.globalAlpha = 0.82 + seed * 0.1;
+    ctx.globalCompositeOperation = 'lighter';
     if (ctx.beginPath && ctx.rect && ctx.clip) {
       ctx.beginPath();
       ctx.rect(0, top, model.width, height);
       ctx.clip();
     }
-    ctx.translate?.(cluster + fine + jump, 0);
-    drawBase(ctx, model);
+    ctx.translate?.(offset, 0);
+    ctx.shadowColor = 'rgba(255,255,255,.28)';
+    ctx.shadowBlur = 2;
+    drawText(ctx, model, MOTION_TEXT_LIGHT, 0.82 + seed * 0.1);
     ctx.restore?.();
   }
 
-  withTextMask(ctx, model, target => {
-    target.fillStyle = '#08090D';
-    target.globalAlpha = 0.16;
-    for (let y = textTop; y < textBottom; y += rowHeight * 2.05) {
-      target.fillRect?.(metrics.x - metrics.width / 2, y, metrics.width, Math.max(0.6, rowHeight * 0.32));
-    }
+  // Cut horizontal signal gaps through the assembled rows. Destination-out
+  // keeps the effect transparent around the name in real profile canvases.
+  ctx.save?.();
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.globalAlpha = 0.2;
+  ctx.fillStyle = '#000000';
+  for (let y = textTop; y < textBottom; y += rowHeight * 2.05) {
+    ctx.fillRect?.(metrics.x - metrics.width / 2, y, metrics.width, Math.max(0.6, rowHeight * 0.32));
+  }
+  ctx.restore?.();
 
-    // Sparse bright pixels and fine grain keep the raster surface textured
-    // without introducing frame-to-frame random reshuffling.
-    target.fillStyle = '#FFFFFF';
-    const pixelCount = Math.min(120, Math.max(28, Math.round(metrics.width * 0.24)));
-    for (let index = 0; index < pixelCount; index += 1) {
-      const seed = seededNoise(model.seed, index + 551);
-      if (seed < 0.58) continue;
-      const x = metrics.x - metrics.width / 2 + seededNoise(model.seed, index + 571) * metrics.width;
-      const y = textTop + seededNoise(model.seed, index + 591) * (textBottom - textTop);
-      target.globalAlpha = 0.18 + seed * 0.56;
-      target.fillRect?.(x, y, 0.45 + seed * 1.05, Math.max(0.7, rowHeight * 0.34));
-    }
-  });
+  // A deterministic fine-grain pass and sparse hot pixels supply the noisy
+  // canvas texture seen in the approved study without frame reshuffling.
+  const noiseCount = Math.min(320, Math.max(80, Math.round(metrics.width * 0.58)));
+  ctx.save?.();
+  ctx.globalCompositeOperation = 'source-atop';
+  for (let index = 0; index < noiseCount; index += 1) {
+    const seed = seededNoise(model.seed, index + 551);
+    const x = metrics.x - metrics.width / 2 + seededNoise(model.seed, index + 571) * metrics.width;
+    const y = textTop + seededNoise(model.seed, index + 591) * (textBottom - textTop);
+    ctx.fillStyle = seed > 0.54 ? '#FFFFFF' : '#07090D';
+    ctx.globalAlpha = seed > 0.54 ? 0.08 + seed * 0.12 : 0.08 + seed * 0.1;
+    ctx.fillRect?.(x, y, 0.45 + seed * 1.05, Math.max(0.55, rowHeight * 0.28));
+  }
+  ctx.restore?.();
+
+  const pixelCount = Math.min(140, Math.max(32, Math.round(metrics.width * 0.3)));
+  ctx.save?.();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = '#FFFFFF';
+  for (let index = 0; index < pixelCount; index += 1) {
+    const seed = seededNoise(model.seed, index + 611);
+    if (seed < 0.58) continue;
+    const x = metrics.x - metrics.width / 2 + seededNoise(model.seed, index + 631) * metrics.width;
+    const y = textTop + seededNoise(model.seed, index + 651) * (textBottom - textTop);
+    ctx.globalAlpha = 0.12 + seed * 0.34;
+    ctx.fillRect?.(x, y, 0.4 + seed * 1.2, Math.max(0.65, rowHeight * 0.32));
+  }
+  ctx.restore?.();
 }
 
 export function drawComposableMotion(ctx, model, drawBase) {

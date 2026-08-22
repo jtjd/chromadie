@@ -18,6 +18,16 @@
 - Preserved the existing catalog IDs, structured renderer contracts,
   reduced-motion behavior, responsive bounds, and transparent cursor layer.
 
+## Neon/Raster distinction pass — 2026-08-22
+
+- Rebuilt Neon Particle around a cached glyph mask and separate field canvas,
+  sampling its dense particle core and edge emission from real letter pixels.
+- Rebuilt Raster Signal as a strictly monochrome row compositor with stronger
+  independent displacement, transparent scan gaps, deterministic grain, and
+  sparse bright signal pixels.
+- Added regression assertions that keep the two approved name motions on
+  separate visual paths instead of allowing a shared smooth color treatment.
+
 ## Cosmetics terminology pass — 2026-08-20
 
 - Replaced player-facing “expression” labels with “cosmetics” across Roll,

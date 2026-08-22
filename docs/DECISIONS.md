@@ -21,6 +21,16 @@ bounded, reduced-motion-aware, and behind the existing catalog keys and
 renderer contracts. No schema, catalog, scoring, or authority boundary
 changed.
 
+## 2026-08-22 — Keep Neon Particle and Raster Signal structurally distinct
+
+Neon Particle now owns a cached glyph mask and field canvas so its atmospheric
+energy, hot particles, edge emission, and glints are sampled from the actual
+letter shape. Raster Signal intentionally bypasses vivid materials and builds
+the name from monochrome white rows, destination-out scan gaps, deterministic
+grain, and sparse bright pixels. This prevents both motions from collapsing
+into the same colored text treatment while preserving the existing slot keys,
+bounded canvas renderer, and transparent profile surface.
+
 ## 2026-08-20 — Use cosmetics as the product language
 
 Player-facing copy now calls profile appearance layers, earned rewards, and

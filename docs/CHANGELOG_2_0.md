@@ -20,6 +20,17 @@ Document user-visible redesign changes by milestone.
   profile colors.
 - Kept the existing cosmetic IDs and server/data contracts unchanged.
 
+## 2026-08-22 — Separate the Neon Particle and Raster Signal treatments
+
+- Neon Particle now samples its particle core and perimeter emission from the
+  actual glyph mask, producing the bright white-hot reference look instead of
+  a smooth color fill.
+- Raster Signal now uses a dedicated monochrome row compositor with stronger
+  signal displacement, transparent scan gaps, deterministic grain, and sparse
+  bright pixels.
+- The two name motions now have distinct construction, palette, and texture
+  behavior while retaining the same catalog IDs and data contracts.
+
 ## 2026-08-20 — Call profile visual layers cosmetics
 
 - Updated player-facing labels and reward copy to use “cosmetics” consistently
