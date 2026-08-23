@@ -379,7 +379,10 @@ async function inspectAuthenticatedProgression(width, height, label) {
       rewardThumbnailCount: document.querySelectorAll('.progression-reward-preview__thumbnail').length,
       canonicalThumbnailCount: document.querySelectorAll('.progression-reward-preview__thumbnail .shop-preview-area').length,
       placeholderRewardText: text.includes('Preview reward'),
-      radialBackground: getComputedStyle(document.querySelector('.progression-page')).backgroundImage.includes('radial-gradient'),
+      accentGradient: [
+        getComputedStyle(document.querySelector('.progression-page')).backgroundImage,
+        ...[...document.querySelectorAll('.profile-progression-rank--page,.profile-progression-weekly--page')].map(element => getComputedStyle(element).backgroundImage)
+      ].some(value => /gradient/i.test(value)),
       progressbars,
       horizontalOverflow: root.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1,
       reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -400,7 +403,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
   assert(state.pathIconCount >= 3, `${label} did not render the three path glyphs: ${JSON.stringify(state)}.`);
   assert(state.rewardThumbnailCount === 0 || state.canonicalThumbnailCount >= 1, `${label} did not render a canonical cosmetic thumbnail: ${JSON.stringify(state)}.`);
   assert(!state.placeholderRewardText, `${label} still exposes placeholder reward copy: ${JSON.stringify(state)}.`);
-  assert(state.radialBackground, `${label} progression page is missing its grayscale vignette: ${JSON.stringify(state)}.`);
+  assert(!state.accentGradient, `${label} progression page still exposes an accent gradient: ${JSON.stringify(state)}.`);
   assert(!state.horizontalOverflow, `${label} progression surface overflows horizontally.`);
   assert(state.streakStrip && /5\s+of\s+14\s+days/i.test(state.streakText), 'Established progression did not render the persisted next-day current streak state: ' + JSON.stringify(state) + '.');
   return state;

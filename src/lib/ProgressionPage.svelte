@@ -198,7 +198,7 @@
   <title>Progression · ChromaDie</title>
 </svelte:head>
 
-<div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-ink:${accentInk};--progression-accent-light:color-mix(in srgb,${accentColor} 76%,white);--progression-accent-glow:color-mix(in srgb,${accentColor} 24%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentColor} 40%,transparent);background:radial-gradient(ellipse 72% 78% at 92% 4%,color-mix(in srgb,${accentColor} 12%,transparent),transparent 72%),radial-gradient(ellipse 68% 62% at 10% 92%,color-mix(in srgb,${accentColor} 7%,transparent),transparent 74%),var(--bg,#0e0e10)`}>
+<div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-ink:${accentInk};--progression-accent-light:color-mix(in srgb,${accentColor} 42%,white);--progression-accent-glow:color-mix(in srgb,${accentColor} 24%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentColor} 40%,transparent)`}>
   <div class="progression-page__shell">
     <div class="progression-page__composition">
       <div class="progression-page__rail" style="--progression-rail-offset:clamp(7rem,17vh,10rem);align-self:start">
@@ -587,7 +587,7 @@
   }
 
   .progression-page__account-actions .site-button:not(.site-button--secondary) {
-    background:linear-gradient(135deg,var(--progression-accent-light),var(--progression-accent));
+    background:var(--progression-accent);
     color:var(--progression-accent-ink);
   }
 

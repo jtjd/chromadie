@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Progression contrast and weekly-color clarity — 2026-08-23
+
+- Removed the page, rank, and weekly accent gradients so no clipped wash or
+  hard right-edge line remains in the progression board.
+- Increased page-mode text, rule, and progress-track contrast while retaining
+  color in bounded state marks and Rank/Ritual/Discovery fills.
+- Changed the weekly challenge copy to explicitly say “Match this week’s
+  color” and retain the target hex beside that instruction.
+
 ## Progression color field and game-state hierarchy — 2026-08-23
 
 - Removed the page-mode dashboard frame and nested rank-card treatment so the

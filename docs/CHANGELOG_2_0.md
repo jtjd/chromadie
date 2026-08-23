@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-23 — Remove the Progression accent wash
+
+- Removed the page/rank/weekly accent gradients that created visible clipped
+  edges in the board.
+- Increased contrast for labels, rules, progress tracks, and values while
+  keeping color in bounded state accents.
+- Clarified the weekly challenge as “Match this week’s color” with its target
+  hex shown inline.
+
 ## 2026-08-23 — Reframe Progression as a color-led game surface
 
 - Removed the nested page panel and softened the board into the site canvas.

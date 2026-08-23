@@ -265,7 +265,8 @@ test('progression visual treatment keeps state neutral and previews canonical co
   assert.match(progression, /profile-progression-rank__ring-value[^}]*var\(--progression-accent/);
   assert.match(page, /--progression-accent/);
   assert.match(page, /progression-page__composition/);
-  assert.match(page, /radial-gradient\(ellipse 72% 78% at 92% 4%,color-mix/);
+  assert.doesNotMatch(page, /radial-gradient|linear-gradient/);
+  assert.doesNotMatch(progression, /radial-gradient/);
   assert.match(page, /--progression-accent-light/);
   assert.match(page, /progression-page__color-chip/);
   assert.match(page, /progression-page__streak-strip/);
@@ -276,6 +277,7 @@ test('progression visual treatment keeps state neutral and previews canonical co
   assert.match(page, /View full roll/);
   assert.match(page, /Scoring signals/);
   assert.doesNotMatch(page, /Next milestone/);
+  assert.match(progression, /this week’s color/);
   assert.match(page, /focusStreakTitle/);
   assert.match(rewardPreview, /onMount/);
   assert.match(rewardPreview, /progression-reward-preview__thumbnail/);

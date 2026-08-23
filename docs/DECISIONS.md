@@ -5875,3 +5875,15 @@ Summary counters stay useful as one signal ribbon, while Rank, Ritual, and
 Discovery use bounded accent blends derived from the same current roll. These
 are presentation-only variables; daily eligibility, scoring, milestones,
 rewards, inventory, and RLS remain server-authoritative.
+
+## 2026-08-23 — Keep Progression color bounded, not atmospheric
+
+The progression route no longer uses a page-wide, rank, or weekly accent
+gradient. Those washes introduced clipped edges that read as accidental panel
+boundaries. Color remains where it carries state: the rank mark, left/bottom
+rank rules, weekly target swatch, track rails, and progress fills.
+
+Page-mode contrast is raised independently through brighter text, stronger
+rules, and thicker progress tracks. The weekly row names the action directly as
+“Match this week’s color” so the target hex is understood as a challenge, not a
+generic match status. No game authority moved into presentation code.
