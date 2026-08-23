@@ -333,7 +333,7 @@
       revealConditions = revealItems;
       revealStep = ROLL_REVEAL_STEPS.length - 1;
       revealStatus = ROLL_REVEAL_STEPS[ROLL_REVEAL_STEPS.length - 1].label;
-      revealDetail = `${conditionCount} server-confirmed condition${conditionCount === 1 ? '' : 's'} secured`;
+    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
       displayHex = finalHex;
       displayColor = finalHex;
       displayScore = score;
@@ -345,7 +345,7 @@
     displayHex = getRevealHex(canonical.hex, 0);
     revealStep = 0;
     revealStatus = ROLL_REVEAL_STEPS[0].label;
-    revealDetail = 'The server-confirmed signal is ready to read';
+    revealDetail = 'Waiting for the roll result';
     scanProgress = ROLL_REVEAL_STEPS[0].progress;
     displayScore = 0;
     score = 0;
@@ -356,7 +356,7 @@
 
     if (!await waitThroughStage(
       timing.signal,
-      ['Sampling hue', 'Measuring saturation', 'Mapping lightness', 'Preparing the condition scan'],
+      ['Reading hue', 'Reading saturation', 'Reading lightness', 'Checking conditions'],
       (index, message) => {
         revealStatus = ROLL_REVEAL_STEPS[0].label;
         revealDetail = message;
@@ -372,7 +372,7 @@
     for (const [index, lockedChannels] of [1, 2, 3].entries()) {
       if (revealSkipRequested) return finalize();
       revealStatus = ROLL_REVEAL_STEPS[1].label;
-      revealDetail = `${['Red', 'Green', 'Blue'][index]} channel locked`;
+      revealDetail = `${['Red', 'Green', 'Blue'][index]} channel confirmed`;
       displayHex = getRevealHex(canonical.hex, lockedChannels);
       displayColor = ROLL_REVEAL_SIGNAL_COLORS[(index + 2) % ROLL_REVEAL_SIGNAL_COLORS.length];
       if (!await waitForBeat(timing.channel)) {
@@ -386,7 +386,7 @@
     revealStep = 2;
     scanProgress = ROLL_REVEAL_STEPS[2].progress;
     revealStatus = ROLL_REVEAL_STEPS[2].label;
-    revealDetail = `${conditionCount} server-reported condition${conditionCount === 1 ? '' : 's'} found`;
+    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} confirmed`;
     if (!await waitForBeat(timing.conditionIntro)) {
       if (!requestIsCurrent()) return null;
       if (revealSkipRequested) return finalize();
@@ -397,7 +397,7 @@
       const item = revealItems[index];
       revealConditions = [...revealConditions, item];
       revealDetail = item.kind === 'condition' && item.points > 0
-        ? `${item.label} found · +${item.points.toLocaleString()} score`
+        ? `${item.label} · +${item.points.toLocaleString()} score`
         : `${item.label} checked`;
       if (!await waitForBeat(timing.conditionBeat)) {
         if (!requestIsCurrent()) return null;
@@ -405,7 +405,7 @@
       }
     }
 
-    revealDetail = 'Validating the final pattern stack';
+    revealDetail = 'Confirming conditions';
     if (!await waitForBeat(timing.conditionSettle)) {
       if (!requestIsCurrent()) return null;
       if (revealSkipRequested) return finalize();
@@ -417,9 +417,11 @@
     rarity = canonical.rarity || 'Common';
     identity = canonical.identity;
     revealStatus = ROLL_REVEAL_STEPS[3].label;
-    const rarityMessages = rarity === 'Mythic'
-      ? ['Comparing the full roll space', 'Rare convergence detected', 'Mythic threshold confirmed']
-      : [`Comparing the full roll space`, `${rarity} threshold is in range`, 'Rarity signal confirmed'];
+    const rarityMessages = [
+      'Checking rarity',
+      `${rarity} rarity identified`,
+      'Rarity confirmed'
+    ];
     if (!await waitThroughStage(timing.rarity, rarityMessages, (_index, message) => {
       revealDetail = message;
     })) {
@@ -434,7 +436,7 @@
     rollContributors = canonical.contributors;
     traits = canonical.traits;
     revealStatus = ROLL_REVEAL_STEPS[4].label;
-    revealDetail = 'Adding the confirmed score signals';
+    revealDetail = 'Showing the confirmed score';
     const scoreComplete = await animateScoreCountUp(
       score,
       requestIsCurrent,
@@ -442,10 +444,10 @@
       reducedMotion,
       progress => {
         revealDetail = progress < 0.35
-          ? 'Adding the color signal'
+          ? 'Showing color points'
           : progress < 0.75
-            ? 'Adding condition bonuses'
-            : 'Confirming the final total';
+            ? 'Showing condition points'
+            : 'Confirming total score';
       }
     );
     if (!scoreComplete || !requestIsCurrent()) {
@@ -457,7 +459,7 @@
     revealStep = 5;
     scanProgress = ROLL_REVEAL_STEPS[5].progress;
     revealStatus = ROLL_REVEAL_STEPS[5].label;
-    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} and ${score.toLocaleString()} score secured`;
+    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
     if (!await waitForBeat(timing.settle)) {
       if (!requestIsCurrent()) return null;
       if (revealSkipRequested) return finalize();
@@ -1034,17 +1036,16 @@
     <div class="card roll-stage roll-stage--preroll">
       {#if dedicated}
         <div class="roll-card-header">
-          <div>
-            <p class="roll-card-header__title">Daily Roll</p>
-            <p class="roll-card-header__meta">{$isAuthenticated ? 'Saved to your profile' : 'Saved on this device'}</p>
+          <div class="roll-card-header__copy">
+            <h2 class="roll-card-header__title">Daily Roll</h2>
+            <p class="roll-card-header__meta">One color. Every day.</p>
           </div>
         </div>
         <div class="roll-display roll-display--preview" aria-label="Daily roll preview">
           <RollTile displayColor="#28282C" rarity="Common" idle={true} label="Unrevealed daily roll" />
           <div class="roll-color-info">
-            <div class="roll-color-rarity">DAILY ROLL</div>
-            <div class="roll-color-name">Ready to reveal</div>
-            <div class="roll-color-hex">Roll to discover today’s color</div>
+            <div class="roll-color-name">No result yet</div>
+            <div class="roll-color-hex">Roll to generate today’s color.</div>
           </div>
         </div>
 
@@ -1070,7 +1071,7 @@
           <p class="info-text">You can roll once a day in guest mode. Guest rolls stay on this device and do not earn account EP or enter leaderboards.</p>
         {/if}
         <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
-          {loading ? 'Reading the spectrum…' : profileMode ? 'Reveal today’s color' : 'Roll the Die'}
+          {loading ? 'Preparing roll…' : profileMode ? 'Reveal today’s color' : 'Roll the Die'}
         </button>
       {/if}
 
@@ -1094,16 +1095,16 @@
   {:else if phase === 'rolling'}
     <div class="card roll-stage roll-stage--rolling" aria-live="polite">
       <div class="roll-card-header">
-        <div>
-          <p class="roll-card-header__title">Daily Roll</p>
-          <p class="roll-card-header__meta">Reading today’s color</p>
+        <div class="roll-card-header__copy">
+          <h2 class="roll-card-header__title">Daily Roll</h2>
+          <p class="roll-card-header__meta">Processing today’s roll</p>
         </div>
         <span class="roll-mode-pill">IN PROGRESS</span>
       </div>
       <div class="roll-rolling-display" data-reveal-step={revealStep}>
         <RollTile displayColor={displayColor} rarity={rarity || 'Common'} label="Color being rolled" />
         <p class="roll-stage__eyebrow">{revealStatus}</p>
-        <h2 class="roll-stage__title">{revealStep === ROLL_REVEAL_STEPS.length - 1 ? 'This one is yours.' : 'Finding your color.'}</h2>
+        <h2 class="roll-stage__title">{revealStep === ROLL_REVEAL_STEPS.length - 1 ? 'Result ready.' : 'Generating today’s color.'}</h2>
         <div class="rolling-hex">{displayHex}</div>
         <p class="roll-stage__status" role="status">
           {revealDetail}
@@ -1152,12 +1153,12 @@
 
   {:else if phase === 'results'}
     <div class="card roll-stage roll-stage--results" style={`--roll-result-color: ${normalizeHexColor(displayColor, '#ffffff')}; --roll-rarity: ${getRarityPresentation(rarity || 'Common').color};`} aria-labelledby="roll-result-title">
-        <div class="roll-card-header">
-          <div>
-            <p class="roll-card-header__title">Daily Roll</p>
-            <p class="roll-card-header__meta">{$isAuthenticated ? 'Saved to your profile' : 'Saved on this device'}</p>
-          </div>
+      <div class="roll-card-header">
+        <div class="roll-card-header__copy">
+          <h2 class="roll-card-header__title">Daily Roll</h2>
+          <p class="roll-card-header__meta">One color. Every day.</p>
         </div>
+      </div>
       <div class="roll-display" aria-live="polite">
         <RollTile displayColor={displayColor} rarity={rarity || 'Common'} label="Rolled color" />
         <div class="roll-color-info">
@@ -1271,7 +1272,7 @@
 
       {#if !$isAuthenticated}
         <div class="guest-prompt">
-          <div class="guest-prompt-copy">This preview will not transfer. Create an account to start saving future rolls.</div>
+          <div class="guest-prompt-copy">Want to save future rolls? Create an account.</div>
           <button type="button" class="roll-btn guest-prompt__button" on:click={beginGuestSignup}>
             Create Account
           </button>

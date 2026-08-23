@@ -1,10 +1,10 @@
 export const ROLL_REVEAL_STEPS = Object.freeze([
-  Object.freeze({ id: 'signal', label: 'Read the spectrum', progress: 8 }),
-  Object.freeze({ id: 'channels', label: 'Lock the channels', progress: 28 }),
-  Object.freeze({ id: 'conditions', label: 'Find the signals', progress: 54 }),
-  Object.freeze({ id: 'rarity', label: 'Assess the rarity', progress: 72 }),
-  Object.freeze({ id: 'score', label: 'Count the score', progress: 94 }),
-  Object.freeze({ id: 'complete', label: 'Result secured', progress: 100 })
+  Object.freeze({ id: 'signal', label: 'Color', progress: 8 }),
+  Object.freeze({ id: 'channels', label: 'Channels', progress: 28 }),
+  Object.freeze({ id: 'conditions', label: 'Conditions', progress: 54 }),
+  Object.freeze({ id: 'rarity', label: 'Rarity', progress: 72 }),
+  Object.freeze({ id: 'score', label: 'Score', progress: 94 }),
+  Object.freeze({ id: 'complete', label: 'Complete', progress: 100 })
 ]);
 
 // A fixed signal palette keeps the anticipation legible without inventing

@@ -91,15 +91,21 @@ test('editable controls use a mobile-safe text size without enlarging binary con
   assert.match(foundations, /:not\(\[type=['"]range['"]\]\)/);
 });
 
-test('Leaderboard keeps the podium and mobile score rows readable', () => {
-  assert.match(leaderboard, /roll-leaderboard__featured-list/);
-  assert.match(leaderboard, /roll-leaderboard__lower/);
+test('Leaderboard keeps the flat ranked columns readable on mobile', () => {
+  assert.match(leaderboard, /roll-leaderboard__results/);
+  assert.match(leaderboard, /roll-leaderboard__list/);
   assert.match(leaderboard, /roll-leaderboard__tabs/);
+  assert.match(leaderboard, /roll-leaderboard__column-headings/);
+  assert.match(leaderboard, /roll-leaderboard__column-heading-metrics/);
   assert.match(leaderboard, /@media \(max-width: 620px\)/);
   assert.match(leaderboardEntry, /@media \(max-width: 620px\)/);
   assert.match(leaderboardEntry, /leaderboard-row__score/);
-  assert.match(leaderboardEntry, /leaderboard-row--podium/);
-  assert.match(leaderboardEntry, /min-height: 4\.45rem/);
+  assert.match(leaderboardEntry, /leaderboard-row__metrics/);
+  assert.match(leaderboardEntry, /leaderboard-row__metric-label/);
+  assert.match(leaderboardEntry, /repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(leaderboardEntry, /leaderboard-row__rank-mark/);
+  assert.doesNotMatch(leaderboard + leaderboardEntry, /leaderboard-row--podium|featured-list|roll-leaderboard__lower/);
+  assert.match(leaderboardEntry, /grid-template-columns: 2\.25rem minmax\(0, 1fr\)/);
   assert.doesNotMatch(leaderboard + leaderboardEntry, /discovery-card|discovery-grid|discovery-hub/);
 });
 

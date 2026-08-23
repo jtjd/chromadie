@@ -9,7 +9,7 @@
   import { PROFILE_RENDER_CONTEXTS, resolveProfileRenderContext } from './profile-studio/previewContexts.js';
 
   export let item;
-  export let username = 'You';
+  export let username = 'CHM';
   export let displayColor = '#8B7CF6';
   export let avatarSrc = '';
   export let mode = 'animated';
@@ -27,6 +27,7 @@
     Nocturne: '#B5A9FF',
     'Static Bloom': '#8DDCFF'
   });
+  const PREVIEW_NAME = 'CHM';
   const PREVIEW_SURFACE = '#020306';
 
   $: itemNameLayerLoadout = item?.slot === 'name_font'
@@ -90,7 +91,7 @@
   {:else if nameLayerLoadout}
     <div class="shop-preview-text shop-preview-text--name">
       <NameEffectCanvas
-        text={username}
+        text={PREVIEW_NAME}
         loadout={nameLayerLoadout}
         todayColor={previewAccent}
         context={nameRendererContext}

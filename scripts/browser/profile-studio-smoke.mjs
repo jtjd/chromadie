@@ -1981,7 +1981,7 @@ try {
       await page.navigate(`${appUrl}/leaderboard`, `Leaderboard at ${width}x${height}`);
       await page.waitFor(`location.pathname === '/leaderboard' && document.querySelector('.roll-leaderboard')`, `Leaderboard shell at ${width}px`, 30000);
       await page.clickText('This month', { description: `Leaderboard monthly tab at ${width}px` });
-      await page.waitFor('document.querySelector(".roll-leaderboard__featured, .roll-leaderboard__lower, .roll-leaderboard__state")', `Leaderboard results at ${width}px`, 30000);
+      await page.waitFor('document.querySelector(".roll-leaderboard__list, .roll-leaderboard__state")', `Leaderboard results at ${width}px`, 30000);
       await delay(120);
       const state = await page.evaluate(`(() => {
         const rect = element => {
@@ -1991,9 +1991,7 @@ try {
         const shell = document.querySelector('.roll-leaderboard');
         const appShell = document.querySelector('.app-shell--leaderboard');
         const header = document.querySelector('.site-mode-header--leaderboard');
-        const featured = document.querySelector('.roll-leaderboard__featured-list');
         const list = document.querySelector('.roll-leaderboard__list');
-        const lower = document.querySelector('.roll-leaderboard__lower');
         const empty = document.querySelector('.roll-leaderboard__state');
         const items = [...document.querySelectorAll('.roll-leaderboard__list-item')];
         const entries = [...document.querySelectorAll('.leaderboard-row')];
@@ -2011,7 +2009,7 @@ try {
           const inViewport = Boolean(avatarBox && avatarBox.bottom > -160 && avatarBox.top < innerHeight + 160);
           return { imageLoaded: Boolean(image?.complete && image.naturalWidth > 0), fallback: visible(fallback), inViewport };
         });
-        const outOfShell = [...document.querySelectorAll('.roll-leaderboard__featured, .roll-leaderboard__lower, .roll-leaderboard__list-item, .leaderboard-row, .roll-leaderboard__tabs button')]
+        const outOfShell = [...document.querySelectorAll('.roll-leaderboard__results, .roll-leaderboard__list-item, .leaderboard-row, .roll-leaderboard__tabs button')]
           .map(element => ({ element, box: element.getBoundingClientRect() }))
           .filter(({ box }) => box.left < shell?.getBoundingClientRect().left - 1 || box.right > shell?.getBoundingClientRect().right + 1)
           .slice(0, 8)
@@ -2019,8 +2017,6 @@ try {
         return {
           viewport: [innerWidth, innerHeight],
           shell: rect(shell),
-          featured: rect(featured),
-          lower: rect(lower),
           list: rect(list),
           empty: rect(empty),
           items: items.map(item => ({ box: rect(item) })),
@@ -2033,7 +2029,7 @@ try {
         };
       })()`);
       assert(state.shell && state.shell.width >= Math.min(width - 16, 900), `Leaderboard shell is still constrained at ${width}px: ${JSON.stringify(state)}.`);
-      const resultSurface = state.featured || state.list || state.empty;
+      const resultSurface = state.list || state.empty;
       assert(resultSurface && resultSurface.left >= state.shell.left - 1 && resultSurface.right <= state.shell.right + 1, `Leaderboard results surface escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.tabs.length === 2 && state.tabs.some(tab => tab.label === 'This month' && tab.active), `Leaderboard period tabs are not reduced to Today and This month at ${width}px: ${JSON.stringify(state)}.`);
       assert(!state.outOfShell.length, `Leaderboard controls escape its route shell at ${width}px: ${JSON.stringify(state)}.`);

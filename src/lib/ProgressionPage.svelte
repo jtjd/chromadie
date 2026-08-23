@@ -3,6 +3,8 @@
   import { getBadgeMeta } from './badgeData.js';
   import { loadDailyRollColor, loadProgressionData } from './progressionData.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
+  import { getVividHexColor } from './profileAppearanceColors.js';
+  import { getRankState } from './ranks.js';
   import ProfileProgression from './ProfileProgression.svelte';
   import ProgressionPathIcon from './ProgressionPathIcon.svelte';
   import { accountState, authInitialized, isAuthenticated, profile, session } from './stores.js';
@@ -31,8 +33,12 @@
   $: hasRolledToday = dailyRollLoaded && Boolean(dailyRollData);
   $: rollSignals = resolveRollSignals(dailyRollData);
   $: accentColor = normalizeHexColor(todayColor, '#FFFFFF');
-  $: accentInk = getReadableTextColor(accentColor);
+  $: accentVivid = getVividHexColor(accentColor, '#FFFFFF');
+  $: accentInk = getReadableTextColor(accentVivid);
   $: currentStreak = Math.max(0, Number(progression?.currentStreak ?? accountProfile?.current_streak) || 0);
+  $: lifetimeEp = Math.max(0, Number(progression?.currentEp ?? accountProfile?.lifetime_ep) || 0);
+  $: pageRankState = getRankState(lifetimeEp);
+  $: pageRankPercent = Math.round((pageRankState?.progress || 0) * 100);
   $: focusGoal = resolveFocusGoal(progression);
   $: pageLoading = !$authInitialized
     || $accountState === ACCOUNT_STATES.PROFILE_LOADING
@@ -113,10 +119,6 @@
     void loadProgressionContext(accountId);
   }
 
-  function formatNumber(value) {
-    return Number(value || 0).toLocaleString();
-  }
-
   function resolveRollSignals(data) {
     const contributors = Array.isArray(data?.contributors) ? data.contributors : [];
     const traits = Array.isArray(data?.traits) ? data.traits : [];
@@ -147,37 +149,6 @@
     return candidates.find(node => node && node.unlocked !== true && !node.unlockedAt && !node.unlocked_at) || null;
   }
 
-  function focusProgressLabel(node) {
-    if (!node) return 'Roll today';
-    const current = Number(node?.progress?.current);
-    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
-    if (Number.isFinite(current) && Number.isFinite(target) && target > 0) {
-      const rawUnit = node?.progress?.unit || (node?.track === 'rank' ? 'points' : 'rolls');
-      const unit = String(rawUnit).toLowerCase() === 'ep' ? 'points' : rawUnit;
-      return `${formatNumber(current)} / ${formatNumber(target)} ${unit}`;
-    }
-    if (node?.track === 'discovery') return 'Discover a rare color';
-    return 'Keep rolling';
-  }
-
-  function focusStreakLabel(node) {
-    const current = Number(node?.progress?.current);
-    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
-    if (node?.track === 'ritual' && Number.isFinite(target) && target > 0) {
-      const safeCurrent = currentStreak || (Number.isFinite(current) ? Math.max(0, current) : 0);
-      return `${formatNumber(safeCurrent)} of ${formatNumber(target)} days`;
-    }
-    return focusProgressLabel(node);
-  }
-
-  function focusStreakTitle(node) {
-    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
-    if (node?.track === 'ritual' && Number.isFinite(target) && target > 0) {
-      return `${formatNumber(target)}-day streak`;
-    }
-    return node?.name || `${currentStreak}-day streak`;
-  }
-
   function getReadableTextColor(value) {
     const hex = normalizeHexColor(value, '#FFFFFF').slice(1);
     const channels = [0, 2, 4].map(offset => {
@@ -195,124 +166,86 @@
 </script>
 
 <svelte:head>
-  <title>Progression · ChromaDie</title>
+  <title>Progress · ChromaDie</title>
 </svelte:head>
 
-<div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-ink:${accentInk};--progression-accent-light:color-mix(in srgb,${accentColor} 42%,white);--progression-accent-glow:color-mix(in srgb,${accentColor} 24%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentColor} 40%,transparent)`}>
+<div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-vivid:${accentVivid};--progression-accent-ink:${accentInk};--progression-accent-light:${accentVivid};--progression-accent-glow:color-mix(in srgb,${accentVivid} 42%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentVivid} 68%,transparent)`}>
   <div class="progression-page__shell">
     <div class="progression-page__composition">
-      <div class="progression-page__rail" style="--progression-rail-offset:clamp(7rem,17vh,10rem);align-self:start">
-        <header class="progression-page__intro" aria-labelledby="progression-page-title">
-          <h1 id="progression-page-title">Progression</h1>
-          <p class="progression-page__scope">Rolls, rank, and unlocks.</p>
-        </header>
-
-        {#if accountProfile?.id}
-          {#if error}
-            <div class="progression-page__warning" role="status">
-              <span>{error} Showing the profile record that is available.</span>
-              <button type="button" on:click={retry} disabled={loading} aria-busy={loading}>Retry</button>
-            </div>
-          {/if}
-
-          <section class="progression-page__account-bar progression-page__streak-strip" aria-label="Daily streak and roll action">
-            <div class="progression-page__streak-copy">
-              <ProgressionPathIcon track="ritual" state="active" />
-              <div>
-                <strong>{focusStreakTitle(focusGoal)}</strong>
-                <small>{focusGoal ? focusStreakLabel(focusGoal) : 'Keep rolling'}</small>
-              </div>
-              {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
-            </div>
-            <div class="progression-page__account-actions">
-              {#if hasRolledToday}
-                <span class="progression-page__roll-status" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--progression-muted);font:600 .68rem/1 var(--font-mono-stack);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap" role="status">
-                  <span class="progression-page__roll-status-dot" style="width:.42rem;height:.42rem;border-radius:50%;background:var(--color-success,#6ee787);box-shadow:0 0 .55rem color-mix(in srgb,var(--color-success,#6ee787) 55%,transparent)" aria-hidden="true"></span>
-                  Rolled today
+      <header class="progression-page__intro" aria-labelledby="progression-page-title">
+        <div class="progression-page__intro-main">
+          <h1 id="progression-page-title">Progress</h1>
+          {#if accountProfile?.id}
+            <section class="progression-page__account-bar progression-page__streak-strip" aria-label="Daily streak and roll status">
+              <div class="progression-page__streak-copy">
+                <ProgressionPathIcon track="ritual" state="active" />
+                <strong>{currentStreak}-day streak</strong>
+                {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
+                <span class="progression-page__streak-days" aria-hidden="true">
+                  {#each [0, 1, 2, 3, 4, 5, 6] as day (day)}<span class="progression-page__streak-day" class:progression-page__streak-day--active={day === 0 && currentStreak > 0}></span>{/each}
                 </span>
-              {:else if dailyRollLoaded && dailyRollError}
-                <span class="progression-page__roll-status" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--progression-muted);font:600 .68rem/1 var(--font-mono-stack);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap" role="status" title={dailyRollError}>Status unavailable</span>
-              {:else if dailyRollLoaded}
-                <a class="site-button" href="/roll">{focusGoal?.track === 'discovery' ? 'Roll and explore' : 'Roll today'}</a>
-              {:else}
-                <span class="progression-page__roll-status" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--progression-muted);font:600 .68rem/1 var(--font-mono-stack);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap" role="status">Checking today</span>
-              {/if}
-            </div>
-          </section>
-
-          <div class="progression-page__rail-details" style="display:grid;gap:.9rem;margin-top:1rem;padding:.9rem .2rem 0;border-top:1px solid var(--progression-line)" aria-label="Today's roll details">
-            <section class="progression-page__rail-detail" style="display:grid;gap:.28rem;min-width:0" aria-labelledby="progression-today-roll-title">
-              <span class="progression-page__detail-label" style="color:var(--progression-muted);font:700 .62rem/1 var(--font-mono-stack);letter-spacing:.12em;text-transform:uppercase">Today's roll</span>
-              {#if hasRolledToday}
-                <strong id="progression-today-roll-title" style="color:var(--progression-text);font:650 1rem/1.15 var(--font-display-stack);overflow-wrap:anywhere">{dailyRollData?.identity || 'Color recorded'}</strong>
-                <small style="color:var(--progression-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere">
-                  {dailyRollData?.rarity || 'Common'} · {dailyRollHex || todayColor || 'Color'} · {formatNumber(dailyRollData?.score)} pts
-                </small>
-              {:else if dailyRollLoaded && dailyRollError}
-                <strong id="progression-today-roll-title" style="color:var(--progression-text);font:650 1rem/1.15 var(--font-display-stack);overflow-wrap:anywhere">Roll status unavailable</strong>
-                <small style="color:var(--progression-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere">Refresh before starting another roll.</small>
-              {:else if dailyRollLoaded}
-                <strong id="progression-today-roll-title" style="color:var(--progression-text);font:650 1rem/1.15 var(--font-display-stack);overflow-wrap:anywhere">Ready to roll</strong>
-                <small style="color:var(--progression-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere">{focusGoal ? `${focusGoal.name} · ${focusProgressLabel(focusGoal)}` : 'No color recorded for today.'}</small>
-              {:else}
-                <strong id="progression-today-roll-title" style="color:var(--progression-text);font:650 1rem/1.15 var(--font-display-stack);overflow-wrap:anywhere">Checking today</strong>
-                <small style="color:var(--progression-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere">Reading your server record.</small>
-              {/if}
+              </div>
+              <div class="progression-page__account-actions">
+                {#if hasRolledToday}
+                  <span class="progression-page__roll-status" role="status"><span class="progression-page__roll-status-dot" aria-hidden="true"></span>Rolled today</span>
+                {:else if dailyRollLoaded && dailyRollError}
+                  <span class="progression-page__roll-status" role="status" title={dailyRollError}>Status unavailable</span>
+                {:else if dailyRollLoaded}
+                  <span class="progression-page__roll-status" role="status">Roll available</span>
+                {:else}
+                  <span class="progression-page__roll-status" role="status">Checking today</span>
+                {/if}
+              </div>
             </section>
-
-            {#if hasRolledToday}
-              <a class="progression-page__detail-link" style="width:fit-content;color:var(--progression-text);font-size:.72rem;font-weight:650;text-underline-offset:.2em" href="/roll">View full roll</a>
-            {/if}
-
-            {#if hasRolledToday && rollSignals.length}
-              <section class="progression-page__rail-detail progression-page__rail-detail--signals" style="display:grid;gap:.35rem;min-width:0;padding-top:.9rem;border-top:1px solid var(--progression-line)" aria-labelledby="progression-roll-signals-title">
-                <span class="progression-page__detail-label" style="color:var(--progression-muted);font:700 .62rem/1 var(--font-mono-stack);letter-spacing:.12em;text-transform:uppercase">Scoring signals</span>
-                <div id="progression-roll-signals-title" style="display:flex;flex-wrap:wrap;gap:.35rem .45rem" aria-label="Server-reported scoring signals">
-                  {#each rollSignals as signal (signal.id)}
-                    <span style="display:inline-flex;align-items:center;gap:.25rem;color:var(--progression-text);font-size:.72rem;line-height:1.35">
-                      <span aria-hidden="true">{signal.symbol}</span>
-                      <span>{signal.label}</span>
-                      {#if signal.points}<small style="color:var(--progression-muted);font-size:.65rem">+{formatNumber(signal.points)}</small>{/if}
-                    </span>
-                  {/each}
-                </div>
-              </section>
-            {/if}
+          {/if}
+        </div>
+        {#if accountProfile?.id}
+          <div class="progression-page__header-meta" aria-label="Active progress">
+            <span>Active progress</span>
+            <strong>{pageRankPercent}%</strong>
+            <small>{pageRankState.current?.name || 'Unranked'} rank</small>
           </div>
         {/if}
-      </div>
+      </header>
+
+      {#if accountProfile?.id && error}
+        <div class="progression-page__warning" role="status">
+          <span>{error} Showing the profile record that is available.</span>
+          <button type="button" on:click={retry} disabled={loading} aria-busy={loading}>Retry</button>
+        </div>
+      {/if}
 
       {#if pageLoading}
         <section class="progression-page__state" role="status" aria-live="polite" aria-busy="true">
-          <div><strong>Loading progression</strong><p>Reading the progression earned by your account.</p></div>
+          <div><strong>Loading progress</strong><p>Reading the progress earned by your account.</p></div>
         </section>
       {:else if signedOut}
         <section class="progression-page__state progression-page__state--guest" aria-labelledby="progression-guest-title">
           <div>
             <p class="progression-page__state-eyebrow">Personal record</p>
-            <h2 id="progression-guest-title">Progression belongs to your profile.</h2>
+          <h2 id="progression-guest-title">Progress belongs to your profile.</h2>
             <p>Sign in to see your rank, streaks, discoveries, and cosmetic rewards. You can still try today’s color ritual first.</p>
           </div>
           <div class="progression-page__state-actions">
             <a class="site-button" href="/login?next=%2Fprogression">Sign in to continue</a>
             <a class="site-button site-button--secondary" href="/roll">Try a roll</a>
           </div>
-      </section>
+        </section>
       {:else if accountUnavailable}
         <section class="progression-page__state" role="alert">
-          <div><strong>Your account is unavailable right now.</strong><p>We could not read the profile that owns this progression. Try again in a moment.</p></div>
+          <div><strong>Your account is unavailable right now.</strong><p>We could not read the progress that belongs to this profile. Try again in a moment.</p></div>
           <button type="button" class="site-button site-button--secondary" on:click={() => window.location.reload()}>Retry</button>
-      </section>
+        </section>
       {:else if authenticatedWithoutProfile}
         <section class="progression-page__state" role="alert">
-          <div><strong>Your profile is still loading.</strong><p>The progression record is ready, but the profile that owns it has not arrived yet. Try again in a moment.</p></div>
+          <div><strong>Your profile is still loading.</strong><p>The progress record is ready, but the profile that owns it has not arrived yet. Try again in a moment.</p></div>
           <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
-      </section>
+        </section>
       {:else if error && !progressionLoaded}
         <section class="progression-page__state" role="alert">
-          <div><strong>Progression unavailable</strong><p>{error}</p></div>
+          <div><strong>Progress unavailable</strong><p>{error}</p></div>
           <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
-      </section>
+        </section>
       {:else if accountProfile?.id}
         <ProfileProgression
           profile={accountProfile}
@@ -323,6 +256,13 @@
           {progression}
           {featureFlags}
           currentRollColor={todayColor}
+          {dailyRollData}
+          {dailyRollHex}
+          {dailyRollLoaded}
+          {dailyRollError}
+          {hasRolledToday}
+          {rollSignals}
+          dailyFocusGoal={focusGoal}
           pageMode={true}
           analyticsSurface="progression"
         />
@@ -338,7 +278,7 @@
     --progression-muted: var(--color-ink-muted);
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
-    padding: clamp(3rem, 7vw, 6rem) 0 5rem;
+    padding: 1.1rem 0 4rem;
     background: var(--bg, #0e0e10);
     color: var(--progression-text);
     font-family: var(--site-font, var(--font-body-stack, sans-serif));
@@ -346,18 +286,13 @@
   }
 
   .progression-page__shell {
-    width: min(1040px, calc(100% - 48px));
+    width: min(1184px, calc(100% - 2rem));
     margin-inline: auto;
   }
 
-  .progression-page__composition { display:grid; grid-template-columns:minmax(13rem,.72fr) minmax(28rem,1.28fr); align-items:center; gap:clamp(2rem,6vw,5rem); }
-  .progression-page__rail { padding-top:var(--progression-rail-offset); }
-  .progression-page__intro {
-    display: flex;
-    align-items: flex-start;
-    flex-direction: column;
-    text-align: left;
-  }
+  .progression-page__composition { display:grid; gap:1.4rem; }
+  .progression-page__intro { display:block; padding-bottom:0; border-bottom:0; }
+  .progression-page__intro-main { min-width:0; }
 
   .progression-page__state-eyebrow {
     margin: 0;
@@ -367,28 +302,73 @@
     text-transform: uppercase;
   }
 
-  .progression-page__color-chip { display:inline-block; flex:0 0 1rem; width:1rem; height:1rem; border:1px solid rgba(255,255,255,.55); border-radius:50%; background:var(--data-color); }
+  .progression-page__color-chip { display:none; }
 
   .progression-page__intro h1 {
-    margin: .8rem 0 0;
+    margin: 0;
     color: var(--progression-text);
-    font: 700 clamp(2.6rem, 4vw, 3.5rem)/.96 var(--site-display, var(--font-display-stack, sans-serif));
-    letter-spacing: -.06em;
+    font: 800 clamp(2.7rem, 5vw, 4rem)/.9 var(--site-display, var(--font-display-stack, sans-serif));
+    letter-spacing: -.065em;
+    text-transform: uppercase;
   }
 
-  .progression-page__scope {
-    max-width: 20rem;
-    margin: .85rem 0 0;
-    color: var(--progression-muted);
-    font-size: .85rem;
-    line-height: 1.55;
+  .progression-page__header-meta {
+    display:none;
+    justify-items:end;
+    gap:.2rem;
+    min-width:9rem;
+    color:var(--progression-muted);
+    text-align:right;
   }
+
+  .progression-page__header-meta span,
+  .progression-page__header-meta small {
+    color:var(--progression-muted);
+    font:500 .72rem/1.25 var(--font-body-stack, sans-serif);
+  }
+
+  .progression-page__header-meta span { letter-spacing:.09em; text-transform:uppercase; }
+  .progression-page__header-meta strong { color:var(--progression-text); font:600 1rem/1.1 var(--font-display-stack, sans-serif); }
+  .progression-page__header-meta small { font-size:.68rem; }
+
+  .progression-page__account-bar {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    width:max-content;
+    max-width:100%;
+    margin-top:.7rem;
+    padding:.52rem .7rem;
+    border:1px solid #5b3318;
+    border-radius:999px;
+    background:#1f140d;
+  }
+
+  .progression-page__streak-copy {
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    min-width:0;
+  }
+
+  .progression-page__streak-copy > :global(.progression-path-icon) { flex:0 0 1rem; width:1rem; height:1rem; color:#ff8b2b; }
+  .progression-page__streak-copy strong { color:#ff9b3d; font:700 .68rem/1 var(--font-body-stack, sans-serif); letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  .progression-page__streak-days { display:flex; align-items:center; gap:4px; margin-left:.25rem; }
+  .progression-page__streak-day { display:block; flex:0 0 7px; width:7px; min-width:7px; max-width:7px; height:7px; aspect-ratio:1; box-sizing:border-box; border-radius:50%; background:#39414f; }
+  .progression-page__streak-day--active { background:#ff8b2b; }
+
+  .progression-page__roll-status { display:inline-flex; align-items:center; gap:.4rem; color:var(--progression-muted); font:600 .64rem/1 var(--font-mono-stack); letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  .progression-page__roll-status-dot { width:.42rem; height:.42rem; border-radius:50%; background:var(--color-success,#6ee787); box-shadow:0 0 .5rem color-mix(in srgb,var(--color-success,#6ee787) 55%,transparent); }
 
   .progression-page__state,
   .progression-page__account-bar {
-    border: 1px solid var(--progression-line);
-    border-radius: 18px;
-    background: var(--surface, #161619);
+    box-shadow:none;
+  }
+
+  .progression-page__state,
+  .progression-page__warning {
+    border-radius:1rem;
   }
 
   .progression-page__state {
@@ -398,6 +378,8 @@
     gap: 1rem;
     grid-column:1 / -1;
     padding: 1.4rem 1.5rem;
+    border:1px solid var(--progression-line);
+    background:var(--surface, #161619);
   }
 
   .progression-page__state strong {
@@ -445,7 +427,8 @@
     align-items: center;
     justify-content: space-between;
     gap: .75rem;
-    margin: 2rem 0 -1.7rem;
+    padding:.8rem 1rem;
+    border:1px solid var(--progression-line);
     color: var(--progression-muted);
     font-size: .76rem;
   }
@@ -455,7 +438,7 @@
     min-height: 2.25rem;
     padding: .35rem .65rem;
     border: 1px solid var(--progression-line);
-    border-radius: .5rem;
+    border-radius: .6rem;
     background: transparent;
     color: var(--progression-text);
     font: inherit;
@@ -472,62 +455,25 @@
     opacity: .6;
   }
 
-  .progression-page__account-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.25rem;
-    margin-top: 1.25rem;
-    padding: 1rem 1.15rem;
-  }
-
-  .progression-page__streak-copy {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .progression-page__streak-copy > :global(.progression-path-icon) {
-    flex: 0 0 1.5rem;
-  }
-
-  .progression-page__streak-copy > div {
-    display: grid;
-    gap: .2rem;
-    min-width: 0;
-  }
-
-  .progression-page__streak-copy strong {
-    color: var(--progression-text);
-    font-size: .95rem;
-  }
-
-  .progression-page__streak-copy small {
-    overflow: hidden;
-    color: var(--progression-muted);
-    font-size: .72rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .progression-page :global(.profile-progression-surface--page) {
     margin-top: 0;
   }
 
   @media (max-width: 620px) {
     .progression-page {
-      padding: 2.5rem 0 3.5rem;
+      padding: 1rem 0 3.5rem;
     }
 
     .progression-page__shell {
-      width: min(calc(100% - 30px), 620px);
+      width: min(calc(100% - 2rem), 620px);
     }
 
+    .progression-page__intro { align-items:flex-start; flex-direction:column; gap:1.25rem; }
+    .progression-page__header-meta { justify-items:start; text-align:left; }
+    .progression-page__account-bar { width:100%; }
+
     .progression-page__state,
-    .progression-page__state--guest,
-    .progression-page__account-bar {
+    .progression-page__state--guest {
       align-items: flex-start;
       flex-direction: column;
     }
@@ -538,74 +484,21 @@
       width: 100%;
     }
 
-    .progression-page__state-actions .site-button,
-    .progression-page__account-actions .site-button {
+    .progression-page__state-actions .site-button {
       flex: 1 1 auto;
     }
 
     .progression-page__warning {
       align-items: flex-start;
       flex-direction: column;
-      margin-bottom: -1rem;
     }
+    .progression-page__streak-copy { min-width:0; }
+    .progression-page__streak-copy strong { overflow:hidden; text-overflow:ellipsis; }
+    .progression-page__account-actions { flex:0 0 auto; }
   }
 
-  @media (max-width: 900px) {
-    .progression-page__composition { grid-template-columns:minmax(0, 620px); justify-content:center; gap:2rem; }
-    .progression-page__rail { padding-top:0; }
-  }
-
-  .progression-page__account-bar {
-    border-color: var(--color-state-active, var(--progression-line));
-    box-shadow: var(--shadow-card-glass);
-  }
-
-  .progression-page__streak-copy strong {
-    font: 650 1.12rem/1.15 var(--font-display-stack, sans-serif);
-    letter-spacing: -.015em;
-  }
-
-  .progression-page__streak-copy small {
-    max-width: 38rem;
-    overflow: visible;
-    white-space: normal;
-    line-height: 1.45;
-  }
-
-  .progression-page__streak-copy > :global(.progression-path-icon) { color: var(--progression-text); }
-  .progression-page__streak-copy .progression-page__color-chip { margin-left: .15rem; }
-
-  .progression-page__streak-strip {
-    padding: 1rem;
-  }
-
-  .progression-page__account-actions { flex: 0 0 auto; }
-
-  .progression-page__account-actions .site-button {
-    border:1px solid var(--progression-accent);
-    box-shadow:0 0 .85rem var(--progression-accent-glow);
-  }
-
-  .progression-page__account-actions .site-button:not(.site-button--secondary) {
-    background:var(--progression-accent);
-    color:var(--progression-accent-ink);
-  }
-
-  .progression-page__account-actions .site-button:hover,
-  .progression-page__account-actions .site-button:focus-visible {
-    box-shadow:0 0 1.2rem var(--progression-accent-glow-strong);
-  }
-
-  @media (max-width: 620px) {
-    .progression-page__streak-strip {
-      align-items: center;
-      flex-direction: row;
-      gap: .65rem;
-    }
-
-    .progression-page__streak-copy { min-width: 0; }
-    .progression-page__streak-copy > div { min-width: 0; }
-    .progression-page__account-actions { width: auto; }
-    .progression-page__account-actions .site-button { flex: 0 0 auto; }
+  @media (max-width:420px) {
+    .progression-page__account-bar { align-items:flex-start; flex-direction:column; gap:.65rem; }
+    .progression-page__streak-days { margin-left:0; }
   }
 </style>

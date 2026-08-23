@@ -8,9 +8,6 @@
   import { trackProductEvent } from './productAnalytics.js';
 
   const dispatch = createEventDispatcher();
-  let gameSurface;
-  let tiltFrame = null;
-  let pendingPointer = null;
   let rollContext = {
     phase: 'preroll',
     identity: '',
@@ -57,43 +54,6 @@
     };
   }
 
-  function resetCardParallax() {
-    pendingPointer = null;
-    if (tiltFrame) {
-      cancelAnimationFrame(tiltFrame);
-      tiltFrame = null;
-    }
-
-    const card = gameSurface?.querySelector('.game-container--dedicated .roll-stage');
-    card?.style.setProperty('--roll-card-rotate-x', '0deg');
-    card?.style.setProperty('--roll-card-rotate-y', '0deg');
-    card?.style.setProperty('--roll-card-shift-x', '0px');
-    card?.style.setProperty('--roll-card-shift-y', '0px');
-  }
-
-  function handleCardPointerMove(event) {
-    if (event.pointerType === 'touch' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      resetCardParallax();
-      return;
-    }
-
-    pendingPointer = { clientX: event.clientX, clientY: event.clientY };
-    if (tiltFrame) return;
-
-    tiltFrame = requestAnimationFrame(() => {
-      tiltFrame = null;
-      const card = gameSurface?.querySelector('.game-container--dedicated .roll-stage');
-      if (!card || !pendingPointer) return;
-
-      const rect = card.getBoundingClientRect();
-      const x = Math.max(-1, Math.min(1, (pendingPointer.clientX - rect.left - rect.width / 2) / (rect.width / 2)));
-      const y = Math.max(-1, Math.min(1, (pendingPointer.clientY - rect.top - rect.height / 2) / (rect.height / 2)));
-      card.style.setProperty('--roll-card-rotate-x', `${y * -3.5}deg`);
-      card.style.setProperty('--roll-card-rotate-y', `${x * 4.5}deg`);
-      card.style.setProperty('--roll-card-shift-x', `${x * 2}px`);
-      card.style.setProperty('--roll-card-shift-y', `${y * 2}px`);
-    });
-  }
 </script>
 
 <svelte:head>
@@ -102,12 +62,9 @@
 
 <div class="roll-page">
   <section
-    bind:this={gameSurface}
     class="roll-page__game"
     aria-labelledby="roll-page-title"
     style={`--roll-context-accent: ${contextHasResult && rollContext.hex ? rollContext.hex : 'var(--white)'}; --roll-rarity: ${contextHasResult ? contextRarity.color : 'var(--roll-accent)'};`}
-    on:pointermove={handleCardPointerMove}
-    on:pointerleave={resetCardParallax}
   >
     <div class="roll-page__context" class:roll-page__context--result={contextHasResult} aria-live="polite">
       {#if contextHasResult}
@@ -152,8 +109,8 @@
         {/if}
       {:else}
         <p class="roll-page__eyebrow">DAILY ROLL</p>
-        <h1 id="roll-page-title">Keep your <span>color story.</span></h1>
-        <p class="roll-page__description">Roll before the timer resets to add another scored color to your profile.</p>
+        <h1 id="roll-page-title">Today’s roll is ready.</h1>
+        <p class="roll-page__description">Roll once per day to generate a color, rarity, and score.</p>
       {/if}
 
       {#if rollContext.isAuthenticated}
@@ -250,8 +207,6 @@
     gap: clamp(44px, 6vw, 88px);
     width: min(100%, 980px);
     margin-inline: auto;
-    perspective: 1200px;
-    perspective-origin: center;
   }
 
   .roll-page__context {
@@ -475,10 +430,6 @@
   }
 
   .roll-page :global(.game-container--dedicated .roll-stage) {
-    --roll-card-rotate-x: 0deg;
-    --roll-card-rotate-y: 0deg;
-    --roll-card-shift-x: 0px;
-    --roll-card-shift-y: 0px;
     position: relative;
     z-index: 10;
     display: flex;
@@ -498,35 +449,52 @@
     text-align: left;
     backdrop-filter: saturate(180%) blur(30px);
     -webkit-backdrop-filter: saturate(180%) blur(30px);
-    transform: translate3d(var(--roll-card-shift-x), var(--roll-card-shift-y), 0) rotateX(var(--roll-card-rotate-x)) rotateY(var(--roll-card-rotate-y));
-    transform-style: preserve-3d;
-    transition: transform 180ms ease-out;
-    will-change: transform;
   }
 
   .roll-page :global(.game-container--dedicated .roll-stage::before) { display: none; }
 
   .roll-page :global(.game-container--dedicated .roll-card-header) {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    gap: 12px;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-card-header__copy) {
+    display: grid;
+    grid-column: 2;
+    justify-items: center;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-card-header__copy::before) {
+    width: 28px;
+    height: 3px;
+    margin-bottom: 9px;
+    border-radius: 999px;
+    background: var(--roll-accent);
+    box-shadow: 0 0 16px var(--roll-accent-glow);
+    content: '';
   }
 
   .roll-page :global(.game-container--dedicated .roll-card-header__title) {
     margin: 0;
     color: var(--roll-text);
-    font: 700 1.3rem/1.15 var(--site-display, 'Manrope', sans-serif);
-    letter-spacing: -.02em;
+    font: 800 1.45rem/1 var(--site-display, 'Manrope', sans-serif);
+    letter-spacing: -.035em;
   }
 
   .roll-page :global(.game-container--dedicated .roll-card-header__meta) {
-    margin: 4px 0 0;
+    margin: 7px 0 0;
     color: var(--roll-muted);
-    font: 500 .75rem/1 var(--site-font, 'Inter', sans-serif);
+    font: 500 .74rem/1.2 var(--site-font, 'Inter', sans-serif);
+    white-space: nowrap;
   }
 
   .roll-page :global(.game-container--dedicated .roll-mode-pill) {
+    grid-column: 3;
+    justify-self: end;
     flex: 0 0 auto;
     padding: 6px 12px;
     border: 1px solid var(--roll-accent);
@@ -554,6 +522,7 @@
     width: 88px;
     height: 88px;
     margin: 0;
+    border-radius: 14px;
     filter: none;
   }
 
@@ -562,6 +531,7 @@
   .roll-page :global(.game-container--dedicated .roll-tile__surface) {
     position: absolute;
     inset: 0;
+    border-radius: inherit;
     transform: none;
   }
 
@@ -570,7 +540,7 @@
     inset: 0;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, .2);
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--roll-tile-color);
     box-shadow:
       0 10px 24px -8px color-mix(in srgb, var(--roll-tile-color) 38%, transparent),
@@ -1008,7 +978,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     .roll-page::before { position: absolute; }
-    .roll-page :global(.game-container--dedicated .roll-stage) { transform: none; transition: none; }
     .roll-page :global(.game-container--dedicated .roll-stage--results) { animation: none; }
     .roll-page :global(.game-container--dedicated .roll-tile__surface) { transform: none; }
     .roll-page :global(.game-container--dedicated .roll-action__button:hover:not(:disabled)),

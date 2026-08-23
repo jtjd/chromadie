@@ -42,15 +42,15 @@
 
   const dispatch = createEventDispatcher();
   const REVEAL_STAGES = Object.freeze([
-    'Reading the spectrum…',
-    'Locking the channels…',
-    'Finding scoring signals…',
-    'Assessing rarity…',
-    'Counting the score…',
-    'Result secured.'
+    'Reading color…',
+    'Confirming channels…',
+    'Checking conditions…',
+    'Checking rarity…',
+    'Showing score…',
+    'Result ready.'
   ]);
   const REVEAL_SPECTRUM = ROLL_REVEAL_SIGNAL_COLORS;
-  const REVEAL_STEP_LABELS = Object.freeze(['Spectrum', 'Channels', 'Signals', 'Rarity', 'Score', 'Locked']);
+  const REVEAL_STEP_LABELS = Object.freeze(['Color', 'Channels', 'Conditions', 'Rarity', 'Score', 'Complete']);
   const REVEAL_COMPLETE_STAGE = ROLL_REVEAL_STEPS.length - 1;
   const SYSTEM_BADGE_IDS = new Set([
     'beat_your_best',
@@ -330,7 +330,7 @@
     displayHex = getRevealHex(canonical?.hex, 0);
     revealedBadges = [];
     revealStage = 0;
-    revealDetail = 'The server-confirmed signal is ready to read';
+    revealDetail = 'Waiting for the roll result';
     primeCanonicalConditions(canonical);
 
     let canonicalPresented = false;
@@ -362,7 +362,7 @@
       if (!canonicalPresented) presentCanonical(true);
       applyServerPresentation(data, canonical, { notifyProfile: false });
       revealStage = REVEAL_COMPLETE_STAGE;
-      revealDetail = `${conditionCount} server-confirmed condition${conditionCount === 1 ? '' : 's'} secured`;
+      revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
       displayScore = score;
       freshReveal = true;
       phase = 'results';
@@ -370,10 +370,10 @@
     };
 
     const signalMessages = [
-      'Sampling hue',
-      'Measuring saturation',
-      'Mapping lightness',
-      'Preparing the condition scan'
+      'Reading hue',
+      'Reading saturation',
+      'Reading lightness',
+      'Checking conditions'
     ];
     if (!await waitThroughStage(timing.signal, signalMessages, (index, message) => {
       revealStage = 0;
@@ -388,7 +388,7 @@
     revealStage = 1;
     for (const [index, lockedChannels] of [1, 2, 3].entries()) {
       if (skipRevealRequested) return finalize();
-      revealDetail = `${['Red', 'Green', 'Blue'][index]} channel locked`;
+      revealDetail = `${['Red', 'Green', 'Blue'][index]} channel confirmed`;
       displayHex = getRevealHex(canonical?.hex, lockedChannels);
       displayColor = REVEAL_SPECTRUM[(index + 2) % REVEAL_SPECTRUM.length];
       dispatch('colorpreview', { hex: displayColor });
@@ -402,7 +402,7 @@
     displayColor = displayHex;
     dispatch('colorpreview', { hex: displayColor });
     revealStage = 2;
-    revealDetail = `${conditionCount} server-reported condition${conditionCount === 1 ? '' : 's'} found`;
+    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} confirmed`;
     if (!await waitForBeat(timing.conditionIntro)) {
       if (!requestIsCurrent()) return false;
       if (skipRevealRequested) return finalize();
@@ -413,7 +413,7 @@
       const item = revealItems[index];
       revealedConditionCount = index + 1;
       revealDetail = item.kind === 'condition' && item.points > 0
-        ? `${item.label} found · +${item.points.toLocaleString()} score`
+        ? `${item.label} · +${item.points.toLocaleString()} score`
         : `${item.label} checked`;
       if (!await waitForBeat(timing.conditionBeat)) {
         if (!requestIsCurrent()) return false;
@@ -421,7 +421,7 @@
       }
     }
 
-    revealDetail = 'Validating the final pattern stack';
+    revealDetail = 'Confirming conditions';
     if (!await waitForBeat(timing.conditionSettle)) {
       if (!requestIsCurrent()) return false;
       if (skipRevealRequested) return finalize();
@@ -430,9 +430,11 @@
 
     presentCanonical(true);
     revealStage = 3;
-    const rarityMessages = canonical.rarity === 'Mythic'
-      ? ['Comparing the full roll space', 'Rare convergence detected', 'Mythic threshold confirmed']
-      : ['Comparing the full roll space', `${canonical.rarity || 'Common'} threshold is in range`, 'Rarity signal confirmed'];
+    const rarityMessages = [
+      'Checking rarity',
+      `${canonical.rarity || 'Common'} rarity identified`,
+      'Rarity confirmed'
+    ];
     if (!await waitThroughStage(timing.rarity, rarityMessages, (_index, message) => {
       revealDetail = message;
     })) {
@@ -442,7 +444,7 @@
     if (skipRevealRequested) return finalize();
 
     revealStage = 4;
-    revealDetail = 'Adding the confirmed score signals';
+    revealDetail = 'Showing the confirmed score';
     const scoreTarget = score;
     const scoreSteps = reducedMotion ? 1 : 20;
     for (let step = 1; step <= scoreSteps; step += 1) {
@@ -451,10 +453,10 @@
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       displayScore = Math.floor(scoreTarget * easedProgress);
       revealDetail = progress < 0.35
-        ? 'Adding the color signal'
+        ? 'Showing color points'
         : progress < 0.75
-          ? 'Adding condition bonuses'
-          : 'Confirming the final total';
+          ? 'Showing condition points'
+          : 'Confirming total score';
       if (!await waitForBeat(reducedMotion ? 0 : timing.score / scoreSteps)) {
         if (!requestIsCurrent()) return false;
         if (skipRevealRequested) return finalize();
@@ -462,7 +464,7 @@
     }
 
     revealStage = REVEAL_COMPLETE_STAGE;
-    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} and ${score.toLocaleString()} score secured`;
+    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
     if (!await waitForBeat(timing.settle)) {
       if (!requestIsCurrent()) return false;
       if (skipRevealRequested) return finalize();
@@ -473,7 +475,7 @@
   function skipReveal() {
     if (phase !== 'rolling') return;
     skipRevealRequested = true;
-    revealDetail = 'Showing the server-confirmed result';
+    revealDetail = 'Showing the confirmed result';
   }
 
   async function shareRoll() {
@@ -692,8 +694,8 @@
       <div class="profile-roll__rolling-copy">
         <div class="profile-roll__reading-line"><span aria-hidden="true"></span><p class="profile-roll__eyebrow">{revealStatus}</p></div>
         <p class="profile-roll__hex">{displayHex}</p>
-        <h3>{revealStage >= 5 ? 'This one is yours.' : revealStage >= 4 ? 'The score is taking shape.' : revealStage >= 3 ? 'The color is locked.' : revealStage >= 2 ? 'Signals are lining up.' : 'Finding today’s signal.'}</h3>
-        <p>{revealDetail || (revealStage >= 5 ? 'Adding it to your profile.' : 'The spectrum is narrowing.')}</p>
+        <h3>{revealStage >= 5 ? 'Result ready.' : revealStage >= 4 ? 'Score confirmed.' : revealStage >= 3 ? 'Rarity confirmed.' : revealStage >= 2 ? 'Conditions confirmed.' : 'Generating today’s color.'}</h3>
+        <p>{revealDetail || (revealStage >= 5 ? 'Adding it to your profile.' : 'Processing the roll result.')}</p>
         <div class="profile-roll__stage-track" aria-hidden="true">
           {#each REVEAL_STEP_LABELS as label, index (label)}
             <span class:active={revealStage === index} class:complete={revealStage > index}>{label}</span>
@@ -702,7 +704,7 @@
         {#if visibleRevealItems.length}
           <div class="profile-roll__rolling-conditions" aria-label="Score conditions being revealed">
             <div class="profile-roll__rolling-conditions-heading">
-              <p class="profile-roll__eyebrow">Signals aligning</p>
+              <p class="profile-roll__eyebrow">Score conditions</p>
               <span>{visibleRevealItems.length}/{revealItems.length}</span>
             </div>
             <div class="profile-roll__condition-list">

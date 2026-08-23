@@ -120,7 +120,7 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.doesNotMatch(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
 });
 
-test('leaderboard owns a focused podium-and-list presentation contract', async () => {
+test('leaderboard owns a focused flat ranked-column presentation contract', async () => {
   const siteStyles = await read('src/styles/site.css');
   const leaderboard = await read('src/lib/Leaderboard.svelte');
   const leaderboardEntry = await read('src/lib/LeaderboardEntry.svelte');
@@ -129,11 +129,31 @@ test('leaderboard owns a focused podium-and-list presentation contract', async (
 
   assert.match(leaderboard, /<main class="roll-leaderboard"/);
   assert.match(leaderboard, /roll-leaderboard__tabs/);
-  assert.match(leaderboard, /roll-leaderboard__featured-list/);
-  assert.match(leaderboard, /roll-leaderboard__lower/);
+  assert.match(leaderboard, /roll-leaderboard__results/);
+  assert.match(leaderboard, /roll-leaderboard__list/);
+  assert.match(leaderboard, /roll-leaderboard__column-headings/);
+  assert.match(leaderboard, /roll-leaderboard__column-heading-metrics/);
   assert.match(leaderboardEntry, /leaderboard-row/);
   assert.match(leaderboard, /--leaderboard-accent:/);
   assert.match(leaderboard, /Manrope Variable/);
+  assert.match(leaderboard, /--leaderboard-panel: #111115/);
+  assert.match(leaderboard, /--leaderboard-muted: #b7b8c2/);
+  assert.match(leaderboardEntry, /leaderboard-row__rank-mark/);
+  assert.match(leaderboardEntry, /visiblePosition === 1/);
+  assert.match(leaderboardEntry, /leaderboard-row::before/);
+  assert.match(leaderboardEntry, /border-radius: 999px; background: linear-gradient/);
+  assert.match(leaderboardEntry, /showUsername/);
+  assert.match(leaderboardEntry, /leaderboard-row__roll-swatch/);
+  assert.match(leaderboardEntry, /leaderboard-row__metrics/);
+  assert.match(leaderboardEntry, /leaderboard-row__metric-label.*aria-hidden="true"/s);
+  assert.match(leaderboardEntry, /border-radius: 16px/);
+  assert.match(leaderboard, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(leaderboard, /column-heading-metrics span \{ text-align: center; \}/);
+  assert.match(leaderboardEntry, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(leaderboardEntry, /justify-content: center; min-width: 0/);
+  assert.match(leaderboardEntry, /rollHex/);
+  assert.match(leaderboardEntry, /font: 850 1\.15rem\/1/);
+  assert.doesNotMatch(leaderboard + leaderboardEntry, /featured-list|roll-leaderboard__lower|leaderboard-row--podium|variant="podium"/);
   assert.doesNotMatch(siteStyles, /discovery-(?:hub|card|grid|tabs|empty|your-rank)/);
   assert.match(privacy, /class="container site-document legal-page"/);
   assert.match(terms, /class="site-document terms"/);

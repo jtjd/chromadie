@@ -375,6 +375,8 @@ test('production Name surfaces preserve semantic text while the Canvas is visual
   assert.match(identity, /semanticClass="profile-reference-card__name"/);
   assert.match(canvas, /name-effect-canvas__semantic\.profile-reference-card__name/);
   assert.match(preview, /NameEffectCanvas/);
+  assert.match(preview, /text=\{PREVIEW_NAME\}/);
+  assert.match(preview, /const PREVIEW_NAME = 'CHM'/);
   assert.match(profile, /ProfileBorderEffect/);
   assert.doesNotMatch(canvas, /arbitrary CSS|innerHTML|eval\s*\(/i);
 });

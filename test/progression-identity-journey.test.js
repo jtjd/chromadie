@@ -224,22 +224,24 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(progression, /verified on the server/);
   assert.match(progression, /pageMode/);
   assert.doesNotMatch(page, /Your profile \/ progression/);
-  assert.match(page, /Progression belongs to your profile/);
-  assert.doesNotMatch(page, /progression-page__ambient|progression-page__hero|[✦↗→]/);
+  assert.match(page, /Progress belongs to your profile/);
+  assert.doesNotMatch(page, /progression-page__ambient|progression-page__hero|Season 1|season 1/i);
   assert.doesNotMatch(progression, /color-mix\(in srgb,var\(--color-accent/);
   assert.match(game, /newProgressionUnlocks/);
   assert.match(game, /function beginGuestSignup/);
   assert.match(game, /clearGuestRoll\(\)/);
-  assert.match(game, /This preview will not transfer/);
+  assert.match(game, /Want to save future rolls\? Create an account/);
+  assert.doesNotMatch(game, /This preview will not transfer|start saving future rolls/);
   assert.match(shell, /Recent unlocks/);
   assert.match(preferences, /90 days/);
   assert.doesNotMatch(game, /insert\(.*(?:progression|inventory)/s);
 });
 
 test('progression visual treatment keeps state neutral and previews canonical cosmetics', async () => {
-  const [progression, page, rewardPreview, pathIcon, tokens, smoke] = await Promise.all([
+  const [progression, page, board, rewardPreview, pathIcon, tokens, smoke] = await Promise.all([
     read('src/lib/ProfileProgression.svelte'),
     read('src/lib/ProgressionPage.svelte'),
+    read('src/lib/ProgressionPageBoard.svelte'),
     read('src/lib/ProgressionRewardPreview.svelte'),
     read('src/lib/ProgressionPathIcon.svelte'),
     read('src/styles/tokens.css'),
@@ -248,20 +250,32 @@ test('progression visual treatment keeps state neutral and previews canonical co
 
   assert.match(tokens, /--color-state-active/);
   assert.match(tokens, /--shadow-state-card/);
-  assert.match(progression, /profile-progression-rank__ring/);
+  assert.match(board, /profile-progression-rank__badge-label/);
   assert.match(progression, /profile-progression-color-chip/);
-  assert.match(progression, /formatCompactNumber/);
-  assert.match(progression, /profile-progression-lane__toggle/);
-  assert.match(progression, /function toggleLane/);
-  assert.match(progression, /laneMilestoneCopy/);
-  assert.match(progression, /profile-progression-section-heading--page/);
-  assert.match(progression, /profile-progression-rank__name/);
-  assert.match(progression, /border-left:3px solid color-mix/);
-  assert.match(progression, /function laneAccent/);
-  assert.match(progression, /profile-progression-surface--page \{ padding:2rem!important; border:0!important/);
+  assert.match(rewardPreview, /REWARD_TYPE_LABELS/);
+  assert.match(rewardPreview, /NON_PREVIEWABLE_SLOTS/);
+  assert.match(rewardPreview, /progression-reward-preview__category-card/);
+  assert.match(rewardPreview, /progression-reward-preview__type/);
+  assert.doesNotMatch(rewardPreview, /Preview unavailable/);
+  assert.match(board, /formatCompactNumber/);
+  assert.match(board, /profile-progression-lane__toggle/);
+  assert.match(board, /function toggleLane/);
+  assert.match(board, /laneMilestoneCopy/);
+  assert.match(board, /profile-progression-section-heading--page/);
+  assert.match(board, /profile-progression-rank__badge-label/);
+  assert.match(progression, /profile-progression-surface--page \{[^}]*border-radius:0!important/);
+  assert.match(board, /function laneAccent/);
+  assert.match(progression, /profile-progression-surface--page \{[^}]*padding:0!important; border:0!important;[^}]*background:transparent!important/);
+  assert.match(board, /profile-progression-page-grid/);
+  assert.match(board, /profile-progression-page-main/);
+  assert.match(board, /profile-progression-page-side/);
+  assert.match(board, /progression-page__roll-card/);
+  assert.match(board, /viewBox="0 0 24 24"[^>]*aria-hidden="true"[^>]*focusable="false"><g transform="rotate\(-18 8\.2 8\.2\)"/);
+  assert.match(board, /profile-progression-stat__icon \{[^}]*width:1\.8rem; height:1\.8rem/);
+  assert.match(board, /profile-progression-weekly__page-copy/);
   const rankMarkup = progression.slice(progression.indexOf('Rank · Build mastery'), progression.indexOf('Rank · Build mastery') + 180);
   assert.doesNotMatch(rankMarkup, /profile-progression-color-chip/);
-  assert.match(progression, /ProgressionPathIcon/);
+  assert.match(board, /ProgressionPathIcon/);
   assert.match(progression, /profile-progression-rank__ring-value[^}]*var\(--progression-accent/);
   assert.match(page, /--progression-accent/);
   assert.match(page, /progression-page__composition/);
@@ -270,21 +284,23 @@ test('progression visual treatment keeps state neutral and previews canonical co
   assert.match(page, /--progression-accent-light/);
   assert.match(page, /progression-page__color-chip/);
   assert.match(page, /progression-page__streak-strip/);
+  assert.match(page, /class=\"progression-page__streak-day\" class:progression-page__streak-day--active/);
+  assert.match(page, /progression-page__streak-day \{[^}]*flex:0 0 7px;[^}]*width:7px;[^}]*height:7px;[^}]*aspect-ratio:1/);
   assert.match(page, /dailyRollData = dailyRoll\.data \|\| null/);
   assert.match(page, /hasRolledToday/);
   assert.match(page, /progression-page__roll-status/);
-  assert.match(page, /progression-page__rail-details/);
-  assert.match(page, /View full roll/);
-  assert.match(page, /Scoring signals/);
-  assert.doesNotMatch(page, /Next milestone/);
-  assert.match(progression, /this week’s color/);
-  assert.match(page, /focusStreakTitle/);
+  assert.match(board, /progression-page__rail-details/);
+  assert.match(board, /View full roll/);
+  assert.match(board, /Scoring signals/);
+  assert.doesNotMatch(board, /Next milestone/);
+  assert.match(board, /this week’s color/);
+  assert.match(page, /currentStreak}-day streak/);
   assert.match(rewardPreview, /onMount/);
   assert.match(rewardPreview, /progression-reward-preview__thumbnail/);
   assert.match(rewardPreview, /flex-basis:min\(8\.5rem,46%\)/);
-  assert.match(progression, /presentation=\{pageMode \? 'wide' : 'default'\}/);
-  assert.match(progression, /flat=\{pageMode\}/);
-  assert.match(progression, /grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(board, /presentation="wide"/);
+  assert.match(board, /flat=\{true\}/);
+  assert.match(board, /grid-template-columns:minmax\(0,1fr\)/);
   assert.match(rewardPreview, /grayscale\(1\)/);
   assert.doesNotMatch(rewardPreview, /Preview reward/);
   assert.match(pathIcon, /normalizedTrack === 'rank'/);

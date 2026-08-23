@@ -99,6 +99,23 @@ export function getHueColor(value) {
 }
 
 /**
+ * Keep a color's hue while making it read as a vivid UI signal on the dark
+ * progression surface. Neutral colors stay neutral so a missing/white color
+ * does not unexpectedly turn red.
+ */
+export function getVividHexColor(value, fallback = '#FFFFFF') {
+  const candidate = String(value || '').toUpperCase();
+  const safeValue = HEX_COLOR_PATTERN.test(candidate) ? candidate : fallback;
+  const hsv = hexToHsv(safeValue);
+  if (hsv.s < 0.12) return safeValue;
+  return hsvToHex({
+    h: hsv.h,
+    s: Math.max(hsv.s, 0.78),
+    v: Math.max(hsv.v, 0.86)
+  });
+}
+
+/**
  * Derive the picker marker positions from the active role's current value.
  * The editor consumes this object as one reactive value so role switches and
  * staged edits both invalidate the marker styles.

@@ -36,8 +36,6 @@
   let loadRequestId = 0;
 
   $: meta = TAB_META[activeTab] || TAB_META.today;
-  $: featuredItems = items.slice(0, 3);
-  $: remainingItems = items.slice(featuredItems.length);
 
   async function fetchLeaderboard({ reset = true } = {}) {
     const requestId = ++loadRequestId;
@@ -117,15 +115,8 @@
 
       {#if loading}
         <div class="roll-leaderboard__loading" aria-busy="true" aria-label="Loading leaderboard profiles">
-          <div class="roll-leaderboard__featured-skeleton" aria-hidden="true">
-            {#each [1, 2, 3] as placeholder (placeholder)}
-              <div class="roll-leaderboard__podium-skeleton">
-                <span></span><i></i><b></b>
-              </div>
-            {/each}
-          </div>
           <div class="roll-leaderboard__list-skeleton">
-            {#each [1, 2, 3, 4] as placeholder (placeholder)}
+            {#each [1, 2, 3, 4, 5, 6] as placeholder (placeholder)}
               <div class="roll-leaderboard__row-skeleton" data-placeholder={placeholder} aria-hidden="true">
                 <span></span><span></span><span></span>
               </div>
@@ -142,41 +133,29 @@
           <div><strong>No rolls on this board yet</strong><p>Check back after the next public roll.</p></div>
         </div>
       {:else}
-        <section class="roll-leaderboard__featured" aria-labelledby="leaderboard-featured-title">
-          <h3 id="leaderboard-featured-title" class="roll-leaderboard__sr-only">Top three profiles</h3>
-          <ol class="roll-leaderboard__featured-list">
-            {#each featuredItems as item, index (`featured:${item.username}:${item.rollDate || item.hexCode || index}`)}
-              <li class="roll-leaderboard__featured-item">
+        <section class="roll-leaderboard__results" aria-labelledby="leaderboard-results-title">
+          <h3 id="leaderboard-results-title" class="roll-leaderboard__sr-only">Ranked profiles</h3>
+          <div class="roll-leaderboard__column-headings" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span class="roll-leaderboard__column-heading-metrics">
+              <span>Color</span>
+              <span>Rarity</span>
+              <span>Score</span>
+            </span>
+          </div>
+          <ol class="roll-leaderboard__list">
+            {#each items as item, index (`ranked:${item.username}:${item.rollDate || item.hexCode || index}`)}
+              <li class="roll-leaderboard__list-item">
                 <LeaderboardEntry
                   {item}
                   position={index}
-                  featured={true}
-                  variant="podium"
                   on:navigate={forwardNavigation}
                 />
               </li>
             {/each}
           </ol>
         </section>
-
-        {#if remainingItems.length}
-          <section class="roll-leaderboard__lower" aria-labelledby="leaderboard-lower-title">
-            <h3 id="leaderboard-lower-title" class="roll-leaderboard__sr-only">More top profiles</h3>
-            <ol class="roll-leaderboard__list">
-              {#each remainingItems as item, index (`list:${item.username}:${item.rollDate || item.hexCode || index}`)}
-                <li class="roll-leaderboard__list-item">
-                  <LeaderboardEntry
-                    {item}
-                    position={featuredItems.length + index}
-                    featured={false}
-                    variant="list"
-                    on:navigate={forwardNavigation}
-                  />
-                </li>
-              {/each}
-            </ol>
-          </section>
-        {/if}
 
         {#if hasMore}
           <div class="roll-leaderboard__load-more">
@@ -193,14 +172,14 @@
 <style>
   .roll-leaderboard {
     --leaderboard-bg: var(--bg, #0e0e10);
-    --leaderboard-panel: var(--surface-2, #1e1e22);
-    --leaderboard-line: var(--border, rgba(255, 255, 255, .09));
-    --leaderboard-muted: var(--text-muted, #8d8c92);
-    --leaderboard-text: var(--text, #f5f5f6);
-    --leaderboard-accent: var(--white, #ffffff);
+    --leaderboard-panel: #111115;
+    --leaderboard-line: #30313b;
+    --leaderboard-muted: #b7b8c2;
+    --leaderboard-text: #f7f7fa;
+    --leaderboard-accent: #aab1ff;
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
-    padding: clamp(3rem, 7vw, 6rem) 0 5rem;
+    padding: clamp(2.5rem, 5.5vw, 4.5rem) 0 4.5rem;
     background: transparent;
     color: var(--leaderboard-text);
     font-family: 'Inter', var(--font-body-stack, sans-serif);
@@ -208,49 +187,39 @@
   }
   .roll-leaderboard__shell { width: min(980px, calc(100% - 48px)); margin-inline: auto; }
   .roll-leaderboard__intro { display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .roll-leaderboard__tabs { display: flex; justify-content: center; gap: .65rem; margin-top: 1.6rem; }
+  .roll-leaderboard__tabs { display: flex; justify-content: center; gap: .7rem; margin-top: 1.5rem; }
   .roll-leaderboard__tabs button {
-    min-height: 2.4rem;
-    padding: .6rem 1.15rem;
+    min-height: 2.55rem;
+    padding: .65rem 1.3rem;
     border: 1px solid var(--leaderboard-line);
     border-radius: 999px;
     background: transparent;
     color: var(--leaderboard-muted);
     cursor: pointer;
-    font: 500 .75rem/1 'Inter', sans-serif;
+    font: 700 .82rem/1 'Inter', sans-serif;
     transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
   }
   .roll-leaderboard__tabs button:hover,
   .roll-leaderboard__tabs button:focus-visible { border-color: var(--leaderboard-accent); color: var(--leaderboard-text); background: color-mix(in srgb, var(--leaderboard-accent) 9%, transparent); transform: translateY(-1px); }
   .roll-leaderboard__tabs button.active { border-color: var(--leaderboard-accent); background: color-mix(in srgb, var(--leaderboard-accent) 12%, transparent); color: var(--leaderboard-text); }
-  .roll-leaderboard__intro h1 { margin: 0; color: var(--leaderboard-text); font: 750 clamp(3.25rem, 6vw, 5.25rem)/.94 'Manrope Variable', var(--font-display-stack, sans-serif) !important; letter-spacing: -.052em; }
-  .roll-leaderboard__scope { max-width: 30rem; margin: .8rem auto 0; color: var(--leaderboard-muted); font: 400 .78rem/1.4 'Inter', sans-serif; }
-  .roll-leaderboard__board { margin-top: 3.15rem; }
-  .roll-leaderboard__featured-list,
+  .roll-leaderboard__intro h1 { margin: 0; color: var(--leaderboard-text); font: 750 clamp(3.4rem, 6.3vw, 5.5rem)/.94 'Manrope Variable', var(--font-display-stack, sans-serif) !important; letter-spacing: -.055em; }
+  .roll-leaderboard__scope { max-width: 30rem; margin: .85rem auto 0; color: var(--leaderboard-muted); font: 600 .88rem/1.45 'Inter', sans-serif; }
+  .roll-leaderboard__board { margin-top: 2.9rem; }
   .roll-leaderboard__list { margin: 0; padding: 0; list-style: none; }
-  .roll-leaderboard__featured-list { display: grid; width: min(820px, 100%); margin-inline: auto; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .8rem; }
-  .roll-leaderboard__featured-item { display: flex; min-width: 0; align-items: flex-end; }
-  .roll-leaderboard__featured-item:only-child { grid-column: 2; }
-  .roll-leaderboard__featured-item:nth-child(1) { order: 2; }
-  .roll-leaderboard__featured-item:nth-child(2) { order: 1; }
-  .roll-leaderboard__featured-item:nth-child(3) { order: 3; }
-  .roll-leaderboard__lower { margin-top: 2.6rem; }
-  .roll-leaderboard__list { display: grid; gap: .7rem; }
+  .roll-leaderboard__results { width: min(960px, 100%); margin-inline: auto; }
+  .roll-leaderboard__column-headings { display: grid; grid-template-columns: 2.5rem minmax(13rem, 1.15fr) minmax(0, 1.8fr); gap: .85rem; align-items: end; min-height: 1.45rem; padding: 0 1rem .25rem; color: var(--leaderboard-muted); font: 750 .65rem/1 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+  .roll-leaderboard__column-heading-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; min-width: 0; }
+  .roll-leaderboard__column-heading-metrics span { text-align: center; }
+  .roll-leaderboard__list { display: grid; gap: .75rem; }
   .roll-leaderboard__list-item { min-width: 0; }
   .roll-leaderboard__state { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 9rem; padding: 1.4rem; border: 1px solid var(--leaderboard-line); border-radius: 18px; background: var(--leaderboard-panel); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-  .roll-leaderboard__state strong { font: 600 .9rem/1 'Inter', sans-serif; }
-  .roll-leaderboard__state p { margin: .45rem 0 0; color: var(--leaderboard-muted); font: 400 .76rem/1.45 'Inter', sans-serif; }
-  .roll-leaderboard__retry { min-height: 42px; padding: 0 18px; border: 1px solid var(--leaderboard-line); border-radius: 9px; background: transparent; color: var(--leaderboard-text); cursor: pointer; font: 600 .78rem/1 'Inter', sans-serif; }
+  .roll-leaderboard__state strong { color: var(--leaderboard-text); font: 750 .98rem/1 'Inter', sans-serif; }
+  .roll-leaderboard__state p { margin: .5rem 0 0; color: var(--leaderboard-muted); font: 600 .82rem/1.45 'Inter', sans-serif; }
+  .roll-leaderboard__retry { min-height: 44px; padding: 0 20px; border: 1px solid var(--leaderboard-line); border-radius: 999px; background: transparent; color: var(--leaderboard-text); cursor: pointer; font: 700 .82rem/1 'Inter', sans-serif; }
   .roll-leaderboard__retry:hover:not(:disabled), .roll-leaderboard__retry:focus-visible { border-color: var(--leaderboard-accent); background: color-mix(in srgb, var(--leaderboard-accent) 9%, transparent); color: var(--leaderboard-text); }
   .roll-leaderboard__retry:disabled { cursor: wait; opacity: .55; }
   .roll-leaderboard__load-more { display: flex; justify-content: center; padding-top: 1rem; }
   .roll-leaderboard__loading { display: grid; gap: 2.6rem; }
-  .roll-leaderboard__featured-skeleton { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .8rem; }
-  .roll-leaderboard__podium-skeleton { display: flex; flex-direction: column; align-items: center; gap: .55rem; }
-  .roll-leaderboard__podium-skeleton span { width: 4.25rem; height: 4.25rem; border: .3rem solid rgba(255, 255, 255, .1); border-radius: 50%; background: rgba(255, 255, 255, .08); }
-  .roll-leaderboard__podium-skeleton:nth-child(2) span { width: 5.25rem; height: 5.25rem; }
-  .roll-leaderboard__podium-skeleton i { width: 4.2rem; height: .75rem; border-radius: .3rem; background: rgba(255, 255, 255, .11); }
-  .roll-leaderboard__podium-skeleton b { width: 3rem; height: .55rem; border-radius: .3rem; background: rgba(255, 255, 255, .08); }
   .roll-leaderboard__list-skeleton { display: grid; gap: .7rem; }
   .roll-leaderboard__row-skeleton { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 6rem; gap: .8rem; align-items: center; min-height: 4.5rem; padding: .75rem .9rem; border: 1px solid var(--leaderboard-line); border-radius: 18px; background: var(--leaderboard-panel); }
   .roll-leaderboard__row-skeleton span { display: block; height: .7rem; border-radius: .25rem; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.1), rgba(255,255,255,.04)); background-size: 220% 100%; animation: leaderboard-shimmer 1.5s ease-in-out infinite; }
@@ -261,15 +230,16 @@
   @keyframes leaderboard-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
   @media (max-width: 620px) {
-    .roll-leaderboard { padding: 2.5rem 0 3.5rem; }
+    .roll-leaderboard { padding: 2.25rem 0 3.25rem; }
     .roll-leaderboard__shell { width: calc(100% - 30px); }
-    .roll-leaderboard__tabs { width: 100%; margin-top: 1.4rem; }
+    .roll-leaderboard__tabs { width: 100%; margin-top: 1.3rem; }
     .roll-leaderboard__tabs button { flex: 1; }
     .roll-leaderboard__intro h1 { font-size: clamp(2.8rem, 13vw, 4rem) !important; }
     .roll-leaderboard__scope { max-width: 18rem; }
-    .roll-leaderboard__board { margin-top: 2.5rem; }
-    .roll-leaderboard__featured-list { gap: .35rem; }
-    .roll-leaderboard__lower { margin-top: 2.1rem; }
+    .roll-leaderboard__board { margin-top: 2.65rem; }
+    .roll-leaderboard__column-headings { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .65rem; padding-inline: .8rem; }
+    .roll-leaderboard__column-heading-metrics { grid-column: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+    .roll-leaderboard__column-heading-metrics span { text-align: center; }
     .roll-leaderboard__state { align-items: flex-start; flex-direction: column; }
     .roll-leaderboard__row-skeleton { grid-template-columns: 2.25rem minmax(0, 1fr) 5.5rem; gap: .6rem; padding-inline: .7rem; }
   }

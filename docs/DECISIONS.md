@@ -1,5 +1,99 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-23 — Keep guest result conversion copy conversational
+
+The guest result prompt uses “Want to save future rolls? Create an account.”
+It remains accurate because the guest preview is cleared when signup begins,
+while avoiding operational language about transfer that distracts from the
+next action.
+
+## 2026-08-23 — Use factual copy during the roll reveal
+
+The roll animation uses short labels and status messages that describe the
+actual presentation state: color, channels, conditions, rarity, score, and
+completion. Atmospheric phrases such as “Read the spectrum,” “Find the
+signals,” and “condition scan” were removed because they suggest fictional
+mechanics and weaken the product’s matter-of-fact game language. The shared
+reveal timeline, server-authoritative result, scoring, and skip/reduced-motion
+behavior remain unchanged.
+
+## 2026-08-23 — Use a fixed sample name in compact cosmetic previews
+
+Canonical catalog-backed cosmetic previews render `CHM` instead of the
+account's display name. Narrow reward, shop, and effect-card previews are
+visual samples rather than identity surfaces, so a fixed three-letter sample
+prevents long names from clipping while real profile and Studio identity
+rendering remains unchanged.
+
+Avatar effect and Profile motion rewards do not render a static effect preview
+in progression unlock rows. Their pointer- or surface-dependent behavior is
+better represented by a structured category badge and explicit type/status
+copy; the full interactive renderer remains available in Profile Studio.
+
+## 2026-08-23 — Use rank imagery instead of a rank initial
+
+The page-mode rank card uses a structured medal/trophy SVG as its large badge,
+colored from the existing server-derived rank model. A letter initial was too
+generic for a profile identity surface; the badge is visual-only and does not
+change rank thresholds, rewards, or authority.
+
+## 2026-08-23 — Group the path bars into one progression surface
+
+Rank, Ritual, and Discovery remain independently expandable and independently
+colored, but their closed rows now live inside one shared Your Paths card. This
+keeps the three tracks legible as one progression system instead of three
+unrelated panels.
+
+## 2026-08-23 — Make binary weekly goals read as binary state
+
+The weekly focus is one server-backed match condition, not a continuous
+quantity. Page mode therefore shows the authoritative target swatch and hex,
+an explicit 0 / 1 or 1 / 1 match state, and the bonus outcome instead of a
+mostly-empty progress bar. Progress gradients remain reserved for bounded
+track fills where a percentage is meaningful.
+
+## 2026-08-23 — Keep the page-mode board focused on player-facing progression
+
+History remains part of the progression data contract and the normal Studio
+surface, but the dedicated reference-matched board does not repeat it below
+the primary progression content. The server-authority sentence and cosmetic
+setup link were also removed from this board because they read as operational
+admin copy rather than profile identity. Server-backed data, reward
+boundaries, and settings routes are unchanged.
+
+## 2026-08-23 — Keep Progression cardless at the page level
+
+The supplied reference uses the site canvas as the outer surface and reserves
+rounded borders for the daily roll, weekly goal, rank, stat, path, and recent
+unlock units. Page mode therefore removes the generic `Surface` frame, keeps
+the route header compact, and uses a fixed two-column desktop composition that
+collapses at the existing responsive breakpoint. Path disclosure remains
+keyboard-operable even though the closed rows match the reference's compact
+visual state. Server-owned progression data, reward previews, and history stay
+unchanged.
+
+## 2026-08-23 — Use semantic accents and inline SVG glyphs for Progression
+
+The supplied dashboard reference establishes color roles rather than a single
+page wash: gold for rank, coral for Ritual, cyan for Discovery, green for
+weekly success, and separate vivid colors for the summary counters. Progression
+now applies those roles directly to the path, rank, stat, score, and unlock
+icons. These are local structured SVGs, while reward thumbnails continue to use
+the canonical catalog-backed renderer. The authenticated board is lazy-loaded
+so the route keeps its initial JavaScript/CSS budget without moving any
+gameplay, scoring, or reward authority to the client.
+
+## 2026-08-23 — Align the progression destination to the supplied dashboard reference
+
+The authenticated `/progression` destination now uses the supplied progression
+composition as its page-mode visual authority: a title/streak header followed
+by a rounded two-column board. The left column contains the server-backed daily
+roll, weekly focus, and Rank/Ritual/Discovery paths; the right column contains
+the current rank, EP progress, durable counters, and recent earned unlocks.
+The existing owner RPCs, canonical reward previews, history handoff, mobile
+containment, and reduced-motion behavior remain unchanged. The page intentionally
+does not add a season, battle pass, or other fictional progression section.
+
 ## 2026-08-22 — Port Raster Signal as text-only compositing
 
 The supplied three-effect HTML remains the visual authority for Raster
@@ -5887,3 +5981,48 @@ Page-mode contrast is raised independently through brighter text, stronger
 rules, and thicker progress tracks. The weekly row names the action directly as
 “Match this week’s color” so the target hex is understood as a challenge, not a
 generic match status. No game authority moved into presentation code.
+
+## 2026-08-23 — Make leaderboard identity and roll color primary
+
+Leaderboard entries now prioritize one readable identity, the score, and the
+actual rolled color. A handle is shown only when it differs from the display
+name; date metadata is omitted because the selected board period already gives
+that context. The color is represented by a larger swatch with rarity and hex
+copy instead of a tiny dot. One continuous list keeps every row equal while
+rank-colored rails and top-three marks provide state without introducing
+client-side ranking authority.
+
+The list uses one aligned floating Color, Rarity, and Score header rather than
+repeating field labels inside every card. The row values remain semantically
+structured and scan as a single set of columns without a cramped cluster.
+
+The visual pass keeps the list compact but deliberate: 12px row spacing,
+moderate corner radii, a slightly larger display title, and shared desktop and
+mobile spacing rules keep the board from feeling either compressed or adrift.
+
+Color, Rarity, and Score use equal metric tracks with consistent value
+alignment, so numeric emphasis does not make the overall grid feel weighted
+toward one side.
+
+The final presentation centers each metric heading and value within its track;
+this makes the equal-column structure visible without relying on the dividers.
+
+## 2026-08-23 — Make the dedicated Roll card feel like a ritual surface
+
+The Roll card header treats `Daily Roll` as a centered section title rather
+than a left-aligned status label. The saved-state line is replaced with the
+shorter product-facing phrase `One color. Every day.` so the card communicates
+the daily ritual instead of implementation state.
+
+The dedicated card no longer tracks pointer movement or applies perspective /
+3D transforms. Its neutral border and stable inner surface remain the default;
+the rejected liquid-blob experiment is intentionally not part of the final
+Roll card presentation.
+
+## 2026-08-23 — Keep preroll copy factual
+
+The dedicated preroll state uses “Today’s roll is ready.” and explains that a
+roll generates a color, rarity, and score. The unrevealed panel does not repeat
+the page title or restate the reveal action in three places; it uses one empty
+state and one instruction. The placeholder tile uses the same rounded geometry
+as the result tile.

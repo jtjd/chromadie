@@ -363,7 +363,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
       rank: document.querySelector('#profile-progression-rank-title')?.textContent?.trim() || '',
       stats,
       streakStrip: Boolean(document.querySelector('.progression-page__streak-strip')),
-      paths: text.includes('Your paths'),
+      paths: text.toLowerCase().includes('your paths'),
       accordionExpanded: Boolean(document.querySelector('.profile-progression-lane__toggle[aria-expanded="true"]')),
       approachingRoll50: /42\\s*\\/\\s*50\\s+rolls/i.test(text),
       approachingGoalText: text.includes('50 rolls') ? text.slice(Math.max(0, text.indexOf('50 rolls') - 120), text.indexOf('50 rolls') + 180) : '',
@@ -374,7 +374,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
       recentThumbnailRect: rect(recentThumbnailRect),
       recentSemanticRect: rect(recentSemanticRect),
       recentUnlockColumns: recentUnlocks ? getComputedStyle(recentUnlocks.querySelector('ol')).gridTemplateColumns : '',
-      rankRing: Boolean(document.querySelector('.profile-progression-rank__ring')),
+      rankBadge: Boolean(document.querySelector('.profile-progression-rank__badge-label')),
       pathIconCount: document.querySelectorAll('.progression-path-icon').length,
       rewardThumbnailCount: document.querySelectorAll('.progression-reward-preview__thumbnail').length,
       canonicalThumbnailCount: document.querySelectorAll('.progression-reward-preview__thumbnail .shop-preview-area').length,
@@ -398,14 +398,14 @@ async function inspectAuthenticatedProgression(width, height, label) {
   assert(/#[0-9A-F]{6}/i.test(state.dailyRollDetail) && /pts/i.test(state.dailyRollDetail), `${label} did not render the recorded daily-roll details in the left rail: ${JSON.stringify(state)}.`);
   assert(state.rollSignalsDetail && !/scoring signals\s*$/i.test(state.rollSignalsDetail), `${label} did not render server-reported scoring signals in the left rail: ${JSON.stringify(state)}.`);
   assert(state.recentUnlocks, `${label} did not render historical progression rewards: ${JSON.stringify(state)}.`);
-  assert(!state.recentUnlocks || (state.recentPreviewWide && state.recentPreviewFits && state.recentPreviewRatio >= 1.5), `${label} recent cosmetic preview is clipped or still using a square viewport: ${JSON.stringify(state)}.`);
-  assert(state.rankRing, `${label} did not render the rank progress ring: ${JSON.stringify(state)}.`);
+  assert(!state.recentUnlocks || (state.recentPreviewFits && state.recentPreviewRatio >= 1), `${label} recent cosmetic preview is clipped or missing its rounded thumbnail: ${JSON.stringify(state)}.`);
+  assert(state.rankBadge, `${label} did not render the current rank badge: ${JSON.stringify(state)}.`);
   assert(state.pathIconCount >= 3, `${label} did not render the three path glyphs: ${JSON.stringify(state)}.`);
   assert(state.rewardThumbnailCount === 0 || state.canonicalThumbnailCount >= 1, `${label} did not render a canonical cosmetic thumbnail: ${JSON.stringify(state)}.`);
   assert(!state.placeholderRewardText, `${label} still exposes placeholder reward copy: ${JSON.stringify(state)}.`);
   assert(!state.accentGradient, `${label} progression page still exposes an accent gradient: ${JSON.stringify(state)}.`);
   assert(!state.horizontalOverflow, `${label} progression surface overflows horizontally.`);
-  assert(state.streakStrip && /5\s+of\s+14\s+days/i.test(state.streakText), 'Established progression did not render the persisted next-day current streak state: ' + JSON.stringify(state) + '.');
+  assert(state.streakStrip && /5\s*-day\s+streak/i.test(state.streakText), 'Established progression did not render the persisted current streak state: ' + JSON.stringify(state) + '.');
   return state;
 }
 
@@ -435,7 +435,7 @@ async function inspectViewport(width, height, label) {
   })()`);
   assert(state.path === '/progression', `${label} did not settle at /progression.`);
   assert(state.headerCount === 1, `${label} rendered ${state.headerCount} site headers.`);
-  assert(state.title === 'Progression', `${label} progression title is missing.`);
+  assert(state.title === 'Progress', `${label} progress title is missing.`);
   assert(state.stateVisible, `${label} progression state is missing.`);
   assert(!state.horizontalOverflow, `${label} progression surface overflows horizontally.`);
   return state;

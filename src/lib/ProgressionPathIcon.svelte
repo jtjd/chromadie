@@ -12,22 +12,18 @@
 >
   {#if normalizedTrack === 'rank'}
     <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M4.5 17.5a7.5 7.5 0 0 1 15 0" />
-      <path d="M12 4v5" />
-      <path d="m9.5 6.5 2.5-2.5 2.5 2.5" />
+      <path d="M8 4h8v4.5a4 4 0 0 1-8 0V4Z" />
+      <path d="M8 5H5.5v2a3.5 3.5 0 0 0 3.2 3.48M16 5h2.5v2a3.5 3.5 0 0 1-3.2 3.48M12 12.5v3M8.5 19.5h7M10 15.5h4" />
     </svg>
   {:else if normalizedTrack === 'ritual'}
     <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M4 12h16" />
-      <circle cx="4" cy="12" r="1.6" />
-      <circle cx="10" cy="12" r="1.6" />
-      <circle cx="16" cy="12" r="1.6" />
-      <circle cx="22" cy="12" r="1.6" />
+      <path d="M13.5 3.5c.35 2.05-.28 3.37-1.8 4.75-1.2 1.08-1.7 2.2-1.42 3.43.24 1.05 1.08 1.73 2.12 1.73 1.12 0 1.94-.8 2.08-2.08 1.76 1.2 2.72 2.82 2.72 4.65A5.2 5.2 0 0 1 12 21.2a6.2 6.2 0 0 1-6.2-6.2c0-2.42 1.16-4.35 3.04-6.17.18 1.33.73 2.2 1.56 2.73-.2-2.7.92-5.36 3.1-8.06Z" />
     </svg>
   {:else}
     <svg viewBox="0 0 24 24" focusable="false">
-      <path d="m12 3.5 7.2 4.25v8.5L12 20.5l-7.2-4.25v-8.5L12 3.5Z" />
-      <path d="m4.8 7.75 7.2 4.4 7.2-4.4M12 12.15v8.35" />
+      <circle cx="12" cy="12" r="8.25" />
+      <path d="m14.8 9.2-2.35 5.6-5.25 2.35 2.35-5.6 5.25-2.35Z" />
+      <circle cx="12.45" cy="12.45" r=".8" fill="currentColor" stroke="none" />
     </svg>
   {/if}
 </span>
@@ -52,8 +48,9 @@
     stroke-width: 1.35;
   }
 
-  .progression-path-icon--complete { color: var(--color-ink-strong); }
-  .progression-path-icon--active,
-  .progression-path-icon--new { color: var(--color-ink-strong); }
-  .progression-path-icon--future { opacity: .65; }
+  .progression-path-icon--rank { color: #ffd21c; }
+  .progression-path-icon--ritual { color: #ff5c68; }
+  .progression-path-icon--ritual svg path { fill: currentColor; stroke-width: .75; }
+  .progression-path-icon--discovery { color: #22d7f3; }
+  .progression-path-icon--future { opacity: .48; }
 </style>

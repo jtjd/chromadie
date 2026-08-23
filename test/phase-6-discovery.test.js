@@ -135,7 +135,7 @@ test('leaderboard route parsing accepts only the active today and monthly period
   assert.equal(parseRouteLocation('/leaderboard', '?tab=private').leaderboardTab, 'today');
 });
 
-test('leaderboard implementation is a focused podium and score list without raw HTML', async () => {
+test('leaderboard implementation is a focused ranked score list without raw HTML', async () => {
   const leaderboard = await readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8');
   const entry = await readFile(new URL('../src/lib/LeaderboardEntry.svelte', import.meta.url), 'utf8');
   const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
@@ -155,8 +155,8 @@ test('leaderboard implementation is a focused podium and score list without raw 
   assert.match(leaderboard, /This month/);
   assert.match(leaderboard, /align-items: center; text-align: center/);
   assert.match(leaderboard, /width: min\(980px, calc\(100% - 48px\)\)/);
-  assert.match(leaderboard, /roll-leaderboard__featured-list/);
-  assert.match(leaderboard, /roll-leaderboard__lower/);
+  assert.match(leaderboard, /roll-leaderboard__results/);
+  assert.match(leaderboard, /roll-leaderboard__list/);
   assert.match(leaderboard, /--leaderboard-bg: var\(--bg, #0e0e10\)/);
   assert.match(leaderboard, /background: transparent/);
   assert.match(app, /class:app-shell--leaderboard=\{leaderboardModeVisible\}/);
@@ -166,14 +166,17 @@ test('leaderboard implementation is a focused podium and score list without raw 
   assert.match(header, /\.site-mode-header--leaderboard \{[\s\S]*background: transparent !important;/);
   assert.ok(background.size > 1000, 'leaderboard background should be a real local asset');
   assert.match(leaderboard, /color-scheme: dark/);
-  assert.match(leaderboard, /items\.slice\(0, 3\)/);
-  assert.match(leaderboard, /variant="podium"/);
-  assert.match(leaderboard, /variant="list"/);
+  assert.match(leaderboard, /items as item, index/);
+  assert.doesNotMatch(leaderboard + entry, /featured-list|roll-leaderboard__lower|leaderboard-row--podium|variant="podium"/);
   assert.doesNotMatch(leaderboard, /roll-leaderboard__table/);
   assert.doesNotMatch(leaderboard, /Search username|Exceptional|Rising|Random|Following|All-time/);
   assert.match(entry, /getPublicProfilePath/);
   assert.match(entry, /getProfileMediaUrl/);
-  assert.match(entry, /Score details unavailable/);
+  assert.match(leaderboard, /roll-leaderboard__column-headings/);
+  assert.match(leaderboard, /roll-leaderboard__column-heading-metrics/);
+  assert.match(leaderboard, />Color</);
+  assert.match(leaderboard, />Rarity</);
+  assert.match(leaderboard, />Score</);
   assert.match(entry, /leaderboard-row/);
   assert.match(entry, /var\(--leaderboard-text/);
   assert.match(entry, /prefers-reduced-motion/);

@@ -2,6 +2,69 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-23 — Simplify the guest result prompt
+
+- Replaced the sterile preview-transfer warning with the shorter, friendlier
+  prompt “Want to save future rolls? Create an account.”
+
+## 2026-08-23 — Clarify the daily roll reveal
+
+- Replaced the reveal timeline’s atmospheric labels with direct stages for
+  color, channels, conditions, rarity, score, and completion.
+- Updated rolling headings and status messages to explain what is being
+  displayed or confirmed, removing “condition scan,” “finding your color,” and
+  similar theatrical copy from both roll surfaces.
+- Preserved the existing server-backed result, timing, skip behavior, and
+  reduced-motion path.
+
+## 2026-08-23 — Strengthen Progression hierarchy and goal state
+
+- Increased page-mode type scale, weight, and muted-text contrast so the
+  daily roll, rank, counters, paths, and unlocks read as primary game content.
+- Enlarged the summary and path icons, added a real rank-colored medal badge,
+  and added bounded gold, coral, and cyan progress-fill gradients without
+  reintroducing a page-wide color wash.
+- Replaced the weekly goal's misleading continuous bar with an explicit
+  target swatch, hex value, 0 / 1 or 1 / 1 match state, and bonus status.
+- Removed the page-mode History and server-verification footer copy so the
+  board stays focused; the existing history data and normal Studio surface
+  remain intact.
+- Consolidated Your Paths into one card containing the three progress bars and
+  renamed the visible destination label from Progression to Progress.
+- Standardized cosmetic preview samples on `CHM` so long profile names remain
+  contained in narrow reward and effect-preview tiles.
+- Added reward type labels such as `Font`; Avatar effect and Profile motion
+  unlocks now use deliberate category badges instead of misleading static
+  effect previews.
+
+## 2026-08-23 — Refine Progression against the supplied reference
+
+- Removed the enclosing page frame and tightened the title/streak header so
+  the authenticated board reads like the supplied profile progression surface.
+- Restored the compact individual Rank, Ritual, and Discovery cards, the 2×2
+  stat grid, the rank corner accent, and the reference-sized weekly/unlock
+  cards.
+- Kept the vivid semantic SVG accents and canonical catalog-backed reward
+  previews while constraining their small thumbnails to the card bounds.
+
+## 2026-08-23 — Progression color and icon pass
+
+- Tuned the progression dashboard to use vivid semantic accents from the
+  supplied reference: gold rank, coral Ritual, cyan Discovery, green weekly
+  success, and distinct stat accents.
+- Replaced generic path/stat/check glyphs with purpose-built inline SVG icons
+  while keeping cosmetic thumbnails on the canonical renderer.
+- Kept the authenticated board behind a lazy boundary and verified mobile,
+  reduced-motion, disclosure, and server-owned roll states in browser smoke.
+
+## 2026-08-23 — Match the supplied Progression reference layout
+
+- Reworked `/progression` to use the supplied dashboard composition with
+  rounded sections: daily roll and paths on the left, rank/stats/recent
+  unlocks on the right.
+- Used only existing server-backed progression data and deliberately omitted
+  fictional seasonal copy or sections.
+
 ## 2026-08-23 — Remove the Progression accent wash
 
 - Removed the page/rank/weekly accent gradients that created visible clipped
@@ -3767,3 +3830,34 @@ direct route behavior.
   report horizontal overflow from Bézier control-handle overshoot.
 - Preserved the existing pointer-responsive bend and added bounded-path
   regression coverage for neutral and bent states.
+
+## Leaderboard visual hierarchy — 2026-08-23
+
+- Replaced the tiered podium with one continuous ranked list. Top-three rank
+  marks and gold/silver/bronze accents remain without changing row geometry.
+- Simplified identity copy by hiding redundant handles and removing date noise.
+- Enlarged roll-color swatches and paired them with readable rarity/hex labels
+  across podium and list entries.
+- Added one aligned floating Color, Rarity, and Score header above the list,
+  keeping each row's swatch, rarity, and score visible without repeated labels.
+- Polished the composition with tighter vertical pacing, softer row geometry,
+  clearer type sizing, and responsive spacing adjustments.
+- Equalized the three metric columns and gave their values consistent alignment.
+- Centered the three metric headings and values so the balanced tracks read
+  clearly at a glance.
+- Kept the existing public discovery data boundary, navigation behavior, and
+  responsive containment unchanged.
+
+## Roll card hierarchy — 2026-08-23
+
+- Made `Daily Roll` a centered, semantic card heading with a small accent rule
+  and a dedicated reveal-state column for `IN PROGRESS`.
+- Replaced saved-state/admin copy with `One color. Every day.`
+- Removed the Roll card's 3D pointer tilt and perspective treatment.
+
+## Roll preroll copy — 2026-08-23
+
+- Replaced the promotional preroll copy with a factual readiness message and
+  a concise explanation of the generated color, rarity, and score.
+- Removed redundant daily/reveal labels from the unrevealed result panel.
+- Rounded the unrevealed color tile corners for consistency with result tiles.

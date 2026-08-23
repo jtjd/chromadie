@@ -592,7 +592,7 @@
         loaderKey: 'progression',
         componentKey: 'progression',
         componentProps: {},
-        loadingLabel: 'Opening progression'
+        loadingLabel: 'Opening progress'
       };
     }
 
@@ -725,7 +725,7 @@
         : routeMode === 'app' && view === 'profile-settings'
           ? 'Profile Studio | ChromaDie'
         : routeMode === 'app' && view === 'progression'
-          ? 'Progression | ChromaDie'
+          ? 'Progress | ChromaDie'
         : routeMode === 'app' && view === 'home'
           ? 'ChromaDie — A daily color identity'
         : routeMode === 'app' && view === 'prototype'

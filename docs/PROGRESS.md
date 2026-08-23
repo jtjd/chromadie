@@ -1,5 +1,77 @@
 # Chromadie 2.0 Progress
 
+## Guest roll result prompt — 2026-08-23
+
+- Simplified the guest result CTA to “Want to save future rolls? Create an
+  account.” so it reads as a clear player-facing invitation rather than an
+  operational warning about preview transfer.
+
+## Roll reveal copy clarification — 2026-08-23
+
+- Replaced theatrical rolling language such as “Read the spectrum,” “Find the
+  signals,” and “condition scan” with direct status labels for color, channels,
+  conditions, rarity, score, and completion.
+- Simplified the live headings and detail messages to describe the confirmed
+  roll result without changing reveal timing, score presentation, or server
+  authority.
+- Applied the same vocabulary to the dedicated Roll card and the owner profile
+  roll module, including the reduced-motion and skip paths.
+
+## Progression hierarchy and weekly-state refinement — 2026-08-23
+
+- Increased the authenticated page-mode type scale, text weights, contrast,
+  stat glyphs, path glyphs, and recent-unlock checks.
+- Added bounded gold/coral/cyan progress gradients to the meaningful rank and
+  path fills while keeping the surrounding board free of accent washes.
+- Replaced the weekly focus bar with a clear target swatch/hex, 0 / 1 or 1 / 1
+  match state, and bonus status.
+- Removed the page-mode History and server-verification footer so the surface
+  reads as a player-facing progression board; history remains in the data
+  path and normal Studio view.
+- Replaced the generic rank initial with a large rank-colored medal/trophy SVG,
+  centered the XP amount, and grouped all three path bars inside one card.
+- Renamed the visible destination title, page title, and authenticated footer
+  link from Progression to Progress while keeping the /progression route.
+- Standardized canonical cosmetic preview names on `CHM` so long account
+  names cannot clip inside narrow thumbnails; real profile identity rendering
+  remains unchanged.
+- Added visible reward type labels such as `Font` and replaced misleading
+  static previews for Avatar effect/Profile motion unlocks with intentional
+  category badges and status copy.
+
+## Progression reference fidelity refinement — 2026-08-23
+
+- Removed the generic page-level frame and matched the supplied header, board
+  proportions, card hierarchy, compact path rows, 2×2 counters, and rank
+  corner treatment.
+- Kept gold/coral/cyan/green/purple/blue/pink state accents and strengthened
+  the filled stat glyphs without adding client-owned gameplay state.
+- Constrained canonical recent-unlock previews to the small rounded tiles and
+  verified the result with authenticated desktop/mobile/reduced-motion smoke.
+
+## Progression color and icon pass — 2026-08-23
+
+- Added the reference-driven gold/coral/cyan/green/purple/blue/pink semantic
+  palette to the authenticated dashboard and replaced generic glyphs with
+  trophy, flame, compass, dice, calendar, target, lock, star, and check SVGs.
+- Kept reward previews canonical and vivid where the catalog renderer supports
+  it; the recent-unlock rows use the wide renderer with contained rounded
+  thumbnails.
+- Lazy-loaded the authenticated board to preserve the progression route
+  performance budget; browser smoke covers disclosure state, mobile, reduced
+  motion, and server-owned daily-roll details.
+
+## Progression reference layout — 2026-08-23
+
+- Replaced the dedicated progression page-mode composition with the supplied
+  title/streak header and rounded two-column board.
+- Kept the actual daily roll identity, HEX, rarity, score, server-reported
+  scoring signals, weekly focus, rank/EP progress, counters, paths, and recent
+  earned unlocks; no seasonal or fabricated sections were added.
+- Preserved the owner-only progression boundary, canonical cosmetic previews,
+  existing history, keyboard disclosure controls, mobile containment, and
+  reduced-motion behavior.
+
 ## Progression contrast and weekly-color clarity — 2026-08-23
 
 - Removed the page, rank, and weekly accent gradients so no clipped wash or
@@ -4723,3 +4795,40 @@ responsive desktop two-column/mobile stacked composition.
   assertion. That run later stops at an independent public-refresh fixture
   check where the persisted effect layers are empty; the Elastic Frame step is
   green.
+
+## Leaderboard visual hierarchy pass — 2026-08-23
+
+- Reworked the leaderboard into one continuous ranked list with equal-height
+  rows, rank-colored rails, and trophy/medal marks for the top three.
+- Removed duplicate handles when the display name already is the username and
+  removed low-value date metadata from each entry.
+- Replaced tiny roll-color dots with readable color swatches plus rarity and
+  hex details, while keeping list rows compact and mobile-contained.
+- Added one aligned floating Color, Rarity, and Score header above the list so
+  every row reads as a clean set of columns without repeated card labels.
+- Tightened the leaderboard's vertical rhythm, row corner treatment, heading
+  scale, and desktop/mobile spacing against the latest visual review.
+- Equalized the Color, Rarity, and Score tracks so the column grid reads as a
+  balanced table with consistent metric alignment.
+- Centered each metric heading and value within its equal track so the balance
+  is visible rather than implied by the underlying grid alone.
+- Added focused visual contract assertions and verified desktop, mobile, and
+  reduced-motion leaderboard rendering with no horizontal overflow.
+
+## Roll card hierarchy pass — 2026-08-23
+
+- Promoted `Daily Roll` to a centered semantic heading with an accent lockup
+  and balanced reveal-state layout.
+- Replaced operational saved-state copy with `One color. Every day.`
+- Removed the dedicated Roll card's pointer tilt, perspective, and transform
+  hooks while keeping the card surface neutral and stable.
+- Validation: build, Svelte check, full ESLint, 449 tests, focused Roll page
+  assertions, desktop/mobile visual checks, and `git diff --check` pass.
+
+## Roll preroll copy pass — 2026-08-23
+
+- Replaced the preroll headline and description with direct information about
+  roll availability and the generated color, rarity, and score.
+- Removed repeated `Daily Roll` / reveal language from the unrevealed result
+  panel, leaving one status line and one action instruction.
+- Rounded the unrevealed color tile corners to match the dedicated result tile.
