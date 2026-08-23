@@ -221,8 +221,11 @@ test('the three approved reference effects keep their authored visual primitives
   assert.match(neon, /getReferenceTextMask\(ctx, model\)/);
   assert.match(neon, /createRadialGradient\(\s*fieldContext/);
   assert.match(neon, /const particleCount = Math\.min\(680/);
+  assert.match(neon, /ctx\.globalCompositeOperation = 'source-over'/);
+  assert.match(neon, /const hot = seededNoise\(model\.seed, index \+ 371\) > 0\.82/);
   assert.match(neon, /const edgeCount = Math\.min\(240/);
   assert.match(neon, /strokeText\(ctx, model, outline/);
+  assert.match(motions, /const sampleStep = 2/);
   assert.doesNotMatch(neon, /drawBase\(ctx, model\);\s*\n\s*\n\s*const field/);
 
   assert.match(raster, /drawText\(ctx, model, MOTION_TEXT_LIGHT/);

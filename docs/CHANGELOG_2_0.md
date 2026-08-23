@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-22 — Keep Neon Particle visible in compact previews
+
+- Name Motion previews now retain the reference’s cyan, indigo, rose, and
+  white particle grain instead of flattening into a smooth white name with a
+  colored halo.
+- The same bounded renderer continues to serve Customize, Studio, public
+  profiles, and compact cards without changing the cosmetic key or backend
+  contract.
+
 ## 2026-08-22 — Clarify the cosmetic color direction
 
 - Defined Premium as clean, intentional execution rather than a muted color

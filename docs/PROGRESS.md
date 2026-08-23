@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Neon Particle compact-scale correction — 2026-08-22
+
+- Compared the production render with the supplied Digify screencast and
+  corrected the compact name treatment, which had collapsed into a smooth
+  white glyph and colored halo.
+- Kept bounded glyph sampling, but let the sampled cyan/indigo/rose particle
+  cores tint the white text so the granular interior and perimeter emission
+  survive Customize and profile-card downsampling.
+- Preserved the existing `neon-particle` catalog key, Canvas lifecycle,
+  transparent profile compositing, reduced-motion frame, and all persistence
+  contracts.
+
 ## Premium color-direction clarification — 2026-08-22
 
 - Clarified that “premium” means clean execution and freedom from visual

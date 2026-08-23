@@ -250,13 +250,17 @@ function getReferenceTextMask(ctx, model) {
   };
   const solidPoints = [];
   const edgePoints = [];
-  for (let y = top; y < bottom; y += 2) {
-    for (let x = left; x < right; x += 2) {
+  // The reference samples the glyph on a bounded two-pixel grid. Keep that
+  // density across profile and compact surfaces so a small name stays
+  // granular without turning into a noisy block after downsampling.
+  const sampleStep = 2;
+  for (let y = top; y < bottom; y += sampleStep) {
+    for (let x = left; x < right; x += sampleStep) {
       if (alphaAt(x, y) <= 20) continue;
-      const edge = alphaAt(x - 2, y) <= 20
-        || alphaAt(x + 2, y) <= 20
-        || alphaAt(x, y - 2) <= 20
-        || alphaAt(x, y + 2) <= 20;
+      const edge = alphaAt(x - sampleStep, y) <= 20
+        || alphaAt(x + sampleStep, y) <= 20
+        || alphaAt(x, y - sampleStep) <= 20
+        || alphaAt(x, y + sampleStep) <= 20;
       const point = { x, y };
       solidPoints.push(point);
       if (edge) edgePoints.push(point);
@@ -490,6 +494,11 @@ function drawNeonParticleName(ctx, model, drawBase) {
   const solidPoints = mask.solidPoints;
   const particleCount = Math.min(680, solidPoints.length);
   ctx.save?.();
+  // The halo can add light, but the particle cores must tint the white glyph
+  // instead of being added on top of an already-white mask. `lighter` made
+  // compact previews read as a smooth solid fill and hid the reference's
+  // cyan/indigo/rose grain. Every core is sampled from the glyph mask, so
+  // source-over remains safely bounded to the letterforms.
   ctx.globalCompositeOperation = 'lighter';
   for (let index = 0; index < particleCount; index += 1) {
     const sample = solidPoints[Math.floor(seededNoise(model.seed, index + 281) * solidPoints.length) % solidPoints.length];
@@ -509,10 +518,13 @@ function drawNeonParticleName(ctx, model, drawBase) {
       }
     }
     const pulse = (Math.sin(tw * 1.4 + index) + 1) / 2;
-    const color = hot ? '#FFFFFF' : colors[index % colors.length];
+    const colorIndex = Math.floor(seededNoise(model.seed, index + 391) * colors.length) % colors.length;
+    const color = hot ? '#FFFFFF' : colors[colorIndex];
     drawReferenceCircle(ctx, x, y, size * 3.6, color, 0.04 * (0.5 + pulse * 0.5));
+    ctx.globalCompositeOperation = 'source-over';
     drawReferenceCircle(ctx, x, y, size, color, (hot ? 0.88 : 0.52) * (0.5 + pulse * 0.5));
     if (hot) drawReferenceCircle(ctx, x, y, size * 0.35, '#FFFFFF', 0.98 * (0.6 + pulse * 0.4));
+    ctx.globalCompositeOperation = 'lighter';
   }
 
   // Edge particles are sampled from the actual glyph perimeter, then drift

@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-22 — Preserve Neon Particle grain at compact scale
+
+The supplied screencast shows a white-hot name with visible cyan, indigo, and
+rose micro-particles inside the glyphs, not a smooth white fill with a colored
+halo. Neon Particle keeps its bounded two-pixel glyph sampling and now draws
+the sampled particle cores over the masked field so those colors remain
+visible in small Customize and profile-card renders. The cores remain sampled
+from the real glyph mask, so no particles can escape into arbitrary canvas
+content; catalog IDs, the transparent profile surface, and reduced-motion
+behavior remain unchanged.
+
 ## 2026-08-22 — Treat premium as execution quality, not muted color
 
 “Premium” describes clean, intentional, responsive execution with no visual
