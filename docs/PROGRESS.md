@@ -1,5 +1,24 @@
 # Chromadie 2.0 Progress
 
+## Daily Roll earned-cosmetic integration — 2026-08-23
+
+- Audited the dedicated Roll result, shared progression unlock queue, canonical
+  cosmetic preview, and authenticated progression browser smoke.
+- Placed the single unlock presentation inside the Roll card between the color
+  result and score breakdown; removed the duplicate left-context reward strip.
+- Added a compact one-column reward composition with two balanced actions and a
+  wide canonical preview. Name-preview hosts and semantic text are bounded so
+  long usernames and material/motion renderers remain inside the viewport.
+- Added source-contract coverage plus authenticated browser geometry checks for
+  card containment, ordering, canonical rendering, clipping, desktop, 390px
+  mobile, keyboard controls, and horizontal overflow.
+- Validation passes: production build, Svelte check, ESLint, 449 Node tests,
+  links, CSP, performance, username/balance/catalog/scoring drift, database
+  security, and the authenticated progression browser smoke. Roll-only preview
+  CSS stays on the Roll route so `/progression` remains within its 115 kB gate.
+- No schema, RLS, scoring, eligibility, grant, acknowledgement, inventory, or
+  catalog authority changed.
+
 ## Raster Signal source-fidelity correction — 2026-08-22
 
 - Read the embedded Raster Signal implementation from the supplied approved

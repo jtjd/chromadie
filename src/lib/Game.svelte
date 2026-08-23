@@ -1184,6 +1184,18 @@
         </div>
       </div>
 
+      {#if newMilestones.length}
+        <ProgressionUnlockQueue
+          unlocks={newMilestones}
+          surface={dedicated ? 'dedicated-roll' : 'root-roll'}
+          username={$profile?.username || 'You'}
+          displayColor={displayColor}
+          avatarSrc={$profile?.avatar_url || $profile?.avatar_path || ''}
+          compact={dedicated}
+          on:acknowledge={handleProgressionUnlockAcknowledgement}
+        />
+      {/if}
+
       <div class="roll-breakdown roll-breakdown--result" aria-label="Score breakdown">
         <div class="roll-breakdown__header">Score Breakdown</div>
         <div class="roll-breakdown__list" role="list">
@@ -1266,17 +1278,6 @@
         <div class="milestone-banner">
           Milestone unlocked — you received <strong>{milestoneGranted}</strong>.
         </div>
-      {/if}
-
-      {#if newMilestones.length}
-        <ProgressionUnlockQueue
-          unlocks={newMilestones}
-          surface={dedicated ? 'dedicated-roll' : 'root-roll'}
-          username={$profile?.username || 'You'}
-          displayColor={displayColor}
-          avatarSrc={$profile?.avatar_url || $profile?.avatar_path || ''}
-          on:acknowledge={handleProgressionUnlockAcknowledgement}
-        />
       {/if}
 
       {#if !$isAuthenticated && guestProgressRestored && !dedicated}

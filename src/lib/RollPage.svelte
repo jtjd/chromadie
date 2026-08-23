@@ -107,20 +107,12 @@
           This color is now part of your profile history.
         </p>
 
-        {#if rollContext.newProgressionUnlocks?.length || rollContext.weeklyFocusComplete}
+        {#if rollContext.weeklyFocusComplete}
           <div class="roll-page__proof" role="status" aria-live="polite">
-            {#if rollContext.newProgressionUnlocks?.length}
-              <div class="roll-page__proof-block">
-                <span class="roll-page__proof-label">NEW COSMETIC</span>
-                <strong>{rollContext.newProgressionUnlocks.map(unlock => unlock.reward?.name || unlock.name).join(' · ')}</strong>
-              </div>
-            {/if}
-            {#if rollContext.weeklyFocusComplete}
-              <div class="roll-page__proof-block">
-                <span class="roll-page__proof-label">WEEKLY FOCUS COMPLETE</span>
-                <strong>+50,000 EP is in your wallet.</strong>
-              </div>
-            {/if}
+            <div class="roll-page__proof-block">
+              <span class="roll-page__proof-label">WEEKLY FOCUS COMPLETE</span>
+              <strong>+50,000 EP is in your wallet.</strong>
+            </div>
           </div>
         {/if}
       {:else}
@@ -814,9 +806,19 @@
   }
 
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-display) { order: 0; }
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-breakdown) { order: 1; }
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-action__button) { order: 2; }
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .cotw-success-banner) { order: 3; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .progression-unlock-queue) { order: 1; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-breakdown) { order: 2; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-action__button) { order: 3; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .cotw-success-banner) { order: 4; }
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__trigger) { min-height:4.8rem; padding:.3rem .65rem .3rem .3rem; border-color:var(--roll-border); background:var(--roll-panel-card); }
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__thumbnail) { flex:0 0 min(8.5rem, 46%); width:min(8.5rem, 46%); height:4.2rem; border-color:var(--roll-border); background:var(--roll-bg); }
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__thumbnail .shop-preview-area) { min-height:4.2rem; height:4.2rem; padding:.35rem .55rem; }
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__thumbnail .shop-preview-text--name),
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__thumbnail .name-effect-canvas) { overflow:hidden; }
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__thumbnail .name-effect-canvas) { display:block; width:100%; max-width:100%; }
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__thumbnail .name-effect-canvas__semantic) { width:100%; overflow:hidden; font-size:.9rem; line-height:1.1; text-overflow:ellipsis; white-space:nowrap; }
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__trigger-copy strong) { color:var(--roll-text); }
+  .roll-page :global(.game-container--dedicated .progression-reward-preview--wide .progression-reward-preview__trigger-copy small) { color:var(--roll-muted); }
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-detail-grid),
   .roll-page :global(.game-container--dedicated .roll-stage--results > .milestone-banner),
   .roll-page :global(.game-container--dedicated .roll-stage--results > .local-progress-banner),

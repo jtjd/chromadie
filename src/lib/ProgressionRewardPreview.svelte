@@ -13,6 +13,7 @@
   export let milestoneId = null;
   export let track = 'rank';
   export let analyticsSurface = 'progression';
+  export let presentation = 'default';
 
   let previewComponent = null;
   let catalogItems = {};
@@ -117,7 +118,7 @@
   }
 </script>
 
-<div class="progression-reward-preview">
+<div class="progression-reward-preview" class:progression-reward-preview--wide={presentation === 'wide'}>
   <button
     type="button"
     class="progression-reward-preview__trigger"

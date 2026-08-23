@@ -5821,3 +5821,18 @@ mobile preview by roughly 3px on both sides. Bézier handles are also clamped to
 the renderer's viewBox, so pointer bending can never create layout overflow.
 The frame keeps its existing pointer behavior and visual layering; only invalid
 geometry was removed.
+
+## 2026-08-23 — Present a Roll-earned cosmetic once, inside the result card
+
+The dedicated Roll result owns the live progression unlock presentation. It is
+placed after the canonical color result and before the score breakdown, while
+the surrounding context remains responsible for color history, streak, rank,
+and the separate weekly EP notice. This removes duplicate reward messaging and
+keeps acknowledgement attached to the game event that earned it.
+
+The shared queue exposes a compact presentation mode rather than duplicating a
+Roll-only reward component. Compact mode retains the existing server-backed
+presentation and acknowledgement RPCs, analytics, Studio handoff, and canonical
+`ShopItemPreview`, but uses a single-column layout and a wide preview viewport.
+Name-effect hosts are explicitly bounded within that viewport because their
+canvas renderers intentionally use visual bleed that cannot fit a square icon.

@@ -460,17 +460,66 @@ try {
     await chromium.page.waitFor("document.querySelector('.roll-stage--results') && document.querySelector('.roll-stage--results #roll-result-title')", 'server-confirmed first-roll result', 30000);
     await chromium.page.waitFor('document.querySelector(".progression-unlock-queue")', 'first-roll progression unlock queue', 30000);
 
-    const resultState = await chromium.page.evaluate("(() => ({\n      path: location.pathname,\n      result: document.querySelector('.roll-stage--results #roll-result-title')?.textContent?.trim() || '',\n      score: document.querySelector('.roll-stage--results .roll-score-total')?.textContent?.trim() || '',\n      queue: Boolean(document.querySelector('.progression-unlock-queue')),\n      queueTitle: document.querySelector('.progression-unlock-queue h3')?.textContent?.trim() || '',\n      reward: document.querySelector('.progression-unlock-queue .progression-reward-preview__trigger strong')?.textContent?.trim() || '',\n      reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,\n      horizontalOverflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1\n    }))()");
+    const resultState = await chromium.page.evaluate(`(() => {
+      const card = document.querySelector('.roll-stage--results');
+      const display = card?.querySelector(':scope > .roll-display');
+      const queue = card?.querySelector(':scope > .progression-unlock-queue');
+      const breakdown = card?.querySelector(':scope > .roll-breakdown');
+      const thumbnail = queue?.querySelector('.progression-reward-preview__thumbnail');
+      const semantic = thumbnail?.querySelector('.name-effect-canvas__semantic');
+      const cardRect = card?.getBoundingClientRect();
+      const displayRect = display?.getBoundingClientRect();
+      const queueRect = queue?.getBoundingClientRect();
+      const breakdownRect = breakdown?.getBoundingClientRect();
+      const thumbnailRect = thumbnail?.getBoundingClientRect();
+      const semanticRect = semantic?.getBoundingClientRect();
+      return {
+        path: location.pathname,
+        result: card?.querySelector('#roll-result-title')?.textContent?.trim() || '',
+        score: card?.querySelector('.roll-score-total')?.textContent?.trim() || '',
+        queue: Boolean(queue),
+        compactQueue: queue?.classList.contains('progression-unlock-queue--compact') || false,
+        queueTitle: queue?.querySelector('h3')?.textContent?.trim() || '',
+        reward: queue?.querySelector('.progression-reward-preview__trigger strong')?.textContent?.trim() || '',
+        canonicalThumbnail: Boolean(thumbnail?.querySelector('.shop-preview-area')),
+        queueInsideCard: Boolean(cardRect && queueRect && queueRect.left >= cardRect.left && queueRect.right <= cardRect.right),
+        queueBetweenResultAndScore: Boolean(displayRect && queueRect && breakdownRect && queueRect.top >= displayRect.bottom && queueRect.bottom <= breakdownRect.top),
+        wideThumbnail: Boolean(thumbnailRect && thumbnailRect.width >= thumbnailRect.height * 1.5),
+        previewFits: Boolean(semanticRect && thumbnailRect && semanticRect.left >= thumbnailRect.left - 1 && semanticRect.right <= thumbnailRect.right + 1 && semanticRect.top >= thumbnailRect.top - 1 && semanticRect.bottom <= thumbnailRect.bottom + 1),
+        reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        horizontalOverflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
+      };
+    })()`);
     assert(resultState.path === '/roll', 'First roll settled at ' + resultState.path + '.');
     assert(resultState.result && resultState.score, 'First roll result surface is incomplete: ' + JSON.stringify(resultState) + '.');
     assert(resultState.queue && resultState.queueTitle === 'Cosmetic earned', 'First roll did not render the progression unlock queue: ' + JSON.stringify(resultState) + '.');
     assert(resultState.reward, 'First roll unlock queue did not expose its reward preview trigger: ' + JSON.stringify(resultState) + '.');
+    assert(resultState.compactQueue && resultState.queueInsideCard && resultState.queueBetweenResultAndScore, 'First roll unlock queue is not integrated into the result card: ' + JSON.stringify(resultState) + '.');
+    assert(resultState.wideThumbnail, 'First roll cosmetic preview is using the old square viewport: ' + JSON.stringify(resultState) + '.');
     assert(!resultState.horizontalOverflow, 'First roll result overflows horizontally: ' + JSON.stringify(resultState) + '.');
 
     await chromium.page.click('.progression-reward-preview__trigger', 'first-roll reward preview');
     await chromium.page.waitFor("document.querySelector('.progression-reward-preview__panel') && (document.querySelector('.progression-reward-preview__caption') || document.querySelector('.progression-reward-preview__state[role=\"alert\"]'))", 'first-roll canonical reward preview', 30000);
-    const previewState = await chromium.page.evaluate("(() => ({\n      panel: Boolean(document.querySelector('.progression-reward-preview__panel')),\n      canonicalRenderer: Boolean(document.querySelector('.progression-reward-preview__panel .shop-preview-area')),\n      error: document.querySelector('.progression-reward-preview__state[role=\"alert\"]')?.textContent?.trim() || ''\n    }))()");
+    const previewState = await chromium.page.evaluate("(() => ({ panel: Boolean(document.querySelector('.progression-reward-preview__panel')), canonicalRenderer: Boolean(document.querySelector('.progression-reward-preview__panel .shop-preview-area')), error: document.querySelector('.progression-reward-preview__state[role=\"alert\"]')?.textContent?.trim() || '' }))()");
     assert(previewState.panel && previewState.canonicalRenderer && !previewState.error, 'First-roll reward preview did not resolve the canonical renderer: ' + JSON.stringify(previewState) + '.');
+    await chromium.page.click('.progression-reward-preview__trigger', 'close first-roll reward preview');
+    await chromium.page.waitFor("!document.querySelector('.progression-reward-preview__panel') && document.querySelector('.progression-reward-preview__thumbnail .shop-preview-area')", 'settled inline reward preview', 30000);
+    const inlinePreviewState = await chromium.page.evaluate("(() => { const thumbnail = document.querySelector('.progression-unlock-queue .progression-reward-preview__thumbnail'); const semantic = thumbnail?.querySelector('.name-effect-canvas__semantic'); const thumbnailRect = thumbnail?.getBoundingClientRect(); const semanticRect = semantic?.getBoundingClientRect(); const rect = value => value ? { left: value.left, right: value.right, top: value.top, bottom: value.bottom, width: value.width, height: value.height } : null; return { canonicalRenderer: Boolean(thumbnail?.querySelector('.shop-preview-area')), thumbnailRect: rect(thumbnailRect), semanticRect: rect(semanticRect), previewFits: Boolean(semanticRect && thumbnailRect && semanticRect.left >= thumbnailRect.left - 1 && semanticRect.right <= thumbnailRect.right + 1 && semanticRect.top >= thumbnailRect.top - 1 && semanticRect.bottom <= thumbnailRect.bottom + 1) }; })()");
+    assert(inlinePreviewState.canonicalRenderer && inlinePreviewState.previewFits, 'Settled inline cosmetic preview is clipped or unresolved: ' + JSON.stringify(inlinePreviewState) + '.');
+
+    const unlockScreenshot = join(evidenceDir, 'authenticated-first-roll-unlock-visible.png');
+    await chromium.page.screenshot(unlockScreenshot);
+    results.screenshots.push(unlockScreenshot);
+
+    await chromium.page.setViewport(390, 844);
+    await chromium.page.evaluate("document.querySelector('.progression-unlock-queue')?.scrollIntoView({ block: 'center' })");
+    const mobileUnlockState = await chromium.page.evaluate("(() => { const queue = document.querySelector('.progression-unlock-queue'); const thumbnail = queue?.querySelector('.progression-reward-preview__thumbnail'); const queueRect = queue?.getBoundingClientRect(); const thumbnailRect = thumbnail?.getBoundingClientRect(); return { queueVisible: Boolean(queueRect && queueRect.bottom > 0 && queueRect.top < innerHeight), queueInsideViewport: Boolean(queueRect && queueRect.left >= 0 && queueRect.right <= innerWidth), wideThumbnail: Boolean(thumbnailRect && thumbnailRect.width >= thumbnailRect.height * 1.5), horizontalOverflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1 }; })()");
+    assert(mobileUnlockState.queueVisible && mobileUnlockState.queueInsideViewport && mobileUnlockState.wideThumbnail && !mobileUnlockState.horizontalOverflow, 'Mobile first-roll unlock formatting is not contained: ' + JSON.stringify(mobileUnlockState) + '.');
+    const mobileUnlockScreenshot = join(evidenceDir, 'authenticated-first-roll-unlock-mobile.png');
+    await chromium.page.screenshot(mobileUnlockScreenshot);
+    results.screenshots.push(mobileUnlockScreenshot);
+    await chromium.page.setViewport(1440, 1000);
+    await chromium.page.evaluate("document.querySelector('.progression-unlock-queue')?.scrollIntoView({ block: 'center' })");
 
     const milestonePath = '/rest/v1/user_progression_milestones?select=milestone_id,unlock_source,presented_at,acknowledged_at&user_id=eq.' + encodeURIComponent(disposableUserId) + '&milestone_id=eq.journey_first_roll';
     const presentedLedger = await waitForService(milestonePath, rows => Array.isArray(rows) && rows[0]?.presented_at, 'server presentation of the first-roll unlock');

@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-23 — Integrate earned cosmetics into the Roll result
+
+- Moved the progression unlock presentation directly between the rolled color
+  and score breakdown in the Daily Roll card.
+- Removed the duplicate “New cosmetic” strip from the surrounding result copy.
+- Reflowed the compact reward details and actions for desktop and mobile, and
+  widened the canonical cosmetic viewport so name effects no longer clip.
+
 ## 2026-08-22 — Match Raster Signal’s approved text treatment
 
 - Raster Signal now uses the reference’s independently drifting white rows,

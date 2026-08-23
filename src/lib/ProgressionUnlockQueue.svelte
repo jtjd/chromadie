@@ -11,6 +11,7 @@
   export let username = 'You';
   export let displayColor = '#FFFFFF';
   export let avatarSrc = '';
+  export let compact = false;
 
   const dispatch = createEventDispatcher();
   const queueInstanceId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
@@ -207,7 +208,7 @@
 </script>
 
 {#if featuredUnlock}
-  <section bind:this={queueElement} class="progression-unlock-queue" aria-labelledby={queueTitleId} aria-live="polite" aria-busy={featuredUnlock && acknowledgingIds.has(featuredUnlock.id)}>
+  <section bind:this={queueElement} class="progression-unlock-queue" class:progression-unlock-queue--compact={compact} aria-labelledby={queueTitleId} aria-live="polite" aria-busy={featuredUnlock && acknowledgingIds.has(featuredUnlock.id)}>
     <div class="progression-unlock-queue__heading">
       <div>
         <p class="progression-unlock-queue__eyebrow">New in your profile</p>
@@ -235,6 +236,7 @@
           milestoneId={featuredUnlock.id}
           track={featuredUnlock.track}
           analyticsSurface={analyticsSurfaceName(surface)}
+          presentation={compact ? 'wide' : 'default'}
         />
       {/if}
     </div>
@@ -252,9 +254,11 @@
           track: featuredUnlock.track,
           action: 'studio'
         }, { dedupeKey: `${featuredUnlock.id}:studio` })}
-      >Open Profile Studio</a>
+      >{compact ? 'Open Studio' : 'Open Profile Studio'}</a>
       <button type="button" disabled={acknowledgingIds.has(featuredUnlock.id)} aria-busy={acknowledgingIds.has(featuredUnlock.id)} on:click={() => void finishUnlock('acknowledged')}>Acknowledge</button>
-      <button type="button" class="progression-unlock-queue__dismiss" disabled={acknowledgingIds.has(featuredUnlock.id)} aria-busy={acknowledgingIds.has(featuredUnlock.id)} on:click={() => void finishUnlock('dismissed')}>Dismiss</button>
+      {#if !compact}
+        <button type="button" class="progression-unlock-queue__dismiss" disabled={acknowledgingIds.has(featuredUnlock.id)} aria-busy={acknowledgingIds.has(featuredUnlock.id)} on:click={() => void finishUnlock('dismissed')}>Dismiss</button>
+      {/if}
     </div>
   </section>
 {/if}
@@ -283,6 +287,19 @@
   .progression-unlock-queue__actions button:focus-visible,
   .progression-unlock-queue__actions a:focus-visible { outline:2px solid var(--color-ink-strong); outline-offset:2px; }
   .progression-unlock-queue__dismiss { color:var(--color-ink-muted)!important; }
+  .progression-unlock-queue--compact { gap:.875rem; margin:0; padding:1rem; border-color:var(--roll-border, var(--color-line-subtle)); border-radius:1rem; background:var(--surface-2, var(--surface-panel-soft)); }
+  .progression-unlock-queue--compact .progression-unlock-queue__heading { align-items:flex-start; flex-wrap:nowrap; }
+  .progression-unlock-queue--compact .progression-unlock-queue__eyebrow { color:var(--roll-rarity, var(--color-ink-muted)); font:700 .66rem/1.2 var(--site-font, var(--font-body-stack)); letter-spacing:.08em; }
+  .progression-unlock-queue--compact h3 { margin:.25rem 0 0; color:var(--roll-text, var(--color-ink-strong)); font:700 1.08rem/1.15 var(--site-display, var(--font-display-stack)); letter-spacing:-.02em; }
+  .progression-unlock-queue--compact .progression-unlock-queue__count { flex:0 0 auto; padding-top:.15rem; color:var(--roll-muted, var(--color-ink-muted)); font:600 .66rem/1 var(--site-font, var(--font-body-stack)); }
+  .progression-unlock-queue--compact .progression-unlock-queue__body { grid-template-columns:1fr; gap:.75rem; }
+  .progression-unlock-queue--compact .progression-unlock-queue__copy { gap:.25rem; }
+  .progression-unlock-queue--compact .progression-unlock-queue__copy strong { color:var(--roll-text, var(--color-ink-strong)); font:700 .92rem/1.2 var(--site-display, var(--font-display-stack)); }
+  .progression-unlock-queue--compact .progression-unlock-queue__copy p,
+  .progression-unlock-queue--compact .progression-unlock-queue__copy small { color:var(--roll-muted, var(--color-ink-muted)); font:400 .75rem/1.4 var(--site-font, var(--font-body-stack)); }
+  .progression-unlock-queue--compact .progression-unlock-queue__actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; }
+  .progression-unlock-queue--compact .progression-unlock-queue__actions a,
+  .progression-unlock-queue--compact .progression-unlock-queue__actions button { min-width:0; min-height:2.5rem; padding:.55rem .65rem; border-color:var(--roll-border, var(--color-line-subtle)); border-radius:.6rem; color:var(--roll-text, var(--color-ink-strong)); font:650 .75rem/1 var(--site-font, var(--font-body-stack)); white-space:nowrap; }
   @media (max-width:650px) { .progression-unlock-queue__body { grid-template-columns:1fr; } .progression-unlock-queue__actions > * { flex:1 1 9rem; } }
   @media (prefers-reduced-motion:reduce) { .progression-unlock-queue { transition:none; } }
 </style>
