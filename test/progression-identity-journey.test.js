@@ -266,6 +266,13 @@ test('progression visual treatment keeps state neutral and previews canonical co
   assert.match(page, /--progression-accent-light/);
   assert.match(page, /progression-page__color-chip/);
   assert.match(page, /progression-page__streak-strip/);
+  assert.match(page, /dailyRollData = dailyRoll\.data \|\| null/);
+  assert.match(page, /hasRolledToday/);
+  assert.match(page, /progression-page__roll-status/);
+  assert.match(page, /progression-page__rail-details/);
+  assert.match(page, /View full roll/);
+  assert.match(page, /Scoring signals/);
+  assert.doesNotMatch(page, /Next milestone/);
   assert.match(page, /focusStreakTitle/);
   assert.match(rewardPreview, /onMount/);
   assert.match(rewardPreview, /progression-reward-preview__thumbnail/);

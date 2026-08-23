@@ -1,5 +1,6 @@
 <script>
   import { ACCOUNT_STATES } from './authState.js';
+  import { getBadgeMeta } from './badgeData.js';
   import { loadDailyRollColor, loadProgressionData } from './progressionData.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import ProfileProgression from './ProfileProgression.svelte';
@@ -14,6 +15,9 @@
   let loadedAccountId = '';
   let progressionLoaded = false;
   let dailyRollColor = '';
+  let dailyRollData = null;
+  let dailyRollError = '';
+  let dailyRollLoaded = false;
   let requestId = 0;
 
   $: accountId = $session?.user?.id || $profile?.id || '';
@@ -23,6 +27,9 @@
     isStaff: Boolean(accountProfile?.is_staff)
   });
   $: todayColor = dailyRollColor;
+  $: dailyRollHex = normalizeHexColor(dailyRollData?.hex_code || dailyRollData?.hex, '');
+  $: hasRolledToday = dailyRollLoaded && Boolean(dailyRollData);
+  $: rollSignals = resolveRollSignals(dailyRollData);
   $: accentColor = normalizeHexColor(todayColor, '#FFFFFF');
   $: accentInk = getReadableTextColor(accentColor);
   $: currentStreak = Math.max(0, Number(progression?.currentStreak ?? accountProfile?.current_streak) || 0);
@@ -52,6 +59,9 @@
     progression = null;
     progressionLoaded = false;
     dailyRollColor = '';
+    dailyRollData = null;
+    dailyRollError = '';
+    dailyRollLoaded = false;
     error = '';
     loading = false;
   }
@@ -61,6 +71,9 @@
     loading = true;
     error = '';
     progressionLoaded = false;
+    dailyRollData = null;
+    dailyRollError = '';
+    dailyRollLoaded = false;
 
     try {
       const [result, dailyRoll] = await Promise.all([
@@ -76,11 +89,17 @@
 
       progression = result.data || {};
       dailyRollColor = dailyRoll.color;
+      dailyRollData = dailyRoll.data || null;
+      dailyRollError = dailyRoll.error?.message || '';
+      dailyRollLoaded = true;
       error = result.error?.message || '';
       progressionLoaded = true;
     } catch {
       if (currentRequestId === requestId) {
         progression = {};
+        dailyRollData = null;
+        dailyRollError = 'Daily roll status could not be read.';
+        dailyRollLoaded = true;
         error = 'Progression could not be loaded. Please retry.';
         progressionLoaded = true;
       }
@@ -96,6 +115,26 @@
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
+  }
+
+  function resolveRollSignals(data) {
+    const contributors = Array.isArray(data?.contributors) ? data.contributors : [];
+    const traits = Array.isArray(data?.traits) ? data.traits : [];
+    const conditionIds = Array.isArray(data?.condition_ids) ? data.condition_ids : [];
+    const source = contributors.length ? contributors : traits.length ? traits : conditionIds;
+
+    return source.slice(0, 3).map((item, index) => {
+      const rawId = typeof item === 'string' ? item : item?.id || item?.key || '';
+      const id = typeof rawId === 'string' ? rawId : '';
+      const meta = id ? getBadgeMeta(id) : {};
+      const points = Number(item?.awardedPoints ?? item?.points) || 0;
+      return {
+        id: id || `signal-${index}`,
+        label: item?.name || item?.label || meta.name || id || 'Recorded signal',
+        points,
+        symbol: item?.symbol || meta.symbol || ''
+      };
+    });
   }
 
   function resolveFocusGoal(currentProgression = progression) {
@@ -186,9 +225,60 @@
               {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
             </div>
             <div class="progression-page__account-actions">
-              <a class="site-button" href="/roll">{focusGoal?.track === 'discovery' ? 'Roll and explore' : 'Roll today'}</a>
+              {#if hasRolledToday}
+                <span class="progression-page__roll-status" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--progression-muted);font:600 .68rem/1 var(--font-mono-stack);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap" role="status">
+                  <span class="progression-page__roll-status-dot" style="width:.42rem;height:.42rem;border-radius:50%;background:var(--color-success,#6ee787);box-shadow:0 0 .55rem color-mix(in srgb,var(--color-success,#6ee787) 55%,transparent)" aria-hidden="true"></span>
+                  Rolled today
+                </span>
+              {:else if dailyRollLoaded && dailyRollError}
+                <span class="progression-page__roll-status" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--progression-muted);font:600 .68rem/1 var(--font-mono-stack);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap" role="status" title={dailyRollError}>Status unavailable</span>
+              {:else if dailyRollLoaded}
+                <a class="site-button" href="/roll">{focusGoal?.track === 'discovery' ? 'Roll and explore' : 'Roll today'}</a>
+              {:else}
+                <span class="progression-page__roll-status" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--progression-muted);font:600 .68rem/1 var(--font-mono-stack);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap" role="status">Checking today</span>
+              {/if}
             </div>
           </section>
+
+          <div class="progression-page__rail-details" style="display:grid;gap:.9rem;margin-top:1rem;padding:.9rem .2rem 0;border-top:1px solid var(--progression-line)" aria-label="Today's roll details">
+            <section class="progression-page__rail-detail" style="display:grid;gap:.28rem;min-width:0" aria-labelledby="progression-today-roll-title">
+              <span class="progression-page__detail-label" style="color:var(--progression-muted);font:700 .62rem/1 var(--font-mono-stack);letter-spacing:.12em;text-transform:uppercase">Today's roll</span>
+              {#if hasRolledToday}
+                <strong id="progression-today-roll-title" style="color:var(--progression-text);font:650 1rem/1.15 var(--font-display-stack);overflow-wrap:anywhere">{dailyRollData?.identity || 'Color recorded'}</strong>
+                <small style="color:var(--progression-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere">
+                  {dailyRollData?.rarity || 'Common'} · {dailyRollHex || todayColor || 'Color'} · {formatNumber(dailyRollData?.score)} pts
+                </small>
+              {:else if dailyRollLoaded && dailyRollError}
+                <strong id="progression-today-roll-title" style="color:var(--progression-text);font:650 1rem/1.15 var(--font-display-stack);overflow-wrap:anywhere">Roll status unavailable</strong>
+                <small style="color:var(--progression-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere">Refresh before starting another roll.</small>
+              {:else if dailyRollLoaded}
+                <strong id="progression-today-roll-title" style="color:var(--progression-text);font:650 1rem/1.15 var(--font-display-stack);overflow-wrap:anywhere">Ready to roll</strong>
+                <small style="color:var(--progression-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere">{focusGoal ? `${focusGoal.name} · ${focusProgressLabel(focusGoal)}` : 'No color recorded for today.'}</small>
+              {:else}
+                <strong id="progression-today-roll-title" style="color:var(--progression-text);font:650 1rem/1.15 var(--font-display-stack);overflow-wrap:anywhere">Checking today</strong>
+                <small style="color:var(--progression-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere">Reading your server record.</small>
+              {/if}
+            </section>
+
+            {#if hasRolledToday}
+              <a class="progression-page__detail-link" style="width:fit-content;color:var(--progression-text);font-size:.72rem;font-weight:650;text-underline-offset:.2em" href="/roll">View full roll</a>
+            {/if}
+
+            {#if hasRolledToday && rollSignals.length}
+              <section class="progression-page__rail-detail progression-page__rail-detail--signals" style="display:grid;gap:.35rem;min-width:0;padding-top:.9rem;border-top:1px solid var(--progression-line)" aria-labelledby="progression-roll-signals-title">
+                <span class="progression-page__detail-label" style="color:var(--progression-muted);font:700 .62rem/1 var(--font-mono-stack);letter-spacing:.12em;text-transform:uppercase">Scoring signals</span>
+                <div id="progression-roll-signals-title" style="display:flex;flex-wrap:wrap;gap:.35rem .45rem" aria-label="Server-reported scoring signals">
+                  {#each rollSignals as signal (signal.id)}
+                    <span style="display:inline-flex;align-items:center;gap:.25rem;color:var(--progression-text);font-size:.72rem;line-height:1.35">
+                      <span aria-hidden="true">{signal.symbol}</span>
+                      <span>{signal.label}</span>
+                      {#if signal.points}<small style="color:var(--progression-muted);font-size:.65rem">+{formatNumber(signal.points)}</small>{/if}
+                    </span>
+                  {/each}
+                </div>
+              </section>
+            {/if}
+          </div>
         {/if}
       </div>
 

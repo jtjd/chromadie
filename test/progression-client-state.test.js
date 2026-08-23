@@ -238,6 +238,7 @@ test('daily roll color loader uses the authenticated server roll and rejects app
   const loaded = await loadDailyRollColor(supabaseClient, 'user-id');
   assert.equal(calls[0], DAILY_ROLL_RPC);
   assert.equal(loaded.color, '#F9D9E8');
+  assert.deepEqual(loaded.data, { hex_code: '#f9d9e8' });
   assert.equal(loaded.error, null);
 
   const skipped = await loadDailyRollColor(supabaseClient, null);

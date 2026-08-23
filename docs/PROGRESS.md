@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Progression daily state and signal rail — 2026-08-23
+
+- Made the streak-strip action reflect the authenticated `get_my_daily_roll()`
+  result: completed rolls show a non-action “Rolled today” status, while an
+  unavailable status read never offers a potentially duplicate roll action.
+- Added a data-backed left-rail readout for the recorded identity, rarity, hex,
+  score, and server-reported scoring signals. Removed the redundant repeated-
+  streak milestone block.
+- Added client-contract assertions and authenticated browser coverage for the
+  completed status, hidden Roll today CTA, daily-roll details, scoring signals,
+  mobile containment, and horizontal overflow.
+- Added a restrained roll-color tint to the progression board’s rank and
+  weekly anchors and flattened page-mode path rows so the board no longer reads
+  as stacked grey cards.
+- No schema, scoring, eligibility, reward, inventory, or RLS authority changed.
+
 ## Daily Roll earned-cosmetic integration — 2026-08-23
 
 - Audited the dedicated Roll result, shared progression unlock queue, canonical

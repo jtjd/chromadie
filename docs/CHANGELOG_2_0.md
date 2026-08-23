@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-23 — Make Progression reflect the completed daily roll
+
+- Replaced the stale post-roll “Roll today” action with a server-backed
+  “Rolled today” status so the Progression rail cannot invite a duplicate roll.
+- Filled the left rail with the actual roll identity, rarity, hex, score, and
+  named scoring signals, removing the redundant repeated-streak milestone.
+- Added a restrained current-roll tint to the rank and weekly anchors and
+  flattened page-mode path rows so the right board has a clear hierarchy
+  instead of grey cards nested inside one another.
+
 ## 2026-08-23 — Integrate earned cosmetics into the Roll result
 
 - Moved the progression unlock presentation out of the Daily Roll card and

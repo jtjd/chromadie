@@ -315,7 +315,11 @@
 </script>
 
 <Surface variant="panel" padding="lg" className={`profile-progression-surface${pageMode ? ' profile-progression-surface--page' : ''}`}>
-  <section class:profile-progression-page-mode={pageMode} aria-labelledby="profile-progression-title">
+  <section
+    class:profile-progression-page-mode={pageMode}
+    style={pageMode ? 'background:radial-gradient(circle at 88% 0%,color-mix(in srgb,var(--progression-accent) 18%,transparent),transparent 32rem);--color-state-active:color-mix(in srgb,var(--progression-accent) 78%,white);--color-state-active-soft:color-mix(in srgb,var(--progression-accent) 24%,transparent);--color-line-subtle:color-mix(in srgb,var(--progression-accent) 34%,rgba(255,255,255,.2));--color-line-strong:color-mix(in srgb,var(--progression-accent) 52%,rgba(255,255,255,.3));--color-ink-strong:#fff;--color-ink-muted:rgba(255,255,255,.72);--color-ink-faint:rgba(255,255,255,.5);' : undefined}
+    aria-labelledby="profile-progression-title"
+  >
     {#if !pageMode}
     <header class="profile-progression-heading">
       <div>
@@ -350,7 +354,12 @@
       </section>
     {/if}
 
-    <section class:profile-progression-rank--page={pageMode} class="profile-progression-rank" aria-labelledby="profile-progression-rank-title">
+    <section
+      class:profile-progression-rank--page={pageMode}
+      class="profile-progression-rank"
+      style={pageMode ? 'border-color:color-mix(in srgb,var(--progression-accent) 72%,rgba(255,255,255,.3));background:linear-gradient(135deg,color-mix(in srgb,var(--progression-accent) 24%,#17171f),color-mix(in srgb,var(--progression-accent) 8%,#22232a));box-shadow:0 1rem 2.5rem color-mix(in srgb,var(--progression-accent) 20%,transparent),inset 0 1px 0 rgba(255,255,255,.12);' : undefined}
+      aria-labelledby="profile-progression-rank-title"
+    >
       <div class="profile-progression-rank__identity">
         <div class="profile-progression-rank__badge" role="img" aria-label={`${rankState.current?.name || 'Unranked'} rank, ${progressPercent}% toward ${rankState.next?.name || 'the highest rank'}`}>
           <svg class="profile-progression-rank__ring" viewBox="0 0 76 76" aria-hidden="true">
@@ -362,7 +371,7 @@
         <div>
           {#if pageMode}
             <span id="profile-progression-rank-title" class="profile-progression-rank__name">{rankState.current?.name || 'Unranked'} rank</span>
-            <strong class="profile-progression-rank__ep" title={`${formatNumber(lifetimeEp)} experience points`}>{formatCompactNumber(lifetimeEp)} XP</strong>
+            <strong class="profile-progression-rank__ep" style={pageMode ? 'color:#fff;text-shadow:0 0 .8rem color-mix(in srgb,var(--progression-accent) 68%,transparent);' : undefined} title={`${formatNumber(lifetimeEp)} experience points`}>{formatCompactNumber(lifetimeEp)} XP</strong>
             <small>{rankDistanceLabel()}</small>
           {:else}
             <span class="profile-progression-label">Rank · Build mastery</span>
@@ -388,10 +397,10 @@
 
     <div class="profile-progression-stats" aria-label="Progression summary">
       {#if pageMode}
-        <div><span>Rolls</span><strong title={`${formatNumber(totalRolls)} rolls`}>{formatCompactNumber(totalRolls)}</strong></div>
-        <div><span>Longest streak</span><strong title={`${formatNumber(longestStreak)} days`}>{formatCompactNumber(longestStreak)}d</strong></div>
-        <div><span>Goals</span><strong title={`${formatNumber(journeyGoalComplete)} of ${formatNumber(journeyGoalTotal)} goals complete`}>{journeyGoalTotal ? `${formatCompactNumber(journeyGoalComplete)}/${formatCompactNumber(journeyGoalTotal)}` : formatCompactNumber(journeyGoalComplete)}</strong></div>
-        <div><span>Unlocks</span><strong title={`${formatNumber(earnedCosmeticCount)} cosmetics earned`}>{formatCompactNumber(earnedCosmeticCount)}</strong></div>
+        <div style={pageMode ? 'border:0;border-bottom:1px solid color-mix(in srgb,var(--progression-accent) 46%,rgba(255,255,255,.28));border-radius:0;background:transparent;padding:.7rem .15rem;' : undefined}><span>Rolls</span><strong title={`${formatNumber(totalRolls)} rolls`}>{formatCompactNumber(totalRolls)}</strong></div>
+        <div style={pageMode ? 'border:0;border-bottom:1px solid color-mix(in srgb,var(--progression-accent) 46%,rgba(255,255,255,.28));border-radius:0;background:transparent;padding:.7rem .15rem;' : undefined}><span>Longest streak</span><strong title={`${formatNumber(longestStreak)} days`}>{formatCompactNumber(longestStreak)}d</strong></div>
+        <div style={pageMode ? 'border:0;border-bottom:1px solid color-mix(in srgb,var(--progression-accent) 46%,rgba(255,255,255,.28));border-radius:0;background:transparent;padding:.7rem .15rem;' : undefined}><span>Goals</span><strong title={`${formatNumber(journeyGoalComplete)} of ${formatNumber(journeyGoalTotal)} goals complete`}>{journeyGoalTotal ? `${formatCompactNumber(journeyGoalComplete)}/${formatCompactNumber(journeyGoalTotal)}` : formatCompactNumber(journeyGoalComplete)}</strong></div>
+        <div style={pageMode ? 'border:0;border-bottom:1px solid color-mix(in srgb,var(--progression-accent) 46%,rgba(255,255,255,.28));border-radius:0;background:transparent;padding:.7rem .15rem;' : undefined}><span>Unlocks</span><strong title={`${formatNumber(earnedCosmeticCount)} cosmetics earned`}>{formatCompactNumber(earnedCosmeticCount)}</strong></div>
       {:else}
       <div><span>Rolls</span><strong>{formatNumber(totalRolls)}</strong><small>Colors added</small></div>
       <div><span>Longest streak</span><strong>{formatNumber(longestStreak)} days</strong><small>Current: {formatNumber(currentStreak)} days</small></div>
@@ -408,7 +417,7 @@
 
     {#if journeyEnabled}
       {#if weeklyFocus}
-      <section class:profile-progression-weekly--page={pageMode} class="profile-progression-weekly" aria-labelledby="profile-progression-weekly-title">
+      <section class:profile-progression-weekly--page={pageMode} class="profile-progression-weekly" style={pageMode ? 'border-color:color-mix(in srgb,var(--progression-accent) 68%,rgba(255,255,255,.28));background:linear-gradient(90deg,color-mix(in srgb,var(--progression-accent) 18%,#181820),rgba(255,255,255,.035));box-shadow:inset 4px 0 0 var(--progression-accent),inset 0 1px 0 rgba(255,255,255,.1);' : undefined} aria-labelledby="profile-progression-weekly-title">
         {#if pageMode}
         <div class="profile-progression-weekly__inline">
           <span class="profile-progression-weekly__swatch" style={`--weekly-color:${weeklyFocus.targetHex || '#ffffff'}`} aria-hidden="true"></span>
@@ -443,7 +452,7 @@
 
       <div class="profile-progression-lanes">
         {#each laneModels as lane (lane.id)}
-        <section class:profile-progression-lane--accordion={pageMode} class="profile-progression-lane" aria-labelledby={`profile-progression-lane-${lane.id}`}>
+        <section class:profile-progression-lane--accordion={pageMode} class="profile-progression-lane" style={pageMode ? 'border:0;border-top:1px solid color-mix(in srgb,var(--progression-accent) 44%,rgba(255,255,255,.22));border-radius:0;background:transparent;box-shadow:none;padding:.35rem 0;' : undefined} aria-labelledby={`profile-progression-lane-${lane.id}`}>
           {#if pageMode}
             <button
               type="button"
@@ -470,9 +479,9 @@
               inert={expandedLane !== lane.id}
             >
               {#if lane.featuredNode}
-                <article use:observeJourneyNode={lane.featuredNode} class="profile-progression-node profile-progression-node--active profile-progression-node--compact">
+                <article use:observeJourneyNode={lane.featuredNode} class="profile-progression-node profile-progression-node--active profile-progression-node--compact" style={pageMode ? 'border:0;border-top:1px solid color-mix(in srgb,var(--progression-accent) 24%,rgba(255,255,255,.12));border-radius:0;background:transparent;box-shadow:none;padding:.75rem 0;' : undefined}>
                   <p class="profile-progression-node__one-line">{laneMilestoneCopy(lane)}</p>
-                  {#if lane.featuredNode.reward}<ProgressionRewardPreview reward={lane.featuredNode.reward} unlocked={isUnlocked(lane.featuredNode)} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={lane.featuredNode.id} track={lane.id} analyticsSurface={analyticsSurface} />{/if}
+                  {#if lane.featuredNode.reward}<ProgressionRewardPreview reward={lane.featuredNode.reward} unlocked={isUnlocked(lane.featuredNode)} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={lane.featuredNode.id} track={lane.id} analyticsSurface={analyticsSurface} presentation={pageMode ? 'wide' : 'default'} flat={pageMode} />{/if}
                 </article>
               {:else}
                 <p class="profile-progression-empty">{laneMilestoneCopy(lane)}</p>
@@ -669,7 +678,7 @@
   .profile-progression-rank__next-copy { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem 1rem; color:var(--color-ink-muted); font-size:var(--type-small); }
   .profile-progression-rank__next-copy strong { color:var(--color-ink-strong); }
   .profile-progression-bar, .profile-progression-node__bar { height:.34rem; overflow:hidden; border-radius:999px; background:var(--color-line-subtle); }
-  .profile-progression-bar span, .profile-progression-node__bar span { display:block; height:100%; border-radius:inherit; background:var(--color-ink-strong); transition:width .4s ease; }
+  .profile-progression-bar span, .profile-progression-node__bar span { display:block; height:100%; border-radius:inherit; background:var(--progression-accent,var(--color-ink-strong)); transition:width .4s ease; }
   .profile-progression-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.55rem; margin-top:1rem; }
   .profile-progression-stats > div { display:grid; gap:.25rem; min-width:0; padding:.75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
   .profile-progression-stats span, .profile-progression-stats small { overflow:hidden; color:var(--color-ink-muted); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
@@ -763,7 +772,7 @@
   .profile-progression-rank__identity small { font-size:.72rem; }
   .profile-progression-rank__next { gap:.65rem; }
   .profile-progression-rank__next-copy strong { font-size:1rem; }
-  .profile-progression-bar span, .profile-progression-node__bar span { background:var(--color-ink-strong); }
+  .profile-progression-bar span, .profile-progression-node__bar span { background:var(--progression-accent,var(--color-ink-strong)); }
   .profile-progression-stats { margin-top:.8rem; }
   .profile-progression-stats > div { padding:.8rem .85rem; }
   .profile-progression-stats strong { font-size:1rem; }

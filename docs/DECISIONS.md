@@ -5846,3 +5846,19 @@ bleed. Page-mode recent unlocks now use a single readable card column and a wide
 preview presentation. The renderer passes bounded name dimensions through
 existing effect-card variables, preserving the route CSS budget and the shared
 server/catalog authority.
+
+## 2026-08-23 — Use the daily-roll RPC as the Progression action boundary
+
+The Progression rail now treats the owner `get_my_daily_roll()` response as the
+only proof that today’s roll exists. A non-null response changes the action from
+the Roll today link to a status label and exposes the same response’s identity,
+rarity, hex, score, and scoring contributors/traits. A failed daily read shows
+an unavailable state instead of guessing that a roll is eligible.
+
+The left rail does not repeat the active streak as a second next-milestone
+block. Its additional space is reserved for the current roll’s server-reported
+signals, which add new record detail without duplicating the Rank board’s
+counters or the streak strip. The page-mode board uses the same roll color for
+restrained rank/weekly tinting and flat path rows, keeping one outer panel as
+the frame. No eligibility, scoring, reward, inventory, or RLS authority moved
+to the client.

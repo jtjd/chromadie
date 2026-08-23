@@ -318,6 +318,11 @@ async function inspectAuthenticatedProgression(width, height, label) {
     `${label} established rank data`,
     30000
   );
+  await chromium.page.waitFor(
+    `document.querySelector('.progression-page__roll-status')`,
+    `${label} server-owned daily roll status`,
+    30000
+  );
   const initialAccordion = await chromium.page.evaluate("[...document.querySelectorAll('.profile-progression-lane__toggle')].every(toggle => toggle.getAttribute('aria-expanded') === 'false')");
   assert(initialAccordion, `${label} did not start with collapsed progression paths.`);
   const ritualToggle = await chromium.page.evaluate("Boolean(document.querySelector('[aria-labelledby=\"profile-progression-lane-ritual\"] .profile-progression-lane__toggle'))");
@@ -343,11 +348,18 @@ async function inspectAuthenticatedProgression(width, height, label) {
     const recentSemanticRect = recentSemantic?.getBoundingClientRect();
     const rect = value => value ? { left: value.left, right: value.right, top: value.top, bottom: value.bottom, width: value.width, height: value.height } : null;
     const text = document.querySelector('.progression-page')?.textContent?.trim().replace(/\\s+/g, ' ') || '';
+    const todayRollDetail = document.querySelector('.progression-page__rail-detail[aria-labelledby="progression-today-roll-title"]');
+    const rollSignalsDetail = document.querySelector('.progression-page__rail-detail--signals');
+    const accountAction = document.querySelector('.progression-page__streak-strip .progression-page__account-actions');
     return {
       path: location.pathname,
       accountBar: Boolean(document.querySelector('.progression-page__account-bar')),
       profileProgression: Boolean(document.querySelector('.profile-progression-surface--page')),
       streakText: document.querySelector('.progression-page__streak-strip')?.textContent?.trim().replace(/\\s+/g, ' ') || '',
+      rollTodayButtonVisible: Boolean([...accountAction?.querySelectorAll('a') || []].find(element => /roll today|roll and explore/i.test(element.textContent || ''))),
+      rollCompleteStatus: document.querySelector('.progression-page__roll-status')?.textContent?.trim().replace(/\\s+/g, ' ') || '',
+      dailyRollDetail: todayRollDetail?.textContent?.trim().replace(/\\s+/g, ' ') || '',
+      rollSignalsDetail: rollSignalsDetail?.textContent?.trim().replace(/\\s+/g, ' ') || '',
       rank: document.querySelector('#profile-progression-rank-title')?.textContent?.trim() || '',
       stats,
       streakStrip: Boolean(document.querySelector('.progression-page__streak-strip')),
@@ -379,6 +391,9 @@ async function inspectAuthenticatedProgression(width, height, label) {
   assert(state.stats.some(value => value.includes('42')), `${label} did not render the established 42-roll history: ${JSON.stringify(state)}.`);
   assert(state.stats.some(value => value.includes('9d')), `${label} did not render the established streak history: ${JSON.stringify(state)}.`);
   assert(state.streakStrip && state.paths && state.accordionExpanded && state.approachingRoll50, `${label} did not render the focused progression hierarchy: ${JSON.stringify(state)}.`);
+  assert(!state.rollTodayButtonVisible && state.rollCompleteStatus === 'Rolled today', `${label} exposed a duplicate daily-roll action after the server recorded today's roll: ${JSON.stringify(state)}.`);
+  assert(/#[0-9A-F]{6}/i.test(state.dailyRollDetail) && /pts/i.test(state.dailyRollDetail), `${label} did not render the recorded daily-roll details in the left rail: ${JSON.stringify(state)}.`);
+  assert(state.rollSignalsDetail && !/scoring signals\s*$/i.test(state.rollSignalsDetail), `${label} did not render server-reported scoring signals in the left rail: ${JSON.stringify(state)}.`);
   assert(state.recentUnlocks, `${label} did not render historical progression rewards: ${JSON.stringify(state)}.`);
   assert(!state.recentUnlocks || (state.recentPreviewWide && state.recentPreviewFits && state.recentPreviewRatio >= 1.5), `${label} recent cosmetic preview is clipped or still using a square viewport: ${JSON.stringify(state)}.`);
   assert(state.rankRing, `${label} did not render the rank progress ring: ${JSON.stringify(state)}.`);
