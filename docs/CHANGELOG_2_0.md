@@ -4,9 +4,11 @@ Document user-visible redesign changes by milestone.
 
 ## 2026-08-22 — Keep Neon Particle visible in compact previews
 
-- Name Motion previews now retain the reference’s cyan, indigo, rose, and
-  white particle grain instead of flattening into a smooth white name with a
-  colored halo.
+- Neon Particle now matches the supplied white-hot reference structure:
+  crisp white letters, a restrained cyan/rose bloom, irregular micro-grain,
+  and sparse particles emitted from the glyph edges.
+- Removed the broad color bands, crowded particle field, and oversized glints
+  that obscured compact names.
 - The same bounded renderer continues to serve Customize, Studio, public
   profiles, and compact cards without changing the cosmetic key or backend
   contract.

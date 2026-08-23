@@ -1,15 +1,15 @@
 # Chromadie 2.0 Decisions
 
-## 2026-08-22 — Preserve Neon Particle grain at compact scale
+## 2026-08-22 — Make white type the Neon Particle anchor
 
-The supplied screencast shows a white-hot name with visible cyan, indigo, and
-rose micro-particles inside the glyphs, not a smooth white fill with a colored
-halo. Neon Particle keeps its bounded two-pixel glyph sampling and now draws
-the sampled particle cores over the masked field so those colors remain
-visible in small Customize and profile-card renders. The cores remain sampled
-from the real glyph mask, so no particles can escape into arbitrary canvas
-content; catalog IDs, the transparent profile surface, and reduced-motion
-behavior remain unchanged.
+The supplied screencast establishes a crisp white-hot glyph as the dominant
+layer, with a restrained cyan-to-rose perimeter bloom, irregular micro-grain,
+and sparse particles emitted from the real letter edges. Neon Particle no
+longer uses broad moving color bands or one shared high particle density at
+every size. Full profile renders receive the reference-level interior and edge
+detail; compact surfaces use a lower bounded density so the name remains
+legible after downsampling. Catalog IDs, transparent profile compositing, and
+reduced-motion behavior remain unchanged.
 
 ## 2026-08-22 — Treat premium as execution quality, not muted color
 

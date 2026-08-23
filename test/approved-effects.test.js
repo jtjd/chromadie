@@ -219,13 +219,17 @@ test('the three approved reference effects keep their authored visual primitives
   const raster = motions.slice(rasterStart, rasterEnd);
 
   assert.match(neon, /getReferenceTextMask\(ctx, model\)/);
-  assert.match(neon, /createRadialGradient\(\s*fieldContext/);
-  assert.match(neon, /const particleCount = Math\.min\(680/);
-  assert.match(neon, /ctx\.globalCompositeOperation = 'source-over'/);
-  assert.match(neon, /const hot = seededNoise\(model\.seed, index \+ 371\) > 0\.82/);
-  assert.match(neon, /const edgeCount = Math\.min\(240/);
+  assert.match(neon, /ctx\.globalAlpha = 0\.94;\s*ctx\.drawImage\?\.\(mask\.canvas/);
+  assert.match(neon, /const perimeter = createLinearGradient/);
+  assert.match(neon, /const compactParticles = model\.compact \|\| metrics\.fontSize < 36/);
+  assert.match(neon, /compactParticles \? 42 : 320/);
+  assert.match(neon, /const edgeBiased = index % 3 === 0/);
+  assert.match(neon, /const hot = seededNoise\(model\.seed, index \* 89 \+ 371\) > 0\.91/);
+  assert.match(neon, /compactParticles \? 34 : 160/);
+  assert.match(neon, /edge\.nx \* distance/);
   assert.match(neon, /strokeText\(ctx, model, outline/);
   assert.match(motions, /const sampleStep = 2/);
+  assert.doesNotMatch(neon, /const bandWidth|index < 13/);
   assert.doesNotMatch(neon, /drawBase\(ctx, model\);\s*\n\s*\n\s*const field/);
 
   assert.match(raster, /drawText\(ctx, model, MOTION_TEXT_LIGHT/);

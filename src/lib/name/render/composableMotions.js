@@ -257,11 +257,18 @@ function getReferenceTextMask(ctx, model) {
   for (let y = top; y < bottom; y += sampleStep) {
     for (let x = left; x < right; x += sampleStep) {
       if (alphaAt(x, y) <= 20) continue;
-      const edge = alphaAt(x - sampleStep, y) <= 20
-        || alphaAt(x + sampleStep, y) <= 20
-        || alphaAt(x, y - sampleStep) <= 20
-        || alphaAt(x, y + sampleStep) <= 20;
-      const point = { x, y };
+      const leftAlpha = alphaAt(x - sampleStep, y);
+      const rightAlpha = alphaAt(x + sampleStep, y);
+      const topAlpha = alphaAt(x, y - sampleStep);
+      const bottomAlpha = alphaAt(x, y + sampleStep);
+      const edge = leftAlpha <= 20 || rightAlpha <= 20 || topAlpha <= 20 || bottomAlpha <= 20;
+      const normalLength = Math.hypot(leftAlpha - rightAlpha, topAlpha - bottomAlpha) || 1;
+      const point = {
+        x,
+        y,
+        nx: (leftAlpha - rightAlpha) / normalLength,
+        ny: (topAlpha - bottomAlpha) / normalLength
+      };
       solidPoints.push(point);
       if (edge) edgePoints.push(point);
     }
@@ -403,8 +410,7 @@ function drawNeonParticleName(ctx, model, drawBase) {
   const { metrics } = model;
   const time = Number.isFinite(model.time) ? model.time : 0;
   const left = metrics.x - metrics.width / 2;
-  const top = metrics.y - metrics.fontSize * 0.43;
-  const colors = ['#00EFFF', '#6E5CFF', '#FF4AD4'];
+  const colors = ['#31E6FF', '#8176FF', '#FF6ED8'];
 
   const mask = getReferenceTextMask(ctx, model);
   if (!mask?.fieldCanvas || !mask.fieldContext || !mask.canvas) {
@@ -412,101 +418,110 @@ function drawNeonParticleName(ctx, model, drawBase) {
     return;
   }
 
-  // Build the same separate field/mask stack as the reference. This keeps the
-  // energy inside the glyph shape rather than letting a source-atop gradient
-  // become a smooth rectangle or a material-colored text fill.
+  // The reference is white type first. Color appears as a restrained edge
+  // atmosphere and isolated particles, never as broad bands across the name.
   const fieldContext = mask.fieldContext;
   const fieldCanvas = mask.fieldCanvas;
   fieldContext.clearRect(0, 0, model.width, model.height);
-  const fieldPad = Math.max(28, metrics.fontSize * 0.42);
-  const fieldLeft = left - fieldPad;
-  const fieldTop = top - fieldPad;
-  const fieldWidth = metrics.width + fieldPad * 2;
-  const fieldHeight = metrics.fontSize * 0.86 + fieldPad * 2;
-  const atmosphereA = createRadialGradient(
+  fieldContext.fillStyle = createLinearGradient(
     fieldContext,
-    ['rgba(0,220,255,.26)', 'rgba(55,110,255,.12)', 'rgba(0,0,0,0)'],
-    left + metrics.width * 0.25,
-    top + metrics.fontSize * 0.3,
+    ['rgba(28,226,255,.72)', 'rgba(255,255,255,.08)', 'rgba(126,108,255,.26)', 'rgba(255,91,214,.68)'],
+    left,
     0,
-    left + metrics.width * 0.25,
-    top + metrics.fontSize * 0.3,
-    metrics.fontSize * 0.8,
-    'rgba(0,0,0,0)'
-  );
-  fieldContext.fillStyle = atmosphereA;
-  fieldContext.fillRect(fieldLeft, fieldTop, fieldWidth, fieldHeight);
-  const atmosphereB = createRadialGradient(
-    fieldContext,
-    ['rgba(255,45,215,.26)', 'rgba(148,40,255,.12)', 'rgba(0,0,0,0)'],
-    left + metrics.width * 0.74,
-    top + metrics.fontSize * 0.48,
+    left + metrics.width,
     0,
-    left + metrics.width * 0.74,
-    top + metrics.fontSize * 0.48,
-    metrics.fontSize * 0.9,
-    'rgba(0,0,0,0)'
+    '#FFFFFF'
   );
-  fieldContext.fillStyle = atmosphereB;
-  fieldContext.fillRect(fieldLeft, fieldTop, fieldWidth, fieldHeight);
-
-  fieldContext.save?.();
-  fieldContext.globalCompositeOperation = 'lighter';
-  const bandWidth = Math.max(44, metrics.fontSize * 0.65);
-  for (let index = 0; index < 13; index += 1) {
-    const progress = fract(time * 0.00006 + index * 0.12);
-    const bandX = left + metrics.width * progress;
-    const band = createLinearGradient(
-      fieldContext,
-      ['rgba(0,0,0,0)', 'rgba(40,225,255,.14)', index % 2 ? 'rgba(255,60,230,.18)' : 'rgba(80,100,255,.16)', 'rgba(255,255,255,.11)', 'rgba(0,0,0,0)'],
-      bandX - bandWidth,
-      0,
-      bandX + bandWidth,
-      0,
-      'rgba(255,255,255,.1)'
-    );
-    fieldContext.fillStyle = band;
-    const waveY = Math.sin(time * 0.0012 + index) * Math.max(3, metrics.fontSize * 0.07);
-    fieldContext.fillRect(bandX - bandWidth * 1.14, top - metrics.fontSize * 0.1 + waveY, bandWidth * 2.28, metrics.fontSize * 0.86 + metrics.fontSize * 0.2);
-  }
-  fieldContext.restore?.();
+  fieldContext.fillRect(0, 0, model.width, model.height);
   fieldContext.globalCompositeOperation = 'destination-in';
   fieldContext.drawImage(mask.canvas, 0, 0);
   fieldContext.globalCompositeOperation = 'source-over';
 
+  // Two close, low-energy color shadows provide the cyan-left/pink-right
+  // perimeter in the source without sacrificing the letter silhouette.
   ctx.save?.();
-  ctx.shadowColor = 'rgba(95,130,255,.34)';
-  ctx.shadowBlur = 24;
+  ctx.globalAlpha = 0.44;
+  ctx.shadowColor = 'rgba(38,218,255,.7)';
+  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.16);
+  ctx.translate?.(-Math.max(0.35, metrics.fontSize * 0.009), 0);
   ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
   ctx.restore?.();
 
-  // A faint mask and its blurred duplicate lift the perimeter without filling
-  // the name with the solid material used by the other motions.
   ctx.save?.();
+  ctx.globalAlpha = 0.34;
+  ctx.shadowColor = 'rgba(255,76,210,.62)';
+  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.14);
+  ctx.translate?.(Math.max(0.35, metrics.fontSize * 0.009), metrics.fontSize * 0.003);
+  ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
+  ctx.restore?.();
+
+  ctx.save?.();
+  ctx.filter = `blur(${Math.max(3, metrics.fontSize * 0.09)}px)`;
   ctx.globalAlpha = 0.16;
-  ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.filter = 'blur(7px)';
-  ctx.globalAlpha = 0.55;
+  ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
+  ctx.restore?.();
+
+  ctx.save?.();
+  ctx.globalAlpha = 0.18;
+  ctx.shadowColor = 'rgba(116,132,255,.82)';
+  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.18);
   ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
   ctx.restore?.();
 
-  const solidPoints = mask.solidPoints;
-  const particleCount = Math.min(680, solidPoints.length);
   ctx.save?.();
-  // The halo can add light, but the particle cores must tint the white glyph
-  // instead of being added on top of an already-white mask. `lighter` made
-  // compact previews read as a smooth solid fill and hid the reference's
-  // cyan/indigo/rose grain. Every core is sampled from the glyph mask, so
-  // source-over remains safely bounded to the letterforms.
-  ctx.globalCompositeOperation = 'lighter';
+  ctx.filter = `blur(${Math.max(2, metrics.fontSize * 0.055)}px)`;
+  ctx.globalAlpha = 0.44;
+  ctx.shadowColor = 'rgba(80,108,255,.68)';
+  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.12);
+  ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
+  ctx.restore?.();
+
+  const perimeter = createLinearGradient(
+    ctx,
+    ['#43ECFF', '#F8FDFF', '#8E84FF', '#FF73D9'],
+    left,
+    0,
+    left + metrics.width,
+    0,
+    '#F8FDFF'
+  );
+  ctx.save?.();
+  setTextContext(ctx, model);
+  ctx.globalAlpha = 0.52;
+  ctx.strokeStyle = perimeter;
+  ctx.lineWidth = Math.max(1.05, metrics.fontSize * 0.018);
+  ctx.shadowColor = 'rgba(105,126,255,.86)';
+  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.11);
+  ctx.strokeText?.(model.displayText, metrics.x, metrics.y);
+  ctx.restore?.();
+
+  // The clean white face is the dominant layer in the supplied reference.
+  ctx.save?.();
+  ctx.globalAlpha = 0.94;
+  ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
+  ctx.globalAlpha = 0.17;
+  ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
+  ctx.restore?.();
+
+  const solidPoints = mask.solidPoints;
+  const compactParticles = model.compact || metrics.fontSize < 36;
+  const particleCount = Math.min(
+    solidPoints.length,
+    compactParticles ? 42 : 320,
+    Math.max(compactParticles ? 14 : 96, Math.round(metrics.width * metrics.fontSize * 0.0115))
+  );
+  const particleScale = Math.min(1.35, Math.max(0.42, metrics.fontSize / 74));
+  ctx.save?.();
   for (let index = 0; index < particleCount; index += 1) {
-    const sample = solidPoints[Math.floor(seededNoise(model.seed, index + 281) * solidPoints.length) % solidPoints.length];
-    const tw = time * 0.0015 + seededNoise(model.seed, index + 301) * Math.PI * 2;
-    const size = 0.9 + seededNoise(model.seed, index + 361) * 1.5;
-    const hot = seededNoise(model.seed, index + 371) > 0.82;
-    let x = sample.x + Math.sin(tw + index) * 1.3 + Math.cos(tw * 1.2 + index) * 0.6;
-    let y = sample.y + Math.cos(tw * 1.2 + index) * 1.3 + Math.sin(tw + index) * 0.6;
+    const edgeBiased = index % 3 === 0 && mask.edgePoints.length;
+    const points = edgeBiased ? mask.edgePoints : solidPoints;
+    const sample = points[Math.floor(seededNoise(model.seed, index * 73 + 281) * points.length) % points.length];
+    const tw = time * 0.0015 + seededNoise(model.seed, index * 79 + 301) * Math.PI * 2;
+    const sizeNoise = seededNoise(model.seed, index * 83 + 361);
+    const size = (0.5 + sizeNoise * sizeNoise * 1.55) * particleScale;
+    const hot = seededNoise(model.seed, index * 89 + 371) > 0.91;
+    let x = sample.x + Math.sin(tw + index) * 0.32 * particleScale;
+    let y = sample.y + Math.cos(tw * 1.2 + index) * 0.32 * particleScale;
     if (model.pointer && Number.isFinite(model.pointer.x) && Number.isFinite(model.pointer.y)) {
       const dx = model.pointer.x - x;
       const dy = model.pointer.y - y;
@@ -518,56 +533,55 @@ function drawNeonParticleName(ctx, model, drawBase) {
       }
     }
     const pulse = (Math.sin(tw * 1.4 + index) + 1) / 2;
-    const colorIndex = Math.floor(seededNoise(model.seed, index + 391) * colors.length) % colors.length;
+    const colorIndex = Math.floor(seededNoise(model.seed, index * 97 + 391) * colors.length) % colors.length;
     const color = hot ? '#FFFFFF' : colors[colorIndex];
-    drawReferenceCircle(ctx, x, y, size * 3.6, color, 0.04 * (0.5 + pulse * 0.5));
-    ctx.globalCompositeOperation = 'source-over';
-    drawReferenceCircle(ctx, x, y, size, color, (hot ? 0.88 : 0.52) * (0.5 + pulse * 0.5));
-    if (hot) drawReferenceCircle(ctx, x, y, size * 0.35, '#FFFFFF', 0.98 * (0.6 + pulse * 0.4));
-    ctx.globalCompositeOperation = 'lighter';
+    drawReferenceCircle(ctx, x, y, size * 2.25, color, 0.085 * (0.65 + pulse * 0.35));
+    drawReferenceCircle(ctx, x, y, size, color, (hot ? 0.72 : 0.54) * (0.76 + pulse * 0.24));
+    if (hot) drawReferenceCircle(ctx, x, y, size * 0.34, '#FFFFFF', 0.92);
   }
 
-  // Edge particles are sampled from the actual glyph perimeter, then drift
-  // outward. This is what makes Neon Particle emit from letters rather than
-  // decorate the rectangular canvas bounds.
-  const edgeCount = Math.min(240, mask.edgePoints.length);
+  const edgeCount = Math.min(
+    mask.edgePoints.length,
+    compactParticles ? 34 : 160,
+    Math.max(compactParticles ? 16 : 72, Math.round(metrics.width * 0.5))
+  );
   for (let index = 0; index < edgeCount; index += 1) {
-    const seed = seededNoise(model.seed, index + 401);
-    const edge = mask.edgePoints[Math.floor(seededNoise(model.seed, index + 411) * mask.edgePoints.length) % mask.edgePoints.length];
+    const seed = seededNoise(model.seed, index * 131 + 401);
+    const edge = mask.edgePoints[
+      Math.floor(seededNoise(model.seed, index * 137 + 411) * mask.edgePoints.length) % mask.edgePoints.length
+    ];
     const life = fract(seed + time * 0.00045);
-    const vx = (seededNoise(model.seed, index + 421) - 0.5) * 1.6;
-    const vy = (seededNoise(model.seed, index + 431) - 0.5) * 1.6;
-    const x = edge.x + vx * life * 4;
-    const y = edge.y + vy * life * 4;
-    const size = 0.9 + seededNoise(model.seed, index + 441) * 1.5;
-    const alpha = life * 0.55;
-    drawReferenceCircle(ctx, x, y, size * 2.5, '#00EFFF', alpha * 0.08);
-    drawReferenceCircle(ctx, x, y, size, '#FF4FD7', alpha * 0.22);
-    drawReferenceCircle(ctx, x, y, size * 0.55, '#FFFFFF', alpha * 0.6);
+    const tangent = (seededNoise(model.seed, index * 149 + 421) - 0.5) * 1.8;
+    const distance = life * (3.5 + 8.5 * particleScale);
+    const x = edge.x + edge.nx * distance - edge.ny * tangent;
+    const y = edge.y + edge.ny * distance + edge.nx * tangent;
+    const size = (0.55 + seededNoise(model.seed, index * 157 + 441) * 1.25) * particleScale;
+    const alpha = 0.14 + Math.sin(life * Math.PI) * 0.68;
+    const color = colors[Math.floor(seededNoise(model.seed, index * 163 + 446) * colors.length) % colors.length];
+    drawReferenceCircle(ctx, x, y, size * 2.5, color, alpha * 0.11);
+    drawReferenceCircle(ctx, x, y, size, color, alpha * 0.64);
+    if (seededNoise(model.seed, index * 167 + 447) > 0.66) {
+      drawReferenceCircle(ctx, x, y, size * 0.42, '#FFFFFF', alpha * 0.82);
+    }
   }
 
-  // Keep a few sharp, deterministic star glints alive directly on the edge.
-  for (let index = 0; index < 14; index += 1) {
+  // Tiny edge glints punctuate the particles without producing the long
+  // horizontal streak that obscured compact names.
+  const glintCount = compactParticles ? 3 : 8;
+  for (let index = 0; index < glintCount; index += 1) {
     const phase = fract(time * 0.00025 + seededNoise(model.seed, index + 451));
-    if (phase > 0.2 || !mask.edgePoints.length) continue;
+    if (phase > 0.16 || !mask.edgePoints.length) continue;
     const edge = mask.edgePoints[Math.floor(seededNoise(model.seed, index + 461) * mask.edgePoints.length) % mask.edgePoints.length];
-    const size = 4 + seededNoise(model.seed, index + 471) * 5;
-    const alpha = (0.2 - phase) / 0.2;
-    ctx.globalAlpha = alpha * 0.9;
+    const size = (1.8 + seededNoise(model.seed, index + 471) * 2.8) * particleScale;
+    const alpha = (0.16 - phase) / 0.16;
+    ctx.globalAlpha = alpha * 0.82;
     ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = Math.max(0.55, particleScale * 0.65);
     ctx.beginPath?.();
     ctx.moveTo?.(edge.x - size, edge.y);
     ctx.lineTo?.(edge.x + size, edge.y);
     ctx.moveTo?.(edge.x, edge.y - size);
     ctx.lineTo?.(edge.x, edge.y + size);
-    ctx.stroke?.();
-    ctx.strokeStyle = `rgba(0,238,255,${alpha * 0.36})`;
-    ctx.beginPath?.();
-    ctx.moveTo?.(edge.x - size * 1.6, edge.y);
-    ctx.lineTo?.(edge.x + size * 1.6, edge.y);
-    ctx.moveTo?.(edge.x, edge.y - size * 1.6);
-    ctx.lineTo?.(edge.x, edge.y + size * 1.6);
     ctx.stroke?.();
   }
   ctx.restore?.();
@@ -581,7 +595,7 @@ function drawNeonParticleName(ctx, model, drawBase) {
     0,
     '#F7FBFF'
   );
-  strokeText(ctx, model, outline, Math.max(1.2, metrics.fontSize * 0.01), 0.75);
+  strokeText(ctx, model, outline, Math.max(0.6, metrics.fontSize * 0.009), 0.56);
 }
 
 function drawRasterSignal(ctx, model, drawBase) {
