@@ -335,6 +335,13 @@ async function inspectAuthenticatedProgression(width, height, label) {
     const root = document.documentElement;
     const stats = [...document.querySelectorAll('.profile-progression-stats > div')].map(item => item.textContent.trim().replace(/\\s+/g, ' '));
     const progressbars = [...document.querySelectorAll('[role="progressbar"]')].map(item => ({ label: item.getAttribute('aria-label') || '', value: item.getAttribute('aria-valuenow') || '' }));
+    const recentUnlocks = document.querySelector('.profile-progression-unlocks');
+    const recentPreview = recentUnlocks?.querySelector('.progression-reward-preview');
+    const recentThumbnail = recentPreview?.querySelector('.progression-reward-preview__thumbnail');
+    const recentSemantic = recentThumbnail?.querySelector('.name-effect-canvas__semantic');
+    const recentThumbnailRect = recentThumbnail?.getBoundingClientRect();
+    const recentSemanticRect = recentSemantic?.getBoundingClientRect();
+    const rect = value => value ? { left: value.left, right: value.right, top: value.top, bottom: value.bottom, width: value.width, height: value.height } : null;
     const text = document.querySelector('.progression-page')?.textContent?.trim().replace(/\\s+/g, ' ') || '';
     return {
       path: location.pathname,
@@ -349,6 +356,12 @@ async function inspectAuthenticatedProgression(width, height, label) {
       approachingRoll50: /42\\s*\\/\\s*50\\s+rolls/i.test(text),
       approachingGoalText: text.includes('50 rolls') ? text.slice(Math.max(0, text.indexOf('50 rolls') - 120), text.indexOf('50 rolls') + 180) : '',
       recentUnlocks: Boolean(document.querySelector('.profile-progression-unlocks')),
+      recentPreviewWide: Boolean(recentPreview?.classList.contains('progression-reward-preview--wide')),
+      recentPreviewFits: Boolean(recentSemanticRect && recentThumbnailRect && recentSemanticRect.left >= recentThumbnailRect.left - 1 && recentSemanticRect.right <= recentThumbnailRect.right + 1 && recentSemanticRect.top >= recentThumbnailRect.top - 1 && recentSemanticRect.bottom <= recentThumbnailRect.bottom + 1),
+      recentPreviewRatio: recentThumbnailRect ? recentThumbnailRect.width / Math.max(1, recentThumbnailRect.height) : 0,
+      recentThumbnailRect: rect(recentThumbnailRect),
+      recentSemanticRect: rect(recentSemanticRect),
+      recentUnlockColumns: recentUnlocks ? getComputedStyle(recentUnlocks.querySelector('ol')).gridTemplateColumns : '',
       rankRing: Boolean(document.querySelector('.profile-progression-rank__ring')),
       pathIconCount: document.querySelectorAll('.progression-path-icon').length,
       rewardThumbnailCount: document.querySelectorAll('.progression-reward-preview__thumbnail').length,
@@ -367,6 +380,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
   assert(state.stats.some(value => value.includes('9d')), `${label} did not render the established streak history: ${JSON.stringify(state)}.`);
   assert(state.streakStrip && state.paths && state.accordionExpanded && state.approachingRoll50, `${label} did not render the focused progression hierarchy: ${JSON.stringify(state)}.`);
   assert(state.recentUnlocks, `${label} did not render historical progression rewards: ${JSON.stringify(state)}.`);
+  assert(!state.recentUnlocks || (state.recentPreviewWide && state.recentPreviewFits && state.recentPreviewRatio >= 1.5), `${label} recent cosmetic preview is clipped or still using a square viewport: ${JSON.stringify(state)}.`);
   assert(state.rankRing, `${label} did not render the rank progress ring: ${JSON.stringify(state)}.`);
   assert(state.pathIconCount >= 3, `${label} did not render the three path glyphs: ${JSON.stringify(state)}.`);
   assert(state.rewardThumbnailCount === 0 || state.canonicalThumbnailCount >= 1, `${label} did not render a canonical cosmetic thumbnail: ${JSON.stringify(state)}.`);
@@ -553,6 +567,10 @@ try {
     const fixture = await seedEstablishedAccountFixture(disposableUserId);
     results.fixture = fixture;
     const state = await inspectAuthenticatedProgression(1440, 1000, 'established');
+    await chromium.page.evaluate("document.querySelector('.profile-progression-unlocks')?.scrollIntoView({ block: 'center', inline: 'nearest' })");
+    const progressionUnlockScreenshot = join(evidenceDir, 'authenticated-progression-recent-unlock.png');
+    await chromium.page.screenshot(progressionUnlockScreenshot);
+    results.screenshots.push(progressionUnlockScreenshot);
     const establishedProgression = await callAuthenticatedRpc('get_my_progression');
     const rareDiscovery = establishedProgression?.milestones?.find(milestone => milestone.id === 'journey_rarity_rare');
     assert(rareDiscovery?.unlocked === true && ['historical_backfill', 'live'].includes(rareDiscovery.unlock_source) && rareDiscovery.acknowledged_at, 'Rare discovery fixture did not remain a server-owned acknowledged fact: ' + JSON.stringify(rareDiscovery) + '.');

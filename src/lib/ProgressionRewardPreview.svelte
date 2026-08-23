@@ -14,6 +14,7 @@
   export let track = 'rank';
   export let analyticsSurface = 'progression';
   export let presentation = 'default';
+  export let flat = false;
 
   let previewComponent = null;
   let catalogItems = {};
@@ -118,15 +119,20 @@
   }
 </script>
 
-<div class="progression-reward-preview" class:progression-reward-preview--wide={presentation === 'wide'}>
+<div
+  class="progression-reward-preview"
+  class:progression-reward-preview--wide={presentation === 'wide'}
+  style={presentation === 'wide' ? '--progression-preview-name-size:.9rem; --progression-preview-name-width:100%; --progression-preview-name-overflow:hidden;' : undefined}
+>
   <button
     type="button"
     class="progression-reward-preview__trigger"
+    style={flat ? 'min-height:4.8rem; border:0; background:transparent; padding:.25rem 0 0; border-radius:0;' : presentation === 'wide' ? 'min-height:4.8rem;' : undefined}
     aria-expanded={previewOpen}
     aria-controls={previewPanelId}
     on:click={previewOpen ? closePreview : loadPreview}
   >
-    <span class={`progression-reward-preview__thumbnail${unlocked ? '' : ' progression-reward-preview__thumbnail--locked'}`} aria-hidden="true">
+    <span class={`progression-reward-preview__thumbnail${unlocked ? '' : ' progression-reward-preview__thumbnail--locked'}`} style={presentation === 'wide' ? 'flex-basis:min(8.5rem,46%); width:min(8.5rem,46%); height:4.2rem;' : undefined} aria-hidden="true">
       {#if previewComponent && catalogItem}
         <svelte:component
           this={previewComponent}

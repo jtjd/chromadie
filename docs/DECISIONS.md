@@ -5836,3 +5836,13 @@ presentation and acknowledgement RPCs, analytics, Studio handoff, and canonical
 `ShopItemPreview`, but uses a single-column layout and a wide preview viewport.
 Name-effect hosts are explicitly bounded within that viewport because their
 canvas renderers intentionally use visual bleed that cannot fit a square icon.
+
+## 2026-08-23 — Give Progression recent unlocks a readable preview viewport
+
+Recent unlocks on the dedicated Progression page use the same canonical reward
+preview as Roll and Studio, but the previous three-column card grid reduced each
+preview to a narrow square and clipped name effects with intentional canvas
+bleed. Page-mode recent unlocks now use a single readable card column and a wide
+preview presentation. The renderer passes bounded name dimensions through
+existing effect-card variables, preserving the route CSS budget and the shared
+server/catalog authority.

@@ -6,12 +6,15 @@
   cosmetic preview, and authenticated progression browser smoke.
 - Placed the single unlock presentation in the left result context directly
   beneath its compact reward strip, outside the Daily Roll card.
+- Expanded the authenticated Progression page's recent-unlock cards to a
+  readable single-column layout with wide, bounded canonical previews.
 - Added a compact one-column reward composition with two balanced actions and a
   wide canonical preview. Name-preview hosts and semantic text are bounded so
   long usernames and material/motion renderers remain inside the viewport.
 - Added source-contract coverage plus authenticated browser geometry checks for
-  left-context containment and ordering, canonical rendering, clipping, desktop, 390px
-  mobile, keyboard controls, and horizontal overflow.
+  left-context containment and ordering, progression-card preview bounds,
+  canonical rendering, clipping, desktop, 390px mobile, keyboard controls, and
+  horizontal overflow.
 - Validation passes: production build, Svelte check, ESLint, 449 Node tests,
   links, CSP, performance, username/balance/catalog/scoring drift, database
   security, and the authenticated progression browser smoke. Roll-only preview

@@ -610,9 +610,9 @@
           <div><span class="profile-progression-label">Recent unlocks</span><h3 id="profile-progression-unlocks-title">Cosmetics added to your record</h3></div>
           <span>{recentUnlocks.length} recent</span>
         </div>
-        <ol>
+        <ol style={pageMode ? 'grid-template-columns:minmax(0,1fr); row-gap:0;' : undefined}>
           {#each recentUnlocks.slice(0, 3) as unlock (unlock.id)}
-            <li><div><strong>{unlock.name || 'Milestone complete'}</strong><small>{unlock.reward?.name || 'Cosmetic reward'}</small></div>{#if unlock.reward}<ProgressionRewardPreview reward={unlock.reward} unlocked={true} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={unlock.id} track={unlock.track} analyticsSurface={analyticsSurface} />{/if}</li>
+            <li><div><strong>{unlock.name || 'Milestone complete'}</strong><small>{unlock.reward?.name || 'Cosmetic reward'}</small></div>{#if unlock.reward}<ProgressionRewardPreview reward={unlock.reward} unlocked={true} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={unlock.id} track={unlock.track} analyticsSurface={analyticsSurface} presentation={pageMode ? 'wide' : 'default'} flat={pageMode} />{/if}</li>
           {/each}
         </ol>
         </section>
@@ -714,7 +714,7 @@
   .profile-progression-condensed-list small, .profile-progression-condensed-list em { color:var(--color-ink-muted); font-size:.65rem; font-style:normal; }
   .profile-progression-unlocks ol, .profile-progression-history ol { display:grid; gap:.45rem; margin:.75rem 0 0; padding:0; list-style:none; }
   .profile-progression-unlocks ol { grid-template-columns:repeat(3,minmax(0,1fr)); }
-  .profile-progression-unlocks li { display:grid; gap:.5rem; min-width:0; padding:.65rem .75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
+  .profile-progression-unlocks li { display:grid; gap:.5rem; min-width:0; padding:.85rem 0; border-top:1px solid var(--color-line-subtle); }
   .profile-progression-unlocks li > div:first-child { display:grid; gap:.2rem; min-width:0; }
   .profile-progression-unlocks strong, .profile-progression-unlocks small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .profile-progression-unlocks strong { color:var(--color-ink-strong); font-size:var(--type-small); }
@@ -800,7 +800,6 @@
   .profile-progression-weekly,
   .profile-progression-lane,
   .profile-progression-node,
-  .profile-progression-unlocks li,
   .profile-progression-history li {
     border-color:var(--color-state-active);
     border-radius:1.1rem;
@@ -810,7 +809,6 @@
   }
   .profile-progression-rank { box-shadow:var(--shadow-state-card), var(--shadow-card-glass); }
   .profile-progression-lane,
-  .profile-progression-unlocks li,
   .profile-progression-history li { border-color:var(--color-line-subtle); }
   .profile-progression-stats > div { border-color:var(--color-line-subtle); border-radius:var(--radius-md); background:rgba(255,255,255,.018); }
   .profile-progression-node { border-color:var(--color-line-subtle); border-radius:var(--radius-md); box-shadow:none; background:rgba(255,255,255,.025); }

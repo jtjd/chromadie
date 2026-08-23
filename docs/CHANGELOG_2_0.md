@@ -8,6 +8,8 @@ Document user-visible redesign changes by milestone.
   directly beneath the “New cosmetic” reward strip in the left result column.
 - Kept the compact strip as the immediate earned-reward signal while the panel
   beneath it owns the preview, acknowledgement, and Studio action.
+- Fixed recent-unlock cards on Progression so canonical name previews have a
+  readable wide viewport instead of clipping inside narrow three-column cells.
 - Reflowed the compact reward details and actions for desktop and mobile, and
   widened the canonical cosmetic viewport so name effects no longer clip.
 

@@ -269,6 +269,10 @@ test('progression visual treatment keeps state neutral and previews canonical co
   assert.match(page, /focusStreakTitle/);
   assert.match(rewardPreview, /onMount/);
   assert.match(rewardPreview, /progression-reward-preview__thumbnail/);
+  assert.match(rewardPreview, /flex-basis:min\(8\.5rem,46%\)/);
+  assert.match(progression, /presentation=\{pageMode \? 'wide' : 'default'\}/);
+  assert.match(progression, /flat=\{pageMode\}/);
+  assert.match(progression, /grid-template-columns:minmax\(0,1fr\)/);
   assert.match(rewardPreview, /grayscale\(1\)/);
   assert.doesNotMatch(rewardPreview, /Preview reward/);
   assert.match(pathIcon, /normalizedTrack === 'rank'/);
