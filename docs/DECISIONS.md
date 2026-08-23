@@ -5862,3 +5862,16 @@ counters or the streak strip. The page-mode board uses the same roll color for
 restrained rank/weekly tinting and flat path rows, keeping one outer panel as
 the frame. No eligibility, scoring, reward, inventory, or RLS authority moved
 to the client.
+
+## 2026-08-23 — Let the current roll color own the Progression field
+
+The dedicated Progression route is a game/profile surface, not a generic
+dashboard. Page mode therefore drops the shared panel frame and uses the
+current roll color as a soft full-page field. The rank plate has no enclosing
+right edge or clipped linear gradient; only its left/bottom state marks remain,
+so the color fades into the canvas instead of stopping at a visible rectangle.
+
+Summary counters stay useful as one signal ribbon, while Rank, Ritual, and
+Discovery use bounded accent blends derived from the same current roll. These
+are presentation-only variables; daily eligibility, scoring, milestones,
+rewards, inventory, and RLS remain server-authoritative.

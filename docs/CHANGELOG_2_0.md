@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-23 — Reframe Progression as a color-led game surface
+
+- Removed the nested page panel and softened the board into the site canvas.
+- Replaced the rank card’s clipped purple linear gradient with a borderless
+  current-roll color field that fades across the page.
+- Added a high-contrast counter ribbon and distinct Rank, Ritual, and Discovery
+  accent colors so progression paths read as game state rather than dashboard
+  rows.
+
 ## 2026-08-23 — Make Progression reflect the completed daily roll
 
 - Replaced the stale post-roll “Roll today” action with a server-backed

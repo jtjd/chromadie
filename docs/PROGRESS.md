@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Progression color field and game-state hierarchy — 2026-08-23
+
+- Removed the page-mode dashboard frame and nested rank-card treatment so the
+  progression board reads as a profile/game surface rather than a SaaS panel.
+- Replaced the hard current-color rank fill with full-viewport soft color fields
+  and a borderless rank plate; the color now fades through the board without a
+  clipped gradient edge.
+- Turned the summary counters into one colored signal ribbon and gave Rank,
+  Ritual, and Discovery distinct accent blends for their path bars and rails.
+- Kept the existing server-backed daily status, roll identity, scoring signals,
+  reward previews, mobile containment, and reduced-motion behavior intact.
+
 ## Progression daily state and signal rail — 2026-08-23
 
 - Made the streak-strip action reflect the authenticated `get_my_daily_roll()`

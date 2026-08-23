@@ -256,13 +256,16 @@ test('progression visual treatment keeps state neutral and previews canonical co
   assert.match(progression, /laneMilestoneCopy/);
   assert.match(progression, /profile-progression-section-heading--page/);
   assert.match(progression, /profile-progression-rank__name/);
+  assert.match(progression, /border-left:3px solid color-mix/);
+  assert.match(progression, /function laneAccent/);
+  assert.match(progression, /profile-progression-surface--page \{ padding:2rem!important; border:0!important/);
   const rankMarkup = progression.slice(progression.indexOf('Rank · Build mastery'), progression.indexOf('Rank · Build mastery') + 180);
   assert.doesNotMatch(rankMarkup, /profile-progression-color-chip/);
   assert.match(progression, /ProgressionPathIcon/);
   assert.match(progression, /profile-progression-rank__ring-value[^}]*var\(--progression-accent/);
   assert.match(page, /--progression-accent/);
   assert.match(page, /progression-page__composition/);
-  assert.match(page, /radial-gradient\(circle at 72% 42%, color-mix/);
+  assert.match(page, /radial-gradient\(ellipse 72% 78% at 92% 4%,color-mix/);
   assert.match(page, /--progression-accent-light/);
   assert.match(page, /progression-page__color-chip/);
   assert.match(page, /progression-page__streak-strip/);

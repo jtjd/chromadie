@@ -198,7 +198,7 @@
   <title>Progression · ChromaDie</title>
 </svelte:head>
 
-<div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-ink:${accentInk};--progression-accent-light:color-mix(in srgb,${accentColor} 76%,white);--progression-accent-glow:color-mix(in srgb,${accentColor} 24%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentColor} 40%,transparent)`}>
+<div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-ink:${accentInk};--progression-accent-light:color-mix(in srgb,${accentColor} 76%,white);--progression-accent-glow:color-mix(in srgb,${accentColor} 24%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentColor} 40%,transparent);background:radial-gradient(ellipse 72% 78% at 92% 4%,color-mix(in srgb,${accentColor} 12%,transparent),transparent 72%),radial-gradient(ellipse 68% 62% at 10% 92%,color-mix(in srgb,${accentColor} 7%,transparent),transparent 74%),var(--bg,#0e0e10)`}>
   <div class="progression-page__shell">
     <div class="progression-page__composition">
       <div class="progression-page__rail" style="--progression-rail-offset:clamp(7rem,17vh,10rem);align-self:start">
@@ -339,7 +339,7 @@
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: clamp(3rem, 7vw, 6rem) 0 5rem;
-    background: radial-gradient(circle at 72% 42%, color-mix(in srgb, var(--progression-accent) 14%, transparent), transparent 42rem), var(--bg, #0e0e10);
+    background: var(--bg, #0e0e10);
     color: var(--progression-text);
     font-family: var(--site-font, var(--font-body-stack, sans-serif));
     color-scheme: dark;
