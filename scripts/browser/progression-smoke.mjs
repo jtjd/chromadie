@@ -462,15 +462,15 @@ try {
 
     const resultState = await chromium.page.evaluate(`(() => {
       const card = document.querySelector('.roll-stage--results');
-      const display = card?.querySelector(':scope > .roll-display');
-      const queue = card?.querySelector(':scope > .progression-unlock-queue');
-      const breakdown = card?.querySelector(':scope > .roll-breakdown');
+      const context = document.querySelector('.roll-page__context');
+      const strip = context?.querySelector('.roll-page__proof');
+      const queue = context?.querySelector('.progression-unlock-queue');
       const thumbnail = queue?.querySelector('.progression-reward-preview__thumbnail');
       const semantic = thumbnail?.querySelector('.name-effect-canvas__semantic');
       const cardRect = card?.getBoundingClientRect();
-      const displayRect = display?.getBoundingClientRect();
+      const contextRect = context?.getBoundingClientRect();
+      const stripRect = strip?.getBoundingClientRect();
       const queueRect = queue?.getBoundingClientRect();
-      const breakdownRect = breakdown?.getBoundingClientRect();
       const thumbnailRect = thumbnail?.getBoundingClientRect();
       const semanticRect = semantic?.getBoundingClientRect();
       return {
@@ -482,8 +482,10 @@ try {
         queueTitle: queue?.querySelector('h3')?.textContent?.trim() || '',
         reward: queue?.querySelector('.progression-reward-preview__trigger strong')?.textContent?.trim() || '',
         canonicalThumbnail: Boolean(thumbnail?.querySelector('.shop-preview-area')),
-        queueInsideCard: Boolean(cardRect && queueRect && queueRect.left >= cardRect.left && queueRect.right <= cardRect.right),
-        queueBetweenResultAndScore: Boolean(displayRect && queueRect && breakdownRect && queueRect.top >= displayRect.bottom && queueRect.bottom <= breakdownRect.top),
+        queueInLeftContext: Boolean(context?.contains(queue) && contextRect && queueRect && queueRect.left >= contextRect.left && queueRect.right <= contextRect.right),
+        queueBelowRewardStrip: Boolean(stripRect && queueRect && queueRect.top >= stripRect.bottom),
+        queueOutsideCard: Boolean(queue && card && !card.contains(queue)),
+        queueLeftOfCard: Boolean(cardRect && queueRect && queueRect.right <= cardRect.left),
         wideThumbnail: Boolean(thumbnailRect && thumbnailRect.width >= thumbnailRect.height * 1.5),
         previewFits: Boolean(semanticRect && thumbnailRect && semanticRect.left >= thumbnailRect.left - 1 && semanticRect.right <= thumbnailRect.right + 1 && semanticRect.top >= thumbnailRect.top - 1 && semanticRect.bottom <= thumbnailRect.bottom + 1),
         reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -494,7 +496,7 @@ try {
     assert(resultState.result && resultState.score, 'First roll result surface is incomplete: ' + JSON.stringify(resultState) + '.');
     assert(resultState.queue && resultState.queueTitle === 'Cosmetic earned', 'First roll did not render the progression unlock queue: ' + JSON.stringify(resultState) + '.');
     assert(resultState.reward, 'First roll unlock queue did not expose its reward preview trigger: ' + JSON.stringify(resultState) + '.');
-    assert(resultState.compactQueue && resultState.queueInsideCard && resultState.queueBetweenResultAndScore, 'First roll unlock queue is not integrated into the result card: ' + JSON.stringify(resultState) + '.');
+    assert(resultState.compactQueue && resultState.queueInLeftContext && resultState.queueBelowRewardStrip && resultState.queueOutsideCard && resultState.queueLeftOfCard, 'First roll unlock queue is not beneath the left reward strip: ' + JSON.stringify(resultState) + '.');
     assert(resultState.wideThumbnail, 'First roll cosmetic preview is using the old square viewport: ' + JSON.stringify(resultState) + '.');
     assert(!resultState.horizontalOverflow, 'First roll result overflows horizontally: ' + JSON.stringify(resultState) + '.');
 

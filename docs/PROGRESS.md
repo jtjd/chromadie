@@ -4,13 +4,13 @@
 
 - Audited the dedicated Roll result, shared progression unlock queue, canonical
   cosmetic preview, and authenticated progression browser smoke.
-- Placed the single unlock presentation inside the Roll card between the color
-  result and score breakdown; removed the duplicate left-context reward strip.
+- Placed the single unlock presentation in the left result context directly
+  beneath its compact reward strip, outside the Daily Roll card.
 - Added a compact one-column reward composition with two balanced actions and a
   wide canonical preview. Name-preview hosts and semantic text are bounded so
   long usernames and material/motion renderers remain inside the viewport.
 - Added source-contract coverage plus authenticated browser geometry checks for
-  card containment, ordering, canonical rendering, clipping, desktop, 390px
+  left-context containment and ordering, canonical rendering, clipping, desktop, 390px
   mobile, keyboard controls, and horizontal overflow.
 - Validation passes: production build, Svelte check, ESLint, 449 Node tests,
   links, CSP, performance, username/balance/catalog/scoring drift, database

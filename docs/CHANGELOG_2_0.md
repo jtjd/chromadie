@@ -4,9 +4,10 @@ Document user-visible redesign changes by milestone.
 
 ## 2026-08-23 — Integrate earned cosmetics into the Roll result
 
-- Moved the progression unlock presentation directly between the rolled color
-  and score breakdown in the Daily Roll card.
-- Removed the duplicate “New cosmetic” strip from the surrounding result copy.
+- Moved the progression unlock presentation out of the Daily Roll card and
+  directly beneath the “New cosmetic” reward strip in the left result column.
+- Kept the compact strip as the immediate earned-reward signal while the panel
+  beneath it owns the preview, acknowledgement, and Studio action.
 - Reflowed the compact reward details and actions for desktop and mobile, and
   widened the canonical cosmetic viewport so name effects no longer clip.
 

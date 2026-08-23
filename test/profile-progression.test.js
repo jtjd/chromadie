@@ -42,7 +42,7 @@ test('Customize is the complete profile cosmetics surface with earned and Plus s
   assert.doesNotMatch(cosmetics, /purchase_item/);
 });
 
-test('the dedicated Roll unlock is integrated and gives name cosmetics a wide canonical preview', async () => {
+test('the dedicated Roll unlock sits beneath the left reward strip with a wide canonical preview', async () => {
   const [game, page, queue, preview] = await Promise.all([
     read('src/lib/Game.svelte'),
     read('src/lib/RollPage.svelte'),
@@ -50,13 +50,15 @@ test('the dedicated Roll unlock is integrated and gives name cosmetics a wide ca
     read('src/lib/ProgressionRewardPreview.svelte')
   ]);
 
-  const resultDisplayIndex = game.indexOf('<div class="roll-display" aria-live="polite">');
-  const unlockQueueIndex = game.indexOf('<ProgressionUnlockQueue', resultDisplayIndex);
-  const resultBreakdownIndex = game.indexOf('<div class="roll-breakdown roll-breakdown--result"', resultDisplayIndex);
+  const rewardStripIndex = page.indexOf('<div class="roll-page__proof"');
+  const unlockQueueIndex = page.indexOf('<ProgressionUnlockQueue', rewardStripIndex);
+  const streakIndex = page.indexOf('{#if rollContext.isAuthenticated}', rewardStripIndex);
 
-  assert.ok(resultDisplayIndex >= 0 && unlockQueueIndex > resultDisplayIndex && unlockQueueIndex < resultBreakdownIndex);
-  assert.match(game, /compact=\{dedicated\}/);
-  assert.doesNotMatch(page, /roll-page__proof-label">NEW COSMETIC/);
+  assert.ok(rewardStripIndex >= 0 && unlockQueueIndex > rewardStripIndex && unlockQueueIndex < streakIndex);
+  assert.doesNotMatch(game, /ProgressionUnlockQueue/);
+  assert.match(page, /roll-page__proof-label">NEW COSMETIC/);
+  assert.match(page, /class="roll-page__unlock"/);
+  assert.match(page, /compact=\{true\}/);
   assert.match(queue, /class:progression-unlock-queue--compact=\{compact\}/);
   assert.match(queue, /presentation=\{compact \? 'wide' : 'default'\}/);
   assert.match(preview, /export let presentation = 'default'/);

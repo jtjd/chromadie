@@ -1,6 +1,5 @@
 <script>
   import RollTile from './RollTile.svelte';
-  import ProgressionUnlockQueue from './ProgressionUnlockQueue.svelte';
   import { supabase } from './supabase';
   import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
   import { createChallengeLink } from './challenges';
@@ -106,6 +105,8 @@
       totalRolls: Number($profile?.total_rolls) || 0,
       lifetimeEp: Number($profile?.lifetime_ep) || 0,
       isAuthenticated: Boolean($isAuthenticated),
+      username: $profile?.username || 'You',
+      avatarSrc: $profile?.avatar_url || $profile?.avatar_path || '',
       newProgressionUnlocks: newMilestones,
       weeklyFocusComplete: cotwHit
     });
@@ -963,12 +964,6 @@
     dispatch('promptlogin', { mode: 'signup' });
   }
 
-  function handleProgressionUnlockAcknowledgement(event) {
-    const unlockId = event?.detail?.unlock?.id;
-    if (!unlockId) return;
-    newMilestones = newMilestones.filter(milestone => milestone.id !== unlockId);
-  }
-
   onMount(async () => {
     tickCountdown();
     countdownInterval = setInterval(tickCountdown, 1000);
@@ -1183,18 +1178,6 @@
           {/if}
         </div>
       </div>
-
-      {#if newMilestones.length}
-        <ProgressionUnlockQueue
-          unlocks={newMilestones}
-          surface={dedicated ? 'dedicated-roll' : 'root-roll'}
-          username={$profile?.username || 'You'}
-          displayColor={displayColor}
-          avatarSrc={$profile?.avatar_url || $profile?.avatar_path || ''}
-          compact={dedicated}
-          on:acknowledge={handleProgressionUnlockAcknowledgement}
-        />
-      {/if}
 
       <div class="roll-breakdown roll-breakdown--result" aria-label="Score breakdown">
         <div class="roll-breakdown__header">Score Breakdown</div>
