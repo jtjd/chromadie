@@ -1,5 +1,17 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-22 — Port Raster Signal as text-only compositing
+
+The supplied three-effect HTML remains the visual authority for Raster
+Signal’s white source glyph, 2.5%-of-font horizontal slices, three-frequency
+row drift, periodic signal jump, 16% scan gaps, drifting 128px monochrome
+noise, and sparse white pixels. The reference page also paints moving grain
+across its entire stage; that is presentation background rather than the name
+motion and is deliberately excluded. Production clips the same noise to the
+assembled glyph so profile canvases remain transparent. Spatial distortion,
+blur, texture, and pixel size scale down proportionally for compact names
+while retaining the source values at the full reference size.
+
 ## 2026-08-22 — Make white type the Neon Particle anchor
 
 The supplied screencast establishes a crisp white-hot glyph as the dominant

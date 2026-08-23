@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Raster Signal source-fidelity correction — 2026-08-22
+
+- Read the embedded Raster Signal implementation from the supplied approved
+  three-effect HTML and ported its source glyph buffer, exact row frequencies,
+  periodic jump, alpha modulation, scan gaps, 128px noise tile, and 55-pixel
+  full-size sparkle pass.
+- Kept the profile canvas transparent by clipping texture to the text instead
+  of copying the reference page’s moving full-stage grain background.
+- Added proportional compact scaling for fixed-pixel spatial values so card
+  names preserve the same structure without becoming illegible.
+- Preserved the `raster-signal` key, composable font slot, shared animation
+  clock, reduced-motion frame, and persistence contracts.
+
 ## Neon Particle compact-scale correction — 2026-08-22
 
 - Compared matched compact and full-size browser renders directly with the

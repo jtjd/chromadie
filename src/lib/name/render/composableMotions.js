@@ -184,6 +184,7 @@ function drawParticleTrail(ctx, model, count = 32) {
 }
 
 const REFERENCE_TEXT_MASKS = new WeakMap();
+const RASTER_SIGNAL_BUFFERS = new WeakMap();
 
 function createReferenceCanvas(ctx, width, height) {
   const ownerDocument = ctx?.canvas?.ownerDocument
@@ -279,6 +280,55 @@ function getReferenceTextMask(ctx, model) {
   const fieldContext = fieldCanvas?.getContext?.('2d') || null;
   const state = { key, canvas: maskCanvas, solidPoints, edgePoints, fieldCanvas, fieldContext };
   REFERENCE_TEXT_MASKS.set(ctx, state);
+  return state;
+}
+
+function getRasterSignalBuffers(ctx, model) {
+  if (!ctx || (typeof ctx !== 'object' && typeof ctx !== 'function')) return null;
+  const width = Math.max(1, Math.round(model.width));
+  const height = Math.max(1, Math.round(model.height));
+  const key = [
+    model.displayText,
+    width,
+    height,
+    model.font.key,
+    model.metrics.fontSize,
+    model.metrics.x,
+    model.metrics.y,
+    model.seed
+  ].join('|');
+  const cached = RASTER_SIGNAL_BUFFERS.get(ctx);
+  if (cached?.key === key) return cached;
+
+  const sourceCanvas = createReferenceCanvas(ctx, width, height);
+  const sourceContext = sourceCanvas?.getContext?.('2d');
+  const noiseCanvas = createReferenceCanvas(ctx, 128, 128);
+  const noiseContext = noiseCanvas?.getContext?.('2d');
+  if (!sourceCanvas || !sourceContext?.fillText || !noiseCanvas || !noiseContext?.createImageData || !noiseContext?.putImageData) {
+    return null;
+  }
+
+  sourceContext.clearRect(0, 0, width, height);
+  setTextContext(sourceContext, model);
+  sourceContext.fillStyle = '#FFFFFF';
+  sourceContext.shadowColor = 'rgba(255,255,255,.42)';
+  const visualScale = Math.min(1, Math.max(0.42, model.metrics.fontSize / 111));
+  sourceContext.shadowBlur = Math.max(0.85, 2 * visualScale);
+  sourceContext.fillText(model.displayText, model.metrics.x, model.metrics.y);
+
+  const image = noiseContext.createImageData(128, 128);
+  for (let pixel = 0; pixel < 128 * 128; pixel += 1) {
+    const offset = pixel * 4;
+    const value = Math.floor(seededNoise(model.seed, pixel * 17 + 701) * 255);
+    image.data[offset] = value;
+    image.data[offset + 1] = value;
+    image.data[offset + 2] = value;
+    image.data[offset + 3] = seededNoise(model.seed, pixel * 19 + 709) < 0.62 ? 255 : 0;
+  }
+  noiseContext.putImageData(image, 0, 0);
+
+  const state = { key, sourceCanvas, noiseCanvas };
+  RASTER_SIGNAL_BUFFERS.set(ctx, state);
   return state;
 }
 
@@ -608,79 +658,93 @@ function drawRasterSignal(ctx, model, drawBase) {
   const rowHeight = Math.max(1.5, metrics.fontSize * 0.025);
   const textTop = metrics.y - metrics.fontSize * 0.47;
   const textBottom = metrics.y + metrics.fontSize * 0.47;
-  const rows = Math.min(64, Math.max(8, Math.ceil((textBottom - textTop) / rowHeight)));
+  const rows = Math.min(96, Math.max(8, Math.ceil((textBottom - textTop) / rowHeight)));
+  const buffers = getRasterSignalBuffers(ctx, model);
+  const visualScale = Math.min(1, Math.max(0.42, metrics.fontSize / 111));
 
   // Raster Signal is intentionally monochrome. It constructs the name from
   // white glyph rows, so a vivid material cannot collapse it into Neon's
   // colored energy fill.
   ctx.save?.();
-  ctx.shadowColor = 'rgba(255,255,255,.42)';
-  ctx.shadowBlur = 3;
-  drawText(ctx, model, MOTION_TEXT_LIGHT, 0.12);
-  ctx.restore?.();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.12;
+  ctx.filter = `blur(${Math.max(1.25, 3 * visualScale)}px)`;
+  if (buffers?.sourceCanvas) ctx.drawImage?.(buffers.sourceCanvas, 0, 0, model.width, model.height);
+  else drawText(ctx, model, MOTION_TEXT_LIGHT, 1);
+  ctx.filter = 'none';
+  ctx.globalAlpha = 1;
 
-  const distortion = Math.min(1.4, Math.max(0.8, metrics.fontSize / 54));
   for (let index = 0; index < rows; index += 1) {
-    const seed = seededNoise(model.seed, index + 501);
     const slow = Math.sin(time * 0.004 + index * 0.64) * 1.7;
     const fine = Math.sin(time * 0.011 + index * 1.83) * 0.55;
     const cluster = Math.sin(index * 0.29 + time * 0.0015) * 1.15;
     const jump = ((index + Math.floor(time / 170)) % 17 === 0 ? Math.sin(time * 0.05 + index) * 2.2 : 0);
-    const offset = (slow + fine + cluster + jump) * distortion;
+    const offset = (slow + fine + cluster + jump) * visualScale;
     const top = textTop + index * rowHeight;
     const height = Math.min(rowHeight + 0.4, textBottom - top);
     if (height <= 0) continue;
-    ctx.save?.();
-    ctx.globalCompositeOperation = 'lighter';
-    if (ctx.beginPath && ctx.rect && ctx.clip) {
-      ctx.beginPath();
-      ctx.rect(0, top, model.width, height);
-      ctx.clip();
+    ctx.globalAlpha = 0.82 + Math.sin(time * 0.0027 + index * 0.43) * 0.1;
+    if (buffers?.sourceCanvas && ctx.drawImage) {
+      ctx.drawImage(buffers.sourceCanvas, 0, top, model.width, height, offset, top, model.width, height);
+    } else {
+      ctx.save?.();
+      if (ctx.beginPath && ctx.rect && ctx.clip) {
+        ctx.beginPath();
+        ctx.rect(0, top, model.width, height);
+        ctx.clip();
+      }
+      ctx.translate?.(offset, 0);
+      drawText(ctx, model, MOTION_TEXT_LIGHT, 1);
+      ctx.restore?.();
     }
-    ctx.translate?.(offset, 0);
-    ctx.shadowColor = 'rgba(255,255,255,.28)';
-    ctx.shadowBlur = 2;
-    drawText(ctx, model, MOTION_TEXT_LIGHT, 0.82 + seed * 0.1);
-    ctx.restore?.();
   }
+  ctx.restore?.();
 
   // Cut horizontal signal gaps through the assembled rows. Destination-out
   // keeps the effect transparent around the name in real profile canvases.
   ctx.save?.();
   ctx.globalCompositeOperation = 'destination-out';
-  ctx.globalAlpha = 0.2;
+  ctx.globalAlpha = 0.16;
   ctx.fillStyle = '#000000';
   for (let y = textTop; y < textBottom; y += rowHeight * 2.05) {
     ctx.fillRect?.(metrics.x - metrics.width / 2, y, metrics.width, Math.max(0.6, rowHeight * 0.32));
   }
   ctx.restore?.();
 
-  // A deterministic fine-grain pass and sparse hot pixels supply the noisy
-  // canvas texture seen in the approved study without frame reshuffling.
-  const noiseCount = Math.min(320, Math.max(80, Math.round(metrics.width * 0.58)));
-  ctx.save?.();
-  ctx.globalCompositeOperation = 'source-atop';
-  for (let index = 0; index < noiseCount; index += 1) {
-    const seed = seededNoise(model.seed, index + 551);
-    const x = metrics.x - metrics.width / 2 + seededNoise(model.seed, index + 571) * metrics.width;
-    const y = textTop + seededNoise(model.seed, index + 591) * (textBottom - textTop);
-    ctx.fillStyle = seed > 0.54 ? '#FFFFFF' : '#07090D';
-    ctx.globalAlpha = seed > 0.54 ? 0.08 + seed * 0.12 : 0.08 + seed * 0.1;
-    ctx.fillRect?.(x, y, 0.45 + seed * 1.05, Math.max(0.55, rowHeight * 0.28));
+  // Tile the source's 128px monochrome texture across only pixels already
+  // occupied by the name. The reference page applies this texture to its
+  // stage background too; public profiles deliberately keep that background
+  // transparent and retain only the text treatment requested here.
+  if (buffers?.noiseCanvas && ctx.drawImage) {
+    ctx.save?.();
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.globalAlpha = 0.08;
+    const tileSize = 128 * visualScale;
+    const offsetX = (time * 0.025 * visualScale) % tileSize;
+    const offsetY = (time * 0.011 * visualScale) % tileSize;
+    for (let x = -tileSize + offsetX; x < model.width; x += tileSize) {
+      for (let y = -tileSize + offsetY; y < model.height; y += tileSize) {
+        ctx.drawImage(buffers.noiseCanvas, x, y, tileSize, tileSize);
+      }
+    }
+    ctx.restore?.();
   }
-  ctx.restore?.();
 
-  const pixelCount = Math.min(140, Math.max(32, Math.round(metrics.width * 0.3)));
+  const pixelCount = model.compact
+    ? Math.min(55, Math.max(20, Math.round(metrics.width * 0.2)))
+    : 55;
+  const frame = Math.floor(time / (1000 / 60));
   ctx.save?.();
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = '#FFFFFF';
   for (let index = 0; index < pixelCount; index += 1) {
-    const seed = seededNoise(model.seed, index + 611);
-    if (seed < 0.58) continue;
-    const x = metrics.x - metrics.width / 2 + seededNoise(model.seed, index + 631) * metrics.width;
-    const y = textTop + seededNoise(model.seed, index + 651) * (textBottom - textTop);
-    ctx.globalAlpha = 0.12 + seed * 0.34;
-    ctx.fillRect?.(x, y, 0.4 + seed * 1.2, Math.max(0.65, rowHeight * 0.32));
+    const x = metrics.x - metrics.width / 2 + seededNoise(model.seed, frame * 4099 + index * 31 + 611) * metrics.width;
+    const y = textTop + seededNoise(model.seed, frame * 4127 + index * 37 + 631) * (textBottom - textTop);
+    const alpha = seededNoise(model.seed, frame * 4153 + index * 41 + 641);
+    const width = (0.4 + seededNoise(model.seed, frame * 4177 + index * 43 + 651) * 1.4) * visualScale;
+    const height = (0.4 + seededNoise(model.seed, frame * 4201 + index * 47 + 661) * 1.4) * visualScale;
+    ctx.globalAlpha = alpha * 0.18;
+    ctx.fillRect?.(x, y, width, height);
   }
   ctx.restore?.();
 }

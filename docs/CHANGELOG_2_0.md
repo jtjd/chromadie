@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-22 — Match Raster Signal’s approved text treatment
+
+- Raster Signal now uses the reference’s independently drifting white rows,
+  thin dark scan gaps, moving grayscale texture, and sparse signal pixels.
+- The reference page’s moving background grain is intentionally not included;
+  the cosmetic remains a transparent text-only effect on profiles and cards.
+- Compact previews proportionally reduce fixed-pixel distortion and texture so
+  usernames remain readable.
+
 ## 2026-08-22 — Keep Neon Particle visible in compact previews
 
 - Neon Particle now matches the supplied white-hot reference structure:

@@ -232,10 +232,18 @@ test('the three approved reference effects keep their authored visual primitives
   assert.doesNotMatch(neon, /const bandWidth|index < 13/);
   assert.doesNotMatch(neon, /drawBase\(ctx, model\);\s*\n\s*\n\s*const field/);
 
-  assert.match(raster, /drawText\(ctx, model, MOTION_TEXT_LIGHT/);
+  assert.match(raster, /getRasterSignalBuffers\(ctx, model\)/);
+  assert.match(motions, /sourceContext\.shadowColor = 'rgba\(255,255,255,\.42\)'/);
+  assert.match(raster, /const rowHeight = Math\.max\(1\.5, metrics\.fontSize \* 0\.025\)/);
+  assert.match(raster, /Math\.sin\(time \* 0\.004 \+ index \* 0\.64\) \* 1\.7/);
+  assert.match(raster, /Math\.sin\(time \* 0\.011 \+ index \* 1\.83\) \* 0\.55/);
+  assert.match(raster, /ctx\.globalAlpha = 0\.82 \+ Math\.sin\(time \* 0\.0027 \+ index \* 0\.43\) \* 0\.1/);
   assert.match(raster, /globalCompositeOperation = 'destination-out'/);
-  assert.match(raster, /const noiseCount = Math\.min\(320/);
-  assert.match(raster, /const pixelCount = Math\.min\(140/);
+  assert.match(raster, /ctx\.globalAlpha = 0\.16/);
+  assert.match(raster, /globalCompositeOperation = 'source-atop'/);
+  assert.match(raster, /const tileSize = 128 \* visualScale/);
+  assert.match(raster, /: 55;/);
+  assert.doesNotMatch(raster, /fillStyle = '#08090[dD]'/);
   assert.doesNotMatch(raster, /#00EFFF|#6E5CFF|#FF4AD4/);
 
   assert.match(cursorTrail, /const color = particle\.hot \? '#7CFFFA' : '#7A4DFF'/);
