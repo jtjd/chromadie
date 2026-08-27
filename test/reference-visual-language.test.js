@@ -25,7 +25,7 @@ test('the approved homepage typography is bundled and authoritative', async () =
   assert.match(homepage, /--homepage-display: 'Manrope Variable'/);
   assert.match(homepage, /--homepage-secondary: rgba\(248, 248, 248, 0\.88\)/);
   assert.match(homepage, /--homepage-secondary-shadow: none/);
-  assert.match(homepage, /\.app-main--site \.homepage-reference :is\(\.homepage-hero__copy > h1, \.homepage-section-heading, \.homepage-final h2, \.homepage-step h3\)/);
+  assert.match(homepage, /\.app-main--site \.homepage-reference :is\(\.homepage-section-heading, \.homepage-step h3\)/);
   assert.match(homepage, /font-family: var\(--homepage-display\) !important/);
   assert.match(header, /SiteModeHeader/);
   assert.match(sharedHeader, /--site-header-display: 'Manrope Variable'/);
@@ -35,48 +35,38 @@ test('the approved homepage typography is bundled and authoritative', async () =
   assert.match(claim, /box-shadow: 0 12px 28px rgba\(7, 4, 14, 0\.14\)/);
 });
 
-test('the homepage shell preserves the frozen reference geometry and treatment', async () => {
-  const [styles, hero, demo, card, showcase, loop] = await Promise.all([
+test('the homepage shell uses the Roll and Progression visual language without profile scenery', async () => {
+  const [styles, home, rollPage, scoring, community, loop] = await Promise.all([
     read('src/lib/homepage/homepage-reference.css'),
-    read('src/lib/homepage/HomepageHero.svelte'),
-    read('src/lib/homepage/HomepageProfileDemo.svelte'),
-    read('src/lib/ProfileReferenceCard.svelte'),
-    read('src/lib/homepage/HomepageShowcase.svelte'),
+    read('src/lib/HomePage.svelte'),
+    read('src/lib/RollPage.svelte'),
+    read('src/lib/homepage/HomepageScoring.svelte'),
+    read('src/lib/homepage/HomepageCommunity.svelte'),
     read('src/lib/homepage/HomepageLoop.svelte')
   ]);
 
-  assert.match(styles, /--homepage-bg: #050506/);
+  assert.match(styles, /--homepage-bg: #0e0e10/);
   assert.match(styles, /--homepage-border: rgba\(255, 255, 255, 0\.11\)/);
   assert.match(styles, /--homepage-radius: 18px/);
-  assert.match(styles, /position: fixed/);
-  assert.match(styles, /--homepage-background-image/);
   assert.match(styles, /\.homepage-content \{/);
-  assert.match(styles, /\.homepage-content::before \{/);
-  assert.match(styles, /height: 280px/);
-  assert.match(styles, /rgba\(5, 5, 6, \.36\) 0/);
-  assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
-  assert.match(hero, /min-height: calc\(100svh - 88px\)/);
-  assert.match(hero, /width: 440px/);
-  assert.match(hero, /\.homepage-hero h1 \{[\s\S]*?text-shadow: none;/);
-  assert.match(hero, /class:homepage-hero--meilin=\{fixture\.id === 'meilin-horizon'\}/);
-  assert.match(hero, /\.homepage-hero--meilin h1 \{ color: #0e0e10; \}/);
-  assert.match(hero, /\.homepage-hero--meilin h1 span \{ color: #ffffff; \}/);
-  assert.match(hero, /\.homepage-theme-button \{[\s\S]*?background: rgba\(255, 255, 255, \.94\)/);
-  assert.match(hero, /\.homepage-theme-button:hover,[\s\S]*?background: rgba\(10, 10, 13, \.72\)/);
+  assert.doesNotMatch(styles, /--homepage-background-image|\.homepage-background|\.homepage-atmosphere/);
+  assert.match(rollPage, /grid-template-columns: minmax\(280px, 400px\) minmax\(360px, 420px\)/);
+  assert.match(rollPage, /min-height: calc\(100dvh - 88px\)/);
+  assert.match(rollPage, /align-items: start/);
+  assert.match(rollPage, /--roll-bg: var\(--bg, #0e0e10\)/);
+  assert.match(rollPage, /--roll-panel-card: var\(--surface, #161619\)/);
+  assert.doesNotMatch(home, /HomepageHero|HomepageProfileDemo|HomepageShowcase|HomepageBestRoll/);
   assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /\.homepage-daily-leaderboard__kicker[\s\S]*?font: 600 \.98rem \/ 1\.1 var\(--homepage-display\)/);
-  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /border-radius: 20px; background: rgba\(20, 18, 30, \.55\)/);
-  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /backdrop-filter: blur\(20px\)/);
-  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /box-shadow: 0 8px 32px rgba\(0, 0, 0, \.25\)/);
-  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /transform: translateY\(clamp\(-3\.5rem, -6vh, -2rem\)\)/);
-  assert.doesNotMatch(hero, /height: 470px|ProfileShell|HomepageProfileRenderer|layoutLabel/);
-  assert.match(demo, /ProfileReferenceCard/);
-  assert.match(card, /profile-reference-card--homepage/);
-  assert.match(card, /repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(card, /backdrop-filter: blur\(32px\)/);
-  assert.doesNotMatch(`${demo}${showcase}`, /profile-shell|ProfileShell|ProfileLayoutFrame/);
-  assert.match(showcase, /homepage-profile-demo/);
-  assert.doesNotMatch(showcase, /layout|profile-shell/i);
-  for (const step of ['Roll', 'Build', 'Be seen']) assert.match(loop, new RegExp(`<h3>${step}</h3>`));
+  const homepageDailyLeaderboard = await read('src/lib/homepage/HomepageDailyLeaderboard.svelte');
+  assert.match(homepageDailyLeaderboard, /\.homepage-daily-leaderboard \{/);
+  assert.match(homepageDailyLeaderboard, /background: var\(--leaderboard-panel\)/);
+  assert.doesNotMatch(homepageDailyLeaderboard, /background: rgba\(20, 18, 30, \.55\)/);
+  assert.doesNotMatch(homepageDailyLeaderboard, /backdrop-filter: blur\(20px\)/);
+  assert.doesNotMatch(homepageDailyLeaderboard, /box-shadow: 0 8px 32px rgba\(0, 0, 0, \.25\)/);
+  assert.doesNotMatch(homepageDailyLeaderboard, /transform: translateY\(clamp\(-3\.5rem, -6vh, -2rem\)\)/);
+  assert.match(scoring, /Probability, not opinion/);
+  assert.match(community, /Today’s board/);
+  for (const step of ['Roll', 'Decode', 'Compare']) assert.match(loop, new RegExp(`<h3>${step}</h3>`));
   assert.match(styles, /prefers-reduced-motion/);
-  assert.doesNotMatch(`${styles}${hero}${showcase}${loop}`, /blob|orb|dashboard statistic|illustration/i);
+  assert.doesNotMatch(`${styles}${home}${scoring}${loop}`, /blob|orb|dashboard statistic|illustration/i);
 });

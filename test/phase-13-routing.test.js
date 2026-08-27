@@ -135,6 +135,8 @@ test('standalone auth routes carry only bounded, safe presentation state', () =>
   assert.match(authSource, /standalone/);
   assert.match(authSource, /getAuthCallbackUrl\(next\)/);
   assert.match(authSource, /getResetPasswordUrl\(next\)/);
+  assert.match(authPageSource, /safeNext/);
+  assert.match(authPageSource, /params\.set\('next', safeNext\)/);
 });
 
 test('reserved application and asset paths cannot become usernames', () => {

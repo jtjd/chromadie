@@ -4,8 +4,9 @@ const RARITY_PRESENTATION_ENTRIES = {
   Uncommon: { color: '#6ee2a4', icon: '✦' },
   Rare: { color: '#84aaff', icon: '✧' },
   Epic: { color: '#d8a6ff', icon: '✹' },
-  Anomaly: { color: '#ff9a66', icon: '⚠' },
-  Mythic: { color: '#f4cd76', icon: '✺' }
+  Legendary: { color: '#ff9a66', icon: '⚠' },
+  Anomaly: { color: '#ff6bd6', icon: '✺' },
+  Mythic: { color: '#ff6bd6', icon: '✺' }
 };
 
 export const RARITY_PRESENTATION = Object.freeze(

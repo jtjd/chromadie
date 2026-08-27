@@ -30,6 +30,7 @@ export function canInitiateRoll({
 }
 
 export function normalizeCanonicalRoll(data) {
+  const scoreVersion = Number(data?.scoreVersion ?? data?.score_version);
   return {
     hex: typeof data?.hex === 'string' ? data.hex : (typeof data?.hex_code === 'string' ? data.hex_code : ''),
     score: data?.score ?? 0,
@@ -37,7 +38,8 @@ export function normalizeCanonicalRoll(data) {
     badges: getAuthoritativeBadgeIds(data),
     traits: Array.isArray(data?.traits) ? data.traits.slice(0, 12) : [],
     contributors: Array.isArray(data?.contributors) ? data.contributors.slice(0, 64) : [],
-    identity: typeof data?.identity === 'string' ? data.identity.slice(0, 120) : ''
+    identity: typeof data?.identity === 'string' ? data.identity.slice(0, 120) : '',
+    ...(Number.isSafeInteger(scoreVersion) && scoreVersion > 0 ? { scoreVersion } : {})
   }
 }
 
@@ -51,6 +53,7 @@ export function createCanonicalRollData(data, date, badges = null) {
     badges: badges || canonical.badges,
     traits: canonical.traits,
     contributors: canonical.contributors,
-    identity: canonical.identity
+    identity: canonical.identity,
+    ...(canonical.scoreVersion ? { scoreVersion: canonical.scoreVersion } : {})
   }
 }

@@ -3,13 +3,11 @@
   import './homepage/homepage-reference.css';
   import { ACCOUNT_STATES } from './authState.js';
   import SiteFooter from './SiteFooter.svelte';
+  import RollPage from './RollPage.svelte';
   import HomepageCommunity from './homepage/HomepageCommunity.svelte';
   import HomepageHeader from './homepage/HomepageHeader.svelte';
-  import HomepageHero from './homepage/HomepageHero.svelte';
   import HomepageLoop from './homepage/HomepageLoop.svelte';
-  import HomepageShowcase from './homepage/HomepageShowcase.svelte';
-  import LazyAtmosphereLayer from './profile-atmosphere/LazyAtmosphereLayer.svelte';
-  import { HOMEPAGE_FIXTURES } from './homepage/homepageFixtures.js';
+  import HomepageScoring from './homepage/HomepageScoring.svelte';
 
   export let isAuthenticated = false;
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.BOOTING);
@@ -17,54 +15,23 @@
   export let logoutInProgress = false;
 
   const dispatch = createEventDispatcher();
-  let activeBackground = HOMEPAGE_FIXTURES[0].media.background;
-  let activeAccent = HOMEPAGE_FIXTURES[0].accent;
-  let activeAtmosphereKey = HOMEPAGE_FIXTURES[0].atmosphereKey || '';
-  let dailyLeaderboardRows = [];
-  let dailyLeaderboardCurrentUser = null;
-  let dailyLeaderboardLoading = true;
-  let dailyLeaderboardError = '';
+  let homepageDiscovery = { rows: [], loading: true, error: '' };
 
-  $: accountReady = accountState === ACCOUNT_STATES.SIGNED_OUT || accountState === ACCOUNT_STATES.AUTHENTICATED;
-  $: accountUnavailable = accountState === ACCOUNT_STATES.PROFILE_ERROR;
+  function handleLeaderboard(event) {
+    const detail = event?.detail || {};
+    homepageDiscovery = {
+      rows: Array.isArray(detail.rows) ? detail.rows : [],
+      loading: detail.loading !== false,
+      error: typeof detail.error === 'string' ? detail.error : ''
+    };
+  }
 
   function forwardAction(event) {
     dispatch(event.type, event.detail);
   }
-
-  function handleFixtureChange(event) {
-    const nextFixture = event.detail.fixture;
-    activeBackground = nextFixture.media.background;
-    activeAccent = nextFixture.accent;
-    activeAtmosphereKey = nextFixture.atmosphereKey || '';
-  }
-
-  function handleDailyLeaderboard(event) {
-    dailyLeaderboardRows = event.detail.rows || [];
-    dailyLeaderboardCurrentUser = event.detail.currentUser || null;
-    dailyLeaderboardLoading = event.detail.loading === true;
-    dailyLeaderboardError = event.detail.error || '';
-  }
 </script>
 
-<div
-  class="homepage-reference"
-  aria-labelledby="homepage-title"
-  style={`--homepage-background-image: url("${activeBackground}"); --homepage-accent: var(--white);`}
->
-  <div class="homepage-background" aria-hidden="true"></div>
-
-  {#if activeAtmosphereKey}
-    <LazyAtmosphereLayer
-      atmosphereKey={activeAtmosphereKey}
-      todayColor={activeAccent}
-      active={true}
-      animated={true}
-      mode="profile"
-      className="homepage-atmosphere"
-    />
-  {/if}
-
+<div class="homepage-reference homepage-reference--roll-first">
   <HomepageHeader
     {accountState}
     {isAuthenticated}
@@ -77,30 +44,22 @@
   />
 
   <main>
-    <HomepageHero
-      {isAuthenticated}
-      dailyLeaderboardRows={dailyLeaderboardRows}
-      currentLeaderboardUser={dailyLeaderboardCurrentUser}
-      dailyLeaderboardLoading={dailyLeaderboardLoading}
-      dailyLeaderboardError={dailyLeaderboardError}
-      {accountReady}
-      {accountUnavailable}
-      on:fixturechange={handleFixtureChange}
-      on:claim={forwardAction}
-      on:profile={forwardAction}
+    <RollPage
+      surface="homepage"
+      signupNext="/"
+      showAcquisitionActions={true}
+      homepage={true}
+      bestRollRows={homepageDiscovery.rows}
+      bestRollLoading={homepageDiscovery.loading}
+      bestRollError={homepageDiscovery.error}
+      on:navigate={forwardAction}
+      on:promptlogin={forwardAction}
     />
 
     <div class="homepage-content">
       <HomepageLoop />
-      <HomepageShowcase />
-      <HomepageCommunity {isAuthenticated} {username} on:leaderboard={handleDailyLeaderboard} />
-
-      <section class="homepage-final homepage-section__inner" aria-labelledby="homepage-final-title">
-        <h2 id="homepage-final-title">Make it yours.</h2>
-        <p>Claim a handle, build the profile, and add a new color to its history tomorrow.</p>
-        <a class="homepage-button" href="#claim">Claim your handle</a>
-      </section>
-
+      <HomepageScoring />
+      <HomepageCommunity {isAuthenticated} {username} on:leaderboard={handleLeaderboard} />
       <SiteFooter {isAuthenticated} />
     </div>
   </main>

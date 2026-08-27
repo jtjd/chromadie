@@ -1,5 +1,6 @@
 <script>
   import { onMount, tick } from 'svelte';
+  import { SvelteURLSearchParams } from 'svelte/reactivity';
   import Auth from './Auth.svelte';
   import SiteFooter from './SiteFooter.svelte';
   import SiteModeHeader from './SiteModeHeader.svelte';
@@ -30,9 +31,18 @@
 
   function openAuthRoute(event) {
     const mode = event.detail?.mode === 'signup' ? 'signup' : 'login';
-    const query = mode === 'signup' && initialUsername
-      ? `?username=${encodeURIComponent(initialUsername.trim().slice(0, 20))}`
+    const params = new SvelteURLSearchParams();
+    const safeNext = typeof next === 'string'
+      && next.startsWith('/')
+      && !next.startsWith('//')
+      && !next.includes('\\')
+      ? next.slice(0, 512)
       : '';
+    if (mode === 'signup' && initialUsername) {
+      params.set('username', initialUsername.trim().slice(0, 20));
+    }
+    if (safeNext) params.set('next', safeNext);
+    const query = params.toString() ? `?${params.toString()}` : '';
     window.location.assign(`/${mode}${query}`);
   }
 

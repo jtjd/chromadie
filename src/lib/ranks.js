@@ -1,4 +1,4 @@
-import { RANKS } from './balanceConfig.js';
+import { RANKS } from './rankConfig.js';
 
 export function getRank(ep = 0) {
   let currentRank = RANKS[0];

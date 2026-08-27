@@ -35,9 +35,15 @@
 .badge-pop.rarity-Epic .badge-symbol { background: rgba(168, 85, 247, 0.1); }
 .badge-pop.rarity-Epic .badge-points { color: var(--accent-purple); text-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
 
-.badge-pop.rarity-Mythic, .badge-result.rarity-Mythic { border-color: rgba(241, 196, 15, 0.3); background: rgba(241, 196, 15, 0.02); box-shadow: 0 0 20px rgba(241, 196, 15, 0.05); }
-.badge-pop.rarity-Mythic .badge-symbol { background: rgba(241, 196, 15, 0.1); }
-.badge-pop.rarity-Mythic .badge-points { color: #f1c40f; text-shadow: 0 0 12px rgba(241, 196, 15, 0.4); }
+.badge-pop.rarity-Legendary, .badge-result.rarity-Legendary { border-color: rgba(255, 154, 102, 0.3); background: rgba(255, 154, 102, 0.02); box-shadow: 0 0 20px rgba(255, 154, 102, 0.05); }
+.badge-pop.rarity-Legendary .badge-symbol { background: rgba(255, 154, 102, 0.1); }
+.badge-pop.rarity-Legendary .badge-points { color: #ff9a66; text-shadow: 0 0 12px rgba(255, 154, 102, 0.4); }
+.badge-pop.rarity-Anomaly, .badge-result.rarity-Anomaly { border-color: rgba(255, 107, 214, 0.3); background: rgba(255, 107, 214, 0.02); box-shadow: 0 0 24px rgba(255, 107, 214, 0.08); }
+.badge-pop.rarity-Anomaly .badge-symbol { background: rgba(255, 107, 214, 0.1); }
+.badge-pop.rarity-Anomaly .badge-points { color: #ff6bd6; text-shadow: 0 0 14px rgba(255, 107, 214, 0.45); }
+.badge-pop.rarity-Mythic, .badge-result.rarity-Mythic { border-color: rgba(255, 107, 214, 0.3); background: rgba(255, 107, 214, 0.02); box-shadow: 0 0 24px rgba(255, 107, 214, 0.08); }
+.badge-pop.rarity-Mythic .badge-symbol { background: rgba(255, 107, 214, 0.1); }
+.badge-pop.rarity-Mythic .badge-points { color: #ff6bd6; text-shadow: 0 0 14px rgba(255, 107, 214, 0.45); }
 
 @keyframes badgePopIn { 0% { opacity: 0; transform: scale(0.5) translateY(10px); } 70% { transform: scale(1.02) translateY(0); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 @keyframes flashGold { 0% { background-color: rgba(20, 20, 30, 0.5); } 50% { background-color: rgba(241, 196, 15, 0.2); } 100% { background-color: rgba(20, 20, 30, 0.5); } }
@@ -59,8 +65,9 @@
 .final-color-display.rarity-Uncommon { box-shadow: 0 0 50px rgba(16, 185, 129, 0.5), inset 0 0 20px rgba(0,0,0,0.5); animation: glowPulse 2.5s infinite; }
 .final-color-display.rarity-Rare { box-shadow: 0 0 60px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(0,0,0,0.5); animation: glowPulse 2s infinite; }
 .final-color-display.rarity-Epic { box-shadow: 0 0 70px rgba(168, 85, 247, 0.7), inset 0 0 20px rgba(0,0,0,0.5); animation: glowPulse 1.5s infinite; }
-.final-color-display.rarity-Anomaly { box-shadow: 0 0 80px rgba(249, 115, 22, 0.8), inset 0 0 20px rgba(0,0,0,0.5); animation: glowPulse 1.2s infinite; }
-.final-color-display.rarity-Mythic { box-shadow: 0 0 90px rgba(241, 196, 15, 0.9), inset 0 0 20px rgba(0,0,0,0.5); animation: glowPulse 1s infinite; }
+.final-color-display.rarity-Legendary { box-shadow: 0 0 80px rgba(255, 154, 102, 0.8), inset 0 0 20px rgba(0,0,0,0.5); animation: glowPulse 1.2s infinite; }
+.final-color-display.rarity-Anomaly { box-shadow: 0 0 96px rgba(255, 107, 214, 0.9), inset 0 0 20px rgba(0,0,0,0.5); animation: glowPulse 1s infinite; }
+.final-color-display.rarity-Mythic { box-shadow: 0 0 96px rgba(255, 107, 214, 0.9), inset 0 0 20px rgba(0,0,0,0.5); animation: glowPulse 1s infinite; }
 @keyframes glowPulse { 0% { filter: brightness(1); transform: scale(1); } 50% { filter: brightness(1.15); transform: scale(1.03); } 100% { filter: brightness(1); transform: scale(1); } }
 
 .hex-code { font-family: var(--font-mono-stack); font-size: 1.2rem; letter-spacing: 2px; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); padding: 8px 16px; border-radius: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); max-width: 100%; word-break: break-word; }
@@ -139,8 +146,9 @@
 .rarity-Uncommon { background-color: rgba(16, 185, 129, 0.15); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.3); }
 .rarity-Rare { background-color: rgba(59, 130, 246, 0.15); color: #3b82f6; border-color: rgba(59, 130, 246, 0.3); }
 .rarity-Epic { background-color: rgba(168, 85, 247, 0.15); color: var(--accent-purple); border-color: rgba(168, 85, 247, 0.3); }
-.rarity-Anomaly { background-color: rgba(249, 115, 22, 0.15); color: #f97316; border-color: rgba(249, 115, 22, 0.3); }
-.rarity-Mythic { background-color: rgba(241, 196, 15, 0.15); color: #f1c40f; border-color: rgba(241, 196, 15, 0.3); box-shadow: 0 0 20px rgba(241, 196, 15, 0.1);}
+.rarity-Legendary { background-color: rgba(255, 154, 102, 0.15); color: #ff9a66; border-color: rgba(255, 154, 102, 0.3); }
+.rarity-Anomaly { background-color: rgba(255, 107, 214, 0.15); color: #ff6bd6; border-color: rgba(255, 107, 214, 0.3); box-shadow: 0 0 24px rgba(255, 107, 214, 0.12); }
+.rarity-Mythic { background-color: rgba(255, 107, 214, 0.15); color: #ff6bd6; border-color: rgba(255, 107, 214, 0.3); box-shadow: 0 0 24px rgba(255, 107, 214, 0.12); }
 
 /* =========================================
  *  MOBILE RESPONSIVE (Component overrides)

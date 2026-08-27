@@ -1,3 +1,5 @@
+import { GENERATED_V6_PRESENTATION_BY_ID } from './generated/scoringV6Presentation.generated.js';
+
 export const BADGES = {
     // == BASE ==
     base_spectrum: { name: 'Base Spectrum', points: 1337, symbol: '🎨', desc: 'Part of the spectrum', rarity: 'Common' },
@@ -168,8 +170,8 @@ export const ACHIEVEMENTS = {
     score_5m: { name: 'Achievement: Tycoon', points: 1000000, symbol: '💰', desc: 'Score over 5,000,000 EP in a single roll.', rarity: 'Mythic' },
     rarity_rare: { name: 'Achievement: Uncommonly Rare', points: 25000, symbol: '🔵', desc: 'Roll a Rare rarity color.', rarity: 'Mythic' },
     rarity_epic: { name: 'Achievement: Epic Encounter', points: 100000, symbol: '🟣', desc: 'Roll an Epic rarity color.', rarity: 'Mythic' },
-    rarity_anomaly: { name: 'Achievement: Anomaly Detected', points: 500000, symbol: '🟠', desc: 'Roll an Anomaly rarity color.', rarity: 'Mythic' },
-    mythic_roll: { name: 'Achievement: Mythic Touch', points: 1000000, symbol: '🌟', desc: 'Roll a Mythic rarity color.', rarity: 'Mythic' },
+    rarity_anomaly: { name: 'Achievement: Legendary Detected', points: 500000, symbol: '🟠', desc: 'Roll a Legendary rarity color.', rarity: 'Mythic' },
+    mythic_roll: { name: 'Achievement: Anomaly Touch', points: 1000000, symbol: '✺', desc: 'Roll an Anomaly rarity color.', rarity: 'Mythic' },
     roll_even_sum: { name: 'Achievement: Even Steven', points: 5000, symbol: '⚖️', desc: 'Roll a color with an even R+G+B sum.', rarity: 'Mythic' },
     roll_odd_sum: { name: 'Achievement: Oddball', points: 5000, symbol: '🎲', desc: 'Roll a color with an odd R+G+B sum.', rarity: 'Mythic' },
     roll_div3_sum: { name: 'Achievement: Rule of Three', points: 15000, symbol: '3️⃣', desc: 'Roll a color where R+G+B is divisible by 3.', rarity: 'Mythic' },
@@ -224,12 +226,12 @@ export const CANDIDATE_ACHIEVEMENTS = {
     streak_100: { name: 'Achievement: Iron Will', points: 750000, symbol: '🔥', desc: 'Maintain a 100-day streak.', rarity: 'Mythic' },
     rarity_rare: { name: 'Achievement: Uncommonly Rare', points: 25000, symbol: '🔵', desc: 'Roll a Rare color.', rarity: 'Common' },
     rarity_epic: { name: 'Achievement: Epic Encounter', points: 100000, symbol: '🟣', desc: 'Roll an Epic color.', rarity: 'Rare' },
-    rarity_anomaly: { name: 'Achievement: Anomaly Detected', points: 250000, symbol: '🟠', desc: 'Roll an Anomaly color.', rarity: 'Epic' },
-    mythic_roll: { name: 'Achievement: Mythic Touch', points: 500000, symbol: '🌟', desc: 'Roll a Mythic color.', rarity: 'Mythic' },
-    score_50k: { name: 'Achievement: High Roller', points: 25000, symbol: '💰', desc: 'Score at least 50,000 EP in a single roll.', rarity: 'Common' },
-    score_100k: { name: 'Achievement: Six Digits', points: 100000, symbol: '💰', desc: 'Score at least 100,000 EP in a single roll.', rarity: 'Rare' },
-    score_200k: { name: 'Achievement: Anomaly Hunter', points: 250000, symbol: '💰', desc: 'Score at least 200,000 EP in a single roll.', rarity: 'Epic' },
-    score_1_5m: { name: 'Achievement: Once in a Spectrum', points: 500000, symbol: '🌈', desc: 'Score at least 1,500,000 EP in a single roll.', rarity: 'Mythic' },
+    rarity_anomaly: { name: 'Achievement: Legendary Detected', points: 250000, symbol: '🟠', desc: 'Roll a Legendary color.', rarity: 'Epic' },
+    mythic_roll: { name: 'Achievement: Anomaly Touch', points: 500000, symbol: '✺', desc: 'Roll an Anomaly color.', rarity: 'Mythic' },
+    score_50k: { name: 'Achievement: High Roller', points: 25000, symbol: '💰', desc: 'Score at least 479,000 EP in a single roll.', rarity: 'Common' },
+    score_100k: { name: 'Achievement: Six Digits', points: 100000, symbol: '💰', desc: 'Score at least 958,000 EP in a single roll.', rarity: 'Rare' },
+    score_200k: { name: 'Achievement: Anomaly Hunter', points: 250000, symbol: '💰', desc: 'Score at least 1,916,000 EP in a single roll.', rarity: 'Epic' },
+    score_1_5m: { name: 'Achievement: Once in a Spectrum', points: 500000, symbol: '🌈', desc: 'Score at least 14,370,000 EP in a single roll.', rarity: 'Mythic' },
     roll_prime: { name: 'Achievement: Prime Number', points: 25000, symbol: '🔢', desc: 'Roll a color with a prime RGB sum.', rarity: 'Common' },
     high_contrast: { name: 'Achievement: Polarized Channels', points: 25000, symbol: '🌓', desc: 'Roll a color with an extreme RGB range.', rarity: 'Common' },
     low_contrast: { name: 'Achievement: Close Harmony', points: 15000, symbol: '🌫️', desc: 'Roll a color with very close RGB channels.', rarity: 'Common' },
@@ -313,10 +315,126 @@ export const CANDIDATE_BADGES = {
     classic_cola_red: { name: 'Classic Cola Red', points: 1024409, symbol: '🥤', desc: 'Brand Match (244,0,9).', rarity: 'Mythic' }
 };
 
+// Score-model conditions are server-defined, but their presentation belongs
+// to the client. Keep this catalog complete so newly introduced conditions do
+// not fall through to the generic question-mark icon.
+const V4_CONDITION_META = Object.freeze({
+    sum_even: { name: 'Even Pulse', symbol: '🔢', desc: 'The RGB channel sum is even.', rarity: 'Common' },
+    sum_odd: { name: 'Odd Pulse', symbol: '🔢', desc: 'The RGB channel sum is odd.', rarity: 'Common' },
+    even_channel_harmony: { name: 'Even Channel Harmony', symbol: '🎛️', desc: 'All three RGB channels are even.', rarity: 'Common' },
+    odd_channel_rhythm: { name: 'Odd Channel Rhythm', symbol: '🎛️', desc: 'All three RGB channels are odd.', rarity: 'Common' },
+    mixed_channel_rhythm: { name: 'Mixed Channel Rhythm', symbol: '🎛️', desc: 'The RGB channels mix even and odd values.', rarity: 'Common' },
+    prime_sum: { name: 'Prime Energy', symbol: '🔢', desc: 'The RGB channel sum is prime.', rarity: 'Common' },
+    fibonacci_sum: { name: 'Fibonacci Energy', symbol: '🌀', desc: 'The RGB channel sum is Fibonacci.', rarity: 'Rare' },
+    sum_divisible_3: { name: 'Rule of Three', symbol: '3️⃣', desc: 'The RGB channel sum is divisible by three.', rarity: 'Common' },
+    sum_divisible_5: { name: 'Fivefold Sum', symbol: '5️⃣', desc: 'The RGB channel sum is divisible by five.', rarity: 'Common' },
+    sum_divisible_7: { name: 'Lucky Sum', symbol: '7️⃣', desc: 'The RGB channel sum is divisible by seven.', rarity: 'Common' },
+    sum_42: { name: 'Meaning of Life', symbol: '🧬', desc: 'The RGB channel sum is exactly 42.', rarity: 'Legendary' },
+    sum_100: { name: 'Perfect Century', symbol: '💯', desc: 'The RGB channel sum is exactly 100.', rarity: 'Epic' },
+    sum_255: { name: 'Max Byte', symbol: '💾', desc: 'The RGB channel sum is exactly 255.', rarity: 'Rare' },
+    sum_666: { name: 'Sinister Shade', symbol: '😈', desc: 'The RGB channel sum is exactly 666.', rarity: 'Epic' },
+    balanced_sum_band: { name: 'Balanced Sum', symbol: '⚖️', desc: 'The RGB channel sum sits in a balanced band.', rarity: 'Common' },
+    high_contrast: { name: 'Polarized Channels', symbol: '🌓', desc: 'The channel range is extremely wide.', rarity: 'Common' },
+    low_contrast: { name: 'Close Harmony', symbol: '🌫️', desc: 'The channels sit very close together.', rarity: 'Uncommon' },
+    gentle_contrast: { name: 'Gentle Contrast', symbol: '🌫️', desc: 'The channels form a softly layered range.', rarity: 'Common' },
+    layered_contrast: { name: 'Layered Contrast', symbol: '🪜', desc: 'The channels form a clearly layered range.', rarity: 'Common' },
+    pastel: { name: 'Pastel Bloom', symbol: '🌸', desc: 'Bright channels create a soft pastel range.', rarity: 'Uncommon' },
+    neon: { name: 'Neon Voltage', symbol: '💡', desc: 'A vivid high-contrast color signature.', rarity: 'Common' },
+    luminous_core: { name: 'Luminous Core', symbol: '✨', desc: 'Bright, pale, and unusually luminous.', rarity: 'Epic' },
+    complementary_balance: { name: 'Complementary Balance', symbol: '☯️', desc: 'The channels balance contrast and light.', rarity: 'Common' },
+    warm_bias: { name: 'Warm Bias', symbol: '🔥', desc: 'Red leads the color temperature.', rarity: 'Common' },
+    cool_bias: { name: 'Cool Bias', symbol: '❄️', desc: 'Blue leads the color temperature.', rarity: 'Common' },
+    vivid_contrast: { name: 'Vivid Contrast', symbol: '🌈', desc: 'Saturation and channel span combine vividly.', rarity: 'Common' },
+    edge_luminance: { name: 'Edge Luminance', symbol: '☀️', desc: 'The color sits near a light or dark boundary.', rarity: 'Uncommon' },
+    channel_span: { name: 'Wide Channel Span', symbol: '↔️', desc: 'The channels stretch across a wide range.', rarity: 'Common' },
+    hex_letter_rich: { name: 'Letter-Rich Hex', symbol: '🔤', desc: 'The hex code contains several A–F characters.', rarity: 'Common' },
+    hex_digit_rich: { name: 'Digit-Rich Hex', symbol: '🔢', desc: 'The hex code contains several digits.', rarity: 'Common' },
+    hex_digit_prime: { name: 'Prime Hex Sum', symbol: '🧮', desc: 'The hexadecimal digit sum is prime.', rarity: 'Common' },
+    channel_edge: { name: 'Edge Channel', symbol: '📐', desc: 'At least one channel approaches an RGB edge.', rarity: 'Common' },
+    edge_pair: { name: 'Edge Pair', symbol: '⚡', desc: 'Two channels approach an RGB edge.', rarity: 'Uncommon' },
+    extreme_span: { name: 'Extreme Span', symbol: '⚡', desc: 'The channel range is exceptionally wide.', rarity: 'Uncommon' },
+    mirror_channels: { name: 'Mirror Channels', symbol: '🪞', desc: 'Red and blue channels mirror each other.', rarity: 'Rare' },
+    hex_echo: { name: 'Hex Echo', symbol: '🔁', desc: 'The hex code repeats a neighboring character.', rarity: 'Common' },
+    hex_bookends: { name: 'Hex Bookends', symbol: '🔗', desc: 'The first and last hex characters match.', rarity: 'Uncommon' },
+    channel_parity_lock: { name: 'Parity Lock', symbol: '🔒', desc: 'Every channel shares the same parity.', rarity: 'Common' },
+    triple_crown: { name: 'Triple Crown', symbol: '👑', desc: 'The channels form a low, middle, and maximum crown.', rarity: 'Rare' },
+    saturation_spike: { name: 'Saturation Spike', symbol: '🎨', desc: 'The color reaches extreme saturation.', rarity: 'Common' },
+    vivid_saturation: { name: 'Vivid Saturation', symbol: '🌈', desc: 'The color carries strong saturation.', rarity: 'Common' },
+    rich_saturation: { name: 'Rich Saturation', symbol: '🎨', desc: 'The color carries balanced saturation.', rarity: 'Common' },
+    muted_saturation: { name: 'Muted Saturation', symbol: '🫧', desc: 'The color carries subtle saturation.', rarity: 'Common' },
+    soft_saturation: { name: 'Soft Saturation', symbol: '☁️', desc: 'The color is close to neutral saturation.', rarity: 'Uncommon' },
+    high_chroma: { name: 'High Chroma', symbol: '💎', desc: 'The color has especially strong chroma.', rarity: 'Common' },
+    luminous_saturation: { name: 'Luminous Saturation', symbol: '✨', desc: 'Lightness and saturation align brightly.', rarity: 'Uncommon' },
+    shadow_saturation: { name: 'Shadow Saturation', symbol: '🌑', desc: 'Deep shadow carries strong saturation.', rarity: 'Uncommon' },
+    shadow_tone: { name: 'Shadow Tone', symbol: '🌑', desc: 'The color sits in very low lightness.', rarity: 'Uncommon' },
+    deep_tone: { name: 'Deep Tone', symbol: '🌌', desc: 'The color sits in low lightness.', rarity: 'Common' },
+    balanced_tone: { name: 'Balanced Tone', symbol: '⚖️', desc: 'The color sits in mid-range lightness.', rarity: 'Common' },
+    bright_tone: { name: 'Bright Tone', symbol: '☀️', desc: 'The color sits in high lightness.', rarity: 'Common' },
+    luminous_tone: { name: 'Luminous Tone', symbol: '✨', desc: 'The color sits in very high lightness.', rarity: 'Uncommon' },
+    tone_edge: { name: 'Tone Edge', symbol: '🌗', desc: 'The color sits near a lightness boundary.', rarity: 'Rare' },
+    red_dominant: { name: 'Red Dominant', symbol: '🔴', desc: 'Red leads the channel mix.', rarity: 'Common' },
+    green_dominant: { name: 'Green Dominant', symbol: '🟢', desc: 'Green leads the channel mix.', rarity: 'Common' },
+    blue_dominant: { name: 'Blue Dominant', symbol: '🔵', desc: 'Blue leads the channel mix.', rarity: 'Common' },
+    balanced_channels: { name: 'Balanced Channels', symbol: '⚪', desc: 'No channel strongly dominates.', rarity: 'Uncommon' },
+    ascending_channels: { name: 'Ascending Channels', symbol: '📈', desc: 'The channels rise from red to blue.', rarity: 'Common' },
+    descending_channels: { name: 'Descending Channels', symbol: '📉', desc: 'The channels fall from red to blue.', rarity: 'Common' },
+    channel_pair: { name: 'Channel Pair', symbol: '🧬', desc: 'Two RGB channels share a value.', rarity: 'Uncommon' },
+    greyscale: { name: 'Perfect Greyscale', symbol: '⚫', desc: 'All three channels are identical.', rarity: 'Legendary' },
+    web_safe: { name: 'Web Safe', symbol: '🕸️', desc: 'Every channel lands on a classic web-safe value.', rarity: 'Legendary' },
+    all_channels_even: { name: 'All Even Channels', symbol: '2️⃣', desc: 'Every RGB channel is even.', rarity: 'Common' },
+    all_channels_odd: { name: 'All Odd Channels', symbol: '1️⃣', desc: 'Every RGB channel is odd.', rarity: 'Common' },
+    palindrome: { name: 'Hex Palindrome', symbol: '🪞', desc: 'The hex code reads the same backwards.', rarity: 'Epic' },
+    repeated_pair: { name: 'Repeated Pair', symbol: '🟰', desc: 'The same byte repeats three times.', rarity: 'Legendary' },
+    triple_hex: { name: 'Triple Hex', symbol: '3️⃣', desc: 'Three matching hexadecimal characters appear in a row.', rarity: 'Uncommon' },
+    f1: { name: 'F1', symbol: '🏎️', desc: 'The hex code contains F1.', rarity: 'Uncommon' },
+    hex_staircase: { name: 'Hex Staircase', symbol: '🪜', desc: 'The hex code follows a perfect staircase sequence.', rarity: 'Anomaly' },
+    hex_letter_run: { name: 'Letter Run', symbol: '🔤', desc: 'Three hexadecimal letters appear in a row.', rarity: 'Common' },
+    hex_digit_run: { name: 'Digit Run', symbol: '🔢', desc: 'Three hexadecimal digits appear in a row.', rarity: 'Common' },
+    condition_cascade: { name: 'Condition Cascade', symbol: '⛓️', desc: 'A dense stack of scoring conditions aligned.', rarity: 'Common' },
+    condition_storm: { name: 'Condition Storm', symbol: '🌪️', desc: 'An unusually dense condition stack.', rarity: 'Common' },
+    condition_constellation: { name: 'Condition Constellation', symbol: '✨', desc: 'A rare constellation of conditions aligned.', rarity: 'Uncommon' },
+    pure_black: { name: 'The Void', symbol: '🌑', desc: 'Pure Black (#000000).', rarity: 'Anomaly' },
+    pure_white: { name: 'The Light', symbol: '☀️', desc: 'Pure White (#FFFFFF).', rarity: 'Anomaly' },
+    pure_red: { name: 'Maximum Red', symbol: '🟥', desc: 'Pure Red (#FF0000).', rarity: 'Anomaly' },
+    pure_green: { name: 'Maximum Green', symbol: '🟩', desc: 'Pure Green (#00FF00).', rarity: 'Anomaly' },
+    pure_blue: { name: 'Maximum Blue', symbol: '🟦', desc: 'Pure Blue (#0000FF).', rarity: 'Anomaly' },
+    pure_cyan: { name: 'Maximum Cyan', symbol: '🟦', desc: 'Pure Cyan (#00FFFF).', rarity: 'Anomaly' },
+    pure_magenta: { name: 'Maximum Magenta', symbol: '🟪', desc: 'Pure Magenta (#FF00FF).', rarity: 'Anomaly' },
+    pure_yellow: { name: 'Maximum Yellow', symbol: '🟨', desc: 'Pure Yellow (#FFFF00).', rarity: 'Anomaly' },
+    pure_gold: { name: 'Midas', symbol: '🥇', desc: 'Pure Gold (#FFD700).', rarity: 'Anomaly' },
+    streamer_purple: { name: 'Streamer Purple', symbol: '🟣', desc: 'Brand Match (145,70,255).', rarity: 'Anomaly' },
+    audio_stream_green: { name: 'Audio Stream Green', symbol: '🟢', desc: 'Brand Match (30,215,96).', rarity: 'Anomaly' },
+    classic_cola_red: { name: 'Classic Cola Red', symbol: '🥤', desc: 'Brand Match (244,0,9).', rarity: 'Anomaly' },
+    reference_123456: { name: 'Reference Sequence', symbol: '🔢', desc: 'The hex code is the classic 123456 sequence.', rarity: 'Anomaly' },
+    reference_abcdef: { name: 'Alphabetic Gradient', symbol: '🔤', desc: 'The hex code runs from A through F.', rarity: 'Anomaly' },
+    reference_fedcba: { name: 'Reverse Gradient', symbol: '🔄', desc: 'The hex code runs from F back to A.', rarity: 'Anomaly' }
+});
+
+const V6_CONDITION_META = GENERATED_V6_PRESENTATION_BY_ID;
+
+// These three identifiers were already emitted by the legacy v2 scorer. Keep
+// their historical presentation points available to the drift checker and
+// older UI callers while v6 derives its own rewards from the manifest.
+const LEGACY_V2_POINTS_BY_ID = Object.freeze({
+    hex_letter_rich: 2203,
+    channel_edge: 3503,
+    extreme_span: 9009
+});
+
 export function getBadgeMeta(id) {
     if (id.startsWith('ach_')) {
         const achievementId = id.replace('ach_', '');
         return CANDIDATE_ACHIEVEMENTS[achievementId] || ACHIEVEMENTS[achievementId] || { name: id, points: 0, symbol: '❓', desc: 'Unknown Achievement', rarity: 'Common' };
+    }
+    const v6Meta = V6_CONDITION_META[id];
+    if (v6Meta) {
+        return {
+            name: v6Meta.name,
+            points: LEGACY_V2_POINTS_BY_ID[id] || 0,
+            symbol: v6Meta.symbol,
+            desc: v6Meta.desc,
+            rarity: v6Meta.rarity
+        };
     }
     if (id.startsWith('hue_family_')) {
         const family = id.replace('hue_family_', '');
@@ -340,5 +458,10 @@ export function getBadgeMeta(id) {
     if (id === 'condition_cascade') return { name: 'Condition Cascade', points: 20021, symbol: '⛓️', desc: 'A dense stack of scoring conditions aligned.', rarity: 'Rare' };
     if (id === 'condition_storm') return { name: 'Condition Storm', points: 210069, symbol: '🌪️', desc: 'An unusually dense condition stack.', rarity: 'Epic' };
     if (id === 'condition_supernova') return { name: 'Condition Supernova', points: 10000013, symbol: '💥', desc: 'An extraordinary convergence of conditions.', rarity: 'Mythic' };
+    const v4Meta = V4_CONDITION_META[id];
+    if (v4Meta) {
+        const legacyMeta = CANDIDATE_BADGES[id] || BADGES[id] || {};
+        return { ...legacyMeta, ...v4Meta, points: legacyMeta.points ?? 0 };
+    }
     return CANDIDATE_BADGES[id] || BADGES[id] || { name: id, points: 0, symbol: '❓', desc: 'Unknown Badge', rarity: 'Common' };
 }

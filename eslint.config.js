@@ -10,7 +10,7 @@ export default [
   ...svelte.configs['flat/recommended'],
   {
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
         ...globals.browser,

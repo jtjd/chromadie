@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   getRevealHex,
+  getRevealHexCharacters,
   getRollRevealItems,
   getRollRevealTimeline,
   ROLL_REVEAL_SIGNAL_COLORS,
@@ -17,60 +18,95 @@ test('the roll reveal locks canonical hex channels in truthful beats', () => {
   assert.equal(getRevealHex('not-a-color', 3), '#------');
 });
 
-test('the shared reveal timeline exposes six meaningful stages', () => {
-  assert.deepEqual(ROLL_REVEAL_STEPS.map(step => step.progress), [8, 28, 54, 72, 94, 100]);
-  assert.equal(ROLL_REVEAL_STEPS.length, 6);
+test('the homepage reveal can unlock the HEX string one character at a time', () => {
+  assert.equal(getRevealHexCharacters('#abcdef', 0), '#??????');
+  assert.equal(getRevealHexCharacters('#abcdef', 1), '#A?????');
+  assert.equal(getRevealHexCharacters('#abcdef', 3), '#ABC???');
+  assert.equal(getRevealHexCharacters('#abcdef', 6), '#ABCDEF');
+  assert.equal(getRevealHexCharacters('not-a-color', 6), '#??????');
+});
+
+test('the shared reveal timeline exposes four meaningful stages', () => {
+  assert.deepEqual(ROLL_REVEAL_STEPS.map(step => step.progress), [18, 72, 94, 100]);
+  assert.equal(ROLL_REVEAL_STEPS.length, 4);
   assert.equal(ROLL_REVEAL_SIGNAL_COLORS.length, 8);
   assert.ok(ROLL_REVEAL_SIGNAL_COLORS.every(color => /^#[0-9A-F]{6}$/i.test(color)));
 });
 
-test('ordinary rolls spend about sixteen seconds across distinct discovery beats', () => {
+test('ordinary rolls leave room for a readable staged reveal', () => {
   const timeline = getRollRevealTimeline({ rarity: 'Common', score: 30000, conditionCount: 10 });
 
   assert.deepEqual(timeline, {
-    signal: 2400,
-    channel: 900,
-    conditionIntro: 600,
-    conditionBeat: 600,
-    conditionSettle: 600,
-    rarity: 2000,
-    score: 3000,
+    color: 900,
+    channel: 340,
+    conditionIntro: 650,
+    conditionBeat: 520,
+    conditionSettle: 650,
+    score: 1700,
     settle: 700,
-    conditionRevealCount: 6,
-    total: 15600
+    conditionRevealCount: 10,
+    total: 11840
   });
+  assert.ok(timeline.total >= 10000);
 });
 
-test('stronger outcomes earn longer rarity and score assessment', () => {
+test('stronger outcomes earn longer score assessment', () => {
   const epic = getRollRevealTimeline({ rarity: 'Epic', score: 100000, conditionCount: 10 });
-  const mythic = getRollRevealTimeline({ rarity: 'Mythic', score: 10000000, conditionCount: 17 });
+  const mythic = getRollRevealTimeline({ rarity: 'Anomaly', score: 10000000, conditionCount: 17 });
 
-  assert.equal(epic.total, 18000);
-  assert.equal(mythic.conditionRevealCount, 8);
-  assert.equal(mythic.total, 23000);
+  assert.equal(epic.score, 1980);
+  assert.equal(epic.total, 12120);
+  assert.equal(mythic.conditionRevealCount, 17);
+  assert.equal(mythic.total, 16380);
   assert.ok(mythic.total > epic.total);
-  assert.ok(epic.rarity > getRollRevealTimeline({ rarity: 'Common' }).rarity);
+  assert.ok(epic.score > getRollRevealTimeline({ rarity: 'Common' }).score);
   assert.ok(mythic.score > epic.score);
 });
 
-test('condition discovery is data-backed and fills remaining beats with named scans', () => {
+test('condition discovery only reveals scored server contributors', () => {
   const items = getRollRevealItems({
-    contributors: [{ id: 'pair', name: 'Pair', awardedPoints: 1200 }],
+    contributors: [{ id: 'pair', name: 'Pair', awardedPoints: 1200, category: 'symmetry', conditionRarity: 'Uncommon' }],
     traits: [{ id: 'warm', label: 'Warm signal' }]
   }, 6);
 
-  assert.equal(items.length, 6);
-  assert.deepEqual(items.slice(0, 2).map(item => item.label), ['Pair', 'Warm signal']);
+  assert.equal(items.length, 1);
+  assert.deepEqual(items.map(item => item.label), ['Pair']);
   assert.equal(items[0].points, 1200);
+  assert.equal(items[0].category, 'symmetry');
+  assert.equal(items[0].conditionRarity, 'Uncommon');
   assert.equal(items[0].kind, 'condition');
-  assert.equal(items[1].kind, 'trait');
-  assert.equal(items[2].kind, 'scan');
-  assert.equal(items[2].label, 'Hue relationship');
+  assert.deepEqual(getRollRevealItems({ traits: [{ id: 'warm', label: 'Warm signal' }] }), []);
+});
+
+test('condition discovery climbs from common scores to the rarest final beat', () => {
+  const items = getRollRevealItems({
+    contributors: [
+      { id: 'legend', name: 'Legend', awardedPoints: 5_000_000, conditionRarity: 'Legendary' },
+      { id: 'common-high', name: 'Common High', awardedPoints: 4_000, conditionRarity: 'Common' },
+      { id: 'rare', name: 'Rare', awardedPoints: 50_000, conditionRarity: 'Rare' },
+      { id: 'common-low', name: 'Common Low', awardedPoints: 500, conditionRarity: 'Common' }
+    ]
+  });
+
+  assert.deepEqual(items.map(item => item.id), [
+    'condition-common-low',
+    'condition-common-high',
+    'condition-rare',
+    'condition-legend'
+  ]);
+  assert.equal(items.at(-1).conditionRarity, 'Legendary');
+
+  const limited = getRollRevealItems({ contributors: [
+    { id: 'common', name: 'Common', awardedPoints: 500, conditionRarity: 'Common' },
+    { id: 'epic', name: 'Epic', awardedPoints: 500_000, conditionRarity: 'Epic' },
+    { id: 'anomaly', name: 'Anomaly', awardedPoints: 100_000_000, conditionRarity: 'Anomaly' }
+  ] }, 2);
+  assert.deepEqual(limited.map(item => item.id), ['condition-epic', 'condition-anomaly']);
 });
 
 test('reduced motion and explicit skipping preserve an immediate canonical path', () => {
   const reducedMotion = getRollRevealTimeline({ reducedMotion: true });
-  const skipped = getRollRevealTimeline({ rarity: 'Mythic', score: 10000000, skipped: true });
+  const skipped = getRollRevealTimeline({ rarity: 'Anomaly', score: 10000000, skipped: true });
 
   assert.equal(reducedMotion.total, 0);
   assert.equal(reducedMotion.conditionRevealCount, 0);

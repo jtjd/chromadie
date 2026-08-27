@@ -1,26 +1,26 @@
 <section class="homepage-section homepage-loop" id="how" aria-labelledby="homepage-loop-title">
   <div class="homepage-section__inner">
-    <div class="homepage-section-kicker">The loop</div>
-    <h2 id="homepage-loop-title" class="homepage-section-heading">A profile you actually have a reason to <span>come back to.</span></h2>
-    <p class="homepage-section-sub">The daily roll gives the profile a pulse. Progress gives you more ways to shape it. The result is still your page—not a game screen pretending to be one.</p>
+    <div class="homepage-section-kicker">How it works</div>
+    <h2 id="homepage-loop-title" class="homepage-section-heading">A complete daily ritual in <span>one roll.</span></h2>
+    <p class="homepage-section-sub">There is no strategy and no rerolling the odds. Chromadie generates one RGB color, explains what is unusual about it, and gives everyone the same daily chance.</p>
 
     <div class="homepage-steps">
       <article class="homepage-step">
         <div class="homepage-step__num">01</div>
         <h3>Roll</h3>
-        <p>Show up once a day for a color, score, rarity, and condition result. Each roll becomes part of your public history.</p>
+        <p>Generate one of 16,777,216 possible RGB colors. Account rolls are saved automatically; guest rolls remain on this device.</p>
         <div class="homepage-step__visual homepage-step__visual--roll" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
       </article>
       <article class="homepage-step">
         <div class="homepage-step__num">02</div>
-        <h3>Build</h3>
-        <p>Shape the page with your own media, six structural layouts, and equipped name, border, avatar, cursor-trail, and atmosphere cosmetics.</p>
+        <h3>Decode</h3>
+        <p>See the HEX value, rarity, score, and exact conditions that made this color ordinary, unusual, or exceptionally rare.</p>
         <div class="homepage-step__visual homepage-step__visual--build" aria-hidden="true"></div>
       </article>
       <article class="homepage-step">
         <div class="homepage-step__num">03</div>
-        <h3>Be seen</h3>
-        <p>Share one URL for your identity and links. Discovery, leaderboard rank, recent colors, favorites, reactions, and guestbook activity add a bounded social layer.</p>
+        <h3>Compare</h3>
+        <p>Share the result, see where it sits on today’s board, and return tomorrow for another independent roll.</p>
         <div class="homepage-step__visual homepage-step__visual--seen" aria-hidden="true"><span></span><span></span><span></span></div>
       </article>
     </div>

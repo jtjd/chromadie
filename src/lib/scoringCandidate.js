@@ -1,7 +1,6 @@
 import {
   BASE_ROLL_SCORE,
-  CATEGORY_MULTIPLIERS,
-  getCandidateRarity
+  CATEGORY_MULTIPLIERS
 } from './balanceCandidate.js';
 import { isPrime } from './scoring.js';
 
@@ -19,6 +18,23 @@ const MEME_PATTERNS = Object.freeze([
   ['james_bond', '007', 100007],
   ['blaze_it', '420', 75420]
 ]);
+
+// This module is retained as a deterministic v2 compatibility scorer for
+// historical fixtures and migration audits. New rolls use scoringV3.js.
+const LEGACY_CANDIDATE_RARITY_THRESHOLDS = Object.freeze([
+  Object.freeze({ name: 'Mythic', min: 1000000 }),
+  Object.freeze({ name: 'Anomaly', min: 500000 }),
+  Object.freeze({ name: 'Epic', min: 85000 }),
+  Object.freeze({ name: 'Rare', min: 49500 }),
+  Object.freeze({ name: 'Uncommon', min: 34500 }),
+  Object.freeze({ name: 'Common', min: 25000 }),
+  Object.freeze({ name: 'Trash', min: 0 })
+]);
+
+function getLegacyCandidateRarity(score = 0) {
+  const safeScore = Math.max(0, Number(score) || 0);
+  return LEGACY_CANDIDATE_RARITY_THRESHOLDS.find(tier => safeScore >= tier.min).name;
+}
 
 function hslFromRgb(red, green, blue) {
   const r = red / 255;
@@ -245,7 +261,7 @@ export function scoreCandidateColor(red, green, blue) {
     hsl,
     identity: `${lightness} ${saturation} ${family}`,
     score,
-    rarity: getCandidateRarity(score),
+    rarity: getLegacyCandidateRarity(score),
     traits,
     conditions,
     contributors

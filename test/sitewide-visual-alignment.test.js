@@ -16,7 +16,7 @@ const atmosphereAsset = await stat(new URL('../public/site/chromadie-roll-horizo
 test('signed-out chrome hides inaccessible Customize actions', () => {
   assert.ok(header.includes('{#if isAuthenticated}'));
   assert.ok(header.includes('>Customize</button>{/if}'));
-  assert.ok(header.includes('{#if !isAuthenticated}'));
+  assert.ok(header.includes('{#if !isAuthenticated && showClaim}'));
   assert.ok(header.includes('class="site-mode-header__claim-link"'));
   assert.ok(header.includes('>Claim handle</a>'));
   assert.ok(footer.includes('{#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}'));
@@ -53,7 +53,7 @@ test('normal site surfaces inherit the homepage type, canvas, and button contrac
   assert.ok(atmosphereAsset.size > 1000, 'roll horizon should be a real local image asset');
   assert.match(siteStyles, /background: var\(--white\)/);
   assert.match(header, /\.site-mode-header--home \.site-mode-header__nav button:not\(\.site-mode-header__claim-link\)/);
-  assert.match(header, /\.site-mode-header--home \.site-mode-header__claim-link[\s\S]*color: var\(--bg, #0e0e10\) !important/);
+  assert.match(header, /\.site-mode-header--home-route \.site-mode-header__nav \.site-mode-header__claim-link \{[\s\S]*background: transparent !important;[\s\S]*color: rgba\(255, 255, 255, \.94\) !important;/);
   assert.match(siteStyles, /\.site-state-card/);
   assert.match(siteStyles, /prefers-reduced-motion/);
   assert.doesNotMatch(siteStyles, /--site-accent: #00ffb3/);

@@ -66,13 +66,15 @@ const RANK_BY_ID = new Map(
   })])
 );
 
+const rankThreshold = rankId => RANK_BY_ID.get(rankId)?.min || 0;
+
 // The server manifest is authoritative. These five entries are retained only
 // as a compatibility fallback for older deployments during migration.
 const MILESTONE_MANIFEST = Object.freeze([
   Object.freeze({
     id: 'rank_silver',
     rankId: 'silver',
-    threshold: 500_000,
+    threshold: rankThreshold('silver'),
     name: 'Silver',
     description: 'Reach Silver.',
     reward: Object.freeze({ itemKey: 'name_motion_typewriter_name', name: 'Type In', slot: 'name_motion' })
@@ -80,7 +82,7 @@ const MILESTONE_MANIFEST = Object.freeze([
   Object.freeze({
     id: 'rank_gold',
     rankId: 'gold',
-    threshold: 2_500_000,
+    threshold: rankThreshold('gold'),
     name: 'Gold',
     description: 'Reach Gold.',
     reward: Object.freeze({ itemKey: 'name_material_carbon_cut', name: 'Carbon Vein', slot: 'name_material' })
@@ -88,7 +90,7 @@ const MILESTONE_MANIFEST = Object.freeze([
   Object.freeze({
     id: 'rank_platinum',
     rankId: 'platinum',
-    threshold: 7_500_000,
+    threshold: rankThreshold('platinum'),
     name: 'Platinum',
     description: 'Reach Platinum.',
     reward: Object.freeze({ itemKey: 'name_motion_haunt_glow', name: 'Glow', slot: 'name_motion' })
@@ -96,7 +98,7 @@ const MILESTONE_MANIFEST = Object.freeze([
   Object.freeze({
     id: 'rank_diamond',
     rankId: 'diamond',
-    threshold: 15_000_000,
+    threshold: rankThreshold('diamond'),
     name: 'Diamond',
     description: 'Reach Diamond.',
     reward: Object.freeze({ itemKey: 'name_material_glass_emboss', name: 'Raised Glass', slot: 'name_material' })
@@ -104,7 +106,7 @@ const MILESTONE_MANIFEST = Object.freeze([
   Object.freeze({
     id: 'rank_chroma',
     rankId: 'chroma',
-    threshold: 30_000_000,
+    threshold: rankThreshold('chroma'),
     name: 'Chroma',
     description: 'Reach Chroma.',
     reward: Object.freeze({ itemKey: 'name_motion_letter_shuffle', name: 'Scramble', slot: 'name_motion' })

@@ -33,6 +33,12 @@ const publicItem = {
   isStaff: false,
   rank: 1,
   profileCreatedAt: '2026-07-01T12:00:00.000Z',
+  contributors: [
+    { id: 'exact_hex', name: 'Exact hex', symbol: '✦', conditionRarity: 'Legendary', awardedPoints: 150000, expectedRolls: 5000, probability: 0.0003 },
+    { id: 'unsafe id!', name: 'Dropped condition' }
+  ],
+  percentile: 99.97,
+  totalRollers: 42,
   kind: 'roll',
   user_id: 'private-internal-id'
 };
@@ -49,6 +55,17 @@ test('discovery normalization keeps public card fields bounded and drops interna
   assert.equal(item.profileAccent, '#8B7CF6');
   assert.equal(item.avatarPath, null);
   assert.equal(item.avatarReference, null);
+  assert.deepEqual(item.contributors, [{
+    id: 'exact_hex',
+    name: 'Exact hex',
+    symbol: '✦',
+    conditionRarity: 'Legendary',
+    awardedPoints: 150000,
+    expectedRolls: 5000,
+    probability: 0.0003
+  }]);
+  assert.equal(item.percentile, 99.97);
+  assert.equal(item.totalRollers, 42);
   assert.deepEqual(item.equippedBadges, ['launch_edition']);
   assert.equal(item.equippedCosmetics.unsafe, undefined);
   assert.equal('user_id' in item, false);
@@ -146,6 +163,7 @@ test('leaderboard implementation is a focused ranked score list without raw HTML
   const previewMigration = await readFile(new URL('../supabase/migrations/20260801090000_discovery_profile_preview.sql', import.meta.url), 'utf8');
   const hardeningMigration = await readFile(new URL('../supabase/migrations/20260811130000_discovery_avatar_contract_and_media_cleanup.sql', import.meta.url), 'utf8');
   const r2Migration = await readFile(new URL('../supabase/migrations/20260813140000_profile_media_r2_discovery.sql', import.meta.url), 'utf8');
+  const spotlightMigration = await readFile(new URL('../supabase/migrations/20260827100000_public_roll_spotlight_details.sql', import.meta.url), 'utf8');
 
   assert.match(leaderboard, /get_public_discovery/);
   assert.match(leaderboard, />Leaderboard</);
@@ -172,6 +190,9 @@ test('leaderboard implementation is a focused ranked score list without raw HTML
   assert.doesNotMatch(leaderboard, /Search username|Exceptional|Rising|Random|Following|All-time/);
   assert.match(entry, /getPublicProfilePath/);
   assert.match(entry, /getProfileMediaUrl/);
+  assert.match(entry, /getRarityPresentation/);
+  assert.match(entry, /leaderboard-row__rarity/);
+  assert.match(entry, /--row-rarity-color/);
   assert.match(leaderboard, /roll-leaderboard__column-headings/);
   assert.match(leaderboard, /roll-leaderboard__column-heading-metrics/);
   assert.match(leaderboard, />Color</);
@@ -197,6 +218,11 @@ test('leaderboard implementation is a focused ranked score list without raw HTML
   assert.match(hardeningMigration, /name LIKE OLD\.id::text \|\| '\/%'/);
   assert.match(r2Migration, /'avatarReference'/);
   assert.match(r2Migration, /profile_media_public_reference/);
+  assert.match(spotlightMigration, /CREATE OR REPLACE FUNCTION public\.get_public_discovery_spotlight/);
+  assert.match(spotlightMigration, /public\.calculate_roll_v6/);
+  assert.match(spotlightMigration, /public\.get_score_percentile/);
+  assert.match(spotlightMigration, /REVOKE ALL ON FUNCTION public\.get_public_discovery_spotlight/);
+  assert.doesNotMatch(spotlightMigration, /'email'|'user_id'/);
   assert.match(leaderboard, /roll-leaderboard__list-item/);
   assert.match(leaderboard, /LeaderboardEntry/);
   assert.doesNotMatch(leaderboard + entry, /DiscoveryHub|DiscoveryCard|discovery-card|discovery-grid|discovery-hub/);

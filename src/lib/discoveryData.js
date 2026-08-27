@@ -23,7 +23,9 @@ export const DISCOVERY_SURFACES = Object.freeze({
   random: 'random'
 });
 
-const RARITIES = new Set(['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
+// Legendary and Anomaly are the active v3 roll tiers. Mythic remains accepted
+// while older cosmetic/catalog records and historical fixtures are retired.
+const RARITIES = new Set(['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Anomaly', 'Mythic']);
 const ITEM_KEY_PATTERN = /^[a-z0-9_]{1,80}$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -50,6 +52,11 @@ function safeScore(value) {
   return Number.isSafeInteger(score) && score >= 0 ? score : null;
 }
 
+function safePercentile(value) {
+  const percentile = Number(value);
+  return Number.isFinite(percentile) && percentile >= 0 && percentile <= 100 ? percentile : null;
+}
+
 function safeDate(value) {
   if (typeof value !== 'string') return null;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) && !/^\d{4}-\d{2}-\d{2}T/.test(value)) return null;
@@ -71,6 +78,30 @@ function normalizeBadges(value) {
   return value
     .filter(badge => typeof badge === 'string' && ITEM_KEY_PATTERN.test(badge))
     .slice(0, 16);
+}
+
+function normalizeContributors(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(raw => {
+      if (!raw || typeof raw !== 'object' || !ITEM_KEY_PATTERN.test(String(raw.id || ''))) return null;
+      const conditionRarity = RARITIES.has(raw.conditionRarity) ? raw.conditionRarity : null;
+      const name = safeText(raw.name || raw.label, 80);
+      if (!name) return null;
+      return {
+        id: String(raw.id),
+        name,
+        symbol: safeText(raw.symbol, 8),
+        conditionRarity,
+        awardedPoints: safeScore(raw.awardedPoints ?? raw.points),
+        expectedRolls: safeCount(raw.expectedRolls),
+        probability: Number.isFinite(Number(raw.probability))
+          ? Math.min(1, Math.max(0, Number(raw.probability)))
+          : null
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 64);
 }
 
 function normalizeHex(value) {
@@ -157,6 +188,9 @@ export function normalizeDiscoveryItem(raw) {
     lifetimeEp: safeCount(raw.lifetimeEp),
     equippedCosmetics: normalizeCosmetics(raw.equippedCosmetics),
     equippedBadges: normalizeBadges(raw.equippedBadges),
+    contributors: normalizeContributors(raw.contributors),
+    percentile: safePercentile(raw.percentile),
+    totalRollers: safeCount(raw.totalRollers ?? raw.total_rollers),
     isStaff: raw.isStaff === true,
     rank: rank > 0 ? rank : null,
     profileCreatedAt: safeDate(raw.profileCreatedAt),

@@ -596,11 +596,9 @@ try {
 
   await step('open local homepage', async () => {
     await page.waitFor(`(() => {
-      const environment = document.querySelector('.homepage-background');
       return Boolean(document.querySelector('.homepage-reference')
-        && document.querySelector('.homepage-profile-demo--hero')
-        && environment
-        && getComputedStyle(environment).backgroundImage !== 'none');
+        && document.querySelector('.homepage-reference .roll-page')
+        && document.querySelector('.roll-stage--preroll, .roll-stage--results'));
     })()`, 'hydrated homepage');
     assert(['127.0.0.1', 'localhost'].includes(await page.evaluate('location.hostname')), 'Homepage did not load on loopback.');
     await capture('01-homepage');
@@ -608,40 +606,42 @@ try {
 
   await step('compiled homepage keeps its phone layout', async () => {
     await page.setViewport(402, 874);
-    await page.waitFor(`document.querySelector('.homepage-hero') && document.querySelector('.homepage-profile-stage')`, 'homepage phone layout');
+    await page.waitFor(`document.querySelector('.roll-page__game') && document.querySelector('.roll-action__button')`, 'homepage phone layout');
     const state = await page.evaluate(`(() => {
       const select = selector => document.querySelector(selector);
       const rect = element => {
         const box = element?.getBoundingClientRect();
         return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
       };
-      const hero = select('.homepage-hero');
-      const stage = select('.homepage-profile-stage');
-      const heroStyle = getComputedStyle(hero);
-      const stageBox = rect(stage);
+      const grid = select('.roll-page__game');
+      const action = select('.roll-action__button');
+      const gridStyle = getComputedStyle(grid);
+      const gridBox = rect(grid);
+      const actionBox = rect(action);
       return {
         headerCount: document.querySelectorAll('.site-mode-header').length,
-        heroColumns: heroStyle.gridTemplateColumns,
-        stage: stageBox,
+        rollColumns: gridStyle.gridTemplateColumns,
+        grid: gridBox,
+        action: actionBox,
         contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
     assert(state.headerCount === 1, `Homepage header ownership is not singular: ${JSON.stringify(state)}.`);
-    assert(state.heroColumns.trim().split(' ').length === 1, `Production homepage retained multi-column phone geometry: ${JSON.stringify(state)}.`);
-    assert(state.stage && state.stage.left >= 0 && state.stage.right <= 402 && state.contained, `Production homepage phone layout is not contained: ${JSON.stringify(state)}.`);
+    assert(state.rollColumns.trim().split(' ').length === 1, `Production homepage retained multi-column phone geometry: ${JSON.stringify(state)}.`);
+    assert(state.grid && state.grid.left >= 0 && state.grid.right <= 402 && state.action && state.action.left >= 0 && state.action.right <= 402 && state.contained, `Production homepage phone layout is not contained: ${JSON.stringify(state)}.`);
     await capture('01-homepage-mobile');
     await page.setViewport(1440, 1000);
     return state;
   });
 
   await step('create a unique account through the signup UI', async () => {
-    await page.clickText('Sign up', { description: 'homepage signup control' });
+    await page.clickText('Sign up', { description: 'homepage account creation navigation' });
     await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('.auth-page .site-mode-header--home') && document.querySelector('.auth-container') && document.querySelector('#username-input') && !document.querySelector('.auth-modal-overlay')`, 'standalone signup page');
     await capture('02-auth-signup');
-    await page.clickText('Sign in', { description: 'auth route switch to sign in' });
+    await page.click('.auth-container .tabs a[href^="/login"]', 'auth route switch to sign in');
     await page.waitFor(`location.pathname === '/login' && document.querySelector('.auth-page') && document.querySelector('#email-input')`, 'standalone login page');
     await capture('03-auth-login');
-    await page.clickText('Create account', { description: 'auth route switch to create account' });
+    await page.click('.auth-container .tabs a[href^="/signup"]', 'auth route switch to create account');
     await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('#username-input')`, 'signup route after auth switch');
     if (smokeMode === 'preview') {
       await page.waitFor(`(() => {
@@ -653,9 +653,9 @@ try {
     await page.setInputValue('#email-input', email, ['input', 'change']);
     await page.setInputValue('#password-input', password, ['input', 'change']);
     await page.click('.auth-submit', 'signup submit control');
-    await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]') && !document.querySelector('.auth-page')`, 'authenticated session after signup', 30000);
+    await page.waitFor(`location.pathname === '/' && document.querySelector('.homepage-reference .roll-page') && !document.querySelector('.auth-page')`, 'authenticated session after signup', 30000);
     const accountPath = await page.evaluate('location.pathname');
-    assert(accountPath === `/${canonicalUsername}`, `Authenticated profile resolved to ${JSON.stringify(accountPath)}, expected /${canonicalUsername}.`);
+    assert(accountPath === '/', `Authenticated signup returned to ${JSON.stringify(accountPath)}, expected the playable homepage.`);
     const initialRoll = await callAuthenticatedRpc('roll_die', { p_is_reroll: false });
     assert(initialRoll?.success === true, `Disposable smoke account could not receive its server-authoritative daily roll: ${JSON.stringify(initialRoll)}`);
     results.account = { username: canonicalUsername, email, canonicalPath: `/${canonicalUsername}` };

@@ -18,6 +18,7 @@
   export let isHomepageStyle = false;
   export let isOwner = false;
   export let claimHref = '';
+  export let showClaim = true;
 
   const dispatch = createEventDispatcher();
   let mobileMenuOpen = false;
@@ -54,12 +55,12 @@
 
     {#if !minimalMode}
       <nav class="site-mode-header__nav" aria-label="Primary application navigation">
-        <button type="button" class:active={activeView === 'game'} aria-current={activeView === 'game' ? 'page' : undefined} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>
+        {#if !isHomeMode}<button type="button" class:active={activeView === 'game'} aria-current={activeView === 'game' ? 'page' : undefined} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>{/if}
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
         {#if isAuthenticated}<button type="button" class:active={activeView === 'progression'} aria-current={activeView === 'progression' ? 'page' : undefined} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigate('progression')}>Progression</button>{/if}
         {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
         <button type="button" class:active={activeView === 'pricing'} aria-current={activeView === 'pricing' ? 'page' : undefined} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
-        {#if !isAuthenticated}
+        {#if !isAuthenticated && showClaim}
           {#if claimHref}
             <a class="site-mode-header__claim-link" href={claimHref}>Claim handle</a>
           {:else}
@@ -94,7 +95,6 @@
           <!-- Keep account controls visually quiet while session data hydrates. -->
         {:else if (isHomeMode || isHomepageStyle || isProfileMode) && !isAuthenticated}
           <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('login', { mode: 'login' })}>Sign in</button>
-          {#if isHomeMode}<button type="button" class="site-mode-header__account-action site-mode-header__account-action--signup" on:click={() => dispatch('login', { mode: 'signup' })}>Sign up</button>{/if}
         {:else}
           <button type="button" class="site-mode-header__account-action site-mode-header__account-action--light" on:click={() => dispatch('login', { mode: 'login' })}>Sign in / Sign up</button>
         {/if}
@@ -106,14 +106,14 @@
       <div class="site-mode-header__mobile-panel" aria-hidden={!mobileMenuOpen}>
         {#if !minimalMode}
           <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
-            <button type="button" class:active={activeView === 'game'} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>
+            {#if !isHomeMode}<button type="button" class:active={activeView === 'game'} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>{/if}
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
             {#if isAuthenticated}<button type="button" class:active={activeView === 'progression'} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigate('progression')}>Progression</button>{/if}
             {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
             <button type="button" class:active={activeView === 'pricing'} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
-            {#if !isAuthenticated && claimHref}
+            {#if !isAuthenticated && showClaim && claimHref}
               <a class="site-mode-header__claim-link" href={claimHref}>Claim handle</a>
-            {:else if !isAuthenticated}
+            {:else if !isAuthenticated && showClaim}
               <button type="button" class="site-mode-header__claim-link" on:click={() => { mobileMenuOpen = false; dispatch('claim'); }}>Claim handle</button>
             {/if}
           </div>
@@ -134,7 +134,6 @@
             <!-- Keep account controls visually quiet while session data hydrates. -->
           {:else if (isHomeMode || isHomepageStyle || isProfileMode) && !isAuthenticated}
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in</button>
-            {#if isHomeMode}<button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Sign up</button>{/if}
           {:else}
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in / Sign up</button>
           {/if}
@@ -304,10 +303,21 @@
     color: var(--white, #ffffff) !important;
   }
 
-  .site-mode-header--home .site-mode-header__claim-link {
-    color: var(--bg, #0e0e10) !important;
+  .site-mode-header--home-route .site-mode-header__nav .site-mode-header__claim-link {
+    min-height: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: rgba(255, 255, 255, .94) !important;
+    font: var(--site-header-control-weight) var(--site-header-control-size) / 1 var(--site-header-font) !important;
     text-shadow: none !important;
-    -webkit-text-fill-color: var(--bg, #0e0e10) !important;
+    -webkit-text-fill-color: currentColor !important;
+    transform: none;
+  }
+
+  .site-mode-header--home-route .site-mode-header__nav .site-mode-header__claim-link:hover {
+    background: transparent !important;
+    color: #fff !important;
   }
 
   .site-mode-header__nav button:focus-visible,
@@ -324,16 +334,6 @@
   .site-mode-header__account-name { max-width: 10rem; overflow: hidden; color: var(--text) !important; text-overflow: ellipsis; white-space: nowrap; }
   .site-mode-header__account-action { color: var(--text-muted) !important; }
   .site-mode-header__account-action--light { color: var(--text) !important; }
-  .site-mode-header__account-action--signup {
-    display: none;
-    min-height: 38px !important;
-    padding: 0 14px !important;
-    border-radius: 9px !important;
-    background: var(--white) !important;
-    color: var(--bg) !important;
-    font: 600 0.8rem / 1 var(--site-header-display) !important;
-  }
-  .site-mode-header__account-action--signup:hover { background: var(--site-header-accent) !important; }
   .site-mode-header__account-action:disabled { cursor: wait; opacity: 0.55; }
 
   .site-mode-header--leaderboard .site-mode-header__brand,
@@ -437,6 +437,12 @@
     min-height: 2.7rem !important;
     padding: 0.75rem !important;
   }
+  .site-mode-header--home-route .site-mode-header__mobile-panel .site-mode-header__claim-link {
+    background: transparent !important;
+    color: rgba(255, 255, 255, .94) !important;
+    -webkit-text-fill-color: currentColor !important;
+    font: inherit !important;
+  }
   .site-mode-header__mobile-panel button:hover,
   .site-mode-header__mobile-panel button.active,
   .site-mode-header__mobile-panel .site-mode-header__claim-link:hover { background: var(--surface-3, #28282c); }
@@ -465,11 +471,10 @@
     .site-mode-header__inner { width: calc(100% - 30px); }
     .site-mode-header__nav { gap: 10px; }
     .site-mode-header__nav button:not(.site-mode-header__claim-link),
-    .site-mode-header__account-action:not(.site-mode-header__account-action--signup),
+    .site-mode-header__account-action,
     .site-mode-header__account-name { display: none; }
     .site-mode-header__claim-link { min-height: 38px !important; padding-inline: 14px !important; font-size: 0.8rem !important; }
     .site-mode-header__account { gap: 10px; }
-    .site-mode-header--home-route .site-mode-header__account-action--signup { display: inline-flex; }
     /* Keep the full navigation and account actions available on small home
      * screens through the same menu used by supporting routes. */
     .site-mode-header--home-route .site-mode-header__nav,

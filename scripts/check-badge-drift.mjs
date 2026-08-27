@@ -9,9 +9,13 @@ const repoRoot = path.resolve(__dirname, '..');
 const baseScoringSqlPath = path.join(repoRoot, 'supabase/migrations/20260710200000_candidate_score_model.sql');
 const finalScoringSqlPath = path.join(repoRoot, 'supabase/migrations/20260712180000_richer_roll_conditions.sql');
 const scoreTuningSqlPath = path.join(repoRoot, 'supabase/migrations/20260819150000_supernova_score_ceiling.sql');
+const v6ScoringSqlPath = path.join(repoRoot, 'supabase/migrations/20260826100000_score_model_v6_probability_catalog.sql');
+const v6GeneratedSqlPath = path.join(repoRoot, 'supabase/generated/scoringV6Evaluator.sql');
+const v6ManifestPath = path.join(repoRoot, 'src/lib/generated/scoringV6ProbabilityManifest.json');
 const rollSqlPath = path.join(repoRoot, 'supabase/migrations/20260710202000_roll_v2_transaction.sql');
 const badgeDataPath = path.join(repoRoot, 'src/lib/badgeData.js');
 const balanceConfigPath = path.join(repoRoot, 'src/lib/balanceConfig.js');
+const conditionCatalogPath = path.join(repoRoot, 'src/lib/conditionCatalogV6.js');
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 const d2NameCatalogMigrationPath = path.join(repoRoot, 'supabase/migrations/20260802100000_composable_name_catalog_activation.sql');
 const profileBordersPath = path.join(repoRoot, 'src/lib/profile-border/profileBorders.js');
@@ -23,6 +27,7 @@ const progressionManifestPath = path.join(repoRoot, 'scripts/progression-manifes
 
 const badgeModule = await import(pathToFileURL(badgeDataPath).href);
 const balanceConfig = await import(pathToFileURL(balanceConfigPath).href);
+const conditionCatalog = await import(pathToFileURL(conditionCatalogPath).href);
 const profileBorders = await import(pathToFileURL(profileBordersPath).href);
 const cursorTrails = await import(pathToFileURL(cursorTrailsPath).href);
 const avatarEffects = await import(pathToFileURL(avatarEffectsPath).href);
@@ -32,6 +37,9 @@ const progressionManifest = await import(pathToFileURL(progressionManifestPath).
 const baseScoringSql = await readFile(baseScoringSqlPath, 'utf8');
 const finalScoringSql = await readFile(finalScoringSqlPath, 'utf8');
 const scoreTuningSql = await readFile(scoreTuningSqlPath, 'utf8');
+const v6ScoringSql = await readFile(v6ScoringSqlPath, 'utf8');
+const v6GeneratedSql = await readFile(v6GeneratedSqlPath, 'utf8');
+const v6Manifest = JSON.parse(await readFile(v6ManifestPath, 'utf8'));
 const scoringSql = `${baseScoringSql}\n${finalScoringSql}`;
 const rollSql = await readFile(rollSqlPath, 'utf8');
 const seed = await readFile(seedPath, 'utf8');
@@ -113,11 +121,77 @@ const sqlRarities = [...rarityCaseMatch[1].matchAll(
 )].map(([, min, name]) => ({ name, min: Number(min) }));
 sqlRarities.push({ name: 'Trash', min: 0 });
 
-const configuredRarities = balanceConfig.RARITY_THRESHOLDS.map(({ name, min }) => ({ name, min }));
-if (JSON.stringify(sqlRarities) !== JSON.stringify(configuredRarities)) {
-  console.error('Rarity drift detected between calculate_roll_v2 and balanceConfig.js.');
+const legacyRarities = [
+  { name: 'Mythic', min: 1000000 },
+  { name: 'Anomaly', min: 500000 },
+  { name: 'Epic', min: 85000 },
+  { name: 'Rare', min: 49500 },
+  { name: 'Uncommon', min: 34500 },
+  { name: 'Common', min: 25000 },
+  { name: 'Trash', min: 0 }
+];
+if (JSON.stringify(sqlRarities) !== JSON.stringify(legacyRarities)) {
+  console.error('Legacy rarity drift detected in calculate_roll_v2.');
   console.error(`  SQL: ${JSON.stringify(sqlRarities)}`);
-  console.error(`  Config: ${JSON.stringify(configuredRarities)}`);
+  console.error(`  Expected legacy values: ${JSON.stringify(legacyRarities)}`);
+  process.exit(1);
+}
+
+const v6RarityCaseMatch = v6GeneratedSql.match(/v_rarity := CASE\s+([\s\S]*?)\s+END;/);
+const v6Rarities = v6RarityCaseMatch
+  ? [...v6RarityCaseMatch[1].matchAll(/WHEN v_score >= (\d+) THEN '([A-Za-z]+)'/g)]
+    .map(([, min, name]) => ({ name, min: Number(min) }))
+    .concat([{ name: 'Trash', min: 0 }])
+  : [];
+const activeRarities = balanceConfig.RARITY_THRESHOLDS.map(({ name, min }) => ({ name, min }));
+if (
+  !v6ScoringSql.includes('calculate_roll_v6')
+    || !v6ScoringSql.includes("'scoreVersion', 6")
+    || !v6ScoringSql.includes('calculate_roll_v6_legacy')
+    || !v6GeneratedSql.includes("'rewardStrength'")
+    || !v6GeneratedSql.includes('six_seven_full')
+    || JSON.stringify(v6Rarities) !== JSON.stringify(activeRarities)
+) {
+  console.error('Active v6 score model drift detected between SQL and balanceConfig.js.');
+  console.error(`  SQL: ${JSON.stringify(v6Rarities)}`);
+  console.error(`  Config: ${JSON.stringify(activeRarities)}`);
+  process.exit(1);
+}
+
+const forbiddenV6Fields = ['rarity', 'probability', 'points', 'basePoints', 'awardedPoints'];
+const invalidV6CatalogEntries = conditionCatalog.ACTIVE_V6_CONDITIONS.filter(condition => (
+  forbiddenV6Fields.some(field => Object.hasOwn(condition, field))
+));
+const manifestIds = new Set(v6Manifest.conditions.map(condition => condition.id));
+const missingV6ManifestEntries = conditionCatalog.ACTIVE_V6_CONDITIONS.filter(condition => (
+  !manifestIds.has(condition.id)
+    || !v6Manifest.conditions.find(entry => entry.id === condition.id)?.matchCount
+));
+if (
+  conditionCatalog.ACTIVE_V6_CONDITIONS.length < 100
+    || conditionCatalog.V6_COMBINATION_CONDITIONS.length < 20
+    || invalidV6CatalogEntries.length > 0
+    || missingV6ManifestEntries.length > 0
+) {
+  console.error('v6 declarative catalog or generated probability manifest drift detected.');
+  console.error(JSON.stringify({
+    activeConditions: conditionCatalog.ACTIVE_V6_CONDITIONS.length,
+    combinations: conditionCatalog.V6_COMBINATION_CONDITIONS.length,
+    invalidCatalogEntries: invalidV6CatalogEntries.map(condition => condition.id),
+    missingManifestEntries: missingV6ManifestEntries.map(condition => condition.id)
+  }, null, 2));
+  process.exit(1);
+}
+
+const missingV6ConditionMeta = conditionCatalog.ACTIVE_V6_CONDITIONS
+  .filter(condition => {
+    const meta = badgeModule.getBadgeMeta?.(condition.id);
+    return !meta || meta.name !== condition.name || meta.symbol === '❓' || !meta.desc || !meta.rarity;
+  })
+  .map(condition => condition.id);
+if (missingV6ConditionMeta.length > 0) {
+  console.error('v6 condition presentation drift detected:');
+  for (const id of missingV6ConditionMeta) console.error(`  - ${id}`);
   process.exit(1);
 }
 

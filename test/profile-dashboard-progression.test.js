@@ -41,21 +41,21 @@ test('progression manifest is a small, stable expression track', () => {
   assert.deepEqual(
     MILESTONE_MANIFEST.map(({ id, threshold, reward }) => [id, threshold, reward.itemKey]),
     [
-      ['rank_silver', 500000, 'name_motion_typewriter_name'],
-      ['rank_gold', 2500000, 'name_material_carbon_cut'],
-      ['rank_platinum', 7500000, 'name_motion_haunt_glow'],
-      ['rank_diamond', 15000000, 'name_material_glass_emboss'],
-      ['rank_chroma', 30000000, 'name_motion_letter_shuffle']
+      ['rank_silver', 4790000, 'name_motion_typewriter_name'],
+      ['rank_gold', 23950000, 'name_material_carbon_cut'],
+      ['rank_platinum', 71851000, 'name_motion_haunt_glow'],
+      ['rank_diamond', 143703000, 'name_material_glass_emboss'],
+      ['rank_chroma', 287405000, 'name_motion_letter_shuffle']
     ]
   );
 
   const normalized = normalizeProgressionData({
-    current_ep: 2500000,
+    current_ep: 23950000,
     milestones: [{ id: 'rank_silver', unlocked: true, unlocked_at: '2026-08-05T12:00:00Z' }, { id: 'not-real', unlocked: true }],
     recent_unlocks: [{ id: 'rank_gold', unlocked_at: '2026-08-05T12:00:00Z' }]
   });
 
-  assert.equal(normalized.currentEp, 2500000);
+  assert.equal(normalized.currentEp, 23950000);
   assert.equal(normalized.currentRank.name, 'Gold');
   assert.equal(normalized.milestones.filter(milestone => milestone.unlocked).length, 1);
   assert.equal(normalized.recentUnlocks[0].reward.name, 'Carbon Vein');

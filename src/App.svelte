@@ -17,6 +17,7 @@
   import { trackProductEvent } from './lib/productAnalytics.js';
   import { ACCOUNT_STATES } from './lib/authState';
   import { onMount, onDestroy, tick } from 'svelte';
+  import { SvelteURLSearchParams } from 'svelte/reactivity';
 
   const VALID_APP_ROUTES = new Set(['app', 'privacy', 'terms', 'how-to-play', 'auth', 'auth-callback', 'reset-password']);
   // Resolve the browser location before the first RouteOutlet pass. Starting
@@ -478,9 +479,14 @@
       ? modeOrEvent
       : eventDetail?.mode || 'login';
     const username = eventDetail?.username ? String(eventDetail.username).trim().slice(0, 20) : '';
-    const query = requestedMode === 'signup' && username
-      ? `username=${encodeURIComponent(username)}`
+    const requestedNext = typeof eventDetail?.next === 'string' ? eventDetail.next.slice(0, 512) : '';
+    const next = requestedNext.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\')
+      ? requestedNext
       : '';
+    const params = new SvelteURLSearchParams();
+    if (requestedMode === 'signup' && username) params.set('username', username);
+    if (next) params.set('next', next);
+    const query = params.toString();
     navigateToPath(`/${requestedMode === 'signup' ? 'signup' : 'login'}${query ? `?${query}` : ''}`);
   }
 
@@ -727,7 +733,7 @@
         : routeMode === 'app' && view === 'progression'
           ? 'Progress | ChromaDie'
         : routeMode === 'app' && view === 'home'
-          ? 'ChromaDie — A daily color identity'
+          ? 'ChromaDie — Daily Random Color Game'
         : routeMode === 'app' && view === 'prototype'
           ? 'Profile Canvas Prototype | ChromaDie'
         : routeMode === 'app' && view === 'leaderboard'
@@ -762,7 +768,7 @@
         : routeMode === 'app' && view === 'progression'
           ? 'Follow the rolls, streaks, discoveries, and cosmetic rewards that make your ChromaDie profile yours.'
         : routeMode === 'app' && view === 'home'
-          ? 'Roll one color each day and build a personal profile that grows through rarity, conditions, collections, and time.'
+          ? 'Roll one of 16,777,216 colors once a day. Discover exact RGB and HEX patterns, see how rare your color is, and compare your score.'
         : routeMode === 'app' && view === 'prototype'
           ? 'A noindex Phase 1 profile canvas prototype for ChromaDie.'
         : routeMode === 'app' && view === 'leaderboard'
@@ -793,7 +799,7 @@
           : routeMode === 'app' && view === 'prototype'
             ? '/prototype/profile'
           : routeMode === 'app' && view === 'game' && !challengeData
-            ? '/roll'
+            ? '/'
           : '/';
   $: pageRobots = routeMode === 'not-found'
     ? 'noindex,follow'

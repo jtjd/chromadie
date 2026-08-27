@@ -1,8 +1,8 @@
+import { getBadgeMeta } from './badgeData.js';
+
 export const ROLL_REVEAL_STEPS = Object.freeze([
-  Object.freeze({ id: 'signal', label: 'Color', progress: 8 }),
-  Object.freeze({ id: 'channels', label: 'Channels', progress: 28 }),
-  Object.freeze({ id: 'conditions', label: 'Conditions', progress: 54 }),
-  Object.freeze({ id: 'rarity', label: 'Rarity', progress: 72 }),
+  Object.freeze({ id: 'color', label: 'Color', progress: 18 }),
+  Object.freeze({ id: 'conditions', label: 'Conditions', progress: 72 }),
   Object.freeze({ id: 'score', label: 'Score', progress: 94 }),
   Object.freeze({ id: 'complete', label: 'Complete', progress: 100 })
 ]);
@@ -20,36 +20,28 @@ export const ROLL_REVEAL_SIGNAL_COLORS = Object.freeze([
   '#FF5DB1'
 ]);
 
-const REVEAL_RARITY_BONUS = Object.freeze({
-  Trash: 0,
-  Common: 0,
-  Uncommon: 400,
-  Rare: 900,
-  Epic: 1800,
-  Anomaly: 3000,
-  Mythic: 4200
-});
-
 const REVEAL_SCORE_BONUS = Object.freeze({
   Trash: 0,
   Common: 0,
-  Uncommon: 200,
-  Rare: 400,
-  Epic: 600,
-  Anomaly: 900,
-  Mythic: 1200
+  Uncommon: 100,
+  Rare: 180,
+  Epic: 280,
+  Legendary: 420,
+  Anomaly: 650,
+  Mythic: 650
 });
 
-const REVEAL_SCAN_LAYERS = Object.freeze([
-  'Hue relationship',
-  'Saturation profile',
-  'Lightness range',
-  'Channel harmony',
-  'Hex signature',
-  'Scoring conditions'
-]);
-
 const HEX_CHANNEL_PATTERN = /^#?([0-9a-f]{6})$/i;
+const CONDITION_RARITY_ORDER = Object.freeze({
+  Trash: 0,
+  Common: 1,
+  Uncommon: 2,
+  Rare: 3,
+  Epic: 4,
+  Legendary: 5,
+  Anomaly: 6,
+  Mythic: 6
+});
 
 export function getRevealHex(value, lockedChannels = 0) {
   const match = String(value || '').trim().match(HEX_CHANNEL_PATTERN);
@@ -60,52 +52,60 @@ export function getRevealHex(value, lockedChannels = 0) {
   return `#${channels.map((channel, index) => index < safeLockedChannels ? channel.toUpperCase() : '--').join('')}`;
 }
 
-export function getRollRevealItems(canonical, maxItems = 8) {
+export function getRevealHexCharacters(value, revealedCharacters = 0) {
+  const match = String(value || '').trim().match(HEX_CHANNEL_PATTERN);
+  if (!match) return '#??????';
+
+  const safeRevealedCharacters = Math.max(0, Math.min(match[1].length, Number(revealedCharacters) || 0));
+  return `#${[...match[1].toUpperCase()].map((character, index) => index < safeRevealedCharacters ? character : '?').join('')}`;
+}
+
+export function getRollRevealItems(canonical, maxItems = null) {
   const contributors = Array.isArray(canonical?.contributors)
     ? canonical.contributors
       .filter(contributor => contributor && typeof contributor.id === 'string')
       .map(contributor => ({
         id: `condition-${contributor.id}`,
         label: contributor.name || contributor.id,
+        symbol: getBadgeMeta(contributor.id).symbol || '✦',
         points: Number(contributor.awardedPoints ?? contributor.points) || 0,
+        category: contributor.category || 'condition',
+        conditionRarity: contributor.conditionRarity || 'Common',
         kind: 'condition'
       }))
     : [];
-  const traits = Array.isArray(canonical?.traits)
-    ? canonical.traits
-      .filter(trait => trait && typeof (trait.id || trait.label) === 'string')
-      .map(trait => ({
-        id: `trait-${trait.id || trait.label}`,
-        label: trait.label || trait.name || trait.id,
-        points: 0,
-        kind: 'trait'
-      }))
-    : [];
-  const items = [...contributors, ...traits].slice(0, Math.max(1, Number(maxItems) || 1));
+  const hasLimit = Number.isFinite(Number(maxItems)) && Number(maxItems) > 0;
+  const itemLimit = hasLimit
+    ? Math.min(64, Math.max(0, Math.floor(Number(maxItems))))
+    : Math.min(64, contributors.length);
+  const revealOrder = (left, right) => {
+    const rarityDifference = (CONDITION_RARITY_ORDER[left.conditionRarity] ?? 1)
+      - (CONDITION_RARITY_ORDER[right.conditionRarity] ?? 1);
+    return rarityDifference
+      || left.points - right.points
+      || left.label.localeCompare(right.label)
+      || left.id.localeCompare(right.id);
+  };
 
-  for (const label of REVEAL_SCAN_LAYERS) {
-    if (items.length >= Math.max(6, Number(maxItems) || 1)) break;
-    if (items.some(item => item.label === label)) continue;
-    items.push({
-      id: `scan-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`,
-      label,
-      points: 0,
-      kind: 'scan'
-    });
-  }
-
-  return items.slice(0, Math.max(1, Number(maxItems) || 1));
+  // Only server-returned scored contributors earn a reveal beat. Reveal the
+  // common floor first and climb toward the rarest condition so the strongest
+  // discovery is the final beat, independent of the stored breakdown order.
+  // If a safety limit applies, retain the strongest conditions before putting
+  // that selected set into bottom-up reveal order.
+  return contributors
+    .sort((left, right) => -revealOrder(left, right))
+    .slice(0, itemLimit)
+    .sort(revealOrder);
 }
 
 export function getRollRevealTimeline({ rarity = 'Common', score = 0, conditionCount = 0, reducedMotion = false, skipped = false } = {}) {
   if (reducedMotion || skipped) {
     return Object.freeze({
-      signal: 0,
+      color: 0,
       channel: 0,
       conditionIntro: 0,
       conditionBeat: 0,
       conditionSettle: 0,
-      rarity: 0,
       score: 0,
       settle: 0,
       conditionRevealCount: 0,
@@ -113,28 +113,29 @@ export function getRollRevealTimeline({ rarity = 'Common', score = 0, conditionC
     });
   }
 
-  const safeRarity = Object.hasOwn(REVEAL_RARITY_BONUS, rarity) ? rarity : 'Common';
+  const safeRarity = Object.hasOwn(REVEAL_SCORE_BONUS, rarity) ? rarity : 'Common';
   const safeScore = Math.max(0, Number(score) || 0);
   const safeConditionCount = Math.max(0, Number(conditionCount) || 0);
-  const conditionRevealCount = Math.max(6, Math.min(8, Math.ceil(safeConditionCount / 2) || 6));
-  const signal = 2400;
-  const channel = 900;
-  const conditionIntro = 600;
-  const conditionBeat = 600;
-  const conditionSettle = 600;
-  const rarityDuration = 2000 + REVEAL_RARITY_BONUS[safeRarity];
-  const scoreDuration = 3000 + REVEAL_SCORE_BONUS[safeRarity] + (safeScore >= 10000000 ? 800 : 0);
+  const conditionRevealCount = Math.min(64, safeConditionCount);
+  // Keep the server result behind deliberate beats. The color signal and
+  // individual HEX characters build anticipation, then every scored condition
+  // gets enough time to be read before the confirmed score counts up.
+  const color = 900;
+  const channel = 340;
+  const conditionIntro = 650;
+  const conditionBeat = 520;
+  const conditionSettle = 650;
+  const scoreDuration = 1700 + REVEAL_SCORE_BONUS[safeRarity] + (safeScore >= 10000000 ? 250 : 0);
   const settle = 700;
-  const total = signal + (channel * 3) + conditionIntro + (conditionBeat * conditionRevealCount)
-    + conditionSettle + rarityDuration + scoreDuration + settle;
+  const total = color + (channel * 6) + conditionIntro + (conditionBeat * conditionRevealCount)
+    + conditionSettle + scoreDuration + settle;
 
   return Object.freeze({
-    signal,
+    color,
     channel,
     conditionIntro,
     conditionBeat,
     conditionSettle,
-    rarity: rarityDuration,
     score: scoreDuration,
     settle,
     conditionRevealCount,

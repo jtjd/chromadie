@@ -61,7 +61,7 @@
       <div class="guest-profile-onboarding__controls">
         <div class="guest-profile-onboarding__progress" aria-label="Onboarding step 1 of 2"><span class="active"></span><span></span></div>
         <button type="button" class="guest-profile-onboarding__next" on:click={advanceToRoll}>
-          <span>See today’s roll</span><span aria-hidden="true">↓</span>
+          <span>See today’s roll</span>
         </button>
       </div>
     </section>
@@ -78,7 +78,7 @@
 
       {#if rollComplete}
         <aside class="guest-profile-onboarding__cta" aria-live="polite">
-          <div><p>Keep this color in your profile.</p><strong>Create an account to save your roll, unlock effects, and join the leaderboard.</strong></div>
+          <div><p>Start your color story.</p><strong>Create a profile to save future rolls, unlock effects, and join the leaderboard. This preview won’t transfer.</strong></div>
           <button type="button" on:click={() => dispatch('login', { mode: 'signup' })}>Create your profile</button>
         </aside>
       {/if}
@@ -104,7 +104,6 @@
   .guest-profile-onboarding__progress span.active, .guest-profile-onboarding__progress span.complete { border-color: #d6ff63; background: #d6ff63; box-shadow: 0 0 0.7rem rgba(214,255,99,0.55); }
   .guest-profile-onboarding__next { display: inline-flex; align-items: center; gap: 0.8rem; min-height: 2.8rem; padding: 0.65rem 1rem; border: 1px solid rgba(196,181,253,0.48); border-radius: 999px; background: rgba(139,124,246,0.12); color: var(--color-ink-strong); cursor: pointer; font: 600 0.72rem / 1 var(--font-mono-stack); }
   .guest-profile-onboarding__next:hover { background: rgba(139,124,246,0.25); }
-  .guest-profile-onboarding__next span:last-child { color: #d6ff63; font-size: 1rem; }
   .guest-profile-onboarding__roll-stage { scroll-margin-top: 5rem; }
   .guest-profile-onboarding__roll-stage > .guest-profile-onboarding__progress { margin-top: 1.5rem; }
   .guest-profile-onboarding__roll { margin: 2.5rem auto 0; text-align: left; }

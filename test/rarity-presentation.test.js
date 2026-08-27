@@ -9,8 +9,9 @@ test('rarity presentation keeps the result icon and color vocabulary canonical',
     Uncommon: ['✦', '#6ee2a4'],
     Rare: ['✧', '#84aaff'],
     Epic: ['✹', '#d8a6ff'],
-    Anomaly: ['⚠', '#ff9a66'],
-    Mythic: ['✺', '#f4cd76']
+    Legendary: ['⚠', '#ff9a66'],
+    Anomaly: ['✺', '#ff6bd6'],
+    Mythic: ['✺', '#ff6bd6']
   };
 
   assert.deepEqual(Object.keys(RARITY_PRESENTATION), Object.keys(expected));

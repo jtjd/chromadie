@@ -1,213 +1,139 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stat, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const readWebpDimensions = async path => {
-  const image = await readFile(new URL(`../${path}`, import.meta.url));
-  assert.equal(image.toString('ascii', 0, 4), 'RIFF');
-  assert.equal(image.toString('ascii', 8, 12), 'WEBP');
-
-  const chunkType = image.toString('ascii', 12, 16);
-  if (chunkType === 'VP8 ') {
-    return {
-      width: image.readUInt16LE(26) & 0x3fff,
-      height: image.readUInt16LE(28) & 0x3fff
-    };
-  }
-
-  if (chunkType === 'VP8X') {
-    return {
-      width: 1 + image[24] + (image[25] << 8) + (image[26] << 16),
-      height: 1 + image[27] + (image[28] << 8) + (image[29] << 16)
-    };
-  }
-
-  throw new Error(`Unsupported WebP chunk ${chunkType} in ${path}`);
-};
-
-const [home, hero, demo, fixtures, community, dailyLeaderboard, claim, header, sharedHeader, footer, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
+const [home, rollPage, game, preRoll, bestRoll, loop, scoring, community, board, header, sharedHeader, footer, app, rootFunction, rollFunction, index] = await Promise.all([
   read('src/lib/HomePage.svelte'),
-  read('src/lib/homepage/HomepageHero.svelte'),
-  read('src/lib/homepage/HomepageProfileDemo.svelte'),
-  read('src/lib/homepage/homepageFixtures.js'),
+  read('src/lib/RollPage.svelte'),
+  read('src/lib/Game.svelte'),
+  read('src/lib/RollPreRoll.svelte'),
+  read('src/lib/homepage/HomepageBestRoll.svelte'),
+  read('src/lib/homepage/HomepageLoop.svelte'),
+  read('src/lib/homepage/HomepageScoring.svelte'),
   read('src/lib/homepage/HomepageCommunity.svelte'),
   read('src/lib/homepage/HomepageDailyLeaderboard.svelte'),
-  read('src/lib/homepage/HomepageClaim.svelte'),
   read('src/lib/homepage/HomepageHeader.svelte'),
   read('src/lib/SiteModeHeader.svelte'),
   read('src/lib/SiteFooter.svelte'),
   read('src/App.svelte'),
-  read('src/lib/routeLoaders.js'),
-  read('src/main.js'),
-  read('src/styles/fonts.css'),
-  read('src/lib/homepage/homepage-reference.css'),
-  read('src/lib/GuestProfileOnboarding.svelte')
+  read('functions/index.js'),
+  read('functions/roll.js'),
+  read('index.html')
 ]);
 
-test('the homepage is a single reference-first composition', () => {
-  for (const component of ['HomepageHeader', 'HomepageHero', 'HomepageLoop', 'HomepageShowcase', 'HomepageCommunity']) {
+test('the homepage is the real daily roll followed by explanation and one public board', () => {
+  for (const component of ['HomepageHeader', 'RollPage', 'HomepageLoop', 'HomepageScoring', 'HomepageCommunity', 'SiteFooter']) {
     assert.match(home, new RegExp(component));
   }
-  assert.match(home, /homepage-reference\.css/);
-  assert.match(home, /homepage-background/);
-  assert.match(home, /HOMEPAGE_FIXTURES/);
-  assert.match(home, /on:fixturechange={handleFixtureChange}/);
-  assert.match(home, /currentLeaderboardUser={dailyLeaderboardCurrentUser}/);
-  assert.doesNotMatch(home, /accentpreview|handleAccentPreview/);
-  assert.match(home, /accountState/);
-  assert.match(home, /logoutInProgress/);
-  assert.doesNotMatch(home, /HomeHero|HomeLeaderboard|HomepageProfileDirectory|SiteModeHeader|activecolor/);
-  assert.match(home, /on:claim={forwardAction}/);
-  assert.match(home, /on:login={forwardAction}/);
-  assert.match(home, /on:logout={forwardAction}/);
-  assert.match(home, /<SiteFooter \{isAuthenticated\} \/>/);
+  assert.match(home, /surface="homepage"/);
+  assert.match(home, /signupNext="\/"/);
+  assert.match(home, /showAcquisitionActions=\{true\}/);
+  assert.match(home, /homepage-reference--roll-first/);
+  assert.match(home, /homepageDiscovery/);
+  assert.doesNotMatch(home, /HomepageHero|HomepageProfileDemo|HomepageShowcase|HomepageBestRoll|HomepageClaim|HOMEPAGE_FIXTURES|LazyAtmosphereLayer|homepage-background/);
+  assert.equal((home.match(/<HomepageCommunity\b/g) || []).length, 1);
 });
 
-test('homepage navigation exposes real product destinations without placeholder links', () => {
-  assert.match(header, /SiteModeHeader/);
-  assert.match(header, /claimHref="#claim"/);
-  assert.match(sharedHeader, /src="\/brand\/am-mark-v1\.webp"/);
-  for (const label of ['Roll', 'Leaderboard', 'Progression', 'Customize', 'Pricing', 'Claim handle']) {
-    assert.match(sharedHeader, new RegExp(`>${label}<`));
-  }
-
-  for (const destination of ['/roll', '/leaderboard', '/progression', '/profile/settings', '/pricing', '/how-to-play', '/privacy', '/terms']) {
-    assert.match(footer, new RegExp(`href="${destination}"`));
-  }
-  assert.match(footer, /support@chromadie\.com/);
-  assert.match(footer, /business@chromadie\.com/);
-  assert.doesNotMatch(`${header}${sharedHeader}`, /How it works|Profiles|href="#how"|href="#showcase"/);
-  assert.doesNotMatch(sharedHeader, /href="#"/);
+test('the first viewport states the game plainly and has one authoritative roll action', () => {
+  assert.match(rollPage, /A NEW COLOR, EVERY DAY/);
+  assert.match(rollPage, /#\?\?\?\?\?\?/);
+  assert.doesNotMatch(rollPage, /One color per day\. One roll\. What will yours be\?/);
+  assert.doesNotMatch(rollPage, /Open progression/);
+  assert.match(rollPage, /HomepageBestRoll/);
+  assert.match(rollPage, /bestRollRows/);
+  assert.match(rollPage, /grid-template-columns: minmax\(280px, 360px\) minmax\(360px, 420px\)/);
+  assert.match(rollPage, /homepage-preroll \.roll-page__context \{[\s\S]*grid-column: 1/);
+  assert.match(rollPage, /homepage-preroll :global\(\.homepage-best-roll\) \{[\s\S]*grid-column: 2/);
+  assert.match(rollPage, /homepageRolling = homepage && !contextHasResult && rollContext\.phase !== 'preroll'/);
+  assert.match(rollPage, /homepage-rolling :global\(\.game-container--dedicated\) \{[\s\S]*grid-column: 2/);
+  assert.match(rollPage, /homepage-rolling \.roll-page__context \{[\s\S]*align-self: center;/);
+  assert.match(rollPage, /homepagePreroll && !homepageRolling/);
+  assert.match(rollPage, /grid-template-rows: auto auto auto/);
+  assert.match(bestRoll, /getBestRoll/);
+  assert.match(bestRoll, /Today’s top roll/);
+  assert.match(bestRoll, /getProfileMediaUrl/);
+  assert.match(bestRoll, /RollResultBreakdown/);
+  assert.match(bestRoll, /homepage-best-roll__heading/);
+  assert.match(bestRoll, /homepage-best-roll__title/);
+  assert.match(bestRoll, /class:homepage-best-roll--active=\{Boolean\(bestRoll\)\}/);
+  assert.match(bestRoll, /homepage-best-roll--active::before/);
+  assert.match(bestRoll, /animation: homepage-best-roll-glow 4\.8s ease-in-out infinite/);
+  assert.match(bestRoll, /@keyframes homepage-best-roll-glow/);
+  assert.match(bestRoll, /prefers-reduced-motion: reduce[\s\S]*homepage-best-roll--active::before \{ animation: none;/);
+  assert.match(bestRoll, /homepage-best-roll__identity-name/);
+  assert.match(bestRoll, /homepage-best-roll__identity-label">Rolled by/);
+  assert.match(bestRoll, /`#\$\{bestRoll\.rank\} TODAY` : 'TOP TODAY'/);
+  assert.match(bestRoll, /homepage-best-roll__identity-name \{[\s\S]*overflow-wrap: anywhere;[\s\S]*white-space: normal;/);
+  assert.match(bestRoll, /homepage-best-roll__color-meta/);
+  assert.match(bestRoll, /homepage-best-roll__rarity/);
+  assert.match(bestRoll, /homepage-best-roll__result-summary/);
+  assert.match(bestRoll, /--roll-score-color: var\(--color-earned, #f5c26f\)/);
+  assert.match(bestRoll, /resets in/);
+  assert.match(bestRoll, /homepage-best-roll__footer[\s\S]*justify-content: center/);
+  assert.match(bestRoll, /homepage-best-roll__footer[\s\S]*border-top: 1px solid/);
+  assert.match(bestRoll, /style={`background: \$\{rollColor\};`}/);
+  assert.doesNotMatch(bestRoll, /backdrop-filter|linear-gradient/);
+  assert.doesNotMatch(bestRoll, /FROM THE COMMUNITY|#1 TODAY|One color\. Every day\.|Explore .*profile|<small>score<\/small>/);
+  assert.match(rollPage, /One of 16,777,216 colors/);
+  assert.match(rollPage, /<Game[\s\S]*dedicated=\{true\}/);
+  assert.match(preRoll, /Roll today’s color/);
+  assert.match(game, /<RollPreRoll/);
+  assert.match(game, /on:roll=\{\(\) => initiateRoll\(false\)\}/);
+  assert.match(game, /phase = 'rolling';[\s\S]{0,800}dispatchRollState\(\);/);
+  assert.match(game, /requestRoll\(supabase, isReroll\)/);
+  assert.doesNotMatch(home + rollPage, /[‹›↗→↓]/);
+  assert.doesNotMatch(home, /href="\/roll"/);
 });
 
-test('the hero carousel uses deterministic homepage specimens without public-profile rendering', () => {
-  assert.match(hero, /HOMEPAGE_FIXTURES/);
-  assert.match(hero, /Previous profile example/);
-  assert.match(hero, /Next profile example/);
-  assert.match(hero, /<HomepageProfileDemo fixture={fixture}/);
-  assert.match(hero, /type="button" aria-label="Previous profile example"/);
-  assert.match(hero, /type="button" aria-label="Next profile example"/);
-  assert.match(hero, /class="homepage-profile-stage"/);
-  assert.match(hero, /anchorId="claim"/);
-  assert.match(hero, /<HomepageDailyLeaderboard/);
-  assert.match(hero, /dailyLeaderboardRows/);
-  assert.match(hero, /homepage-roll-compact/);
-  assert.match(hero, /href="\/roll"/);
-  assert.match(hero, />Roll today<\/a>/);
-  assert.doesNotMatch(hero, /homepage-roll-compact__header|homepage-roll-compact__prompt|Once a day|→/);
-  assert.match(hero, /currentLeaderboardUser/);
-  assert.doesNotMatch(hero, /PREVIEW_ROLL|previewRoll|accentpreview|localLeaderboardEntry|isPreviewRolling|hasLeaderboardEntry|focusClaim|profileImpactActive|rollPhase|homepage-roll-particles/);
-  assert.match(hero, /<ProfileMotionEffect/);
-  assert.match(hero, /motionKey=\{fixture\.profileMotion \|\| ''\}/);
-  assert.match(hero, /inputSurface="viewport"/);
-  assert.doesNotMatch(hero, /handleViewportPointerMove|animateTilt|requestAnimationFrame/);
-  assert.doesNotMatch(hero, /ProfileShell|HomepageProfileRenderer|layoutLabel|random|discovery|roll_die|supabase|\.rpc\(/);
-  assert.doesNotMatch(demo, /ProfileShell|ProfileLayoutFrame|profile-shell|profileRenderModel/);
-  assert.match(dailyLeaderboard, /Daily highest roll/);
-  assert.match(dailyLeaderboard, /avatarReference/);
-  assert.match(dailyLeaderboard, /getProfileMediaUrl/);
-  assert.match(dailyLeaderboard, /export let currentUser = null/);
-  assert.match(dailyLeaderboard, /mergeVisibleRows\(realRows, currentUser\)/);
-  assert.match(dailyLeaderboard, /rows\.slice\(0, 2\)/);
-  assert.match(dailyLeaderboard, /isLocalEntry: true/);
-  assert.match(dailyLeaderboard, /homepage-daily-leaderboard__row--you/);
-  assert.match(dailyLeaderboard, /View full leaderboard/);
-  assert.match(dailyLeaderboard, /displayRank/);
-  assert.doesNotMatch(dailyLeaderboard, /__homepage_you__|Your preview roll|href=\{getRowPath\(row\)\}[^\n]*#claim/);
+test('account actions are contextual before and after the guest roll', () => {
+  assert.match(header, /showClaim=\{false\}/);
+  assert.match(sharedHeader, /export let showClaim = true/);
+  assert.match(sharedHeader, /!isAuthenticated && showClaim/);
+  assert.match(preRoll, /Sign up/);
+  assert.match(preRoll, /to save your roll\./);
+  assert.match(game, /on:signup=\{\(\) => beginGuestSignup\(signupNext\)\}/);
+  assert.match(game, /beginGuestSignup\(signupNext\)/);
+  assert.match(game, /Create an account/);
+  assert.match(game, /Save future rolls and earn EP\./);
+  assert.match(game, /View it on your profile/);
+  assert.match(game, /Share result/);
 });
 
-test('the homepage specimen owns the approved profile anatomy', () => {
-  for (const selector of [
-    'homepage-profile-demo--hero',
-    'ProfileFullBleedLayout',
-    'ProfileReferenceCard',
-    'presentation="homepage"'
-  ]) assert.match(demo, new RegExp(selector));
-  assert.doesNotMatch(demo, /ProfileShell|ProfileLayoutFrame|profile-shell/);
-  assert.doesNotMatch(demo, /export let impactActive = false/);
-  assert.doesNotMatch(demo, /Profile preview|homepage-profile-demo__head|@\{fixture\.username\}|Views|views|↗/);
+test('the lower homepage explains play and scoring before authentic profile discovery', () => {
+  for (const step of ['Roll', 'Decode', 'Compare']) assert.match(loop, new RegExp(`<h3>${step}</h3>`));
+  assert.match(scoring, /Why some colors score/);
+  assert.match(scoring, /Repeated digits/);
+  assert.match(scoring, /Symmetry and sequences/);
+  assert.match(scoring, /Recognizable values/);
+  assert.match(scoring, /href="\/how-to-play"/);
+  assert.match(community, /Today’s five strongest public results/);
+  assert.match(community, /supabase\.rpc\('get_public_discovery',/);
+  assert.match(community, /supabase\.rpc\('get_public_discovery_spotlight'/);
+  assert.match(community, /const DAILY_LEADERBOARD_LIMIT = 5/);
+  assert.match(board, /View full leaderboard/);
+  assert.match(board, /LeaderboardEntry/);
+  assert.match(footer, /href="\/privacy"/);
 });
 
-test('homepage fixtures are local, deterministic, scored, and outside production data feeds', async () => {
-  assert.match(fixtures, /HOMEPAGE_FIXTURES|condition_ids|timelineEvents/);
-  assert.doesNotMatch(fixtures, /createDefaultProfileConfig|normalizeProfileConfig|profileConfig|layoutVariant|supabase|rpc\(|get_public_discovery|KNOWN_STAFF_SHOWCASE_USERNAMES/);
-
-  const assetPaths = [
-    'meilin/background-dusk-v2.webp', 'meilin/avatar.webp',
-    'compact-background.png', 'compact-avatar.png',
-    'sleek-background.png', 'sleek-avatar.png',
-    'minimal-background.webp', 'minimal-avatar.webp',
-    'portfolio-background.webp', 'portfolio-avatar.webp'
-  ];
-  for (const filename of assetPaths) {
-    const image = await stat(new URL(`../public/homepage/fixtures/${filename}`, import.meta.url));
-    assert.ok(image.size > 1000, `${filename} should be a real local fixture asset`);
-  }
-
-  for (const filename of [
-    'meilin/avatar.webp',
-    'p2/p2avatar.webp',
-    'minimal-avatar.webp',
-    'portfolio-avatar.webp'
-  ]) {
-    assert.deepEqual(
-      await readWebpDimensions(`public/homepage/fixtures/${filename}`),
-      { width: 512, height: 512 },
-      `${filename} should be sized for its rendered homepage surface`
-    );
-  }
+test('root and compatibility metadata identify one canonical playable entry', () => {
+  const title = 'ChromaDie — Daily Random Color Game';
+  const description = 'Roll one of 16,777,216 colors once a day.';
+  assert.match(app, new RegExp(title.replace(/[—]/g, '—')));
+  assert.match(app, new RegExp(description.replace(/[,.]/g, value => `\\${value}`)));
+  assert.match(rootFunction, /canonicalPath: '\/'/);
+  assert.match(rootFunction, /Daily Random Color Game/);
+  assert.match(rollFunction, /canonicalPath: '\/'/);
+  assert.match(rollFunction, /robots: 'noindex,follow'/);
+  assert.match(index, /<title>ChromaDie — Daily Random Color Game<\/title>/);
+  assert.match(index, /og:image:alt/);
+  assert.match(index, /"@type": "VideoGame"/);
+  assert.doesNotMatch(index, /aggregateRating|"review"/);
 });
 
-test('homepage community is the only live profile feed on the new homepage', () => {
-  assert.match(community, /supabase\.rpc\('get_public_discovery'/);
-  assert.match(community, /normalizeDiscoveryResponse/);
-  assert.match(community, /getCanonicalProfilePath/);
-  assert.match(community, /p_surface: 'today'/);
-  assert.match(community, /slice\(0, COMMUNITY_LIMIT\)/);
-  assert.match(community, /CURRENT_USER_LOOKUP_LIMIT/);
-  assert.match(community, /p_query: lookupUsername/);
-  assert.match(community, /candidate\.username\.toLowerCase\(\) === lookupKey/);
-  assert.match(community, /dispatch\('leaderboard'/);
-  assert.doesNotMatch(community, /HOMEPAGE_FIXTURES|getHomepageFixture|loadProfileContext/);
-  assert.match(home, /<HomepageCommunity \{isAuthenticated\} \{username\} on:leaderboard=\{handleDailyLeaderboard\} \/>/);
-});
-
-test('claim behavior stays on the shared username and auth routes', () => {
-  assert.match(claim, /isUsernameShapeValid/);
-  assert.match(claim, /1–20 letters, numbers, or underscores/);
-  assert.match(claim, /dispatch\('claim', \{ username: nextUsername \}\)/);
-  assert.match(claim, /dispatch\('profile'\)/);
-  assert.match(claim, /username_claim_started/);
-  assert.match(claim, /username_claim_completed/);
-  assert.doesNotMatch(claim, /↗|Free · One roll each day/);
-  assert.match(header, /on:login=\{forward\}/);
-  assert.match(header, /on:logout=\{forward\}/);
-  assert.match(header, /on:retry=\{forward\}/);
-});
-
-test('the root route mounts the homepage without changing other route contracts', () => {
-  assert.match(routeLoaders, /home:\s*\(\) => import\('\.\/HomePage\.svelte'\)/);
+test('the root route remains stable while the compatibility Roll route stays available', () => {
   assert.match(app, /loaderKey: 'home'/);
-  assert.match(app, /accountState: currentAccountState/);
-  assert.match(app, /username: currentUsername/);
-  assert.match(app, /logoutInProgress: currentLogoutInProgress/);
-  assert.doesNotMatch(app, /handleHomeActiveColor|on:activecolor/);
-  assert.match(fonts, /font-family: 'Inter'/);
-  assert.match(fonts, /inter-latin-wght-normal/);
-  assert.match(main, /@fontsource-variable\/manrope/);
-  assert.match(fonts, /Clash Display/);
-  assert.match(homepageStyles, /--homepage-bg: #050506/);
-  assert.match(homepageStyles, /--homepage-radius: 18px/);
-  assert.doesNotMatch(homepageStyles, /radial-gradient\(circle at 62% 35%/);
-  assert.match(homepageStyles, /rgba\(5, 5, 6, 0\.24\) 0%/);
-  assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
-  assert.match(hero, /\.homepage-hero__product \{[\s\S]*min-width: 0;/);
-  assert.match(hero, /\.homepage-profile-stage \{[\s\S]*min-width: 0;/);
-  assert.match(hero, /width: 440px/);
-  assert.doesNotMatch(hero, /height: 470px/);
-  assert.match(claim, /backdrop-filter: blur\(18px\) saturate\(118%\)/);
-  assert.match(claim, /\.homepage-claim__field \{[\s\S]*min-width: 0;/);
-  assert.match(guestProfile, /This could be your profile/);
+  assert.match(app, /routeMode === 'app' && view === 'game' && !challengeData[\s\S]*\? '\/'/);
+  assert.match(app, /view === 'game'[\s\S]*noindex,follow/);
 });

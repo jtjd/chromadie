@@ -25,32 +25,20 @@ test('persistent Profile Studio preview owns no independent profile/media fetch 
   assert.match(browserSmoke, /requestLog/);
 });
 
-test('homepage network budget is bounded and fixture changes stay local', async () => {
-  const [home, hero, demo, showcase, community, fixtures, smoke] = await Promise.all([
+test('playable homepage network budget is bounded and avoids profile hydration', async () => {
+  const [home, community, smoke] = await Promise.all([
     read('src/lib/HomePage.svelte'),
-    read('src/lib/homepage/HomepageHero.svelte'),
-    read('src/lib/homepage/HomepageProfileDemo.svelte'),
-    read('src/lib/homepage/HomepageShowcase.svelte'),
     read('src/lib/homepage/HomepageCommunity.svelte'),
-    read('src/lib/homepage/homepageFixtures.js'),
     read('scripts/browser/homepage-reference-smoke.mjs')
   ]);
-  const marketing = `${home}\n${hero}\n${demo}\n${showcase}\n${fixtures}`;
-  assert.doesNotMatch(marketing, /ProfileShell|loadProfileContext|setInterval|\/get_public_profile_/);
-  assert.doesNotMatch(`${demo}\n${showcase}`, /<audio|<video|media\.chm\.lol|r2\.cloudflarestorage\.com/);
-  assert.match(showcase, /IntersectionObserver/);
-  assert.match(showcase, /data-media-ready/);
-  assert.match(showcase, /mediaReady=\{showcaseMediaReady\}/);
-  assert.match(demo, /export let mediaReady = true/);
-  assert.match(demo, /mediaReady && avatarSource/);
-  assert.equal((community.match(/supabase\.rpc\('get_public_discovery'/g) || []).length, 2);
-  assert.doesNotMatch(fixtures, /Date\.now\(|Math\.random\(|supabase|loadProfileContext/);
+  assert.match(home, /import RollPage from '.\/RollPage\.svelte'/);
+  assert.match(home, /<RollPage/);
+  assert.doesNotMatch(home, /ProfileShell|loadProfileContext|setInterval|HomepageProfileDemo|HomepageShowcase|homepageFixtures/);
+  assert.equal((community.match(/supabase\.rpc\('get_public_discovery',/g) || []).length, 1);
+  assert.equal((community.match(/supabase\.rpc\('get_public_discovery_spotlight'/g) || []).length, 1);
   assert.match(smoke, /discoveryCount <= 1/);
   assert.match(smoke, /profileHydrationCount === 0/);
   assert.match(smoke, /storageCount === 0/);
-  assert.match(smoke, /remoteMediaCount <= 3/);
-  assert.match(smoke, /showcaseEntries\.length === 0/);
-  assert.match(smoke, /minimal-background\.webp/);
-  assert.match(smoke, /homepageIdleWaitMs/);
-  assert.match(smoke, /61000/);
+  assert.match(smoke, /document\.documentElement\.scrollWidth/);
+  assert.match(smoke, /homepage-roll-first/);
 });

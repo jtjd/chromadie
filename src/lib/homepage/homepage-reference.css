@@ -1,5 +1,5 @@
 .homepage-reference {
-  --homepage-bg: #050506;
+  --homepage-bg: #0e0e10;
   --homepage-panel: rgba(13, 13, 16, 0.66);
   --homepage-panel-heavy: rgba(8, 8, 10, 0.82);
   --homepage-border: rgba(255, 255, 255, 0.11);
@@ -31,46 +31,12 @@
 .homepage-reference a { color: inherit; }
 .homepage-reference button,
 .homepage-reference input { font: inherit; }
-.app-main--site .homepage-reference :is(.homepage-hero__copy > h1, .homepage-section-heading, .homepage-final h2, .homepage-step h3) {
+.app-main--site .homepage-reference :is(.homepage-section-heading, .homepage-step h3) {
   /* The site shell has a higher-specificity !important heading rule. Keep the
      homepage display face authoritative without changing other
      application surfaces. */
   font-family: var(--homepage-display) !important;
 }
-
-.homepage-background {
-  position: fixed;
-  z-index: 0;
-  inset: 0;
-  background-image: var(--homepage-background-image);
-  background-position: center;
-  background-size: cover;
-  filter: saturate(1.08) contrast(1.06);
-  transform: scale(1.01);
-  transition: background-image 0.45s ease, filter 0.3s ease;
-}
-
-.homepage-background::after {
-  position: absolute;
-  inset: 0;
-  content: '';
-  background: linear-gradient(
-    90deg,
-    rgba(5, 5, 6, 0.24) 0%,
-    rgba(5, 5, 6, 0.06) 32%,
-    rgba(5, 5, 6, 0.03) 65%,
-    rgba(5, 5, 6, 0.18) 100%
-  );
-}
-
-.homepage-atmosphere {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  pointer-events: none;
-}
-
-.homepage-atmosphere .profile-atmosphere__video--snow { opacity: .4; }
 
 .homepage-shell { width: min(1480px, calc(100% - 64px)); margin-inline: auto; }
 .homepage-section__inner,
@@ -78,29 +44,7 @@
 .homepage-content {
   position: relative;
   z-index: 3;
-  background: linear-gradient(
-    to bottom,
-    rgba(5, 5, 6, .36) 0,
-    rgba(5, 5, 6, .68) 300px,
-    var(--homepage-bg) 640px
-  );
-}
-
-.homepage-content::before {
-  position: absolute;
-  z-index: 0;
-  inset-inline: 0;
-  bottom: 100%;
-  height: 280px;
-  content: '';
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(5, 5, 6, .08) 35%,
-    rgba(5, 5, 6, .24) 76%,
-    rgba(5, 5, 6, .36) 100%
-  );
-  pointer-events: none;
+  background: var(--homepage-bg);
 }
 
 .homepage-button {
@@ -157,6 +101,7 @@
 
 .homepage-final h2 { margin: 0; color: var(--homepage-text); font: 600 clamp(3.6rem, 6vw, 6rem) / 0.9 var(--homepage-display); letter-spacing: -0.05em; }
 .homepage-final p { max-width: 500px; margin: 18px auto 34px; color: var(--homepage-secondary-muted); font: 500 1rem / 1.6 'Inter', sans-serif; letter-spacing: 0.01em; }
+.homepage-final .homepage-claim-slot { margin-inline: auto; }
 .homepage-final .homepage-button { min-height: 58px; padding-inline: 30px; font-size: 1rem; }
 
 @media (max-width: 1100px) {
@@ -167,7 +112,6 @@
   .homepage-shell { width: calc(100% - 30px); }
   .homepage-section,
   .homepage-section__inner { width: calc(100% - 30px); }
-  .homepage-content::before { height: 220px; }
   .homepage-section-heading { font-size: clamp(2.9rem, 13vw, 4rem); }
   .homepage-final { padding-top: 88px; padding-bottom: 48px; }
 }

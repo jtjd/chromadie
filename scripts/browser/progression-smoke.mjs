@@ -409,9 +409,9 @@ async function inspectAuthenticatedProgression(width, height, label) {
   return state;
 }
 
-async function inspectViewport(width, height, label) {
+async function inspectViewport(width, height, label, { navigate = true } = {}) {
   await chromium.page.setViewport(width, height);
-  await chromium.page.navigate(`${appUrl}/progression`, `${label} progression route`);
+  if (navigate) await chromium.page.navigate(`${appUrl}/progression`, `${label} progression route`);
   await chromium.page.waitFor(
     `location.pathname === '/progression' && document.querySelector('.progression-page')`,
     `${label} progression surface`,
@@ -450,10 +450,10 @@ try {
   chromium = await startChromium({ appUrl, debugPort, evidenceDir, width: 1440, height: 1000 });
 
   await step('direct desktop route and guest state', () => inspectViewport(1440, 1000, 'desktop'));
-  await step('mobile route remains usable', () => inspectViewport(390, 844, 'mobile'));
+  await step('mobile route remains usable', () => inspectViewport(390, 844, 'mobile', { navigate: false }));
   await step('reduced motion preference is honored by the route', async () => {
     await chromium.page.setReducedMotion(true);
-    const state = await inspectViewport(390, 844, 'reduced-motion');
+    const state = await inspectViewport(390, 844, 'reduced-motion', { navigate: false });
     assert(state.reducedMotion, 'Chromium did not apply prefers-reduced-motion.');
     return state;
   });
@@ -467,14 +467,14 @@ try {
     await chromium.page.setReducedMotion(false);
     await chromium.page.setViewport(1440, 1000);
     await chromium.page.navigate(appUrl + '/', 'homepage account creation');
-    await chromium.page.waitFor("document.querySelector('.homepage-reference') && document.querySelector('.site-mode-header')", 'homepage account creation controls');
-    await chromium.page.clickText('Sign up', { description: 'homepage signup control' });
+    await chromium.page.waitFor("location.pathname === '/' && document.querySelector('.homepage-reference .roll-page') && document.querySelector('.roll-stage--preroll, .roll-stage--results')", 'homepage account creation controls', 30000);
+    await chromium.page.clickText('Sign up', { description: 'homepage account creation navigation' });
     await chromium.page.waitFor("location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('#username-input') && !document.querySelector('.auth-modal-overlay')", 'standalone signup page');
     await chromium.page.setInputValue('#username-input', canonicalUsername, ['input', 'change']);
     await chromium.page.setInputValue('#email-input', accountEmail, ['input', 'change']);
     await chromium.page.setInputValue('#password-input', accountPassword, ['input', 'change']);
     await chromium.page.click('.auth-submit', 'signup submit control');
-    await chromium.page.waitFor("location.pathname === " + JSON.stringify('/' + canonicalUsername) + " && document.querySelector('.profile-shell-page') && !document.querySelector('.auth-page')", 'authenticated session after signup', 30000);
+    await chromium.page.waitFor("location.pathname === '/' && document.querySelector('.homepage-reference .roll-page') && !document.querySelector('.auth-page')", 'authenticated session after signup', 30000);
 
     const sessionState = await getBrowserSession();
     disposableUserId = sessionState.userId;

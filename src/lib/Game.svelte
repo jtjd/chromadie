@@ -1,5 +1,7 @@
 <script>
   import RollTile from './RollTile.svelte';
+  import RollPreRoll from './RollPreRoll.svelte';
+  import RollResultBreakdown from './RollResultBreakdown.svelte';
   import { supabase } from './supabase';
   import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
   import { createChallengeLink } from './challenges';
@@ -16,7 +18,7 @@
   import { getAppOrigin } from './authUrls';
   import { trackProductEvent } from './productAnalytics.js';
   import {
-    getRevealHex,
+    getRevealHexCharacters,
     getRollRevealItems,
     getRollRevealTimeline,
     ROLL_REVEAL_SIGNAL_COLORS,
@@ -26,6 +28,9 @@
   const dispatch = createEventDispatcher();
   export let profileMode = false;
   export let dedicated = false;
+  export let surface = 'roll';
+  export let signupNext = '/roll';
+  export let showAcquisitionActions = false;
   let phase = 'preroll';
   let loading = false;
   let error = null;
@@ -56,11 +61,11 @@
   let displayScore = 0;
   let scanProgress = 0;
   let revealStep = 0;
-  let revealStatus = ROLL_REVEAL_STEPS[0].label;
   let revealDetail = '';
   let revealSkipRequested = false;
   let revealConditions = [];
   let revealItemTotal = 0;
+  let revealListElement = null;
   let scoreCountUpFrame = null;
   let scoreCountUpResolve = null;
 
@@ -98,6 +103,7 @@
       phase,
       identity,
       hex: phase === 'results' ? normalizeHexColor(displayColor, '') : '',
+      revealHex: phase === 'rolling' ? displayHex : '',
       rarity,
       score: Number(score) || 0,
       currentStreak: Number($profile?.current_streak) || 0,
@@ -287,25 +293,31 @@
   function skipReveal() {
     if (phase !== 'rolling') return;
     revealSkipRequested = true;
-    revealStatus = ROLL_REVEAL_STEPS[revealStep]?.label || ROLL_REVEAL_STEPS[0].label;
-    revealDetail = 'Showing the server-confirmed result';
+    revealDetail = 'Showing the confirmed result';
   }
 
   async function presentRollResult(data, requestIsCurrent) {
     const canonical = normalizeCanonicalRoll(data);
     const reducedMotion = prefersReducedMotion();
-    const conditionCount = Array.isArray(data?.conditions)
-      ? data.conditions.length
-      : canonical.contributors.length;
+    const conditionCount = canonical.contributors.length;
+    const revealItems = getRollRevealItems(canonical);
     const timing = getRollRevealTimeline({
       rarity: canonical.rarity,
       score: canonical.score,
       conditionCount,
       reducedMotion
     });
-    const revealItems = getRollRevealItems(canonical, timing.conditionRevealCount);
     revealConditions = [];
     revealItemTotal = revealItems.length;
+
+    const revealCondition = async item => {
+      revealConditions = [...revealConditions, item];
+      await tick();
+      revealListElement?.scrollTo({
+        top: revealListElement.scrollHeight,
+        behavior: reducedMotion ? 'auto' : 'smooth'
+      });
+    };
 
     const waitForBeat = async delay => {
       if (revealSkipRequested) return requestIsCurrent();
@@ -330,10 +342,9 @@
       identity = canonical.identity;
       traits = canonical.traits;
       rollContributors = canonical.contributors;
-      revealConditions = revealItems;
+      revealConditions = [...revealItems];
       revealStep = ROLL_REVEAL_STEPS.length - 1;
-      revealStatus = ROLL_REVEAL_STEPS[ROLL_REVEAL_STEPS.length - 1].label;
-    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
+      revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
       displayHex = finalHex;
       displayColor = finalHex;
       displayScore = score;
@@ -342,9 +353,9 @@
     };
 
     displayColor = '#222';
-    displayHex = getRevealHex(canonical.hex, 0);
+    displayHex = getRevealHexCharacters(canonical.hex, 0);
+    dispatchRollState();
     revealStep = 0;
-    revealStatus = ROLL_REVEAL_STEPS[0].label;
     revealDetail = 'Waiting for the roll result';
     scanProgress = ROLL_REVEAL_STEPS[0].progress;
     displayScore = 0;
@@ -355,10 +366,9 @@
     rollContributors = [];
 
     if (!await waitThroughStage(
-      timing.signal,
-      ['Reading hue', 'Reading saturation', 'Reading lightness', 'Checking conditions'],
+      timing.color,
+      ['Color signal received'],
       (index, message) => {
-        revealStatus = ROLL_REVEAL_STEPS[0].label;
         revealDetail = message;
         displayColor = ROLL_REVEAL_SIGNAL_COLORS[index % ROLL_REVEAL_SIGNAL_COLORS.length];
       }
@@ -367,14 +377,12 @@
       if (revealSkipRequested) return finalize();
     }
 
-    revealStep = 1;
-    scanProgress = ROLL_REVEAL_STEPS[1].progress;
-    for (const [index, lockedChannels] of [1, 2, 3].entries()) {
+    for (let revealedCharacters = 1; revealedCharacters <= 6; revealedCharacters += 1) {
       if (revealSkipRequested) return finalize();
-      revealStatus = ROLL_REVEAL_STEPS[1].label;
-      revealDetail = `${['Red', 'Green', 'Blue'][index]} channel confirmed`;
-      displayHex = getRevealHex(canonical.hex, lockedChannels);
-      displayColor = ROLL_REVEAL_SIGNAL_COLORS[(index + 2) % ROLL_REVEAL_SIGNAL_COLORS.length];
+      revealDetail = `${revealedCharacters}/6 HEX characters revealed`;
+      displayHex = getRevealHexCharacters(canonical.hex, revealedCharacters);
+      displayColor = ROLL_REVEAL_SIGNAL_COLORS[(revealedCharacters + 1) % ROLL_REVEAL_SIGNAL_COLORS.length];
+      dispatchRollState();
       if (!await waitForBeat(timing.channel)) {
         if (!requestIsCurrent()) return null;
         if (revealSkipRequested) return finalize();
@@ -383,9 +391,9 @@
 
     displayHex = normalizeHexColor(canonical.hex, '#000000');
     displayColor = normalizeHexColor(canonical.hex, '#000000');
-    revealStep = 2;
-    scanProgress = ROLL_REVEAL_STEPS[2].progress;
-    revealStatus = ROLL_REVEAL_STEPS[2].label;
+    dispatchRollState();
+    revealStep = 1;
+    scanProgress = ROLL_REVEAL_STEPS[1].progress;
     revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} confirmed`;
     if (!await waitForBeat(timing.conditionIntro)) {
       if (!requestIsCurrent()) return null;
@@ -395,7 +403,7 @@
     for (let index = 0; index < revealItems.length; index += 1) {
       if (revealSkipRequested) return finalize();
       const item = revealItems[index];
-      revealConditions = [...revealConditions, item];
+      await revealCondition(item);
       revealDetail = item.kind === 'condition' && item.points > 0
         ? `${item.label} · +${item.points.toLocaleString()} score`
         : `${item.label} checked`;
@@ -412,42 +420,20 @@
     }
 
     if (revealSkipRequested) return finalize();
-    revealStep = 3;
-    scanProgress = ROLL_REVEAL_STEPS[3].progress;
-    rarity = canonical.rarity || 'Common';
-    identity = canonical.identity;
-    revealStatus = ROLL_REVEAL_STEPS[3].label;
-    const rarityMessages = [
-      'Checking rarity',
-      `${rarity} rarity identified`,
-      'Rarity confirmed'
-    ];
-    if (!await waitThroughStage(timing.rarity, rarityMessages, (_index, message) => {
-      revealDetail = message;
-    })) {
-      if (!requestIsCurrent()) return null;
-      if (revealSkipRequested) return finalize();
-    }
-
-    if (revealSkipRequested) return finalize();
-    revealStep = 4;
-    scanProgress = ROLL_REVEAL_STEPS[4].progress;
+    revealStep = 2;
+    scanProgress = ROLL_REVEAL_STEPS[2].progress;
     score = Number(canonical.score) || 0;
     rollContributors = canonical.contributors;
     traits = canonical.traits;
-    revealStatus = ROLL_REVEAL_STEPS[4].label;
-    revealDetail = 'Showing the confirmed score';
+    identity = canonical.identity;
+    revealDetail = 'Counting confirmed score';
     const scoreComplete = await animateScoreCountUp(
       score,
       requestIsCurrent,
       timing.score,
       reducedMotion,
-      progress => {
-        revealDetail = progress < 0.35
-          ? 'Showing color points'
-          : progress < 0.75
-            ? 'Showing condition points'
-            : 'Confirming total score';
+      () => {
+        revealDetail = 'Counting confirmed score';
       }
     );
     if (!scoreComplete || !requestIsCurrent()) {
@@ -456,9 +442,8 @@
     }
 
     if (revealSkipRequested) return finalize();
-    revealStep = 5;
-    scanProgress = ROLL_REVEAL_STEPS[5].progress;
-    revealStatus = ROLL_REVEAL_STEPS[5].label;
+    revealStep = 3;
+    scanProgress = ROLL_REVEAL_STEPS[3].progress;
     revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
     if (!await waitForBeat(timing.settle)) {
       if (!requestIsCurrent()) return null;
@@ -483,7 +468,6 @@
     displayScore = 0;
     scanProgress = 0;
     revealStep = 0;
-    revealStatus = ROLL_REVEAL_STEPS[0].label;
     revealDetail = '';
     revealSkipRequested = false;
     revealConditions = [];
@@ -522,7 +506,7 @@
       guestProgressRestored = false;
       if (!dailyRollError) {
         trackProductEvent('roll_ready', {
-          surface: 'root',
+          surface,
           accountMode: 'authenticated'
         });
       }
@@ -542,7 +526,7 @@
         const rollData = JSON.parse(savedRoll);
         const validHex = normalizeHexColor(rollData?.hex, '');
         const validScore = Number.isSafeInteger(rollData?.score) && rollData.score >= 0 && rollData.score <= MAX_STORED_ROLL_SCORE;
-        const validRarity = ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic'].includes(rollData?.rarity);
+        const validRarity = ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Anomaly', 'Mythic'].includes(rollData?.rarity);
         if (rollData.date === getTodayString() && validHex && validScore && validRarity) {
           guestProgressRestored = true;
           guestProgressActive.set(true);
@@ -575,7 +559,7 @@
     dispatchRollState();
     loading = false;
     trackProductEvent('roll_ready', {
-      surface: 'root',
+      surface,
       accountMode: 'guest'
     });
   }
@@ -715,7 +699,9 @@
     ctx.fillText('Entropy Points', 460, 368);
 
     const rarityColors = {
-      Mythic: '#f1c40f',
+      Anomaly: '#ff6bd6',
+      Legendary: '#ff9a66',
+      Mythic: '#ff6bd6',
       Epic: '#a15cff',
       Rare: '#3b82f6',
       Uncommon: '#10b981',
@@ -819,12 +805,11 @@
     error = null;
     phase = 'rolling';
     badges = [];
-    displayHex = '#------';
+    displayHex = '#??????';
     displayColor = '#222';
     displayScore = 0;
     scanProgress = ROLL_REVEAL_STEPS[0].progress;
     revealStep = 0;
-    revealStatus = ROLL_REVEAL_STEPS[0].label;
     revealDetail = 'Waiting for the server-confirmed roll';
     revealSkipRequested = false;
     revealConditions = [];
@@ -833,6 +818,7 @@
     milestoneGranted = '';
     newMilestones = [];
     cotwHit = false;
+    dispatchRollState();
 
     if (isReroll) {
       setRerollLock();
@@ -859,6 +845,7 @@
       if (isReroll) {
         clearRerollLock();
       }
+      dispatchRollState();
       return;
     }
 
@@ -895,7 +882,7 @@
     if (data.badges && data.badges.includes('cotw_hit')) {
         cotwHit = true;
         trackProductEvent('progression_weekly_focus_completed', {
-          surface: dedicated ? 'dedicated-roll' : 'root-roll',
+          surface,
           accountMode: getRollAccountMode($session)
         });
     }
@@ -913,12 +900,12 @@
     const rollData = createCanonicalRollData(data, getTodayString(), finalBadges);
 
     trackProductEvent('roll_completed', {
-      surface: 'root',
+      surface,
       accountMode: getRollAccountMode($session),
       isReroll
     });
     trackProductEvent('progression_roll_completed', {
-      surface: dedicated ? 'dedicated-roll' : 'root-roll',
+      surface,
       accountMode: getRollAccountMode($session)
     });
 
@@ -955,7 +942,8 @@
     loading = false;
   }
 
-  function beginGuestSignup() {
+  function beginGuestSignup(next = '') {
+    const safeNext = typeof next === 'string' ? next : '';
     if (!$isAuthenticated) {
       clearGuestRoll();
       clearLocalAccountCache();
@@ -963,7 +951,11 @@
       guestProgressActive.set(false);
     }
     trackProductEvent('progression_claim_started', { surface: 'roll', accountMode: 'guest' });
-    dispatch('promptlogin', { mode: 'signup' });
+    dispatch('promptlogin', { mode: 'signup', ...(safeNext ? { next: safeNext } : {}) });
+  }
+
+  export function beginGuestSignupFromParent(next = signupNext) {
+    beginGuestSignup(next);
   }
 
   onMount(async () => {
@@ -1033,37 +1025,16 @@
   {/if}
 
   {#if phase === 'preroll'}
-    <div class="card roll-stage roll-stage--preroll">
-      {#if dedicated}
-        <div class="roll-card-header">
-          <div class="roll-card-header__copy">
-            <h2 class="roll-card-header__title">Daily Roll</h2>
-            <p class="roll-card-header__meta">One color. Every day.</p>
-          </div>
-        </div>
-        <div class="roll-display roll-display--preview" aria-label="Daily roll preview">
-          <RollTile displayColor="#28282C" rarity="Common" idle={true} label="Unrevealed daily roll" />
-          <div class="roll-color-info">
-            <div class="roll-color-name">No result yet</div>
-            <div class="roll-color-hex">Roll to generate today’s color.</div>
-          </div>
-        </div>
-
-        <button class="roll-btn roll-action__button" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
-          <span class="roll-button-glyph" aria-hidden="true">△</span>
-          {loading ? 'Reading…' : 'Roll For Today'}
-        </button>
-
-        {#if !$isAuthenticated}
-          <div class="guest-prompt guest-prompt--preroll">
-            <div class="guest-prompt-copy">Roll first. When you create an account, your next saved roll starts your journey.</div>
-            <button type="button" class="roll-btn guest-prompt__button" on:click={beginGuestSignup}>
-              Create Account
-            </button>
-          </div>
-        {/if}
-
-      {:else}
+    {#if dedicated}
+      <RollPreRoll
+        loading={loading}
+        authInitialized={$authInitialized}
+        isAuthenticated={$isAuthenticated}
+        on:roll={() => initiateRoll(false)}
+        on:signup={() => beginGuestSignup(signupNext)}
+      />
+    {:else}
+      <div class="card roll-stage roll-stage--preroll">
         <h1>{profileMode ? 'Today’s color' : 'Daily Roll'}</h1>
         {#if $isAuthenticated}
           <p class="info-text">You can roll once a day. Your score counts on the leaderboard and adds to spendable EP; achievements and bonuses can add extra EP.</p>
@@ -1073,24 +1044,24 @@
         <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
           {loading ? 'Preparing roll…' : profileMode ? 'Reveal today’s color' : 'Roll the Die'}
         </button>
-      {/if}
+      </div>
+    {/if}
 
-      {#if cotwColor && !dedicated}
-        <div class="cotw-widget" aria-label={$isAuthenticated ? 'Color of the Week. Match this color for 50,000 spendable EP; it does not change your leaderboard score.' : 'Color of the Week. Sign in to earn 50,000 spendable EP for a close match.'}>
-          <div class="cotw-info">
-            <span class="cotw-title">Color of the Week</span>
-            <span class="cotw-desc">
-              {#if $isAuthenticated}
-                Match for <strong>+50,000 EP</strong>
-              {:else}
-                Sign in to earn <strong>+50,000 EP</strong>
-              {/if}
-            </span>
-          </div>
-          <div class="cotw-swatch" style="background-color: {cotwColor};" title="Target Color"></div>
+    {#if cotwColor && !dedicated}
+      <div class="cotw-widget" aria-label={$isAuthenticated ? 'Color of the Week. Match this color for 50,000 spendable EP; it does not change your leaderboard score.' : 'Color of the Week. Sign in to earn 50,000 spendable EP for a close match.'}>
+        <div class="cotw-info">
+          <span class="cotw-title">Color of the Week</span>
+          <span class="cotw-desc">
+            {#if $isAuthenticated}
+              Match for <strong>+50,000 EP</strong>
+            {:else}
+              Sign in to earn <strong>+50,000 EP</strong>
+            {/if}
+          </span>
         </div>
-      {/if}
-    </div>
+        <div class="cotw-swatch" style="background-color: {cotwColor};" title="Target Color"></div>
+      </div>
+    {/if}
 
   {:else if phase === 'rolling'}
     <div class="card roll-stage roll-stage--rolling" aria-live="polite">
@@ -1103,48 +1074,47 @@
       </div>
       <div class="roll-rolling-display" data-reveal-step={revealStep}>
         <RollTile displayColor={displayColor} rarity={rarity || 'Common'} label="Color being rolled" />
-        <p class="roll-stage__eyebrow">{revealStatus}</p>
         <h2 class="roll-stage__title">{revealStep === ROLL_REVEAL_STEPS.length - 1 ? 'Result ready.' : 'Generating today’s color.'}</h2>
         <div class="rolling-hex">{displayHex}</div>
         <p class="roll-stage__status" role="status">
           {revealDetail}
         </p>
-        <div class="roll-reveal-steps" aria-label="Daily roll reveal stages">
-          {#each ROLL_REVEAL_STEPS as step, index (step.id)}
-            <span class:active={revealStep === index} class:complete={revealStep > index}>{step.label}</span>
-          {/each}
-        </div>
-        {#if revealStep >= 2}
-          <div class="roll-reveal-discovery" aria-label="Server-confirmed signals being revealed">
+        <div
+          class="roll-reveal-discovery"
+          class:roll-reveal-discovery--pending={revealStep < 1}
+          aria-hidden={revealStep < 1}
+          aria-label="Server-confirmed score conditions being revealed"
+        >
             <div class="roll-reveal-discovery__header">
-              <span>Signal breakdown</span>
-              <strong>{`${revealConditions.length}/${revealItemTotal} highlights`}</strong>
+              <span>Condition breakdown</span>
+              <strong>{`${revealConditions.length}/${revealItemTotal} conditions`}</strong>
             </div>
-            <div class="roll-reveal-discovery__list">
+            <div class="roll-reveal-discovery__list" bind:this={revealListElement}>
               {#each revealConditions as item (item.id)}
                 <div class="roll-reveal-discovery__item">
-                  <span class="roll-reveal-discovery__mark" aria-hidden="true">{item.kind === 'condition' ? '✦' : item.kind === 'trait' ? '✧' : '◌'}</span>
+                  <span class="roll-reveal-discovery__mark" aria-hidden="true">{item.symbol || '✦'}</span>
                   <span>{item.label}</span>
                   {#if item.points}<strong>+{item.points.toLocaleString()}</strong>{/if}
+                  {#if item.kind === 'condition' && item.conditionRarity}
+                    <em class="roll-reveal-discovery__rarity" data-rarity={item.conditionRarity.toLowerCase()}>{item.conditionRarity}</em>
+                  {/if}
                 </div>
               {/each}
             </div>
-          </div>
-        {/if}
-        {#if revealStep >= 4}
-          <div class="roll-score-reveal" aria-live="polite">
+        </div>
+        <div
+          class="roll-score-reveal"
+          class:roll-score-reveal--pending={revealStep < 2}
+          aria-hidden={revealStep < 2}
+          aria-live="polite"
+        >
             <span>Confirmed score</span>
             <strong>{displayScore.toLocaleString()}</strong>
             <small>EP · counting live</small>
-          </div>
-        {/if}
+        </div>
       </div>
       <div class="scan-container" role="progressbar" aria-label="Daily roll reveal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(scanProgress)}>
         <div class="scan-bar" style="width: {scanProgress}%"></div>
-      </div>
-      <div class="roll-progress-label">
-        <span>{revealStatus}</span>
-        <strong>{Math.round(scanProgress)}%</strong>
       </div>
       <button type="button" class="roll-reveal-skip" on:click={skipReveal}>
         Skip reveal
@@ -1156,7 +1126,6 @@
       <div class="roll-card-header">
         <div class="roll-card-header__copy">
           <h2 class="roll-card-header__title">Daily Roll</h2>
-          <p class="roll-card-header__meta">One color. Every day.</p>
         </div>
       </div>
       <div class="roll-display" aria-live="polite">
@@ -1166,7 +1135,6 @@
           <div class="roll-result-meta">
             <div class="roll-color-hex">{displayColor}</div>
             <div class="roll-color-rarity" aria-label={`${rarity || 'Common'} rarity`} title={`${rarity || 'Common'} rarity`}>
-              <span class="roll-color-rarity__icon" aria-hidden="true">{getRarityPresentation(rarity || 'Common').icon}</span>
               <span>{rarity || 'Common'}</span>
             </div>
           </div>
@@ -1180,34 +1148,11 @@
         </div>
       </div>
 
-      <div class="roll-breakdown roll-breakdown--result" aria-label="Score breakdown">
-        <div class="roll-breakdown__header">Score Breakdown</div>
-        <div class="roll-breakdown__list" role="list">
-          {#if getBaseRollScore() > 0}
-            <div class="roll-breakdown__row" role="listitem" aria-label={`Base roll: ${getBaseRollScore().toLocaleString()} score`}>
-              <div class="roll-breakdown__label"><span class="roll-breakdown__icon">⚡</span>Base Roll</div>
-              <div class="roll-breakdown__value">{getBaseRollScore().toLocaleString()} <span class="roll-breakdown__points">score</span></div>
-            </div>
-          {/if}
-          {#each rollContributors as contributor (contributor.id)}
-            {@const badge = getBadgeMeta(contributor.id)}
-            {@const awardedPoints = getContributorPoints(contributor)}
-            <div
-              class="roll-breakdown__row"
-              role="listitem"
-              aria-label={(contributor.name || badge.name) + ': ' + (badge.desc || 'Special condition met') + '. +' + awardedPoints.toLocaleString() + ' score'}
-              title={badge.desc || 'Special condition met'}
-            >
-              <div class="roll-breakdown__label"><span class="roll-breakdown__icon">{badge.symbol || '✨'}</span>{contributor.name || badge.name}</div>
-              <div class="roll-breakdown__value">{awardedPoints.toLocaleString()} <span class="roll-breakdown__points">score</span></div>
-            </div>
-          {/each}
-          <div class="roll-breakdown__row roll-breakdown__row--total roll-score-total">
-            <div class="roll-breakdown__label">Total Earned</div>
-            <div class="roll-breakdown__value">{displayScore.toLocaleString()} <span class="roll-breakdown__points">score</span></div>
-          </div>
-        </div>
-      </div>
+      <RollResultBreakdown
+        contributors={rollContributors}
+        baseScore={getBaseRollScore()}
+        totalScore={displayScore}
+      />
 
       <button
         type="button"
@@ -1223,6 +1168,23 @@
           Claimed! +{displayScore.toLocaleString()}
         {/if}
       </button>
+
+      {#if showAcquisitionActions}
+        <div class="roll-acquisition-actions" aria-label="Roll result actions">
+          {#if $isAuthenticated}
+            <button class="chroma-btn result-action result-action--primary" on:click={shareResultsText}>
+              {copied ? 'Copied' : 'Share result'}
+            </button>
+            <button class="roll-acquisition-actions__quiet" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>
+              View it on your profile
+            </button>
+          {:else}
+            <button class="roll-acquisition-actions__quiet" type="button" on:click={shareResultsText}>
+              {copied ? 'Copied' : 'Share result'}
+            </button>
+          {/if}
+        </div>
+      {/if}
 
       {#if cotwHit}
         <div class="cotw-success-banner">
@@ -1270,11 +1232,11 @@
         </div>
       {/if}
 
-      {#if !$isAuthenticated}
+      {#if !$isAuthenticated && !dedicated}
         <div class="guest-prompt">
-          <div class="guest-prompt-copy">Want to save future rolls? Create an account.</div>
-          <button type="button" class="roll-btn guest-prompt__button" on:click={beginGuestSignup}>
-            Create Account
+          <div class="guest-prompt-copy">Save future rolls and earn EP.</div>
+          <button type="button" class="roll-btn guest-prompt__button" on:click={() => beginGuestSignup(signupNext)}>
+            Create an account
           </button>
         </div>
       {/if}
@@ -1357,33 +1319,10 @@
     content: '';
     filter: blur(1rem);
     opacity: .65;
-    animation: rollRevealGlow 1.8s ease-in-out infinite;
+    animation: rollRevealGlow 3.2s ease-in-out infinite;
     pointer-events: none;
   }
   .roll-rolling-display > * { position: relative; z-index: 1; }
-  .roll-reveal-steps {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 6px;
-    width: min(100%, 360px);
-    margin-top: 4px;
-  }
-  .roll-reveal-steps span {
-    min-width: 0;
-    padding-top: 6px;
-    border-top: 1px solid color-mix(in srgb, var(--color-line-subtle, #ffffff) 80%, transparent);
-    color: var(--text-faint, #767b8c);
-    font: 600 .56rem/1.2 var(--font-mono-stack);
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-  }
-  .roll-reveal-steps span.active,
-  .roll-reveal-steps span.complete {
-    border-color: var(--color-accent, #8b7cf6);
-    color: var(--color-ink-strong, #ffffff);
-    box-shadow: 0 -3px 10px color-mix(in srgb, var(--color-accent, #8b7cf6) 24%, transparent);
-  }
   .roll-reveal-discovery {
     display: grid;
     gap: 8px;
@@ -1407,10 +1346,27 @@
     font-weight: 600;
     white-space: nowrap;
   }
-  .roll-reveal-discovery__list { display: grid; gap: 5px; }
+  .roll-reveal-discovery__list {
+    display: grid;
+    height: 174px;
+    align-content: start;
+    grid-auto-rows: max-content;
+    gap: 5px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    overflow-anchor: none;
+    scroll-behavior: smooth;
+  }
+  .roll-reveal-discovery--pending,
+  .roll-score-reveal--pending {
+    visibility: hidden;
+    pointer-events: none;
+  }
   .roll-reveal-discovery__item {
     display: grid;
-    grid-template-columns: 16px minmax(0, 1fr) auto;
+    grid-template-columns: 16px minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 7px;
     min-height: 24px;
@@ -1420,11 +1376,12 @@
     background: color-mix(in srgb, var(--color-accent, #8b7cf6) 6%, transparent);
     color: var(--text-muted, #a4a4b5);
     font-size: .68rem;
-    animation: rollRevealCondition .34s ease-out both;
+    animation: rollRevealCondition .48s cubic-bezier(.22, .8, .25, 1) both;
   }
   .roll-reveal-discovery__item > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .roll-reveal-discovery__mark { color: var(--color-accent-bright, #c4b5fd); text-align: center; }
-  .roll-reveal-discovery__item strong { color: var(--color-ink-strong, #ffffff); font: 600 .62rem/1 var(--font-mono-stack); white-space: nowrap; }
+  .roll-reveal-discovery__item strong { color: var(--roll-score-color, var(--color-earned, #f5c26f)); font: 600 .62rem/1 var(--font-mono-stack); white-space: nowrap; }
+  .roll-reveal-discovery__rarity { color: var(--color-ink-muted, #a7a3b5); font: 700 .55rem/1 var(--font-mono-stack); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
   .roll-score-reveal {
     display: flex;
     align-items: baseline;
@@ -1438,7 +1395,7 @@
     background: color-mix(in srgb, var(--color-accent, #8b7cf6) 9%, transparent);
   }
   .roll-score-reveal span { color: var(--text-muted, #a4a4b5); font: 600 .62rem/1 var(--font-mono-stack); letter-spacing: .08em; text-transform: uppercase; }
-  .roll-score-reveal strong { color: var(--color-ink-strong, #ffffff); font: 600 1.35rem/1 var(--font-display-stack); letter-spacing: -.04em; }
+  .roll-score-reveal strong { color: var(--roll-score-color, var(--color-earned, #f5c26f)); font: 600 1.35rem/1 var(--font-display-stack); letter-spacing: -.04em; }
   .roll-score-reveal small { color: var(--text-muted, #a4a4b5); font: 600 .58rem/1 var(--font-mono-stack); letter-spacing: .06em; text-transform: uppercase; }
   .roll-reveal-skip {
     align-self: center;
@@ -1453,7 +1410,7 @@
     font: 600 .68rem/1 var(--font-mono-stack);
     letter-spacing: .08em;
     text-transform: uppercase;
-    transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+    transition: color 220ms ease, border-color 220ms ease, background 220ms ease;
   }
   .roll-reveal-skip:hover,
   .roll-reveal-skip:focus-visible {
@@ -1524,6 +1481,27 @@
     max-width: 34rem;
     margin: 0 auto;
   }
+  .roll-acquisition-actions {
+    display: grid;
+    gap: 12px;
+    width: 100%;
+    text-align: center;
+  }
+  .roll-acquisition-actions__quiet {
+    justify-self: center;
+    min-height: 0;
+    padding: 4px 8px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font: 650 .78rem/1.3 var(--font-body-stack);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--text-muted) 45%, transparent);
+    text-underline-offset: 4px;
+  }
+  .roll-acquisition-actions__quiet:hover { color: var(--text); text-decoration-color: var(--text); }
+  .roll-acquisition-actions__quiet:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
   .badges-subtitle { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 10px; text-align: left; opacity: 0.8; }
 
   .studio-onboarding {
@@ -1597,8 +1575,8 @@
   .close-btn { background: transparent; color: #fff; border: 1px solid var(--card-border); padding: 0 18px; min-height: 42px; border-radius: 9px; cursor: pointer; font-weight: 500; }
 
   @media (max-width: 600px) {
-    .roll-reveal-steps span { font-size: .48rem; letter-spacing: 0; }
     .roll-reveal-discovery__header { font-size: .56rem; }
+    .roll-reveal-discovery__list { height: 145px; }
     .roll-reveal-skip { width: 100%; }
     .final-color-display {
       width: 116px;
@@ -1703,7 +1681,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .roll-rolling-display::before { animation: none; }
-    .roll-reveal-steps span { transition: none; }
+    .roll-reveal-discovery__list { scroll-behavior: auto; }
     .roll-reveal-discovery__item { animation: none; }
     .roll-reveal-skip { transition: none; }
   }

@@ -2,9 +2,13 @@
   import { createEventDispatcher } from 'svelte';
   import { getPublicProfilePath } from './discoveryData.js';
   import { getProfileMediaUrl } from './profileMedia.js';
+  import { getRarityPresentation } from './rarityPresentation.js';
 
   export let item;
   export let position = 0;
+  export let compact = false;
+  export let surface = 'default';
+  export let navigateOnClick = true;
 
   const dispatch = createEventDispatcher();
   let failedAvatarSource = '';
@@ -20,20 +24,24 @@
   $: scoreLabel = score === null ? '—' : score.toLocaleString();
   $: rollColor = item?.hexCode || item?.profileAccent || '#8d8c92';
   $: rollHex = item?.hexCode || '';
-  $: rollRarity = item?.rarity || 'Color roll';
+  $: rarityPresentation = getRarityPresentation(item?.rarity || 'Common');
+  $: rollRarity = rarityPresentation.name;
   $: visiblePosition = item?.rank || position + 1;
   $: rankAccent = visiblePosition === 1 ? '#FFD21C' : visiblePosition === 2 ? '#D5DCE8' : visiblePosition === 3 ? '#E29A66' : '#A5A7B4';
-  $: rowStyle = `--row-accent: ${rankAccent}; --roll-color: ${rollColor};`;
+  $: rowStyle = `--row-accent: ${rankAccent}; --roll-color: ${rollColor}; --row-rarity-color: ${rarityPresentation.color};`;
 
   function viewProfile(event) {
+    if (!profilePath || !navigateOnClick) return;
     event?.preventDefault?.();
-    if (!profilePath) return;
     dispatch('navigate', { view: 'profile', username: item.username, userId: null });
   }
 </script>
 
 <a
   class:leaderboard-row--first={position === 0}
+  class:leaderboard-row--compact={compact}
+  class:leaderboard-row--homepage={surface === 'homepage'}
+  class:leaderboard-row--current={item?.isLocalEntry}
   class="leaderboard-row"
   style={rowStyle}
   href={profilePath || '/leaderboard'}
@@ -140,10 +148,49 @@
   .leaderboard-row__metric-value small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .leaderboard-row__metric-value b { color: var(--leaderboard-text, #f5f5f7); font: 700 .78rem/1 var(--font-mono-stack, monospace); }
   .leaderboard-row__metric-value small { color: var(--leaderboard-muted, #b7b8c2); font-size: .72rem; }
-  .leaderboard-row__rarity { color: var(--row-accent); }
+  .leaderboard-row__rarity { color: var(--row-rarity-color, var(--row-accent)); }
   .leaderboard-row__metric--score .leaderboard-row__metric-value { justify-content: center; text-align: center; }
   .leaderboard-row__score { color: var(--row-accent); font: 850 1.15rem/1 'Inter', sans-serif; }
   .leaderboard-row__roll-swatch { display: block; flex: 0 0 1.15rem; width: 1.15rem; height: 1.15rem; border: 1px solid rgba(255,255,255,.72); border-radius: .28rem; box-shadow: 0 0 .8rem color-mix(in srgb, var(--roll-color) 45%, transparent); }
+
+  .leaderboard-row--compact { grid-template-columns: 2.25rem minmax(7rem, 1fr) minmax(0, 1.5fr); gap: .55rem; min-height: 4rem; padding: .55rem .7rem; border-radius: 14px; }
+  .leaderboard-row--compact::before { top: .55rem; bottom: .55rem; left: .18rem; width: .18rem; }
+  .leaderboard-row--compact .leaderboard-row__rank { gap: .1rem; font-size: .78rem; }
+  .leaderboard-row--compact .leaderboard-row__rank-mark { width: 1.1rem; height: 1.1rem; }
+  .leaderboard-row--compact.leaderboard-row--first .leaderboard-row__rank-mark { width: 1.25rem; height: 1.25rem; }
+  .leaderboard-row--compact .leaderboard-row__profile { gap: .55rem; }
+  .leaderboard-row--compact .leaderboard-row__avatar { width: 2.4rem; height: 2.4rem; }
+  .leaderboard-row--compact .leaderboard-row__identity { gap: .2rem; }
+  .leaderboard-row--compact .leaderboard-row__identity strong { font-size: .78rem; }
+  .leaderboard-row--compact .leaderboard-row__identity small { font-size: .6rem; }
+  .leaderboard-row--compact .leaderboard-row__metrics { gap: .3rem; }
+  .leaderboard-row--compact .leaderboard-row__metric { min-height: 2.2rem; gap: .2rem; }
+  .leaderboard-row--compact .leaderboard-row__metric-value { gap: .22rem; font-size: .62rem; }
+  .leaderboard-row--compact .leaderboard-row__metric-value b { font-size: .56rem; }
+  .leaderboard-row--compact .leaderboard-row__metric-value small { font-size: .58rem; }
+  .leaderboard-row--compact .leaderboard-row__score { font-size: .82rem; }
+  .leaderboard-row--compact .leaderboard-row__roll-swatch { flex-basis: .8rem; width: .8rem; height: .8rem; }
+
+  .leaderboard-row--homepage {
+    --leaderboard-panel: rgba(12, 11, 17, .52);
+    --leaderboard-line: rgba(255, 255, 255, .17);
+    --leaderboard-muted: rgba(248, 248, 248, .84);
+    --leaderboard-text: rgba(248, 248, 248, .95);
+    --surface: rgba(255, 255, 255, .08);
+    border-radius: 12px;
+    box-shadow: 0 8px 22px rgba(7, 4, 14, .14);
+    backdrop-filter: blur(14px) saturate(118%);
+    -webkit-backdrop-filter: blur(14px) saturate(118%);
+  }
+  .leaderboard-row--homepage .leaderboard-row__metric-value { font-size: .64rem; }
+  .leaderboard-row--homepage .leaderboard-row__metric-value b { color: rgba(255, 255, 255, .94); font-size: .6rem; }
+  .leaderboard-row--homepage .leaderboard-row__metric-value small { color: rgba(255, 255, 255, .84); font-size: .6rem; }
+  .leaderboard-row--homepage:hover,
+  .leaderboard-row--homepage:focus-visible {
+    background: rgba(255, 255, 255, .12);
+    box-shadow: 0 10px 24px rgba(7, 4, 14, .18);
+  }
+  .leaderboard-row--homepage::before { left: .22rem; width: .16rem; opacity: .78; box-shadow: none; }
 
   @media (max-width: 620px) {
     .leaderboard-row { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .65rem; min-height: 0; padding: .78rem; border-radius: 15px; }
@@ -160,6 +207,21 @@
     .leaderboard-row__metric--score .leaderboard-row__metric-value { justify-content: center; text-align: center; }
     .leaderboard-row__score { font-size: .98rem; }
     .leaderboard-row__roll-swatch { flex-basis: .95rem; width: .95rem; height: .95rem; }
+
+    .leaderboard-row--compact { grid-template-columns: 2rem minmax(0, 1fr); gap: .5rem; min-height: 0; padding: .55rem .62rem; }
+    .leaderboard-row--compact .leaderboard-row__profile { gap: .5rem; }
+    .leaderboard-row--compact .leaderboard-row__avatar { width: 2.25rem; height: 2.25rem; }
+    .leaderboard-row--compact .leaderboard-row__identity strong { font-size: .78rem; }
+    .leaderboard-row--compact .leaderboard-row__identity small { font-size: .6rem; }
+    .leaderboard-row--compact .leaderboard-row__metrics { gap: .25rem; margin-top: .1rem; }
+    .leaderboard-row--compact .leaderboard-row__metric { min-height: 2.15rem; gap: .2rem; }
+    .leaderboard-row--compact .leaderboard-row__metric-value { gap: .22rem; font-size: .62rem; }
+    .leaderboard-row--compact .leaderboard-row__metric-value b { font-size: .56rem; }
+    .leaderboard-row--compact .leaderboard-row__metric-value small { font-size: .58rem; }
+    .leaderboard-row--compact .leaderboard-row__score { font-size: .82rem; }
+    .leaderboard-row--compact .leaderboard-row__roll-swatch { flex-basis: .8rem; width: .8rem; height: .8rem; }
+
+    .leaderboard-row--homepage { border-radius: 11px; }
   }
 
   @media (prefers-reduced-motion: reduce) {

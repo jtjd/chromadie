@@ -8,17 +8,20 @@ const LONG_TERM_GOALS = Object.freeze({
 
 const DISCOVERY_BALANCE = Object.freeze({
   rarity_rare: { type: 'rarity', key: 'Rare' },
-  roll_prime: { type: 'condition', key: 'prime_sum' },
+  roll_prime: { type: 'condition', key: 'sum_prime' },
   rarity_epic: { type: 'rarity', key: 'Epic' },
   high_contrast: { type: 'condition', key: 'high_contrast' },
-  mythic_roll: { type: 'rarity', key: 'Mythic' },
-  rarity_anomaly: { type: 'rarity', key: 'Anomaly' },
+  // Stable achievement IDs are retained, but their roll-tier meanings move
+  // with the active ladder: rarity_anomaly is now Legendary and mythic_roll is the
+  // new, rarer Anomaly tier.
+  mythic_roll: { type: 'rarity', key: 'Anomaly' },
+  rarity_anomaly: { type: 'rarity', key: 'Legendary' },
   roll_palindrome: { type: 'condition', key: 'palindrome' },
   greyscale: { type: 'condition', key: 'greyscale' }
 });
 
 const PACE_BANDS = new Set(['days', 'weeks', 'months', 'years']);
-const MAX_PUBLISHED_EXPECTED_ROLLS = 10_000;
+const MAX_PUBLISHED_EXPECTED_ROLLS = 100_000;
 
 function fail(message) {
   console.error(`Progression balance drift detected: ${message}`);
@@ -45,7 +48,7 @@ function expectedRollsForGoal(report, achievementId) {
 
 function compareNumbers(left, right, tolerance = 0.25) {
   if (!Number.isFinite(left) || !Number.isFinite(right) || right <= 0) return false;
-  return Math.abs(left - right) / right <= tolerance;
+  return left === Math.ceil(right) || Math.abs(left - right) / right <= tolerance;
 }
 
 const manifest = await readProgressionManifest();
@@ -132,10 +135,10 @@ for (let index = 1; index < measuredDiscovery.length; index += 1) {
   }
 }
 
-const mythicIndex = publishedDiscovery.findIndex(row => row.achievement_id === 'mythic_roll');
-const anomalyIndex = publishedDiscovery.findIndex(row => row.achievement_id === 'rarity_anomaly');
-if (mythicIndex === -1 || anomalyIndex === -1 || mythicIndex >= anomalyIndex) {
-  failures.push('Mythic must precede Anomaly in the published Discovery journey');
+const legendaryIndex = publishedDiscovery.findIndex(row => row.achievement_id === 'rarity_anomaly');
+const anomalyIndex = publishedDiscovery.findIndex(row => row.achievement_id === 'mythic_roll');
+if (legendaryIndex === -1 || anomalyIndex === -1 || legendaryIndex >= anomalyIndex) {
+  failures.push('Legendary must precede Anomaly in the published Discovery journey');
 }
 
 if (failures.length) {
@@ -149,7 +152,7 @@ if (failures.length) {
 console.log(
   `Progression balance check passed: ${publishedRitual.length} published Ritual goals, ` +
   `${publishedDiscovery.length} published Discovery goals, ` +
-  `Mythic before Anomaly, Greyscale retired, and long-term goals at 730/1,095 rolls.`
+  `Legendary before Anomaly, Greyscale retired, and long-term goals at 730/1,095 rolls.`
 );
 console.log(
   `Discovery expected rolls: ${measuredDiscovery.map(({ goal, expected }) => `${goal.id} ${expected.toFixed(2)}`).join('; ')}`

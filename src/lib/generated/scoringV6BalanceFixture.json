@@ -1,0 +1,2002 @@
+{
+  "scoreModelVersion": 6,
+  "rgbColorCount": 16777216,
+  "v5MeanScore": 21280.58,
+  "scoreSpread": {
+    "min": 15648,
+    "max": 48172821304,
+    "mean": 203871.81413668394,
+    "median": 47520,
+    "percentiles": {
+      "p01": 22760,
+      "p50": 47520,
+      "p75": 75849,
+      "p90": 146039,
+      "p97": 650025,
+      "p98": 752311,
+      "p986": 795610,
+      "p99": 838404,
+      "p996": 1548226,
+      "p999": 30203245,
+      "p9999": 43245891
+    }
+  },
+  "conditionTotals": {
+    "average": 18.034408807754517,
+    "families": {
+      "identity": 16777216,
+      "mathematical": 37092062,
+      "sum_shape": 7778096,
+      "channel_identity": 9753011,
+      "edge_behavior": 3533112,
+      "symmetry": 16974080,
+      "color_relationship": 25924446,
+      "composition": 16777216,
+      "sequence": 30708390,
+      "relationship": 196608,
+      "color_identity": 33554432,
+      "saturation": 22958716,
+      "tone": 16913768,
+      "hex_pattern": 4913966,
+      "hex_structure": 34208610,
+      "hex_culture": 1186661,
+      "hex_pair": 4969456,
+      "hex_triplet": 249856,
+      "exact": 18,
+      "combination": 18097452
+    }
+  },
+  "rarities": {
+    "Trash": {
+      "count": 0,
+      "frequency": 0,
+      "expectedRolls": null
+    },
+    "Common": {
+      "count": 0,
+      "frequency": 0,
+      "expectedRolls": null
+    },
+    "Uncommon": {
+      "count": 8774439,
+      "frequency": 0.5229973196983337,
+      "expectedRolls": 1.9120556881186364
+    },
+    "Rare": {
+      "count": 7337859,
+      "frequency": 0.4373704791069031,
+      "expectedRolls": 2.286391166687722
+    },
+    "Epic": {
+      "count": 646311,
+      "frequency": 0.03852313756942749,
+      "expectedRolls": 25.95842558768147
+    },
+    "Legendary": {
+      "count": 18112,
+      "frequency": 0.001079559326171875,
+      "expectedRolls": 926.303886925795
+    },
+    "Anomaly": {
+      "count": 495,
+      "frequency": 0.00002950429916381836,
+      "expectedRolls": 33893.36565656566
+    }
+  },
+  "conditions": {
+    "spectrum_presence": {
+      "count": 16777216,
+      "frequency": 1,
+      "expectedRolls": 1,
+      "rarity": "Common",
+      "family": "identity"
+    },
+    "sum_even": {
+      "count": 8388608,
+      "frequency": 0.5,
+      "expectedRolls": 2,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "sum_odd": {
+      "count": 8388608,
+      "frequency": 0.5,
+      "expectedRolls": 2,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "sum_divisible_3": {
+      "count": 5592406,
+      "frequency": 0.3333333730697632,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "sum_divisible_5": {
+      "count": 3355444,
+      "frequency": 0.20000004768371582,
+      "expectedRolls": 5,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "sum_divisible_7": {
+      "count": 2396743,
+      "frequency": 0.14285701513290405,
+      "expectedRolls": 8,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "sum_divisible_9": {
+      "count": 1864130,
+      "frequency": 0.11111080646514893,
+      "expectedRolls": 10,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "sum_divisible_11": {
+      "count": 1525200,
+      "frequency": 0.09090900421142578,
+      "expectedRolls": 12,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "sum_42": {
+      "count": 946,
+      "frequency": 0.00005638599395751953,
+      "expectedRolls": 17735,
+      "rarity": "Legendary",
+      "family": "mathematical"
+    },
+    "sum_69": {
+      "count": 2485,
+      "frequency": 0.0001481175422668457,
+      "expectedRolls": 6752,
+      "rarity": "Epic",
+      "family": "mathematical"
+    },
+    "sum_100": {
+      "count": 5151,
+      "frequency": 0.0003070235252380371,
+      "expectedRolls": 3258,
+      "rarity": "Epic",
+      "family": "mathematical"
+    },
+    "sum_255": {
+      "count": 32896,
+      "frequency": 0.00196075439453125,
+      "expectedRolls": 511,
+      "rarity": "Rare",
+      "family": "mathematical"
+    },
+    "sum_420": {
+      "count": 47746,
+      "frequency": 0.0028458833694458008,
+      "expectedRolls": 352,
+      "rarity": "Rare",
+      "family": "mathematical"
+    },
+    "sum_666": {
+      "count": 5050,
+      "frequency": 0.00030100345611572266,
+      "expectedRolls": 3323,
+      "rarity": "Epic",
+      "family": "mathematical"
+    },
+    "sum_fibonacci": {
+      "count": 106213,
+      "frequency": 0.0063307881355285645,
+      "expectedRolls": 158,
+      "rarity": "Rare",
+      "family": "mathematical"
+    },
+    "sum_square": {
+      "count": 453595,
+      "frequency": 0.02703636884689331,
+      "expectedRolls": 37,
+      "rarity": "Uncommon",
+      "family": "mathematical"
+    },
+    "sum_triangular": {
+      "count": 641336,
+      "frequency": 0.03822660446166992,
+      "expectedRolls": 27,
+      "rarity": "Uncommon",
+      "family": "mathematical"
+    },
+    "sum_prime": {
+      "count": 2760769,
+      "frequency": 0.1645546555519104,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "balanced_sum_band": {
+      "count": 7778096,
+      "frequency": 0.4636106491088867,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "sum_shape"
+    },
+    "all_channels_even": {
+      "count": 2097152,
+      "frequency": 0.125,
+      "expectedRolls": 8,
+      "rarity": "Common",
+      "family": "channel_identity"
+    },
+    "all_channels_odd": {
+      "count": 2097152,
+      "frequency": 0.125,
+      "expectedRolls": 8,
+      "rarity": "Common",
+      "family": "channel_identity"
+    },
+    "all_channels_div3": {
+      "count": 636056,
+      "frequency": 0.03791189193725586,
+      "expectedRolls": 27,
+      "rarity": "Uncommon",
+      "family": "channel_identity"
+    },
+    "all_channels_div5": {
+      "count": 140608,
+      "frequency": 0.008380889892578125,
+      "expectedRolls": 120,
+      "rarity": "Rare",
+      "family": "channel_identity"
+    },
+    "web_safe": {
+      "count": 216,
+      "frequency": 0.000012874603271484375,
+      "expectedRolls": 77673,
+      "rarity": "Legendary",
+      "family": "channel_identity"
+    },
+    "channel_zero": {
+      "count": 195841,
+      "frequency": 0.011673033237457275,
+      "expectedRolls": 86,
+      "rarity": "Uncommon",
+      "family": "channel_identity"
+    },
+    "channel_maxed": {
+      "count": 195841,
+      "frequency": 0.011673033237457275,
+      "expectedRolls": 86,
+      "rarity": "Uncommon",
+      "family": "channel_identity"
+    },
+    "channel_one": {
+      "count": 195841,
+      "frequency": 0.011673033237457275,
+      "expectedRolls": 86,
+      "rarity": "Uncommon",
+      "family": "channel_identity"
+    },
+    "channel_edge": {
+      "count": 3295944,
+      "frequency": 0.19645357131958008,
+      "expectedRolls": 6,
+      "rarity": "Common",
+      "family": "edge_behavior"
+    },
+    "edge_pair": {
+      "count": 237168,
+      "frequency": 0.014136314392089844,
+      "expectedRolls": 71,
+      "rarity": "Uncommon",
+      "family": "edge_behavior"
+    },
+    "twin_channels": {
+      "count": 196096,
+      "frequency": 0.011688232421875,
+      "expectedRolls": 86,
+      "rarity": "Uncommon",
+      "family": "symmetry"
+    },
+    "greyscale": {
+      "count": 256,
+      "frequency": 0.0000152587890625,
+      "expectedRolls": 65536,
+      "rarity": "Legendary",
+      "family": "symmetry"
+    },
+    "all_channels_distinct": {
+      "count": 16581120,
+      "frequency": 0.988311767578125,
+      "expectedRolls": 2,
+      "rarity": "Common",
+      "family": "symmetry"
+    },
+    "red_green_equal": {
+      "count": 65536,
+      "frequency": 0.00390625,
+      "expectedRolls": 256,
+      "rarity": "Rare",
+      "family": "symmetry"
+    },
+    "green_blue_equal": {
+      "count": 65536,
+      "frequency": 0.00390625,
+      "expectedRolls": 256,
+      "rarity": "Rare",
+      "family": "symmetry"
+    },
+    "red_blue_equal": {
+      "count": 65536,
+      "frequency": 0.00390625,
+      "expectedRolls": 256,
+      "rarity": "Rare",
+      "family": "symmetry"
+    },
+    "low_contrast": {
+      "count": 305596,
+      "frequency": 0.018214941024780273,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "color_relationship"
+    },
+    "gentle_contrast": {
+      "count": 3543540,
+      "frequency": 0.2112114429473877,
+      "expectedRolls": 5,
+      "rarity": "Common",
+      "family": "color_relationship"
+    },
+    "layered_contrast": {
+      "count": 11164500,
+      "frequency": 0.6654560565948486,
+      "expectedRolls": 2,
+      "rarity": "Common",
+      "family": "color_relationship"
+    },
+    "high_contrast": {
+      "count": 1763580,
+      "frequency": 0.1051175594329834,
+      "expectedRolls": 10,
+      "rarity": "Common",
+      "family": "color_relationship"
+    },
+    "extreme_span": {
+      "count": 501930,
+      "frequency": 0.029917359352111816,
+      "expectedRolls": 34,
+      "rarity": "Uncommon",
+      "family": "color_relationship"
+    },
+    "red_dominant": {
+      "count": 5559680,
+      "frequency": 0.33138275146484375,
+      "expectedRolls": 4,
+      "rarity": "Common",
+      "family": "composition"
+    },
+    "green_dominant": {
+      "count": 5559680,
+      "frequency": 0.33138275146484375,
+      "expectedRolls": 4,
+      "rarity": "Common",
+      "family": "composition"
+    },
+    "blue_dominant": {
+      "count": 5559680,
+      "frequency": 0.33138275146484375,
+      "expectedRolls": 4,
+      "rarity": "Common",
+      "family": "composition"
+    },
+    "balanced_channels": {
+      "count": 98176,
+      "frequency": 0.00585174560546875,
+      "expectedRolls": 171,
+      "rarity": "Rare",
+      "family": "composition"
+    },
+    "ascending_channels": {
+      "count": 2763520,
+      "frequency": 0.1647186279296875,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "sequence"
+    },
+    "descending_channels": {
+      "count": 2763520,
+      "frequency": 0.1647186279296875,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "sequence"
+    },
+    "red_green_step": {
+      "count": 8355840,
+      "frequency": 0.498046875,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "sequence"
+    },
+    "green_blue_step": {
+      "count": 8355840,
+      "frequency": 0.498046875,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "sequence"
+    },
+    "blue_red_step": {
+      "count": 8355840,
+      "frequency": 0.498046875,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "sequence"
+    },
+    "channel_progression": {
+      "count": 97792,
+      "frequency": 0.005828857421875,
+      "expectedRolls": 172,
+      "rarity": "Rare",
+      "family": "sequence"
+    },
+    "channel_complement_red_blue": {
+      "count": 65536,
+      "frequency": 0.00390625,
+      "expectedRolls": 256,
+      "rarity": "Rare",
+      "family": "relationship"
+    },
+    "channel_complement_red_green": {
+      "count": 65536,
+      "frequency": 0.00390625,
+      "expectedRolls": 256,
+      "rarity": "Rare",
+      "family": "relationship"
+    },
+    "channel_complement_green_blue": {
+      "count": 65536,
+      "frequency": 0.00390625,
+      "expectedRolls": 256,
+      "rarity": "Rare",
+      "family": "relationship"
+    },
+    "power_two_channels": {
+      "count": 512,
+      "frequency": 0.000030517578125,
+      "expectedRolls": 32768,
+      "rarity": "Legendary",
+      "family": "mathematical"
+    },
+    "power_two_any": {
+      "count": 1524224,
+      "frequency": 0.090850830078125,
+      "expectedRolls": 12,
+      "rarity": "Common",
+      "family": "mathematical"
+    },
+    "parity_pattern_even_odd_even": {
+      "count": 2097152,
+      "frequency": 0.125,
+      "expectedRolls": 8,
+      "rarity": "Common",
+      "family": "channel_identity"
+    },
+    "parity_pattern_odd_even_odd": {
+      "count": 2097152,
+      "frequency": 0.125,
+      "expectedRolls": 8,
+      "rarity": "Common",
+      "family": "channel_identity"
+    },
+    "hue_family_crimson": {
+      "count": 1389274,
+      "frequency": 0.08280718326568604,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_amber": {
+      "count": 1389276,
+      "frequency": 0.08280730247497559,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_gold": {
+      "count": 1389274,
+      "frequency": 0.08280718326568604,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_lime": {
+      "count": 1389276,
+      "frequency": 0.08280730247497559,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_emerald": {
+      "count": 2778550,
+      "frequency": 0.16561448574066162,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_cyan": {
+      "count": 1389274,
+      "frequency": 0.08280718326568604,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_azure": {
+      "count": 1389276,
+      "frequency": 0.08280730247497559,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_blue": {
+      "count": 1389274,
+      "frequency": 0.08280718326568604,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_violet": {
+      "count": 1389276,
+      "frequency": 0.08280730247497559,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_magenta": {
+      "count": 1389274,
+      "frequency": 0.08280718326568604,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_rose": {
+      "count": 1389276,
+      "frequency": 0.08280730247497559,
+      "expectedRolls": 13,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "hue_family_neutral": {
+      "count": 105916,
+      "frequency": 0.0063130855560302734,
+      "expectedRolls": 159,
+      "rarity": "Rare",
+      "family": "color_identity"
+    },
+    "temperature_warm": {
+      "count": 8421120,
+      "frequency": 0.5019378662109375,
+      "expectedRolls": 2,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "temperature_cool": {
+      "count": 8355840,
+      "frequency": 0.498046875,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "color_identity"
+    },
+    "temperature_neutral": {
+      "count": 256,
+      "frequency": 0.0000152587890625,
+      "expectedRolls": 65536,
+      "rarity": "Legendary",
+      "family": "color_identity"
+    },
+    "saturation_soft": {
+      "count": 372574,
+      "frequency": 0.022207140922546387,
+      "expectedRolls": 46,
+      "rarity": "Uncommon",
+      "family": "saturation"
+    },
+    "saturation_muted": {
+      "count": 2272800,
+      "frequency": 0.1354694366455078,
+      "expectedRolls": 8,
+      "rarity": "Common",
+      "family": "saturation"
+    },
+    "saturation_rich": {
+      "count": 5473140,
+      "frequency": 0.32622456550598145,
+      "expectedRolls": 4,
+      "rarity": "Common",
+      "family": "saturation"
+    },
+    "saturation_vivid": {
+      "count": 6837624,
+      "frequency": 0.40755414962768555,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "saturation"
+    },
+    "saturation_electric": {
+      "count": 1821078,
+      "frequency": 0.10854470729827881,
+      "expectedRolls": 10,
+      "rarity": "Common",
+      "family": "saturation"
+    },
+    "saturation_high_chroma": {
+      "count": 6181500,
+      "frequency": 0.36844611167907715,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "saturation"
+    },
+    "lightness_shadow": {
+      "count": 232713,
+      "frequency": 0.013870775699615479,
+      "expectedRolls": 73,
+      "rarity": "Uncommon",
+      "family": "tone"
+    },
+    "lightness_deep": {
+      "count": 2658987,
+      "frequency": 0.1584879755973816,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "tone"
+    },
+    "lightness_balanced": {
+      "count": 10993816,
+      "frequency": 0.6552824974060059,
+      "expectedRolls": 2,
+      "rarity": "Common",
+      "family": "tone"
+    },
+    "lightness_bright": {
+      "count": 2658987,
+      "frequency": 0.1584879755973816,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "tone"
+    },
+    "lightness_luminous": {
+      "count": 232713,
+      "frequency": 0.013870775699615479,
+      "expectedRolls": 73,
+      "rarity": "Uncommon",
+      "family": "tone"
+    },
+    "tone_edge": {
+      "count": 136552,
+      "frequency": 0.00813913345336914,
+      "expectedRolls": 123,
+      "rarity": "Rare",
+      "family": "tone"
+    },
+    "pastel": {
+      "count": 765946,
+      "frequency": 0.04565393924713135,
+      "expectedRolls": 22,
+      "rarity": "Uncommon",
+      "family": "color_relationship"
+    },
+    "neon": {
+      "count": 2041200,
+      "frequency": 0.12166500091552734,
+      "expectedRolls": 9,
+      "rarity": "Common",
+      "family": "color_relationship"
+    },
+    "luminous_core": {
+      "count": 2906,
+      "frequency": 0.00017321109771728516,
+      "expectedRolls": 5774,
+      "rarity": "Epic",
+      "family": "color_relationship"
+    },
+    "warm_bias": {
+      "count": 2829056,
+      "frequency": 0.1686248779296875,
+      "expectedRolls": 6,
+      "rarity": "Common",
+      "family": "color_relationship"
+    },
+    "cool_bias": {
+      "count": 2829056,
+      "frequency": 0.1686248779296875,
+      "expectedRolls": 6,
+      "rarity": "Common",
+      "family": "color_relationship"
+    },
+    "monochromatic": {
+      "count": 177136,
+      "frequency": 0.010558128356933594,
+      "expectedRolls": 95,
+      "rarity": "Uncommon",
+      "family": "color_relationship"
+    },
+    "palindrome": {
+      "count": 4096,
+      "frequency": 0.000244140625,
+      "expectedRolls": 4096,
+      "rarity": "Epic",
+      "family": "hex_pattern"
+    },
+    "repeated_pair": {
+      "count": 256,
+      "frequency": 0.0000152587890625,
+      "expectedRolls": 65536,
+      "rarity": "Legendary",
+      "family": "hex_pattern"
+    },
+    "sixfold_digit": {
+      "count": 16,
+      "frequency": 9.5367431640625e-7,
+      "expectedRolls": 1048576,
+      "rarity": "Anomaly",
+      "family": "hex_pattern"
+    },
+    "triple_hex": {
+      "count": 249616,
+      "frequency": 0.014878273010253906,
+      "expectedRolls": 68,
+      "rarity": "Uncommon",
+      "family": "hex_pattern"
+    },
+    "double_hex": {
+      "count": 4627216,
+      "frequency": 0.2758035659790039,
+      "expectedRolls": 4,
+      "rarity": "Common",
+      "family": "hex_pattern"
+    },
+    "hex_letter_rich": {
+      "count": 6777216,
+      "frequency": 0.40395355224609375,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "hex_structure"
+    },
+    "hex_digit_rich": {
+      "count": 10000000,
+      "frequency": 0.5960464477539062,
+      "expectedRolls": 2,
+      "rarity": "Common",
+      "family": "hex_structure"
+    },
+    "hex_digit_sum_prime": {
+      "count": 3969263,
+      "frequency": 0.23658651113510132,
+      "expectedRolls": 5,
+      "rarity": "Common",
+      "family": "hex_structure"
+    },
+    "hex_digit_sum_square": {
+      "count": 1285123,
+      "frequency": 0.07659929990768433,
+      "expectedRolls": 14,
+      "rarity": "Common",
+      "family": "hex_structure"
+    },
+    "hex_letter_majority": {
+      "count": 2457216,
+      "frequency": 0.14646148681640625,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "hex_structure"
+    },
+    "hex_bookends": {
+      "count": 1048576,
+      "frequency": 0.0625,
+      "expectedRolls": 16,
+      "rarity": "Common",
+      "family": "hex_structure"
+    },
+    "byte_bookends": {
+      "count": 65536,
+      "frequency": 0.00390625,
+      "expectedRolls": 256,
+      "rarity": "Rare",
+      "family": "hex_structure"
+    },
+    "hex_ascending": {
+      "count": 8008,
+      "frequency": 0.0004773139953613281,
+      "expectedRolls": 2096,
+      "rarity": "Epic",
+      "family": "sequence"
+    },
+    "hex_descending": {
+      "count": 8008,
+      "frequency": 0.0004773139953613281,
+      "expectedRolls": 2096,
+      "rarity": "Epic",
+      "family": "sequence"
+    },
+    "hex_staircase": {
+      "count": 11,
+      "frequency": 6.556510925292969e-7,
+      "expectedRolls": 1525202,
+      "rarity": "Anomaly",
+      "family": "sequence"
+    },
+    "hex_reverse_staircase": {
+      "count": 11,
+      "frequency": 6.556510925292969e-7,
+      "expectedRolls": 1525202,
+      "rarity": "Anomaly",
+      "family": "sequence"
+    },
+    "hex_unique_four": {
+      "count": 2839200,
+      "frequency": 0.16922950744628906,
+      "expectedRolls": 6,
+      "rarity": "Common",
+      "family": "hex_structure"
+    },
+    "hex_unique_six": {
+      "count": 5765760,
+      "frequency": 0.34366607666015625,
+      "expectedRolls": 3,
+      "rarity": "Common",
+      "family": "hex_structure"
+    },
+    "hex_contains_all_letters": {
+      "count": 720,
+      "frequency": 0.00004291534423828125,
+      "expectedRolls": 23302,
+      "rarity": "Legendary",
+      "family": "hex_structure"
+    },
+    "f1": {
+      "count": 326145,
+      "frequency": 0.019439756870269775,
+      "expectedRolls": 52,
+      "rarity": "Uncommon",
+      "family": "hex_culture"
+    },
+    "letter_run": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_pattern"
+    },
+    "digit_run": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_pattern"
+    },
+    "contains_00": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_11": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_22": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_33": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_44": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_55": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_66": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_77": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_88": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_99": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_aa": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_bb": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_cc": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_dd": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_ee": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_ff": {
+      "count": 310591,
+      "frequency": 0.01851266622543335,
+      "expectedRolls": 55,
+      "rarity": "Uncommon",
+      "family": "hex_pair"
+    },
+    "contains_000": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_111": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_222": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_333": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_444": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_555": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_666": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_777": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_888": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_999": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_aaa": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_bbb": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_ccc": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_ddd": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_eee": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "contains_fff": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_triplet"
+    },
+    "dead": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "beef": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "cafe": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "face": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "babe": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "fade": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "feed": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "boob": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "dood": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "food": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "leet": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "boob_2": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "abcd": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "james_bond": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "blaze_it": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "nice": {
+      "count": 326145,
+      "frequency": 0.019439756870269775,
+      "expectedRolls": 52,
+      "rarity": "Uncommon",
+      "family": "hex_culture"
+    },
+    "demon": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "jackpot": {
+      "count": 15616,
+      "frequency": 0.0009307861328125,
+      "expectedRolls": 1075,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "emergency": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "not_found": {
+      "count": 16351,
+      "frequency": 0.0009745955467224121,
+      "expectedRolls": 1027,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "server_error": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "perfect_score": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "pure_black": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "pure_white": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "pure_red": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "pure_green": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "pure_blue": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "pure_cyan": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "pure_magenta": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "pure_yellow": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "pure_gold": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "streamer_purple": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "audio_stream_green": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "classic_cola_red": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "almost_black": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "almost_white": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "perfect_grey": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "reference_123456": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "reference_abcdef": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "reference_fedcba": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "exact"
+    },
+    "six_seven": {
+      "count": 325378,
+      "frequency": 0.01939404010772705,
+      "expectedRolls": 52,
+      "rarity": "Uncommon",
+      "family": "hex_culture"
+    },
+    "six_seven_echo": {
+      "count": 766,
+      "frequency": 0.00004565715789794922,
+      "expectedRolls": 21903,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "six_seven_full": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "a24": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "d23": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "ff7": {
+      "count": 16383,
+      "frequency": 0.0009765028953552246,
+      "expectedRolls": 1025,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "a113": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "eight_oh_eight": {
+      "count": 16351,
+      "frequency": 0.0009745955467224121,
+      "expectedRolls": 1027,
+      "rarity": "Epic",
+      "family": "hex_culture"
+    },
+    "era_1989": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "blaze_nice": {
+      "count": 32,
+      "frequency": 0.0000019073486328125,
+      "expectedRolls": 524288,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "nice_blaze": {
+      "count": 32,
+      "frequency": 0.0000019073486328125,
+      "expectedRolls": 524288,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "calculator_classic": {
+      "count": 32,
+      "frequency": 0.0000019073486328125,
+      "expectedRolls": 524288,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "calculator_hello": {
+      "count": 32,
+      "frequency": 0.0000019073486328125,
+      "expectedRolls": 524288,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "calculator_boobs": {
+      "count": 32,
+      "frequency": 0.0000019073486328125,
+      "expectedRolls": 524288,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "double_blaze": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "double_not_found": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "six_sixes": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "nice_stack": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "jackpot_stack": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "leet_stack": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "coffee_code": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "code_echo": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "decode": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "facade": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "deface": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "badass": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "foobar": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "hex_culture"
+    },
+    "boba": {
+      "count": 768,
+      "frequency": 0.0000457763671875,
+      "expectedRolls": 21846,
+      "rarity": "Legendary",
+      "family": "hex_culture"
+    },
+    "combo_meme_symmetry": {
+      "count": 1022,
+      "frequency": 0.00006091594696044922,
+      "expectedRolls": 16417,
+      "rarity": "Legendary",
+      "family": "combination"
+    },
+    "combo_meme_palindrome": {
+      "count": 2,
+      "frequency": 1.1920928955078125e-7,
+      "expectedRolls": 8388608,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_sequence_channel_order": {
+      "count": 8008,
+      "frequency": 0.0004773139953613281,
+      "expectedRolls": 2096,
+      "rarity": "Epic",
+      "family": "combination"
+    },
+    "combo_reverse_sequence": {
+      "count": 8008,
+      "frequency": 0.0004773139953613281,
+      "expectedRolls": 2096,
+      "rarity": "Epic",
+      "family": "combination"
+    },
+    "combo_prime_palindrome": {
+      "count": 3,
+      "frequency": 1.7881393432617188e-7,
+      "expectedRolls": 5592406,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_square_greyscale": {
+      "count": 10,
+      "frequency": 5.960464477539062e-7,
+      "expectedRolls": 1677722,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_fibonacci_sequence": {
+      "count": 17444,
+      "frequency": 0.001039743423461914,
+      "expectedRolls": 962,
+      "rarity": "Rare",
+      "family": "combination"
+    },
+    "combo_high_contrast_neon": {
+      "count": 1566180,
+      "frequency": 0.09335160255432129,
+      "expectedRolls": 11,
+      "rarity": "Common",
+      "family": "combination"
+    },
+    "combo_pastel_luminous": {
+      "count": 231807,
+      "frequency": 0.013816773891448975,
+      "expectedRolls": 73,
+      "rarity": "Uncommon",
+      "family": "combination"
+    },
+    "combo_warm_red": {
+      "count": 5559680,
+      "frequency": 0.33138275146484375,
+      "expectedRolls": 4,
+      "rarity": "Common",
+      "family": "combination"
+    },
+    "combo_cool_blue": {
+      "count": 5559680,
+      "frequency": 0.33138275146484375,
+      "expectedRolls": 4,
+      "rarity": "Common",
+      "family": "combination"
+    },
+    "combo_complement_vivid": {
+      "count": 24792,
+      "frequency": 0.0014777183532714844,
+      "expectedRolls": 677,
+      "rarity": "Rare",
+      "family": "combination"
+    },
+    "combo_web_safe_greyscale": {
+      "count": 6,
+      "frequency": 3.5762786865234375e-7,
+      "expectedRolls": 2796203,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_repeated_palindrome": {
+      "count": 16,
+      "frequency": 9.5367431640625e-7,
+      "expectedRolls": 1048576,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_sixfold_greyscale": {
+      "count": 16,
+      "frequency": 9.5367431640625e-7,
+      "expectedRolls": 1048576,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_exact_sequence": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_exact_reverse": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_anomaly_meme": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_six_seven_palindrome": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "combination"
+    },
+    "combo_hex_letters": {
+      "count": 2457216,
+      "frequency": 0.14646148681640625,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "combination"
+    },
+    "combo_digit_structure": {
+      "count": 2499197,
+      "frequency": 0.14896374940872192,
+      "expectedRolls": 7,
+      "rarity": "Common",
+      "family": "combination"
+    },
+    "combo_power_progression": {
+      "count": 7292,
+      "frequency": 0.00043463706970214844,
+      "expectedRolls": 2301,
+      "rarity": "Epic",
+      "family": "combination"
+    },
+    "combo_edge_contrast": {
+      "count": 127080,
+      "frequency": 0.007574558258056641,
+      "expectedRolls": 133,
+      "rarity": "Rare",
+      "family": "combination"
+    },
+    "combo_saturation_tone": {
+      "count": 29988,
+      "frequency": 0.001787424087524414,
+      "expectedRolls": 560,
+      "rarity": "Rare",
+      "family": "combination"
+    },
+    "combo_culture_exact": {
+      "count": 1,
+      "frequency": 5.960464477539063e-8,
+      "expectedRolls": 16777216,
+      "rarity": "Anomaly",
+      "family": "combination"
+    }
+  },
+  "progression": {
+    "rankThresholds": {
+      "Silver": 4790000,
+      "Gold": 23950000,
+      "Platinum": 71851000,
+      "Diamond": 143703000,
+      "Chroma": 287405000
+    },
+    "scoreAchievementThresholds": {
+      "score_50k": 479000,
+      "score_100k": 958000,
+      "score_200k": 1916000,
+      "score_1_5m": 14370000
+    },
+    "discoveryExpectedRolls": {
+      "spectrum_presence": 1,
+      "sum_even": 2,
+      "sum_odd": 2,
+      "sum_divisible_3": 3,
+      "sum_divisible_5": 5,
+      "sum_divisible_7": 8,
+      "sum_divisible_9": 10,
+      "sum_divisible_11": 12,
+      "sum_42": 17735,
+      "sum_69": 6752,
+      "sum_100": 3258,
+      "sum_255": 511,
+      "sum_420": 352,
+      "sum_666": 3323,
+      "sum_fibonacci": 158,
+      "sum_square": 37,
+      "sum_triangular": 27,
+      "sum_prime": 7,
+      "balanced_sum_band": 3,
+      "all_channels_even": 8,
+      "all_channels_odd": 8,
+      "all_channels_div3": 27,
+      "all_channels_div5": 120,
+      "web_safe": 77673,
+      "channel_zero": 86,
+      "channel_maxed": 86,
+      "channel_one": 86,
+      "channel_edge": 6,
+      "edge_pair": 71,
+      "twin_channels": 86,
+      "greyscale": 65536,
+      "all_channels_distinct": 2,
+      "red_green_equal": 256,
+      "green_blue_equal": 256,
+      "red_blue_equal": 256,
+      "low_contrast": 55,
+      "gentle_contrast": 5,
+      "layered_contrast": 2,
+      "high_contrast": 10,
+      "extreme_span": 34,
+      "red_dominant": 4,
+      "green_dominant": 4,
+      "blue_dominant": 4,
+      "balanced_channels": 171,
+      "ascending_channels": 7,
+      "descending_channels": 7,
+      "red_green_step": 3,
+      "green_blue_step": 3,
+      "blue_red_step": 3,
+      "channel_progression": 172,
+      "channel_complement_red_blue": 256,
+      "channel_complement_red_green": 256,
+      "channel_complement_green_blue": 256,
+      "power_two_channels": 32768,
+      "power_two_any": 12,
+      "parity_pattern_even_odd_even": 8,
+      "parity_pattern_odd_even_odd": 8,
+      "hue_family_crimson": 13,
+      "hue_family_amber": 13,
+      "hue_family_gold": 13,
+      "hue_family_lime": 13,
+      "hue_family_emerald": 7,
+      "hue_family_cyan": 13,
+      "hue_family_azure": 13,
+      "hue_family_blue": 13,
+      "hue_family_violet": 13,
+      "hue_family_magenta": 13,
+      "hue_family_rose": 13,
+      "hue_family_neutral": 159,
+      "temperature_warm": 2,
+      "temperature_cool": 3,
+      "temperature_neutral": 65536,
+      "saturation_soft": 46,
+      "saturation_muted": 8,
+      "saturation_rich": 4,
+      "saturation_vivid": 3,
+      "saturation_electric": 10,
+      "saturation_high_chroma": 3,
+      "lightness_shadow": 73,
+      "lightness_deep": 7,
+      "lightness_balanced": 2,
+      "lightness_bright": 7,
+      "lightness_luminous": 73,
+      "tone_edge": 123,
+      "pastel": 22,
+      "neon": 9,
+      "luminous_core": 5774,
+      "warm_bias": 6,
+      "cool_bias": 6,
+      "monochromatic": 95,
+      "palindrome": 4096,
+      "repeated_pair": 65536,
+      "sixfold_digit": 1048576,
+      "triple_hex": 68,
+      "double_hex": 4,
+      "hex_letter_rich": 3,
+      "hex_digit_rich": 2,
+      "hex_digit_sum_prime": 5,
+      "hex_digit_sum_square": 14,
+      "hex_letter_majority": 7,
+      "hex_bookends": 16,
+      "byte_bookends": 256,
+      "hex_ascending": 2096,
+      "hex_descending": 2096,
+      "hex_staircase": 1525202,
+      "hex_reverse_staircase": 1525202,
+      "hex_unique_four": 6,
+      "hex_unique_six": 3,
+      "hex_contains_all_letters": 23302,
+      "f1": 52,
+      "letter_run": 1025,
+      "digit_run": 1025,
+      "contains_00": 55,
+      "contains_11": 55,
+      "contains_22": 55,
+      "contains_33": 55,
+      "contains_44": 55,
+      "contains_55": 55,
+      "contains_66": 55,
+      "contains_77": 55,
+      "contains_88": 55,
+      "contains_99": 55,
+      "contains_aa": 55,
+      "contains_bb": 55,
+      "contains_cc": 55,
+      "contains_dd": 55,
+      "contains_ee": 55,
+      "contains_ff": 55,
+      "contains_000": 1075,
+      "contains_111": 1075,
+      "contains_222": 1075,
+      "contains_333": 1075,
+      "contains_444": 1075,
+      "contains_555": 1075,
+      "contains_666": 1075,
+      "contains_777": 1075,
+      "contains_888": 1075,
+      "contains_999": 1075,
+      "contains_aaa": 1075,
+      "contains_bbb": 1075,
+      "contains_ccc": 1075,
+      "contains_ddd": 1075,
+      "contains_eee": 1075,
+      "contains_fff": 1075,
+      "dead": 21846,
+      "beef": 21846,
+      "cafe": 21846,
+      "face": 21846,
+      "babe": 21846,
+      "fade": 21846,
+      "feed": 21846,
+      "boob": 21846,
+      "dood": 21846,
+      "food": 21846,
+      "leet": 21846,
+      "boob_2": 21846,
+      "abcd": 21846,
+      "james_bond": 1025,
+      "blaze_it": 1025,
+      "nice": 52,
+      "demon": 1075,
+      "jackpot": 1075,
+      "emergency": 1025,
+      "not_found": 1027,
+      "server_error": 1025,
+      "perfect_score": 1025,
+      "pure_black": 16777216,
+      "pure_white": 16777216,
+      "pure_red": 16777216,
+      "pure_green": 16777216,
+      "pure_blue": 16777216,
+      "pure_cyan": 16777216,
+      "pure_magenta": 16777216,
+      "pure_yellow": 16777216,
+      "pure_gold": 16777216,
+      "streamer_purple": 16777216,
+      "audio_stream_green": 16777216,
+      "classic_cola_red": 16777216,
+      "almost_black": 16777216,
+      "almost_white": 16777216,
+      "perfect_grey": 16777216,
+      "reference_123456": 16777216,
+      "reference_abcdef": 16777216,
+      "reference_fedcba": 16777216,
+      "six_seven": 52,
+      "six_seven_echo": 21903,
+      "six_seven_full": 16777216,
+      "a24": 1025,
+      "d23": 1025,
+      "ff7": 1025,
+      "a113": 21846,
+      "eight_oh_eight": 1027,
+      "era_1989": 21846,
+      "blaze_nice": 524288,
+      "nice_blaze": 524288,
+      "calculator_classic": 524288,
+      "calculator_hello": 524288,
+      "calculator_boobs": 524288,
+      "double_blaze": 16777216,
+      "double_not_found": 16777216,
+      "six_sixes": 16777216,
+      "nice_stack": 16777216,
+      "jackpot_stack": 16777216,
+      "leet_stack": 16777216,
+      "coffee_code": 16777216,
+      "code_echo": 21846,
+      "decode": 16777216,
+      "facade": 16777216,
+      "deface": 16777216,
+      "badass": 16777216,
+      "foobar": 16777216,
+      "boba": 21846,
+      "combo_meme_symmetry": 16417,
+      "combo_meme_palindrome": 8388608,
+      "combo_sequence_channel_order": 2096,
+      "combo_reverse_sequence": 2096,
+      "combo_prime_palindrome": 5592406,
+      "combo_square_greyscale": 1677722,
+      "combo_fibonacci_sequence": 962,
+      "combo_high_contrast_neon": 11,
+      "combo_pastel_luminous": 73,
+      "combo_warm_red": 4,
+      "combo_cool_blue": 4,
+      "combo_complement_vivid": 677,
+      "combo_web_safe_greyscale": 2796203,
+      "combo_repeated_palindrome": 1048576,
+      "combo_sixfold_greyscale": 1048576,
+      "combo_exact_sequence": 16777216,
+      "combo_exact_reverse": 16777216,
+      "combo_anomaly_meme": 16777216,
+      "combo_six_seven_palindrome": 16777216,
+      "combo_hex_letters": 7,
+      "combo_digit_structure": 7,
+      "combo_power_progression": 2301,
+      "combo_edge_contrast": 133,
+      "combo_saturation_tone": 560,
+      "combo_culture_exact": 16777216
+    },
+    "thresholdRounding": 1000
+  }
+}

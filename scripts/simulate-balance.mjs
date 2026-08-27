@@ -1,9 +1,12 @@
 import { scoreColor } from '../src/lib/scoring.js';
-import { scoreCandidateColor } from '../src/lib/scoringCandidate.js';
+import { getConditionRewardBand } from '../src/lib/balanceConfig.js';
+import { scoreCandidateColorV6, ACTIVE_SCORE_MODEL_VERSION } from '../src/lib/scoringV6.js';
+import v6BalanceFixture from '../src/lib/generated/scoringV6BalanceFixture.json' with { type: 'json' };
 
 const DEFAULT_ROLLS = 1_000_000;
 const DEFAULT_SEED = 0x4348524f;
-const rarityOrder = ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic'];
+const ACTIVE_RARITY_ORDER = ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Anomaly'];
+const LEGACY_RARITY_ORDER = ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic'];
 
 function readIntegerFlag(name, fallback) {
   const argument = process.argv.find(value => value.startsWith(`--${name}=`));
@@ -31,11 +34,16 @@ export function simulateBalance({
   legacy = false,
   exhaustive = false
 } = {}) {
+  if (exhaustive && !legacy) return reportFromExhaustiveFixture(seed);
   if (exhaustive) rolls = 256 ** 3;
   const random = createRandom(seed);
-  const scorer = legacy ? scoreColor : scoreCandidateColor;
+  const scorer = legacy ? scoreColor : scoreCandidateColorV6;
+  const rarityOrder = legacy ? LEGACY_RARITY_ORDER : ACTIVE_RARITY_ORDER;
   const rarities = Object.fromEntries(rarityOrder.map(rarity => [rarity, 0]));
   const conditions = new Map();
+  const conditionRarities = new Map();
+  const conditionSets = exhaustive ? null : new Map();
+  const scoreValues = new Uint32Array(rolls);
   let totalScore = 0;
   let totalConditions = 0;
   let f1Rolls = 0;
@@ -51,6 +59,7 @@ export function simulateBalance({
           Math.floor(random() * 256),
           Math.floor(random() * 256)
         );
+    scoreValues[index] = result.score;
     rarities[result.rarity] += 1;
     totalScore += result.score;
     minScore = Math.min(minScore, result.score);
@@ -60,6 +69,25 @@ export function simulateBalance({
     totalContributors += legacy ? result.badges.length : result.contributors.length;
     for (const conditionId of conditionIds) {
       conditions.set(conditionId, (conditions.get(conditionId) || 0) + 1);
+    }
+    if (!legacy) {
+      for (const condition of result.conditions) {
+        conditionRarities.set(condition.id, condition.conditionRarity || 'Common');
+      }
+      for (const contributor of result.contributors) {
+        const band = getConditionRewardBand(contributor.conditionRarity);
+        if (contributor.awardedPoints < band.minPoints || (band.maxPoints !== null && contributor.awardedPoints > band.maxPoints)) {
+          throw new Error(
+            `${contributor.id} awarded ${contributor.awardedPoints} outside its ${contributor.conditionRarity} reward band`
+          );
+        }
+      }
+    }
+    if (conditionSets) {
+      const key = conditionIds.join('|');
+      if (conditionSets.has(key) || conditionSets.size < 200000) {
+        conditionSets.set(key, (conditionSets.get(key) || 0) + 1);
+      }
     }
     if (conditionIds.includes('f1')) f1Rolls += 1;
   }
@@ -71,15 +99,28 @@ export function simulateBalance({
       return [conditionId, {
         count,
         frequency,
-        expectedRolls: frequency > 0 ? 1 / frequency : null
+        expectedRolls: frequency > 0 ? 1 / frequency : null,
+        conditionRarity: conditionRarities.get(conditionId) || null
       }];
     })
   );
 
+  scoreValues.sort();
+  const percentile = fraction => scoreValues[Math.min(
+    scoreValues.length - 1,
+    Math.max(0, Math.floor((scoreValues.length - 1) * fraction))
+  )];
+  const topConditionSets = conditionSets
+    ? [...conditionSets.entries()]
+      .sort((left, right) => right[1] - left[1])
+      .slice(0, 20)
+      .map(([key, count]) => ({ key, count, frequency: count / rolls }))
+    : [];
+
   return {
     rolls,
     seed,
-    model: legacy ? 'legacy' : 'current',
+    model: legacy ? 'legacy' : 'v6',
     exhaustive,
     minScore,
     maxScore,
@@ -87,7 +128,22 @@ export function simulateBalance({
     averageConditions: totalConditions / rolls,
     averageContributors: totalContributors / rolls,
     f1Frequency: f1Rolls / rolls,
+    scoreVersion: legacy ? 1 : ACTIVE_SCORE_MODEL_VERSION,
+    percentiles: {
+      p01: percentile(0.01),
+      p50: percentile(0.5),
+      p75: percentile(0.75),
+      p90: percentile(0.9),
+      p97: percentile(0.97),
+      p98: percentile(0.98),
+      p986: percentile(0.986),
+      p99: percentile(0.99),
+      p996: percentile(0.996),
+      p999: percentile(0.999),
+      p9999: percentile(0.9999)
+    },
     conditions: conditionDistribution,
+    topConditionSets,
     rarities: Object.fromEntries(
       rarityOrder.map(rarity => [rarity, {
         count: rarities[rarity],
@@ -95,6 +151,33 @@ export function simulateBalance({
         expectedRolls: rarities[rarity] > 0 ? rolls / rarities[rarity] : null
       }])
     )
+  };
+}
+
+function reportFromExhaustiveFixture(seed) {
+  const rarityOrder = ACTIVE_RARITY_ORDER;
+  const conditions = Object.fromEntries(Object.entries(v6BalanceFixture.conditions).map(([id, value]) => [id, {
+    count: value.count,
+    frequency: value.frequency,
+    expectedRolls: value.expectedRolls,
+    conditionRarity: value.rarity
+  }]));
+  return {
+    rolls: v6BalanceFixture.rgbColorCount,
+    seed,
+    model: 'v6',
+    exhaustive: true,
+    minScore: v6BalanceFixture.scoreSpread.min,
+    maxScore: v6BalanceFixture.scoreSpread.max,
+    averageScore: v6BalanceFixture.scoreSpread.mean,
+    averageConditions: v6BalanceFixture.conditionTotals.average,
+    averageContributors: v6BalanceFixture.conditionTotals.average,
+    f1Frequency: conditions.f1?.frequency || 0,
+    scoreVersion: ACTIVE_SCORE_MODEL_VERSION,
+    percentiles: v6BalanceFixture.scoreSpread.percentiles,
+    conditions,
+    topConditionSets: [],
+    rarities: Object.fromEntries(rarityOrder.map(rarity => [rarity, v6BalanceFixture.rarities[rarity]]))
   };
 }
 
@@ -109,7 +192,7 @@ function printReport(report) {
   console.log(`Average scoring contributors: ${report.averageContributors.toFixed(3)}`);
   console.log(`F1 frequency: ${(report.f1Frequency * 100).toFixed(3)}%`);
   console.log('Rarity distribution:');
-  for (const rarity of rarityOrder) {
+  for (const rarity of Object.keys(report.rarities)) {
     const result = report.rarities[rarity];
     console.log(
       `  ${rarity.padEnd(9)} ${result.count.toLocaleString().padStart(10)} ` +

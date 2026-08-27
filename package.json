@@ -25,6 +25,7 @@
     "check:badge-drift": "node scripts/check-badge-drift.mjs",
     "check:balance-drift": "node scripts/check-badge-drift.mjs && node scripts/check-progression-balance.mjs",
     "check:catalog-drift": "node scripts/check-catalog-drift.mjs",
+    "check:scoring-spec": "node scripts/generate-scoring-v6.mjs --check",
     "check:scoring-parity": "node scripts/check-scoring-parity.mjs",
     "check:db-security": "node scripts/check-database-security.mjs",
     "check:progression-db": "node scripts/check-progression-database.mjs",
@@ -32,7 +33,7 @@
     "test:r2:integration": "node scripts/r2-control-plane-smoke.mjs",
     "check:profile-certification": "node scripts/check-profile-parity-certification.mjs",
     "simulate:balance": "node scripts/simulate-balance.mjs",
-    "simulate:balance:exhaustive": "node scripts/simulate-balance.mjs --exhaustive"
+    "simulate:balance:exhaustive": "node scripts/simulate-scoring-v6-exhaustive.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

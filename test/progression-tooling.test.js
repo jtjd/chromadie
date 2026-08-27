@@ -9,7 +9,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('balance simulation exposes condition frequencies and expected rolls', () => {
   const report = simulateBalance({ rolls: 10_000, seed: 0x4348524f });
-  const prime = report.conditions.prime_sum;
+  const prime = report.conditions.sum_prime;
   const rare = report.rarities.Rare;
 
   assert.ok(prime.count > 0);
@@ -40,10 +40,20 @@ test('progression manifest parser evaluates the final CASE-based migration patch
   const manifest = await readProgressionManifest();
   const byId = new Map(manifest.map(row => [row.id, row]));
 
+  assert.equal(byId.get('journey_rarity_rare').sort_order, 10);
+  assert.equal(byId.get('journey_rarity_rare').expected_rolls, 3);
   assert.equal(byId.get('journey_roll_prime').sort_order, 20);
-  assert.equal(byId.get('journey_roll_prime').expected_rolls, 6);
-  assert.equal(byId.get('journey_mythic').sort_order, 50);
-  assert.equal(byId.get('journey_mythic').expected_rolls, 852);
+  assert.equal(byId.get('journey_roll_prime').expected_rolls, 7);
+  assert.equal(byId.get('journey_high_contrast').sort_order, 30);
+  assert.equal(byId.get('journey_high_contrast').expected_rolls, 10);
+  assert.equal(byId.get('journey_rarity_epic').sort_order, 40);
+  assert.equal(byId.get('journey_rarity_epic').expected_rolls, 26);
+  assert.equal(byId.get('journey_rarity_anomaly').sort_order, 50);
+  assert.equal(byId.get('journey_rarity_anomaly').expected_rolls, 927);
+  assert.equal(byId.get('journey_mythic').sort_order, 70);
+  assert.equal(byId.get('journey_mythic').expected_rolls, 33894);
+  assert.equal(byId.get('journey_palindrome').sort_order, 60);
+  assert.equal(byId.get('journey_palindrome').expected_rolls, 4096);
   assert.equal(byId.get('journey_streak_14').progress_source, 'longest_streak');
   assert.equal(byId.get('journey_greyscale').published, false);
   assert.equal(byId.get('journey_roll_730').achievement_id, null);
@@ -55,7 +65,7 @@ test('progression balance gate blocks probability and pacing regressions', async
   assert.match(source, /journey_roll_730/);
   assert.match(source, /journey_roll_1095/);
   assert.match(source, /journey_greyscale/);
-  assert.match(source, /Mythic must precede Anomaly/);
+  assert.match(source, /Legendary must precede Anomaly/);
   assert.match(source, /expected_rolls/);
   assert.match(source, /MAX_PUBLISHED_EXPECTED_ROLLS/);
   assert.match(source, /longest_streak/);

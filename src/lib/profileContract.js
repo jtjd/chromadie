@@ -28,7 +28,8 @@ const SCORE_FIELDS = Object.freeze([
   'condition_ids',
   'contributors',
   'traits',
-  'identity'
+  'identity',
+  'score_version'
 ])
 
 function pickFields(record, fields) {

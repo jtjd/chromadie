@@ -4,7 +4,7 @@ export const PROFILE_STORY_COLLECTION_ROLLS = 10;
 export const PROFILE_STORY_TIMELINE_ROLLS = 3;
 
 const EVENT_TYPES = new Set(['profile_created', 'roll']);
-const RARITIES = new Set(['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
+const RARITIES = new Set(['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Anomaly', 'Mythic']);
 const ID_PATTERN = /^[a-z0-9_:-]{1,120}$/i;
 const HEX_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 

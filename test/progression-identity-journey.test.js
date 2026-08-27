@@ -7,7 +7,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('progression normalization preserves server-published journey lanes and weekly focus', () => {
   const progression = normalizeProgressionData({
-    current_ep: 2_500_000,
+    current_ep: 23_950_000,
     total_rolls: 10,
     current_streak: 7,
     milestones: [
@@ -194,12 +194,13 @@ test('the journey schema is additive, catalog-backed, and returned by the author
 });
 
 test('progression presentation and guest claim copy keep authority and privacy boundaries visible', async () => {
-  const [progression, state, overview, page, game, shell, preferences] = await Promise.all([
+  const [progression, state, overview, page, game, preRoll, shell, preferences] = await Promise.all([
     read('src/lib/ProfileProgression.svelte'),
     read('src/lib/progressionState.js'),
     read('src/lib/ProfileStudioOverview.svelte'),
     read('src/lib/ProgressionPage.svelte'),
     read('src/lib/Game.svelte'),
+    read('src/lib/RollPreRoll.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/AnalyticsPreferences.svelte')
   ]);
@@ -230,8 +231,9 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(game, /newProgressionUnlocks/);
   assert.match(game, /function beginGuestSignup/);
   assert.match(game, /clearGuestRoll\(\)/);
-  assert.match(game, /Want to save future rolls\? Create an account/);
-  assert.doesNotMatch(game, /This preview will not transfer|start saving future rolls/);
+  assert.match(game, /Save future rolls and earn EP/);
+  assert.match(preRoll, /Sign up/);
+  assert.match(preRoll, /to save your roll\./);
   assert.match(shell, /Recent unlocks/);
   assert.match(preferences, /90 days/);
   assert.doesNotMatch(game, /insert\(.*(?:progression|inventory)/s);

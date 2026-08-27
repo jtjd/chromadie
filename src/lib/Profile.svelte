@@ -13,17 +13,13 @@
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
+  import { V6_SCORE_ACHIEVEMENT_THRESHOLDS } from './balanceConfig.js';
 
   export let profileUsername = null;
   export let userId = null;
   const dispatch = createEventDispatcher();
   const NON_PINNABLE_BADGE_IDS = new Set(['launch_edition']);
-  const SCORE_ACHIEVEMENT_TARGETS = Object.freeze({
-    score_50k: 50_000,
-    score_100k: 100_000,
-    score_200k: 200_000,
-    score_1_5m: 1_500_000
-  });
+  const SCORE_ACHIEVEMENT_TARGETS = V6_SCORE_ACHIEVEMENT_THRESHOLDS;
 
   let targetProfile = null;
   let targetScores = [];
@@ -287,8 +283,8 @@
 
       let intensity = 0;
       if (roll) {
-        if (roll.rarity === 'Mythic') intensity = 5;
-        else if (roll.rarity === 'Anomaly') intensity = 4;
+        if (roll.rarity === 'Anomaly') intensity = 5;
+        else if (roll.rarity === 'Legendary' || roll.rarity === 'Mythic') intensity = 4;
         else if (roll.rarity === 'Epic') intensity = 4;
         else if (roll.rarity === 'Rare') intensity = 3;
         else if (roll.rarity === 'Uncommon') intensity = 2;

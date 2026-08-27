@@ -107,7 +107,8 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(siteHeader, /\.site-mode-header--profile \{[\s\S]*background: transparent !important;[\s\S]*backdrop-filter: none !important;/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__nav-space \{ display: none; \}/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: none; \}/);
-  assert.match(siteHeader, /\{#if isHomeMode\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
+  assert.match(siteHeader, /\{#if !isHomeMode\}<button[^>]*[\s\S]*?>Roll<\/button>\{\/if\}/);
+  assert.doesNotMatch(siteHeader, /\{#if isHomeMode\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
   assert.match(profileShell, /ProfileEnvironmentLayer/);
   assert.match(environment, /profile-environment--public/);
   assert.match(profileShell, /mode=\{previewMode \? 'preview' : 'public'\}/);

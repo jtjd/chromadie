@@ -43,14 +43,12 @@
   const dispatch = createEventDispatcher();
   const REVEAL_STAGES = Object.freeze([
     'Reading color…',
-    'Confirming channels…',
     'Checking conditions…',
-    'Checking rarity…',
     'Showing score…',
     'Result ready.'
   ]);
   const REVEAL_SPECTRUM = ROLL_REVEAL_SIGNAL_COLORS;
-  const REVEAL_STEP_LABELS = Object.freeze(['Color', 'Channels', 'Conditions', 'Rarity', 'Score', 'Complete']);
+  const REVEAL_STEP_LABELS = Object.freeze(['Color', 'Conditions', 'Score', 'Complete']);
   const REVEAL_COMPLETE_STAGE = ROLL_REVEAL_STEPS.length - 1;
   const SYSTEM_BADGE_IDS = new Set([
     'beat_your_best',
@@ -108,7 +106,9 @@
         id: 'contributor-' + (contributor?.id || 'unknown') + '-' + index,
         label: contributor?.name || badge.name || contributor?.id || 'Score condition',
         symbol: badge.symbol || '✦',
-        points: Number(contributor?.awardedPoints ?? contributor?.points) || 0
+        points: Number(contributor?.awardedPoints ?? contributor?.points) || 0,
+        category: contributor?.category || 'condition',
+        conditionRarity: contributor?.conditionRarity || 'Common'
       };
     })
     : traits.length
@@ -116,17 +116,19 @@
         id: 'trait-' + (trait?.id || 'unknown') + '-' + index,
         label: trait?.label || trait?.name || trait?.id || 'Color trait',
         symbol: '✦',
-        points: 0
+        points: 0,
+        category: trait?.group || 'trait',
+        conditionRarity: ''
       }))
       : revealedBadges
         .filter(id => !SYSTEM_BADGE_IDS.has(id) && !String(id).startsWith('ach_'))
         .map(id => {
           const badge = getBadge(id);
-          return { id: 'badge-' + id, label: badge.name || id, symbol: badge.symbol || '✦', points: 0 };
+          return { id: 'badge-' + id, label: badge.name || id, symbol: badge.symbol || '✦', points: 0, category: 'condition', conditionRarity: badge.rarity || 'Common' };
         });
   $: headlineConditions = conditionSource.slice(0, integrated ? 3 : 4);
-  $: visibleRevealItems = revealItems.slice(0, revealedConditionCount);
-  $: revealIntensity = ['Mythic', 'Anomaly'].includes(rarity)
+  $: visibleRevealItems = revealItems.slice(0, revealedConditionCount).reverse();
+  $: revealIntensity = ['Anomaly', 'Legendary', 'Mythic'].includes(rarity)
     ? 'high'
     : ['Epic', 'Rare'].includes(rarity)
       ? 'medium'
@@ -308,11 +310,8 @@
     const reducedMotion = prefersReducedMotion();
     const requestIsCurrent = () => requestId === rollRequestId
       && requestUserId === ($session?.user?.id || null);
-    const conditionCount = Math.max(
-      Array.isArray(data?.conditions) ? data.conditions.length : 0,
-      Array.isArray(canonical?.contributors) ? canonical.contributors.length : 0,
-      Array.isArray(canonical?.traits) ? canonical.traits.length : 0
-    );
+    const conditionItems = getRollRevealItems(canonical);
+    const conditionCount = conditionItems.length;
     const timing = getRollRevealTimeline({
       rarity: canonical?.rarity,
       score: canonical?.score,
@@ -321,9 +320,9 @@
       skipped: skipRevealRequested
     });
 
-    revealItems = getRollRevealItems(canonical, timing.conditionRevealCount).map(item => ({
+    revealItems = conditionItems.map(item => ({
       ...item,
-      symbol: item.kind === 'condition' ? '✦' : item.kind === 'trait' ? '✧' : '◌'
+      symbol: item.symbol || '✦'
     }));
     revealedConditionCount = 0;
     displayColor = '#222222';
@@ -369,25 +368,19 @@
       return true;
     };
 
-    const signalMessages = [
-      'Reading hue',
-      'Reading saturation',
-      'Reading lightness',
-      'Checking conditions'
-    ];
-    if (!await waitThroughStage(timing.signal, signalMessages, (index, message) => {
+    if (!await waitThroughStage(timing.color, ['Color signal received'], (_index, message) => {
       revealStage = 0;
       revealDetail = message;
-      displayColor = REVEAL_SPECTRUM[index % REVEAL_SPECTRUM.length];
+      displayColor = REVEAL_SPECTRUM[0];
       dispatch('colorpreview', { hex: displayColor });
     })) {
       if (!requestIsCurrent()) return false;
       if (skipRevealRequested) return finalize();
     }
 
-    revealStage = 1;
     for (const [index, lockedChannels] of [1, 2, 3].entries()) {
       if (skipRevealRequested) return finalize();
+      revealStage = 0;
       revealDetail = `${['Red', 'Green', 'Blue'][index]} channel confirmed`;
       displayHex = getRevealHex(canonical?.hex, lockedChannels);
       displayColor = REVEAL_SPECTRUM[(index + 2) % REVEAL_SPECTRUM.length];
@@ -401,7 +394,7 @@
     displayHex = normalizeHexColor(canonical?.hex, '#000000');
     displayColor = displayHex;
     dispatch('colorpreview', { hex: displayColor });
-    revealStage = 2;
+    revealStage = 1;
     revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} confirmed`;
     if (!await waitForBeat(timing.conditionIntro)) {
       if (!requestIsCurrent()) return false;
@@ -429,22 +422,10 @@
     if (skipRevealRequested) return finalize();
 
     presentCanonical(true);
-    revealStage = 3;
-    const rarityMessages = [
-      'Checking rarity',
-      `${canonical.rarity || 'Common'} rarity identified`,
-      'Rarity confirmed'
-    ];
-    if (!await waitThroughStage(timing.rarity, rarityMessages, (_index, message) => {
-      revealDetail = message;
-    })) {
-      if (!requestIsCurrent()) return false;
-      if (skipRevealRequested) return finalize();
-    }
-    if (skipRevealRequested) return finalize();
-
-    revealStage = 4;
-    revealDetail = 'Showing the confirmed score';
+    revealStage = 2;
+    rarity = canonical.rarity || 'Common';
+    identity = canonical.identity;
+    revealDetail = `${rarity} rarity · counting confirmed score`;
     const scoreTarget = score;
     const scoreSteps = reducedMotion ? 1 : 20;
     for (let step = 1; step <= scoreSteps; step += 1) {
@@ -452,18 +433,14 @@
       const progress = step / scoreSteps;
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       displayScore = Math.floor(scoreTarget * easedProgress);
-      revealDetail = progress < 0.35
-        ? 'Showing color points'
-        : progress < 0.75
-          ? 'Showing condition points'
-          : 'Confirming total score';
+      revealDetail = `${rarity} rarity · counting confirmed score`;
       if (!await waitForBeat(reducedMotion ? 0 : timing.score / scoreSteps)) {
         if (!requestIsCurrent()) return false;
         if (skipRevealRequested) return finalize();
       }
     }
 
-    revealStage = REVEAL_COMPLETE_STAGE;
+    revealStage = 3;
     revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
     if (!await waitForBeat(timing.settle)) {
       if (!requestIsCurrent()) return false;
@@ -694,8 +671,8 @@
       <div class="profile-roll__rolling-copy">
         <div class="profile-roll__reading-line"><span aria-hidden="true"></span><p class="profile-roll__eyebrow">{revealStatus}</p></div>
         <p class="profile-roll__hex">{displayHex}</p>
-        <h3>{revealStage >= 5 ? 'Result ready.' : revealStage >= 4 ? 'Score confirmed.' : revealStage >= 3 ? 'Rarity confirmed.' : revealStage >= 2 ? 'Conditions confirmed.' : 'Generating today’s color.'}</h3>
-        <p>{revealDetail || (revealStage >= 5 ? 'Adding it to your profile.' : 'Processing the roll result.')}</p>
+        <h3>{revealStage >= 3 ? 'Result ready.' : revealStage >= 2 ? 'Score confirmed.' : revealStage >= 1 ? 'Conditions confirmed.' : 'Generating today’s color.'}</h3>
+        <p>{revealDetail || (revealStage >= 3 ? 'Adding it to your profile.' : 'Processing the roll result.')}</p>
         <div class="profile-roll__stage-track" aria-hidden="true">
           {#each REVEAL_STEP_LABELS as label, index (label)}
             <span class:active={revealStage === index} class:complete={revealStage > index}>{label}</span>
@@ -713,12 +690,13 @@
                   <span aria-hidden="true">{condition.symbol}</span>
                   <strong>{condition.label}</strong>
                   {#if condition.points}<small>+{condition.points.toLocaleString()}</small>{/if}
+                  {#if condition.conditionRarity}<em data-rarity={condition.conditionRarity.toLowerCase()}>{condition.conditionRarity}</em>{/if}
                 </span>
               {/each}
             </div>
           </div>
         {/if}
-        {#if revealStage >= 4}
+        {#if revealStage >= 2}
           <div class="profile-roll__rolling-score" aria-live="polite">
             <span>Confirmed score</span>
             <strong>{displayScore.toLocaleString()}</strong>
@@ -759,6 +737,7 @@
                 <span aria-hidden="true">{condition.symbol}</span>
                 <strong>{condition.label}</strong>
                 {#if condition.points}<small>+{condition.points.toLocaleString()}</small>{/if}
+                {#if condition.conditionRarity}<em data-rarity={condition.conditionRarity.toLowerCase()}>{condition.conditionRarity}</em>{/if}
               </span>
             {/each}
             {#if conditionSource.length > headlineConditions.length}
@@ -822,7 +801,7 @@
                     <div class="profile-roll__contributor">
                       <span>{contributorBadge.symbol || '✦'}</span>
                       <strong>{contributor.name || contributorBadge.name || contributor.id}</strong>
-                      <small>{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()} reported score</small>
+                      <small>{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()} · {contributor.conditionRarity || 'Common'} condition</small>
                     </div>
                   {/each}
                 </div>
@@ -942,6 +921,15 @@
   .profile-roll__condition-chip { display: inline-flex; align-items: center; gap: 0.38rem; padding: 0.32rem 0.55rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 22%, var(--color-line-subtle)); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--profile-accent) 8%, transparent); color: var(--color-ink-muted); font-size: var(--type-label); }
   .profile-roll__condition-chip strong { overflow: hidden; color: var(--color-ink-strong); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
   .profile-roll__condition-chip small { color: color-mix(in srgb, var(--profile-accent) 72%, white); font-size: 0.62rem; white-space: nowrap; }
+  .profile-roll__condition-chip em { color: var(--color-ink-muted); font: 600 0.58rem / 1 var(--font-mono-stack); font-style: normal; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
+  .profile-roll__condition-chip em[data-rarity='trash'] { color: #aaa9b8; }
+  .profile-roll__condition-chip em[data-rarity='common'] { color: #dedce8; }
+  .profile-roll__condition-chip em[data-rarity='uncommon'] { color: #6ee2a4; }
+  .profile-roll__condition-chip em[data-rarity='rare'] { color: #84aaff; }
+  .profile-roll__condition-chip em[data-rarity='epic'] { color: #d8a6ff; }
+  .profile-roll__condition-chip em[data-rarity='legendary'] { color: #ff9a66; }
+  .profile-roll__condition-chip em[data-rarity='anomaly'],
+  .profile-roll__condition-chip em[data-rarity='mythic'] { color: #ff6bd6; }
   .profile-roll__condition-more { border-style: dashed; color: var(--color-ink-faint); }
   .profile-roll__story,
   .profile-roll__next,
@@ -1052,25 +1040,21 @@
   .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame) { width: 7.5rem; height: 7.5rem; transform: none; }
   .profile-roll__rolling .profile-roll__preview :global(.final-color-display) { width: 7.5rem; height: 7.5rem; }
   .profile-roll__rolling[data-reveal-stage='0'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-charge 0.42s ease-in-out infinite; }
-  .profile-roll__rolling[data-reveal-stage='1'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-charge 0.62s ease-in-out infinite; }
-  .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-narrow 0.82s var(--motion-ease-emphasis) both; }
-  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__preview :global(.roll-preview-frame),
-  .profile-roll__rolling[data-reveal-stage='4'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-lock 0.48s var(--motion-ease-emphasis) both; }
-  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__lock-ring,
-  .profile-roll__rolling[data-reveal-stage='4'] .profile-roll__lock-ring,
-  .profile-roll__rolling[data-reveal-stage='5'] .profile-roll__lock-ring { animation: profile-roll-lock-ring 0.7s ease-out both; }
+  .profile-roll__rolling[data-reveal-stage='1'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-narrow 0.82s var(--motion-ease-emphasis) both; }
+  .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__preview :global(.roll-preview-frame),
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-lock 0.48s var(--motion-ease-emphasis) both; }
+  .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__lock-ring,
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__lock-ring { animation: profile-roll-lock-ring 0.7s ease-out both; }
+  .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__scan-orbit,
+  .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__spectrum-wash,
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__scan-orbit,
-  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__spectrum-wash,
-  .profile-roll__rolling[data-reveal-stage='4'] .profile-roll__scan-orbit,
-  .profile-roll__rolling[data-reveal-stage='4'] .profile-roll__spectrum-wash,
-  .profile-roll__rolling[data-reveal-stage='5'] .profile-roll__scan-orbit,
-  .profile-roll__rolling[data-reveal-stage='5'] .profile-roll__spectrum-wash { animation-play-state: paused; opacity: 0.18; }
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__spectrum-wash { animation-play-state: paused; opacity: 0.18; }
   .profile-roll__rolling-copy { min-width: 0; }
   .profile-roll__reading-line { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
   .profile-roll__reading-line > span { width: 0.42rem; height: 0.42rem; flex: 0 0 auto; border-radius: 50%; background: var(--profile-accent); box-shadow: 0 0 0.8rem color-mix(in srgb, var(--profile-accent) 74%, transparent); animation: profile-roll-signal 1s ease-in-out infinite; }
   .profile-roll__rolling-copy h3 { margin: 0.5rem 0 0.35rem; color: var(--color-ink-strong); font: 600 clamp(1.2rem, 3.5vw, 1.65rem) / 1.04 var(--font-display-stack); letter-spacing: -0.045em; }
   .profile-roll__rolling-copy > p:not(.profile-roll__eyebrow):not(.profile-roll__hex) { max-width: 12rem; font-size: 0.78rem; }
-  .profile-roll__stage-track { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.35rem; width: 100%; max-width: 31rem; margin-top: 0.85rem; }
+  .profile-roll__stage-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.35rem; width: 100%; max-width: 31rem; margin-top: 0.85rem; }
   .profile-roll__stage-track span { padding-top: 0.4rem; border-top: 1px solid var(--color-line-subtle); color: var(--color-ink-faint); font: 600 0.56rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
   .profile-roll__stage-track span.active,
   .profile-roll__stage-track span.complete { border-color: var(--profile-accent); color: color-mix(in srgb, var(--profile-accent) 52%, white); box-shadow: 0 -0.18rem 0.55rem color-mix(in srgb, var(--profile-accent) 24%, transparent); }

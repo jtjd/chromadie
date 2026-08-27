@@ -2,16 +2,26 @@
   import { createEventDispatcher } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
   import Game from './Game.svelte';
+  import HomepageBestRoll from './homepage/HomepageBestRoll.svelte';
   import ProgressionUnlockQueue from './ProgressionUnlockQueue.svelte';
   import { getRankState } from './ranks.js';
   import { getRarityPresentation } from './rarityPresentation.js';
   import { trackProductEvent } from './productAnalytics.js';
 
   const dispatch = createEventDispatcher();
+  export let surface = 'roll';
+  export let signupNext = '/roll';
+  export let showAcquisitionActions = false;
+  export let homepage = false;
+  export let bestRollRows = [];
+  export let bestRollLoading = true;
+  export let bestRollError = '';
+  let gameRef = null;
   let rollContext = {
     phase: 'preroll',
     identity: '',
     hex: '',
+    revealHex: '',
     rarity: '',
     score: 0,
     currentStreak: 0,
@@ -27,13 +37,15 @@
   const progressionViewsTracked = new SvelteSet();
 
   $: contextHasResult = rollContext.phase === 'results' && Boolean(rollContext.identity);
+  $: homepagePreroll = homepage && !contextHasResult;
+  $: homepageRolling = homepage && !contextHasResult && rollContext.phase !== 'preroll';
   $: contextDay = Math.max(0, Number(rollContext.totalRolls) || Number(rollContext.currentStreak) || 0);
   $: contextRank = getRankState(rollContext.lifetimeEp);
   $: contextProgress = Math.round(contextRank.progress * 100);
   $: contextRarity = getRarityPresentation(rollContext.rarity || 'Common');
   $: if (rollContext.isAuthenticated && !progressionViewsTracked.has('authenticated')) {
     progressionViewsTracked.add('authenticated');
-    trackProductEvent('progression_viewed', { surface: 'dedicated-roll', accountMode: 'authenticated' });
+    trackProductEvent('progression_viewed', { surface, accountMode: 'authenticated' });
   }
 
   function forward(eventName, event) {
@@ -42,6 +54,10 @@
 
   function handleRollState(event) {
     rollContext = { ...rollContext, ...(event.detail || {}) };
+  }
+
+  function requestGuestSignup() {
+    gameRef?.beginGuestSignupFromParent(signupNext);
   }
 
   function handleProgressionUnlockAcknowledgement(event) {
@@ -56,11 +72,13 @@
 
 </script>
 
-<svelte:head>
-  <title>Daily Roll · ChromaDie</title>
-</svelte:head>
-
-<div class="roll-page">
+<div
+  class="roll-page"
+  class:roll-page--homepage={homepage}
+  class:roll-page--homepage-preroll={homepagePreroll}
+  class:roll-page--homepage-rolling={homepageRolling}
+  class:roll-page--result={contextHasResult}
+>
   <section
     class="roll-page__game"
     aria-labelledby="roll-page-title"
@@ -107,15 +125,26 @@
             />
           </div>
         {/if}
+
+        {#if !rollContext.isAuthenticated}
+          <div class="roll-page__guest-cta">
+            <button type="button" on:click={requestGuestSignup}>Create an account</button>
+          </div>
+        {/if}
       {:else}
-        <p class="roll-page__eyebrow">DAILY ROLL</p>
-        <h1 id="roll-page-title">Today’s roll is ready.</h1>
-        <p class="roll-page__description">Roll once per day to generate a color, rarity, and score.</p>
+        <p class="roll-page__eyebrow">A NEW COLOR, EVERY DAY</p>
+        {#if homepage}
+          <div class="roll-page__unknown" aria-hidden="true">{homepage && rollContext.phase === 'rolling' ? (rollContext.revealHex || '#??????') : '#??????'}</div>
+          <h1 id="roll-page-title">Today’s color</h1>
+        {:else}
+          <h1 id="roll-page-title">Roll today’s color.</h1>
+          <p class="roll-page__description">One of 16,777,216 colors. See the patterns, rarity, and score hidden in yours.</p>
+        {/if}
       {/if}
 
       {#if rollContext.isAuthenticated}
         <div class="roll-page__streak">
-          <span class="roll-page__streak-icon" aria-hidden="true">↻</span>
+          <span class="roll-page__streak-icon" aria-hidden="true"></span>
           <div>
             <strong>{rollContext.currentStreak > 0 ? `${rollContext.currentStreak}-day streak` : 'Start your streak'}</strong>
             <small>{rollContext.currentStreak > 0 ? 'Roll again before the timer runs out to keep it alive.' : 'Roll again tomorrow to keep it going.'}</small>
@@ -133,15 +162,25 @@
           <small>{contextRank.next ? `${Math.max(0, contextRank.next.min - contextRank.lifetimeEp).toLocaleString()} EP to ${contextRank.next.name}` : 'Final rank reached'}</small>
         </div>
 
-        <a class="roll-page__history-link" href="/progression">Open progression</a>
       {/if}
     </div>
     <Game
+      bind:this={gameRef}
       dedicated={true}
+      {surface}
+      {signupNext}
+      {showAcquisitionActions}
       on:navigate={event => forward('navigate', event)}
       on:promptlogin={event => forward('promptlogin', event)}
       on:rollstate={handleRollState}
     />
+    {#if homepagePreroll && !homepageRolling}
+      <HomepageBestRoll
+        rows={bestRollRows}
+        loading={bestRollLoading}
+        error={bestRollError}
+      />
+    {/if}
   </section>
 </div>
 
@@ -202,7 +241,7 @@
     z-index: 10;
     display: grid;
     grid-template-columns: minmax(280px, 400px) minmax(360px, 420px);
-    align-items: center;
+    align-items: start;
     justify-content: center;
     gap: clamp(44px, 6vw, 88px);
     width: min(100%, 980px);
@@ -264,6 +303,37 @@
     text-shadow: 0 0 14px color-mix(in srgb, var(--roll-score-color) 34%, transparent);
   }
 
+  .roll-page__guest-cta {
+    width: min(100%, 300px);
+    margin-top: 28px;
+  }
+
+  .roll-page__guest-cta button {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 18px;
+    border: 1px solid color-mix(in srgb, var(--roll-context-accent) 42%, var(--roll-border));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--roll-context-accent) 7%, transparent);
+    color: var(--roll-text);
+    cursor: pointer;
+    font: 700 .86rem/1 var(--site-display, 'Manrope', sans-serif);
+    letter-spacing: -.01em;
+    transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+
+  .roll-page__guest-cta button:hover {
+    border-color: color-mix(in srgb, var(--roll-context-accent) 72%, var(--roll-border));
+    background: color-mix(in srgb, var(--roll-context-accent) 13%, transparent);
+    box-shadow: 0 10px 28px -22px color-mix(in srgb, var(--roll-context-accent) 60%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .roll-page__guest-cta button:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--roll-context-accent) 78%, white);
+    outline-offset: 3px;
+  }
+
   .roll-page__proof {
     display: grid;
     gap: .65rem;
@@ -311,15 +381,14 @@
   }
 
   .roll-page__streak-icon {
-    display: grid;
+    display: block;
     width: 30px;
     height: 30px;
     flex: 0 0 30px;
-    place-items: center;
-    border-radius: 9px;
-    background: var(--border-soft, rgba(255, 255, 255, .05));
-    color: var(--roll-accent);
-    font: 700 .9rem/1 var(--site-display, 'Manrope', sans-serif);
+    border: 8px solid var(--border-soft, rgba(255, 255, 255, .05));
+    border-radius: 50%;
+    background: var(--roll-context-accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--roll-context-accent) 30%, transparent);
   }
 
   .roll-page__streak div {
@@ -380,22 +449,6 @@
     box-shadow: 0 0 10px var(--roll-accent-glow);
   }
 
-  .roll-page__history-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    width: fit-content;
-    margin-top: 22px;
-    color: var(--roll-muted);
-    font: 500 .78rem/1.2 var(--site-font, 'Inter', sans-serif);
-    text-decoration: none;
-  }
-
-  .roll-page__history-link:hover,
-  .roll-page__history-link:focus-visible {
-    color: var(--roll-text);
-  }
-
   .roll-page :global(.game-container--dedicated) {
     --roll-rarity: var(--roll-accent);
     width: 100%;
@@ -411,6 +464,8 @@
     --roll-card-glow: color-mix(in srgb, var(--roll-result-color, var(--white)) 30%, transparent);
     --roll-card-glow-soft: color-mix(in srgb, var(--roll-result-color, var(--white)) 14%, transparent);
     animation: roll-result-glow 5.8s ease-in-out infinite;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   @keyframes roll-result-glow {
@@ -557,26 +612,15 @@
   .roll-page :global(.game-container--dedicated .roll-color-rarity) {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
     padding: 4px 7px;
-    border: 1px solid color-mix(in srgb, var(--roll-rarity) 34%, var(--roll-border));
+    border: 1px solid color-mix(in srgb, var(--roll-rarity) 56%, var(--roll-border));
     border-radius: 999px;
-    background: color-mix(in srgb, var(--roll-rarity) 8%, transparent);
+    background: color-mix(in srgb, var(--roll-rarity) 13%, transparent);
     color: var(--roll-rarity);
     font: 600 .7rem/1 var(--site-font, 'Inter', sans-serif);
     letter-spacing: .02em;
-    text-shadow: 0 0 12px color-mix(in srgb, var(--roll-rarity) 70%, transparent);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-color-rarity__icon) {
-    display: inline-grid;
-    width: .9rem;
-    height: .9rem;
-    place-items: center;
-    color: currentColor;
-    font-size: .8rem;
-    line-height: 1;
-    text-shadow: 0 0 10px currentColor;
+    text-shadow: 0 0 16px color-mix(in srgb, var(--roll-rarity) 86%, transparent);
+    filter: saturate(1.2);
   }
 
   .roll-page :global(.game-container--dedicated .roll-color-name) {
@@ -621,14 +665,6 @@
     white-space: nowrap;
   }
 
-  .roll-page :global(.game-container--dedicated .roll-breakdown) {
-    padding: 20px;
-    border: 1px solid var(--roll-border);
-    border-radius: 16px;
-    background: var(--surface-2);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-breakdown__header),
   .roll-page :global(.game-container--dedicated .badges-title) {
     margin-bottom: 16px;
     color: var(--roll-muted);
@@ -637,76 +673,27 @@
     text-transform: uppercase;
   }
 
-  .roll-page :global(.game-container--dedicated .roll-breakdown__list) {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-breakdown__row) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 24px;
-    color: var(--roll-text);
-    font: 500 .9rem/1.2 var(--site-font, 'Inter', sans-serif);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-breakdown__label),
-  .roll-page :global(.game-container--dedicated .badge-text) {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 10px;
-    color: var(--roll-text);
-    font: 500 .9rem/1.2 var(--site-font, 'Inter', sans-serif);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-breakdown__icon) {
-    display: inline-flex;
-    width: 24px;
-    height: 24px;
-    flex: 0 0 24px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, .05);
-    color: var(--roll-rarity);
-    font-size: .8rem;
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-breakdown__value) {
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity) {
     flex: 0 0 auto;
-    color: var(--roll-text);
-    font: 600 .9rem/1.2 var(--site-font, 'Inter', sans-serif);
-    font-variant-numeric: tabular-nums;
+    padding: 3px 6px;
+    border: 1px solid color-mix(in srgb, var(--condition-rarity-color, var(--roll-muted)) 60%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--condition-rarity-color, var(--roll-muted)) 15%, transparent);
+    color: var(--condition-rarity-color, var(--roll-muted));
+    font: 700 .58rem/1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .02em;
+    text-transform: uppercase;
     white-space: nowrap;
   }
 
-  .roll-page :global(.game-container--dedicated .roll-breakdown__points) {
-    margin-left: 4px;
-    color: var(--roll-muted);
-    font-size: .75rem;
-    font-weight: 400;
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-breakdown__row--total) {
-    margin-top: 12px;
-    padding-top: 16px;
-    border-top: 1px solid var(--roll-border);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-breakdown__row--total .roll-breakdown__label) {
-    font: 700 1rem/1 var(--site-display, 'Manrope', sans-serif);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-breakdown__row--total .roll-breakdown__value) {
-    color: var(--roll-score-color, var(--roll-rarity));
-    font: 800 1.2rem/1 var(--site-display, 'Manrope', sans-serif);
-    text-shadow: 0 0 16px color-mix(in srgb, var(--roll-score-color, var(--roll-rarity)) 30%, transparent);
-  }
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity[data-rarity='trash']) { --condition-rarity-color: #bebbcf; }
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity[data-rarity='common']) { --condition-rarity-color: #f0edff; }
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity[data-rarity='uncommon']) { --condition-rarity-color: #54f2a0; }
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity[data-rarity='rare']) { --condition-rarity-color: #70a4ff; }
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity[data-rarity='epic']) { --condition-rarity-color: #d194ff; }
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity[data-rarity='legendary']) { --condition-rarity-color: #ff8e5b; }
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity[data-rarity='anomaly']),
+  .roll-page :global(.game-container--dedicated .roll-reveal-discovery__rarity[data-rarity='mythic']) { --condition-rarity-color: #ff52d1; }
 
   .roll-page :global(.game-container--dedicated .roll-action__button) {
     display: flex;
@@ -820,9 +807,10 @@
   }
 
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-display) { order: 0; }
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-breakdown) { order: 1; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-result-summary) { order: 1; }
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-action__button) { order: 2; }
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .cotw-success-banner) { order: 3; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-acquisition-actions) { order: 3; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .cotw-success-banner) { order: 4; }
   .roll-page__context :global(.progression-reward-preview--wide .progression-reward-preview__trigger) { min-height:4.8rem; padding:.3rem .65rem .3rem .3rem; border-color:var(--roll-border); background:var(--roll-panel-card); }
   .roll-page__context :global(.progression-reward-preview--wide .progression-reward-preview__thumbnail) { flex:0 0 min(8.5rem, 46%); width:min(8.5rem, 46%); height:4.2rem; border-color:var(--roll-border); background:var(--roll-bg); }
   .roll-page__context :global(.progression-reward-preview--wide .progression-reward-preview__thumbnail .shop-preview-area) { min-height:4.2rem; height:4.2rem; padding:.35rem .55rem; }
@@ -835,8 +823,7 @@
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-detail-grid),
   .roll-page :global(.game-container--dedicated .roll-stage--results > .milestone-banner),
   .roll-page :global(.game-container--dedicated .roll-stage--results > .local-progress-banner),
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .studio-onboarding) { order: 4; }
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .guest-prompt) { order: 5; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .studio-onboarding) { order: 5; }
 
   .roll-page :global(.game-container--dedicated .roll-detail-section) {
     min-width: 0;
@@ -855,28 +842,6 @@
     margin: -8px 0 16px;
     color: var(--roll-muted);
     font: 400 .75rem/1.4 var(--site-font, 'Inter', sans-serif);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-score-total) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 12px;
-    padding-top: 16px;
-    border-top: 1px solid var(--roll-border);
-    color: var(--roll-text);
-    font: 700 1rem/1 var(--site-display, 'Manrope', sans-serif);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-score-total strong) {
-    color: var(--roll-accent);
-    font: 800 1.2rem/1 var(--site-display, 'Manrope', sans-serif);
-  }
-
-  .roll-page :global(.game-container--dedicated .roll-score-total small) {
-    color: color-mix(in srgb, var(--roll-accent) 60%, transparent);
-    font: 400 .75rem/1 var(--site-font, 'Inter', sans-serif);
   }
 
   .roll-page :global(.game-container--dedicated .cotw-success-banner),
@@ -924,14 +889,11 @@
   }
 
   .roll-page :global(.game-container--dedicated .roll-rolling-display .roll-tile) { margin-bottom: 8px; }
-  .roll-page :global(.game-container--dedicated .roll-stage__eyebrow) { color: var(--roll-rarity); font: 600 .7rem/1 var(--site-font); letter-spacing: .1em; text-transform: uppercase; }
   .roll-page :global(.game-container--dedicated .roll-stage__title) { margin: 0; color: var(--roll-text); font: 800 1.6rem/1 var(--site-display) !important; letter-spacing: -.02em; }
   .roll-page :global(.game-container--dedicated .rolling-hex) { color: var(--roll-text); font: 600 1rem/1 var(--site-font); letter-spacing: .1em; }
   .roll-page :global(.game-container--dedicated .roll-stage__status) { margin: 0; color: var(--roll-muted); font: 400 .75rem/1.4 var(--site-font); }
   .roll-page :global(.game-container--dedicated .scan-container) { width: 100%; height: 2px; margin: 0; background: var(--roll-border); }
   .roll-page :global(.game-container--dedicated .scan-bar) { background: var(--roll-accent); box-shadow: 0 0 12px var(--roll-accent-glow); }
-  .roll-page :global(.game-container--dedicated .roll-progress-label) { display: flex; justify-content: space-between; color: var(--roll-muted); font: 500 .7rem/1 var(--site-font); }
-  .roll-page :global(.game-container--dedicated .roll-progress-label strong) { color: var(--roll-accent); }
 
   .roll-page :global(.game-container--dedicated .image-modal-content) {
     border-color: var(--roll-border-highlight);
@@ -955,7 +917,6 @@
     .roll-page__context h1 { max-width: none; }
     .roll-page__description { margin-inline: auto; }
     .roll-page__context { max-width: 420px; }
-    .roll-page__history-link { margin-inline: auto; }
   }
 
   @media (max-width: 600px) {
@@ -966,11 +927,7 @@
     .roll-page :global(.game-container--dedicated .roll-color-name) { font-size: 1.35rem !important; }
     .roll-page :global(.game-container--dedicated .roll-attr-tags) { gap: 6px; }
     .roll-page :global(.game-container--dedicated .roll-attr-tag) { font-size: .64rem; }
-    .roll-page :global(.game-container--dedicated .roll-breakdown),
     .roll-page :global(.game-container--dedicated .roll-detail-section) { padding: 16px; }
-    .roll-page :global(.game-container--dedicated .roll-breakdown__row),
-    .roll-page :global(.game-container--dedicated .roll-breakdown__label),
-    .roll-page :global(.game-container--dedicated .roll-breakdown__value),
     .roll-page :global(.game-container--dedicated .guest-prompt-copy) { font-size: .78rem; }
     .roll-page :global(.game-container--dedicated .guest-prompt__button),
     .roll-page :global(.game-container--dedicated .roll-action__button) { font-size: 1rem; }
@@ -980,7 +937,315 @@
     .roll-page::before { position: absolute; }
     .roll-page :global(.game-container--dedicated .roll-stage--results) { animation: none; }
     .roll-page :global(.game-container--dedicated .roll-tile__surface) { transform: none; }
+    .roll-page__guest-cta button { transition: none; }
+    .roll-page__guest-cta button:hover { transform: none; }
     .roll-page :global(.game-container--dedicated .roll-action__button:hover:not(:disabled)),
     .roll-page :global(.game-container--dedicated .guest-prompt__button:hover:not(:disabled)) { transform: none; }
+  }
+
+  /* The homepage starts with the player's roll prompt on the left and today's
+     strongest public roll on the right. Once a roll starts, the game takes
+     over that right-hand slot so the result state keeps the same composition. */
+  .roll-page.roll-page--homepage-preroll {
+    align-items: center;
+    justify-content: center;
+    padding: 44px 20px 72px;
+  }
+
+  .roll-page.roll-page--homepage-preroll .roll-page__game {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) minmax(360px, 420px);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: clamp(44px, 6vw, 88px);
+    row-gap: 0;
+    width: min(100%, 900px);
+  }
+
+  .roll-page.roll-page--homepage-preroll .roll-page__context {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    max-width: 360px;
+    align-self: end;
+    text-align: center;
+  }
+
+  .roll-page.roll-page--homepage-preroll .roll-page__eyebrow {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 18px;
+    color: var(--roll-muted);
+  }
+
+  .roll-page.roll-page--homepage-preroll .roll-page__eyebrow::before { display: none; }
+
+  .roll-page.roll-page--homepage-preroll .roll-page__unknown {
+    margin-top: 0;
+    color: #c8c7cc;
+    font: 800 clamp(3.4rem, 6vw, 4.5rem) / .86 var(--site-display, 'Manrope', sans-serif);
+    letter-spacing: .02em;
+    text-shadow: none;
+  }
+
+  .roll-page.roll-page--homepage-preroll .roll-page__context h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated) {
+    grid-column: 1;
+    grid-row: 2;
+    max-width: 360px !important;
+    margin-top: 30px;
+    align-self: start;
+  }
+
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll) {
+    align-items: center;
+    gap: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    text-align: center;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-card-header),
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-display) { display: none; }
+
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button) {
+    width: min(100%, 320px);
+    min-height: 66px;
+    border: 1px solid rgba(255, 255, 255, .92);
+    border-radius: 10px;
+    background: #fff;
+    color: #111114;
+    box-shadow: 0 14px 32px -22px rgba(255, 255, 255, .55), 0 14px 32px -24px rgba(0, 0, 0, .95);
+    font-size: .92rem;
+    letter-spacing: .01em;
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button:hover:not(:disabled)) {
+    border-color: #fff;
+    background: #e9e9ec;
+    box-shadow: 0 17px 34px -23px rgba(255, 255, 255, .62), 0 17px 34px -23px rgba(0, 0, 0, .95);
+    transform: translateY(-2px);
+  }
+
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button:disabled) {
+    border-color: rgba(255, 255, 255, .14);
+    background: #1b1b1f;
+    box-shadow: none;
+  }
+
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .guest-prompt--quiet) {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: center;
+    gap: .28rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .guest-prompt__text-action) {
+    color: rgba(255, 255, 255, .88);
+    font-weight: 700;
+  }
+
+  .roll-page.roll-page--homepage-preroll :global(.homepage-best-roll) {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: 100%;
+    max-width: 420px;
+    margin-top: 0;
+    align-self: center;
+  }
+
+  /* During the reveal, replace the public spotlight with the live game while
+     keeping the player's context in the left result column. */
+  .roll-page.roll-page--homepage-rolling .roll-page__game {
+    grid-template-columns: minmax(280px, 400px) minmax(360px, 420px);
+    grid-template-rows: auto;
+    width: min(100%, 980px);
+  }
+
+  .roll-page.roll-page--homepage-rolling .roll-page__context {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    max-width: 400px;
+    align-self: center;
+  }
+
+  .roll-page.roll-page--homepage-rolling :global(.game-container--dedicated) {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 420px !important;
+    margin-top: 0;
+    align-self: start;
+  }
+
+  @media (max-width: 900px) {
+    .roll-page.roll-page--homepage-preroll {
+      align-items: flex-start;
+      padding: clamp(52px, 8vh, 82px) 20px 72px;
+    }
+
+    .roll-page.roll-page--homepage-preroll .roll-page__game {
+      grid-template-columns: minmax(0, 420px);
+      grid-template-rows: auto auto auto;
+      width: min(100%, 420px);
+      gap: 0;
+    }
+
+    .roll-page.roll-page--homepage-preroll .roll-page__context {
+      grid-column: 1;
+      grid-row: 1;
+      max-width: 420px;
+      align-self: auto;
+      text-align: center;
+    }
+
+    .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated) {
+      grid-column: 1;
+      grid-row: 2;
+      max-width: 420px !important;
+      margin-top: 30px;
+    }
+
+    .roll-page.roll-page--homepage-preroll :global(.homepage-best-roll) {
+      grid-column: 1;
+      grid-row: 3;
+      margin-top: 30px;
+    }
+
+    .roll-page.roll-page--homepage-rolling .roll-page__game {
+      grid-template-columns: minmax(0, 420px);
+      grid-template-rows: auto auto;
+      width: min(100%, 420px);
+    }
+
+    .roll-page.roll-page--homepage-rolling .roll-page__context {
+      grid-column: 1;
+      grid-row: 1;
+      max-width: 420px;
+      align-self: auto;
+    }
+
+    .roll-page.roll-page--homepage-rolling :global(.game-container--dedicated) {
+      grid-column: 1;
+      grid-row: 2;
+      max-width: 420px !important;
+      margin-top: 30px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .roll-page.roll-page--homepage-preroll { padding: 82px 12px 72px; }
+    .roll-page.roll-page--homepage-preroll .roll-page__unknown { margin-top: 0; font-size: clamp(2.9rem, 14vw, 4.2rem); }
+    .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated) { margin-top: 30px; }
+    .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll) { gap: 25px; }
+    .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button) { min-height: 64px; }
+    .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .guest-prompt--quiet) { flex-wrap: wrap; }
+    .roll-page.roll-page--homepage-preroll :global(.homepage-best-roll) { margin-top: 30px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button) { transition: none; }
+  }
+
+  /* Keep the result card compact. The summary carries the important signal;
+     the complete score record opens in its own contained panel. */
+  .roll-page.roll-page--result .roll-page__game {
+    grid-template-columns: minmax(280px, 400px) minmax(360px, 420px);
+    align-items: center;
+    column-gap: clamp(44px, 6vw, 88px);
+    width: min(100%, 980px);
+  }
+
+  .roll-page.roll-page--result .roll-page__context {
+    align-self: center;
+  }
+
+  .roll-page.roll-page--result :global(.game-container--dedicated) {
+    max-width: 420px !important;
+    align-self: center;
+  }
+
+  .roll-page.roll-page--result :global(.game-container--dedicated .roll-stage--results) {
+    gap: 18px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .roll-page.roll-page--result :global(.game-container--dedicated .roll-stage--results > .roll-acquisition-actions .result-action) {
+    justify-content: center;
+    text-align: center;
+  }
+
+  @media (max-width: 1100px) {
+    .roll-page.roll-page--result .roll-page__game {
+      grid-template-columns: minmax(0, 420px);
+      grid-template-rows: auto auto;
+      gap: 28px;
+      width: min(100%, 420px);
+    }
+
+    .roll-page.roll-page--result .roll-page__context {
+      grid-column: 1;
+      grid-row: 1;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .roll-page.roll-page--result .roll-page__guest-cta {
+      margin-inline: auto;
+    }
+
+    .roll-page.roll-page--result .roll-page__eyebrow {
+      justify-content: center;
+    }
+
+    .roll-page.roll-page--result :global(.game-container--dedicated) {
+      grid-column: 1;
+      grid-row: 2;
+      width: 100%;
+      max-width: 420px !important;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .roll-page.roll-page--result {
+      padding-inline: 12px;
+    }
+
+    .roll-page.roll-page--result .roll-page__game {
+      grid-template-columns: minmax(0, 420px);
+      width: min(100%, 420px);
+    }
+
+    .roll-page.roll-page--result .roll-page__context {
+      max-width: 420px;
+    }
+
+    .roll-page.roll-page--result .roll-page__guest-cta {
+      width: min(100%, 320px);
+    }
+
+    .roll-page.roll-page--result :global(.game-container--dedicated) {
+      max-width: 420px !important;
+    }
   }
 </style>

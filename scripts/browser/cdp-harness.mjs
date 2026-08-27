@@ -392,16 +392,22 @@ export async function startChromium({ appUrl, debugPort, evidenceDir, width = 14
   }
 }
 
-export async function startVite({ appPort, environment, evidenceDir }) {
+export async function startVite({ appPort, environment = null, evidenceDir }) {
   const logPath = join(evidenceDir, 'vite.log');
   const output = createStream(logPath, { flags: 'a' });
+  const environmentOverrides = environment
+    ? {
+        VITE_SUPABASE_URL: environment.url,
+        VITE_SUPABASE_PUBLISHABLE_KEY: environment.key
+      }
+    : {};
   const child = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(appPort), '--strictPort'], {
     cwd: projectRoot,
     detached: true,
     env: {
       ...process.env,
-      VITE_SUPABASE_URL: environment.url,
-      VITE_SUPABASE_PUBLISHABLE_KEY: environment.key,
+      ...environmentOverrides,
+      VITE_CACHE_DIR: join(evidenceDir, 'vite-cache'),
       VITE_SITE_URL: `http://127.0.0.1:${appPort}`
     },
     stdio: ['ignore', 'pipe', 'pipe']

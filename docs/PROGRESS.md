@@ -1,5 +1,235 @@
 # Chromadie 2.0 Progress
 
+## Score and timer hierarchy — 2026-08-27
+
+- Stacked the result score label over its total to keep the metric visually
+  self-contained.
+- Applied the earned-score orange consistently to condition points, base
+  points, breakdown totals, and the live reveal count-up.
+- Integrated the homepage top-roll reset timer into a centered card footer with
+  a divider and concise `Resets in` copy.
+
+## Result hierarchy and guest conversion — 2026-08-27
+
+- Removed the repeated overall rarity pill from the score summary; the color
+  result card remains the single source of that signal in the composition.
+- Moved the guest “Create an account” action into the left result context,
+  while preserving Game's existing guest-roll cleanup and signup handoff.
+- Matched the compact summary's score value to the earned-score treatment used
+  in the result context without adding another redundant unit label.
+- Increased saturation and contrast for rarity accents on the dedicated result
+  and reveal surfaces without changing canonical scoring or rarity definitions.
+- Removed the decorative glyph from the overall rarity pill and centered the
+  result score group and share action for a cleaner visual rhythm.
+- Reworked the homepage best-roll spotlight to use the result card's metadata,
+  earned-score, and compact condition-row hierarchy while retaining its public
+  avatar, rank, and reset context.
+- Promoted “Today’s top roll” to the spotlight title, separated it from the
+  player identity, matched the shared result summary, and removed the repeated
+  hex from the color metadata.
+- Reframed the winning player as a prominent “Rolled by” authorship block with
+  a larger avatar, wrapping display name, and data-driven `#N TODAY` badge.
+- Added a restrained animated halo behind the top-roll spotlight, derived from
+  the returned color and disabled as motion under `prefers-reduced-motion`.
+- Refined the active reveal with slower HEX-character beats, all returned
+  conditions in a contained auto-following list, and no visible stage labels or
+  overall-rarity spoiler before the score settles.
+- Added a single `A NEW COLOR, EVERY DAY` eyebrow above the unknown value so the
+  pre-roll side has a visual anchor without filler copy.
+
+## Result composition and score details — 2026-08-27
+
+- Replaced the dense completed-result ledger with a compact summary showing
+  the total and three strongest server-returned conditions; overall rarity
+  stays with the color card.
+- Added a contained full-breakdown panel with a scrollable detail list, so
+  every condition keeps its full name without stretching the result card.
+- Vertically centered the result context beside the focused card and stacked
+  the composition responsively below 1100px.
+
+## Daily roll reveal pacing and context cleanup — 2026-08-27
+
+- Slowed the server-result presentation into readable color, channel,
+  condition, score, and completion beats, with a longer score count-up and
+  rare-result bonus while preserving skip and reduced-motion paths.
+- Vertically centered the authenticated homepage context beside the live roll.
+- Simplified the unknown homepage state to `#??????` and removed the redundant
+  progression link and pre-roll explanatory sentence.
+
+## Homepage daily-roll spotlight — 2026-08-27
+
+- Recomposed the homepage pre-roll into the result surface's desktop
+  two-column rhythm: the unknown-color invitation and one primary action occupy
+  the left slot, while the best-roll specimen occupies the right; clicking roll
+  replaces the right-hand spotlight with the live game, and the completed result
+  keeps the player's result context on the left. It stacks at 900px and below.
+- Added a live “today’s best roll” card with the real player's avatar or safe
+  initials, display name, rank, flat rolled color, color identity, rarest
+  server-returned conditions, score, percentile, and UTC reset timer.
+- Added a bounded `get_public_discovery_spotlight` SQL projection that reuses
+  public discovery for the top five rows and enriches only the first row with
+  the authoritative v6 evaluator and existing percentile RPC. The browser
+  still makes one public-board request and never re-scores or hydrates a
+  public profile.
+- Kept `Game.svelte` authoritative for eligibility, server rolls, guest
+  persistence, account conversion, and the post-roll reveal; the new layout is
+  keyboard-safe, mobile-contained, and reduced-motion-safe.
+
+## Score model v6 restored and locked — 2026-08-26
+
+- Reserved fixed condition and score regions throughout the dedicated Roll
+  animation, preventing the left-side roll summary from moving as the
+  condition list grows.
+- Replaced the superseded v6 scorer with a declarative, probability-weighted
+  contract generated from one machine-readable specification and shared by
+  the client evaluator, SQL evaluator, probability manifest, and drift checks.
+- The active catalog contains 237 conditions, including 25 explicit
+  combinations, measured exhaustively across all 16,777,216 RGB colors.
+- Removed the 16 single-character `Contains X` predicates from scoring. HEX
+  pairs, triplets, runs, structure, words, and recognizable values remain,
+  without turning every ordinary character into a separate score row.
+- Condition tiers are derived from exact 5%, 1%, 0.1%, 0.01%, and 0.001%
+  probability boundaries. Their reward bands are 500, 5,000, 50,000,
+  500,000, 5,000,000, and 100,000,000+ points; final roll boundaries are
+  2,500, 10,000, 50,000, 500,000, 5,000,000, and 100,000,000 points.
+- The exhaustive score range is 15,648–48,172,821,304, with a mean of
+  203,871.8141 and a median of 47,520. Every award is deterministic,
+  probability-weighted, semantically bounded, and clamped to its ordinary
+  rarity band; Anomaly remains open-ended by the specified formula.
+- Scaled rank and achievement thresholds preserve the checked-in v5 pacing.
+  Historical v3–v5 behavior is unchanged, and pre-existing score-version-6
+  rows retain a legacy replay function rather than being reinterpreted.
+- Added independent contract tests, exhaustive balance fixtures, generated
+  artifact drift checks, and client/SQL parity coverage.
+- Condition reveals now climb from the common floor toward the rarest result,
+  preserving the highest-value condition as the final reveal beat.
+
+## Score model v6 probability-aware culture catalog — 2026-08-25 (superseded)
+
+- Routed new rolls through `calculate_roll_v6`, persisted score version 6, and
+  preserved v3/v4/v5 for historical replay.
+- Reclassified every existing condition from exhaustive RGB frequency buckets
+  so rarity is evidence-based: Common, Uncommon, Rare, Epic, Legendary, and
+  Anomaly now mean progressively less likely signals.
+- Added 28 deterministic culture conditions, including the strongest-match
+  Six Seven family (`67`, `6767`, exact `676767`), current-era pop-culture
+  references, calculator codes, numeric memes, and HEX-native wordplay.
+- Kept condition rewards strictly ordered by condition rarity, with bounded
+  within-tier strengths and deterministic score texture. Nested culture
+  matches do not double-pay.
+- Recalibrated the active ladder from all 16,777,216 RGB colors at 10,813,
+  19,826, 23,826, 28,532, 38,478, and 79,651 points. Realized counts are
+  Trash 167,716 (0.9997%), Common 8,220,719 (48.9993%), Uncommon 4,194,394
+  (25.0005%), Rare 2,516,560 (14.9999%), Epic 1,174,490 (7.0005%), Legendary
+  335,555 (2.0001%), and Anomaly 167,782 (1.0001%).
+- The exhaustive v6 range is 8,215–100,973,598 points, with a 21,770.07-point
+  average across 15.72 conditions. Progression pacing now expects roughly 50
+  rolls for the Legendary unlock and 100 for the Anomaly unlock.
+
+## Scored-condition reveal pacing — 2026-08-25
+
+- Reduced the reveal tracker to Color, Conditions, Score, and Complete.
+- Kept channel locking as a compact Color sub-beat and folded rarity into the
+  confirmed score stage.
+- Slowed each real scored condition to a readable 650 ms beat.
+- Removed non-scoring trait and generic scan rows from the reveal list.
+- Preserved skip, reduced-motion, canonical server presentation, and the
+  shared timeline across the main roll and profile roll surfaces.
+
+## Score model v5 rarity-driven condition rewards — 2026-08-25
+
+- Routed new rolls through `calculate_roll_v5`, persisted score version 5, and
+  kept v3/v4 available for historical replay without recomputing old scores.
+- Made authored condition rarity the source of reward bands: Common 1,000,
+  Uncommon 4,000, Rare 12,000, Epic 40,000, Legendary 150,000, and Anomaly
+  500,000+ before bounded strength and deterministic score texture.
+- Preserved explicit Anomaly multipliers for exact colors and reference
+  sequences, including the 100-million-point ceiling.
+- Returned resolved base points, awarded points, reward strength, variation,
+  icons, and authored rarity consistently from client and SQL scoring.
+- Recalibrated the active overall ladder to 10,786, 19,701, 23,589, 28,177,
+  86,417, and 104,204 points after the v5 distribution change.
+- Exhaustive v5 output ranges from 8,215 to 100,973,598 points, averages
+  21,280.58 points across 15.70 conditions, and realizes the target tiers:
+  Trash 167,670 (0.9994%), Common 8,218,350 (48.9852%), Uncommon 4,196,616
+  (25.0138%), Rare 2,516,585 (15.0000%), Epic 1,610,882 (9.6016%), Legendary
+  50,333 (0.3000%), and Anomaly 16,780 (0.1000%).
+- Added reward-band assertions and expanded JS/SQL parity coverage to include
+  resolved conditions, strengths, and variation values.
+
+## Score model v4 score texture and condition presentation — 2026-08-25 (historical)
+
+- Preserved `calculate_roll_v4` and its deterministic score texture as a
+  historical model while new rolls moved to v5.
+- Preserved the full additive v3 condition catalog while applying a small
+  deterministic ±10% spread to ordinary condition awards. Exact colors,
+  recognizable HEX patterns, and culture/meme matches retain authored values.
+- Added base points, awarded points, variation basis points, complete icon
+  metadata, and visible authored condition rarity to the contributor surface.
+- Recalibrated the active ladder from the exhaustive RGB histogram at 11,013,
+  35,871, 47,916, 73,744, 213,155, and 315,419 points.
+- The exhaustive v4 range is 7,104–100,532,216 points, with an average of
+  43,069.14 points and 15.70 triggered conditions. Tier counts are Trash
+  167,743 (1.000%), Common 8,220,695 (48.999%), Uncommon 4,194,278 (25.000%),
+  Rare 2,516,727 (15.001%), Epic 1,610,663 (9.600%), Legendary 50,331
+  (0.300%), and Anomaly 16,779 (0.100%).
+- Added client/server parity coverage for awarded points and variation values,
+  plus presentation metadata coverage for the new condition IDs.
+
+## Score model v3 historical baseline — 2026-08-25
+
+- Added the versioned, server-authoritative `calculate_roll_v3` scorer and
+  preserved it as a historical baseline while retaining the v2 scorer for
+  older history and compatibility checks.
+- Expanded the deterministic catalog across hue/temperature, RGB arithmetic,
+  color relationships, saturation/tone, channel composition, HEX structure,
+  recognizable strings, exact colors, and condition-density milestones.
+- Every triggered condition is positive and fully additive; contributors now
+  carry their exact awarded points, category, and authored condition rarity.
+- Calibrated the active roll ladder from the exhaustive RGB histogram. Counts
+  by tier are: Trash 154,140 (0.9187%), Common 8,232,256 (49.0681%), Uncommon
+  4,188,306 (24.9642%), Rare 2,521,920 (15.0318%), Epic 1,613,453 (9.6169%),
+  Legendary 50,362 (0.3002%), and Anomaly 16,779 (0.1000%).
+- The exhaustive range is 7,830–100,536,040 points, with an average of
+  43,068.89 points and 15.70 triggered conditions. Exact memorable colors own
+  the long tail; ordinary colors remain in the roughly 1k–50k band.
+- Added `score_version` normalization to client roll/profile contracts, showed
+  all returned contributors in the reveal, and surfaced authored condition
+  rarity alongside each condition; v5 now uses that authored rarity to resolve
+  the reward instead of deriving the label from the old points.
+- Added a compatibility migration that preserves historical scores while
+  remapping stored v2 labels: Mythic → Anomaly and Anomaly → Legendary.
+- Added JS/SQL parity, balance distribution, migration security, and score
+  version coverage around the new model.
+
+## Canonical rarity colors in leaderboard rows — 2026-08-25
+
+- Kept readable rarity names in shared ranked rows while sourcing their colors
+  from `rarityPresentation.js`.
+- Applied the RPG-style tier colors: gray Trash, white Common, green Uncommon,
+  blue Rare, purple Epic, orange Legendary, and magenta Anomaly.
+- Kept rank colors and score emphasis independent, and removed the homepage
+  board’s decorative radial overlay.
+- Renamed the hero board to “Today’s top rolls,” removed the redundant scope
+  copy, and strengthened the reset countdown and compact metric contrast.
+
+## Homepage daily leaderboard parity — 2026-08-25
+
+- Expanded the homepage hero’s live daily discovery request from three to five
+  public rolls, and the compact board now renders exactly the first five rows;
+  an authenticated player outside that range is not appended as a sixth row.
+- Reused `LeaderboardEntry` in compact mode so the homepage shares the full
+  leaderboard’s rank marks, avatar/identity treatment, rolled-color swatch,
+  rarity, score columns, focus behavior, and direct public-profile links.
+- Removed the homepage-only light-grey current-player treatment and outer
+  wrapper card, then added a translucent homepage surface so the compact rows
+  sit directly on the atmosphere without inheriting opaque leaderboard chrome.
+- Kept the existing bounded `get_public_discovery` projection, public profile
+  routing, avatar media safety, reduced-motion behavior, and server-owned rank
+  ordering unchanged.
+- Added source and responsive browser coverage for the five-row cap and raised
+  the homepage avatar media budget from three to five bounded entries.
+
 ## Guest roll result prompt — 2026-08-23
 
 - Simplified the guest result CTA to “Want to save future rolls? Create an
@@ -4832,3 +5062,97 @@ responsive desktop two-column/mobile stacked composition.
 - Removed repeated `Daily Roll` / reveal language from the unrevealed result
   panel, leaving one status line and one action instruction.
 - Rounded the unrevealed color tile corners to match the dedicated result tile.
+
+## Homepage daily-roll spotlight — 2026-08-25
+
+- Replaced the hero’s leaderboard panel with a live “Today’s best roll” card
+  showing the winning color, identity, score, rarity, rank, and public profile
+  destination.
+- Moved the existing five-row “Today’s top rolls” board into the lower social
+  pulse/community section, preserving the single bounded discovery feed and
+  authenticated current-user merge behavior.
+- Added responsive containment, readable empty/loading/error states, a
+  stronger reset timer treatment, and reduced-motion-safe card interactions.
+- Added source and browser-smoke coverage for the hero replacement and the
+  leaderboard’s lower-page placement.
+
+## Roll-first playable homepage — 2026-08-26
+
+- Replaced the production homepage’s sky/profile showcase with the shared
+  authoritative `RollPage` and `Game` flow.
+- Reduced the first viewport to one primary action, state-aware account and
+  sharing actions, and product copy that explains color, rarity, and score.
+- Added a compact Roll/Decode/Compare explanation, a probability-scoring
+  explanation, and the bounded real-player Today board below the game.
+- Preserved `/roll` as a direct route while making `/` canonical and adding a
+  dedicated noindex response for the compatibility route.
+- Capped the condition reveal at eight displayed contributors and approximately
+  2.5–2.8 seconds, with common conditions first, rarest last, and an immediate
+  reduced-motion path.
+- Updated source contracts and account-creation browser flows. The isolated
+  homepage smoke passes seven desktop, tablet, and phone viewports with one
+  discovery request, no profile hydration/storage fetch, and no overflow.
+
+## Homepage best-roll polish — 2026-08-25
+
+- Removed duplicate hex, identity, and rarity signal pills from the hero card.
+- Simplified the action to `Open profile` and kept the primary color/identity
+  treatment as the single visual focus.
+- Reduced panel opacity and softened the border/shadow so the card blends with
+  the photographic homepage background.
+
+## Homepage best-roll surface alignment — 2026-08-25
+
+- Moved the best-roll title and reset timer into the same glass surface as the
+  result content.
+- Removed the redundant `#1 today` label and centered the single player
+  attribution line beneath the color tile.
+- Equalized the Score and Rarity tracks, tightened the color tile and empty
+  states, and added browser-smoke coverage for shared horizontal alignment and
+  mobile containment.
+
+## Deterministic scoring v6 and Roll-first acquisition hierarchy — 2026-08-26
+
+- Rebuilt v6 around a declarative generated catalog with exact RGB-universe
+  probabilities, probability-derived rarity/rewards, deterministic variation,
+  generated client/SQL evaluators, and a preserved legacy-v6 replay path.
+- Kept 237 active conditions and 25 explicit combinations while excluding all
+  single-character `Contains X` conditions; repeated-pair and stronger digit
+  patterns remain available.
+- Made the score breakdown reveal bottom-up in increasing rarity order inside a
+  fixed-height viewport and top-aligned the Roll columns to prevent layout shift.
+- Reworked guest conversion into a quiet pre-roll account link and a prominent,
+  truthful post-result profile CTA that never claims the guest result transfers.
+- Replaced the competing homepage actions and carousel with a static,
+  profile-led Meilin hero, one state-aware Roll CTA, a quiet claim link, an
+  editorial best-roll spotlight, and the real final handle-claim form.
+- Expanded source, contract, parity, drift, browser-smoke, and responsive layout
+  coverage for the new behavior.
+
+## Homepage local-runtime hardening — 2026-08-26
+
+- Added strict host/port behavior for the normal Vite development server so
+  parallel stale instances cannot silently move to alternate ports.
+- Made homepage visual smoke start and stop an isolated server unless an
+  external URL is explicitly supplied.
+- Added rendered uniqueness checks for the hero, best-roll spotlight, and final
+  claim form, plus rejection of any hero-mounted claim or best-roll panel.
+- Added browser-console failure detection and retained the seven-viewport
+  containment matrix.
+- Isolated smoke-server dependency optimization from the normal Vite cache,
+  preventing `504 Outdated Optimize Dep` responses in a concurrently open site.
+
+## Validation status — 2026-08-27
+
+- `npm run build`, `npm run check`, `npx eslint src/`, and all 460 automated
+  tests pass.
+- Links, CSP, responsive build, username-policy, balance, catalog, scoring
+  specification, scoring parity, and database-security checks pass.
+- Schema lint and the required local database reset pass. The corrected v6
+  function and preserved legacy replay function are both present after reset.
+- The isolated homepage browser smoke passes at 2048, 1440, 1280, 1024, 768,
+  390, and 375 pixel viewport widths without profile hydration, overflow, or
+  competing homepage actions.
+- `npm run check:performance` remains red only for the existing JavaScript
+  budgets on `publicProfile` (512.13/475 kB), `dashboard` (574.79/540 kB), and
+  `progression` (414.74/400 kB); the homepage route is 438.41/500 kB.
