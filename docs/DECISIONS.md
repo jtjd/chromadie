@@ -6452,3 +6452,13 @@ JavaScript budgets exceed their current limits. The homepage itself remains
 within its route budget. Existing long Profile Studio and progression browser
 flows also retain their known fixture failures and are not represented as
 passing release gates.
+
+## 2026-08-27 — Protect the service-owned media cleanup queue
+
+The account-media cleanup queue is an internal control-plane table, not a
+browser data source. Browser roles already have no table grants, and cleanup
+workers use owner-backed `SECURITY DEFINER` RPCs granted only to `service_role`.
+Enable RLS without adding browser policies so the queue is protected if a table
+grant changes later while the existing service path remains functional. Keep
+`FORCE ROW LEVEL SECURITY` disabled because these owner-backed RPCs are the
+intended access boundary.

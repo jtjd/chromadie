@@ -5156,3 +5156,12 @@ responsive desktop two-column/mobile stacked composition.
 - `npm run check:performance` remains red only for the existing JavaScript
   budgets on `publicProfile` (512.13/475 kB), `dashboard` (574.79/540 kB), and
   `progression` (414.74/400 kB); the homepage route is 438.41/500 kB.
+
+## 2026-08-27 — Protect service-owned media cleanup jobs
+
+- Added `20260827110000_profile_media_account_cleanup_rls.sql` to enable RLS on
+  the account-media cleanup queue without exposing any browser policy.
+- Added a launch-security regression assertion for RLS, browser table denial,
+  and service cleanup RPC availability.
+- Applied the migration to the linked Supabase database and verified the live
+  table flags and service-role claim privilege.

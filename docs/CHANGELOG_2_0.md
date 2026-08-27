@@ -2,6 +2,11 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-27 — Harden account media cleanup
+
+- Enabled row-level security on the internal account-media cleanup queue while
+  keeping cleanup available only through the service control-plane RPCs.
+
 ## 2026-08-27 — Clarify score and reset hierarchy
 
 - Stacked the score label above the result total for a clearer metric block.

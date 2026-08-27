@@ -1600,6 +1600,16 @@ SELECT pg_temp.audit_assert(
   'profile media roles crossed the R2 control-plane authority boundary'
 );
 SELECT pg_temp.audit_assert(
+  (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.profile_media_account_cleanup_jobs'::regclass)
+    AND NOT has_table_privilege('anon', 'public.profile_media_account_cleanup_jobs', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_media_account_cleanup_jobs', 'SELECT')
+    AND NOT has_table_privilege('anon', 'public.profile_media_account_cleanup_jobs', 'INSERT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_media_account_cleanup_jobs', 'INSERT')
+    AND has_function_privilege('service_role', 'public.claim_profile_media_account_cleanup_jobs(integer)', 'EXECUTE')
+    AND has_function_privilege('service_role', 'public.complete_profile_media_account_cleanup_job(uuid,boolean,text)', 'EXECUTE'),
+  'account media cleanup jobs must remain RLS-protected and service-owned'
+);
+SELECT pg_temp.audit_assert(
   NOT EXISTS (
     SELECT 1
     FROM pg_proc p
