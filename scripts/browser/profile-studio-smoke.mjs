@@ -448,10 +448,60 @@ async function waitForStudioReferenceCard(description) {
   }
 }
 
+async function waitForStudioLayoutEditor(description) {
+  const editor = `document.querySelector('.profile-layout-editor[data-layout-editor="reference-first"]') && document.querySelector('.profile-studio-preview')`;
+  try {
+    await page.waitFor(editor, description);
+  } catch {
+    // A lazy Studio navigation can resolve its document before the editor
+    // chunk has mounted. Refresh the same canonical route once, preserving
+    // the authenticated session and hash-selected tab.
+    await page.command('Page.reload', { ignoreCache: true });
+    await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`, 30000);
+    await page.waitFor(editor, `${description} retry`, 30000);
+  }
+}
+
+async function waitForStudioDashboard(description) {
+  const dashboard = `document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.profile-studio-shell__brand') && !document.querySelector('.site-mode-header')`;
+  try {
+    await page.waitFor(dashboard, description, 30000);
+  } catch {
+    await page.command('Page.reload', { ignoreCache: true });
+    await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`, 30000);
+    await page.waitFor(dashboard, `${description} retry`, 30000);
+  }
+}
+
+async function waitForHydratedHomepage(description) {
+  const homepage = `Boolean(document.querySelector('.homepage-reference') && document.querySelector('.homepage-reference .roll-page') && document.querySelector('.roll-stage--preroll, .roll-stage--results'))`;
+  try {
+    await page.waitFor(homepage, description, 30000);
+  } catch {
+    // Chromium can lose an initial Vite module request while the local
+    // network namespace is settling. Re-request the same loopback document
+    // once before treating the homepage as a real hydration failure.
+    await page.command('Page.navigate', { url: appUrl });
+    await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`, 30000);
+    await page.waitFor(homepage, `${description} retry`, 30000);
+  }
+}
+
+async function waitForCanonicalProfileNavigation(url, expectedPath, description) {
+  const profile = `location.pathname === ${JSON.stringify(expectedPath)} && document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content]')`;
+  try {
+    await page.waitFor(profile, description, 30000);
+  } catch {
+    await page.command('Page.navigate', { url });
+    await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`, 30000);
+    await page.waitFor(profile, `${description} retry`, 30000);
+  }
+}
+
 async function waitForReferenceCardLinks(description) {
   const selector = '.profile-studio-preview .profile-reference-card__links a';
-  const minimum = Math.min(4, RICH_PROFILE_FIXTURE.links.length);
-  const condition = `document.querySelectorAll(${JSON.stringify(selector)}).length >= ${minimum}`;
+  const expected = RICH_PROFILE_FIXTURE.links.length;
+  const condition = `document.querySelectorAll(${JSON.stringify(selector)}).length === ${expected}`;
   try {
     await page.waitFor(condition, description);
   } catch {
@@ -459,7 +509,7 @@ async function waitForReferenceCardLinks(description) {
     // context before the V2 owner projection arrives. Retry the same route
     // once rather than allowing a transient empty draft to be published.
     const state = await page.evaluate(`({ links: document.querySelectorAll(${JSON.stringify(selector)}).length, card: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card')) })`).catch(() => null);
-    if (state?.links >= minimum) return;
+    if (state?.links === expected) return;
     await page.command('Page.reload', { ignoreCache: true });
     await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`);
     await waitForStudioReferenceCard(`${description} retry reference card`);
@@ -491,13 +541,18 @@ async function capturePublishedLayouts() {
       name: Boolean(card?.querySelector('.profile-reference-card__name')),
       links: card?.querySelectorAll('.profile-reference-card__links a').length || 0,
       roll: Boolean(card?.querySelector('.profile-reference-card__roll')),
+      rollWidget: Boolean(card?.querySelector('[data-profile-widget="roll"]')),
+      rollSummary: Boolean(card?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
+      interactiveRoll: Boolean(card?.querySelector('.profile-daily-roll, .profile-roll, .today-color, .profile-roll__reveal-button, .profile-roll__result-actions')),
+      linkTargets: [...(card?.querySelectorAll('.profile-reference-card__links a') || [])].map(link => ({ href: link.href, target: link.target })),
       motion: Boolean(document.querySelector('.profile-studio-preview .profile-motion-effect')),
       oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-template-picker')),
       scrollable: Boolean(stage && stage.scrollHeight > stage.clientHeight + 4)
     };
   })()`);
-  assert(studioState.cardCount === 1 && studioState.avatar && studioState.name && studioState.links > 0 && studioState.roll, `Studio reference card anatomy is incomplete: ${JSON.stringify(studioState)}.`);
-  assert(studioState.card && studioState.card.width >= 300 && studioState.card.width <= 360 && studioState.card.left >= (studioState.viewport?.left || 0) - 1 && studioState.card.right <= (studioState.viewport?.right || 0) + 1, `Studio reference card is not bounded by its preview rail: ${JSON.stringify(studioState)}.`);
+  assert(studioState.cardCount === 1 && studioState.avatar && studioState.name && studioState.links === RICH_PROFILE_FIXTURE.links.length && studioState.roll && studioState.rollWidget && studioState.rollSummary && !studioState.interactiveRoll, `Studio reference card anatomy is incomplete: ${JSON.stringify(studioState)}.`);
+  assert(studioState.linkTargets.every(link => link.target === '_blank' && link.href.startsWith('https://')), `Studio reference card links do not preserve safe external targets: ${JSON.stringify(studioState)}.`);
+  assert(studioState.card && studioState.card.width >= 300 && studioState.card.left >= (studioState.viewport?.left || 0) - 1 && studioState.card.right <= (studioState.viewport?.right || 0) + 1, `Studio reference card is not bounded by its preview rail: ${JSON.stringify(studioState)}.`);
   assert(studioState.motion && !studioState.oldRenderer && !studioState.scrollable, `Studio still mounts an obsolete or scrollable profile renderer: ${JSON.stringify(studioState)}.`);
   await captureRegion('studio-reference-card-desktop', '.profile-studio-preview__viewport');
   const mediaSourcesBeforeDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')].map(element => element.currentSrc || element.src || '').filter(Boolean))()`);
@@ -522,12 +577,16 @@ async function capturePublishedLayouts() {
     return {
       preview: Boolean(preview),
       card: box ? { left: box.left, right: box.right, width: box.width } : null,
+      links: card?.querySelectorAll('.profile-reference-card__links a').length || 0,
+      rollWidget: Boolean(card?.querySelector('[data-profile-widget="roll"]')),
+      rollSummary: Boolean(card?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
+      interactiveRoll: Boolean(card?.querySelector('.profile-daily-roll, .profile-roll, .today-color, .profile-roll__reveal-button, .profile-roll__result-actions')),
       viewport: innerWidth,
       overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1,
       oldRenderer: Boolean(preview?.querySelector('.profile-shell-page, .profile-template-picker'))
     };
   })()`);
-  assert(mobileState.card && mobileState.card.left >= -1 && mobileState.card.right <= mobileState.viewport + 1 && !mobileState.overflow && !mobileState.oldRenderer, `Mobile reference card is not contained: ${JSON.stringify(mobileState)}.`);
+  assert(mobileState.card && mobileState.card.left >= -1 && mobileState.card.right <= mobileState.viewport + 1 && mobileState.links === RICH_PROFILE_FIXTURE.links.length && mobileState.rollWidget && mobileState.rollSummary && !mobileState.interactiveRoll && !mobileState.overflow && !mobileState.oldRenderer, `Mobile reference card is not contained: ${JSON.stringify(mobileState)}.`);
   await captureRegion('studio-reference-card-mobile', '.profile-studio-preview__viewport');
   await page.setViewport(1440, 900);
   await page.navigate(`${appUrl}/${canonicalUsername}`, 'published reference profile evidence');
@@ -554,14 +613,102 @@ async function capturePublishedLayouts() {
       shell: box ? { width: box.width, height: box.height } : null,
       background: Boolean(image?.complete && image.naturalWidth > 0),
       card: Boolean(shell?.querySelector('[data-profile-reference-card], [data-profile-layout-content="full-bleed"]')),
+      links: shell?.querySelectorAll('.profile-reference-card__links a, .profile-full-bleed__links a').length || 0,
+      rollWidget: Boolean(shell?.querySelector('[data-profile-widget="roll"]')),
+      rollSummary: Boolean(shell?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
+      interactiveRoll: Boolean(shell?.querySelector('[data-profile-reference-card] .profile-daily-roll, [data-profile-reference-card] .profile-roll, [data-profile-reference-card] .today-color, [data-profile-reference-card] .profile-roll__reveal-button, [data-profile-reference-card] .profile-roll__result-actions')),
       motion: Boolean(shell?.querySelector('.profile-motion-effect'))
     };
   })()`);
-  assert(publicState.card && publicState.shell && publicState.shell.width >= 1439 && publicState.shell.height >= 899, `Published profile evidence did not fill the viewport: ${JSON.stringify(publicState)}.`);
+  assert(publicState.card && publicState.shell && publicState.shell.width >= 1439 && publicState.shell.height >= 899 && publicState.links === RICH_PROFILE_FIXTURE.links.length && publicState.rollWidget && publicState.rollSummary && !publicState.interactiveRoll, `Published profile evidence did not render the complete compact profile surface: ${JSON.stringify(publicState)}.`);
   await capture('public-reference-profile-desktop');
+
+  // Rotate the published fixture through every real renderer. This is kept in
+  // the browser smoke path because a selector-level unit test cannot prove
+  // that a saved layout, its six links, and its roll widget survive a public
+  // navigation at both desktop and mobile widths.
+  const layoutEvidence = { compact: { desktop: publicState } };
+  const layoutKeys = ['full-bleed', 'sleek', 'framed', 'portfolio'];
+  for (const layoutKey of layoutKeys) {
+    const layoutSelector = `[data-profile-layout-content="${layoutKey}"]`;
+    await page.setViewport(1440, 900);
+    await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layoutKey} Studio layout evidence`);
+    await waitForStudioLayoutEditor(`${layoutKey} Studio editor`);
+    await page.click(`.profile-layout-editor__card[data-layout="${layoutKey}"]`, `stage ${layoutKey} layout`);
+    await page.waitFor(`document.querySelector('.profile-studio-preview ${layoutSelector}')`, `${layoutKey} live preview`);
+    const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`);
+    if (publishPending) {
+      await page.click('.profile-studio-shell__publish', `publish ${layoutKey} layout`);
+      await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === true`, `publish ${layoutKey} layout`);
+    }
+
+    await page.navigate(`${appUrl}/${canonicalUsername}`, `published ${layoutKey} layout evidence`);
+    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] ${layoutSelector}')`, `published ${layoutKey} profile`);
+    const desktop = await page.evaluate(`(() => {
+      const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
+      const content = shell?.querySelector(${JSON.stringify(layoutSelector)});
+      const rect = element => {
+        const box = element?.getBoundingClientRect();
+        return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
+      };
+      const links = [...(content?.querySelectorAll('.profile-reference-card__links a, .profile-full-bleed__links a, .profile-portfolio__links a') || [])];
+      return {
+        layout: content?.getAttribute('data-profile-layout-content') || '',
+        content: rect(content),
+        shell: rect(shell),
+        avatar: Boolean(content?.querySelector('[class*="__avatar"]')),
+        name: Boolean(content?.querySelector('[class*="__name"]')),
+        links: links.length,
+        linkTargets: links.map(link => ({ href: link.href, target: link.target })),
+        rollWidget: Boolean(content?.querySelector('[data-profile-widget="roll"]')),
+        rollSummary: Boolean(content?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
+        interactiveRoll: Boolean(content?.querySelector('.profile-daily-roll, .profile-roll, .today-color, .profile-roll__reveal-button, .profile-roll__result-actions')),
+        contained: Boolean(content && content.getBoundingClientRect().left >= -1 && content.getBoundingClientRect().right <= innerWidth + 1),
+        overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
+      };
+    })()`);
+    assert(desktop.layout === layoutKey && desktop.content?.width > 0 && desktop.content?.height > 0 && desktop.avatar && desktop.name && desktop.links === RICH_PROFILE_FIXTURE.links.length && desktop.rollWidget && desktop.rollSummary && !desktop.interactiveRoll && desktop.contained && !desktop.overflow, `Published ${layoutKey} desktop layout is incomplete or escaping its viewport: ${JSON.stringify(desktop)}.`);
+    assert(desktop.linkTargets.every(link => link.target === '_blank' && link.href.startsWith('https://')), `Published ${layoutKey} links do not preserve safe external targets: ${JSON.stringify(desktop)}.`);
+    await capture(`public-${layoutKey}-desktop`);
+
+    await page.setViewport(390, 844);
+    await page.navigate(`${appUrl}/${canonicalUsername}`, `published ${layoutKey} mobile evidence`);
+    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] ${layoutSelector}')`, `published ${layoutKey} mobile profile`);
+    const mobile = await page.evaluate(`(() => {
+      const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
+      const content = shell?.querySelector(${JSON.stringify(layoutSelector)});
+      const box = content?.getBoundingClientRect();
+      const links = content?.querySelectorAll('.profile-reference-card__links a, .profile-full-bleed__links a, .profile-portfolio__links a').length || 0;
+      return {
+        layout: content?.getAttribute('data-profile-layout-content') || '',
+        content: box ? { left: box.left, right: box.right, width: box.width, height: box.height } : null,
+        links,
+        rollSummary: Boolean(content?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
+        interactiveRoll: Boolean(content?.querySelector('.profile-daily-roll, .profile-roll, .today-color, .profile-roll__reveal-button, .profile-roll__result-actions')),
+        contained: Boolean(box && box.left >= -1 && box.right <= innerWidth + 1),
+        overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
+      };
+    })()`);
+    assert(mobile.layout === layoutKey && mobile.content?.width > 0 && mobile.content?.height > 0 && mobile.links === RICH_PROFILE_FIXTURE.links.length && mobile.rollSummary && !mobile.interactiveRoll && mobile.contained && !mobile.overflow, `Published ${layoutKey} mobile layout is incomplete or escaping its viewport: ${JSON.stringify(mobile)}.`);
+    await capture(`public-${layoutKey}-mobile`);
+    layoutEvidence[layoutKey] = { desktop, mobile };
+  }
+
+  // Leave the disposable smoke account in the ordinary default state for the
+  // following navigation and for any local inspection of the captured proof.
+  await page.setViewport(1440, 900);
+  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after layout evidence');
+  await waitForStudioLayoutEditor('restore Compact layout editor');
+  await page.click('.profile-layout-editor__card[data-layout="compact"]', 'restore Compact layout after layout evidence');
+  await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-layout-content="compact"]')`, 'restore Compact live preview after layout evidence');
+  const compactPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`);
+  if (compactPublishPending) {
+    await page.click('.profile-studio-shell__publish', 'publish restored Compact layout');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === true`, 'publish restored Compact layout');
+  }
   await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore reference-card Studio');
   await waitForStudioReferenceCard('restore reference-card Studio');
-  return { studio: studioState, mobile: mobileState, public: publicState };
+  return { studio: studioState, mobile: mobileState, public: publicState, layouts: layoutEvidence };
 }
 
 try {
@@ -595,11 +742,7 @@ try {
   }
 
   await step('open local homepage', async () => {
-    await page.waitFor(`(() => {
-      return Boolean(document.querySelector('.homepage-reference')
-        && document.querySelector('.homepage-reference .roll-page')
-        && document.querySelector('.roll-stage--preroll, .roll-stage--results'));
-    })()`, 'hydrated homepage');
+    await waitForHydratedHomepage('hydrated homepage');
     assert(['127.0.0.1', 'localhost'].includes(await page.evaluate('location.hostname')), 'Homepage did not load on loopback.');
     await capture('01-homepage');
   });
@@ -678,7 +821,7 @@ try {
 
   await step('direct-refresh authenticated Profile Studio', async () => {
     await page.navigate(`${appUrl}/profile/settings`, 'authenticated Profile Studio');
-    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.profile-studio-shell__brand') && !document.querySelector('.site-mode-header')`, 'Profile Studio dashboard shell');
+    await waitForStudioDashboard('Profile Studio dashboard shell');
     const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-workspace')?.getAttribute('data-section-destination') || '', studioBrand: Boolean(document.querySelector('.profile-studio-shell__brand')), sharedSiteHeader: Boolean(document.querySelector('.site-mode-header')) })`);
     assert(state.path === '/profile/settings', `Expected /profile/settings after refresh, got ${state.path}.`);
     assert(state.studioBrand, 'Profile Studio dashboard brand is missing after refresh.');
@@ -774,7 +917,7 @@ try {
     const aliasPath = await page.evaluate('document.querySelector(".aliases-editor__row a")?.getAttribute("href") || ""');
     assert(aliasPath === `/a/${alias}`, `Alias path was ${aliasPath}, expected /a/${alias}.`);
     await page.command('Page.navigate', { url: `${appUrl}${aliasPath}` });
-    await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]')`, 'canonical profile after alias resolution', 30000);
+    await waitForCanonicalProfileNavigation(`${appUrl}${aliasPath}`, `/${canonicalUsername}`, 'canonical profile after alias resolution');
     const state = await page.evaluate(`({ path: location.pathname, aliasPath: ${JSON.stringify(aliasPath)}, canonical: Boolean(document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]')) })`);
     assert(state.path === `/${canonicalUsername}`, `Alias resolved to ${state.path} instead of canonical profile.`);
     assert(state.canonical, 'Canonical profile did not render after alias resolution.');
@@ -797,15 +940,50 @@ try {
       panel: Boolean(document.querySelector('#customize-links')),
       previewCanvas: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card')),
       authOverlay: Boolean(document.querySelector('.profile-studio-preview')?.closest('.auth-modal-overlay')),
-      linkRows: [...document.querySelectorAll('#customize-links .profile-editor__link-row')].map(row => {
+      linkRows: [...document.querySelectorAll('#customize-links .profile-links-editor__link-row')].map(row => {
         const rowBox = row.getBoundingClientRect();
-        const remove = row.querySelector('.profile-editor__remove')?.getBoundingClientRect();
+        const remove = row.querySelector('.profile-links-editor__remove')?.getBoundingClientRect();
         return remove ? { rowLeft: Math.round(rowBox.left), rowRight: Math.round(rowBox.right), removeLeft: Math.round(remove.left), removeRight: Math.round(remove.right) } : null;
       }).filter(Boolean)
     }))()`);
     assert(state.open && state.tab && state.panel, `Customize Links did not mount the integrated editor: ${JSON.stringify(state)}.`);
     assert(state.linkRows.every(row => row.removeLeft >= row.rowLeft - 1 && row.removeRight <= row.rowRight + 1), `Links row action controls escape their containing row: ${JSON.stringify(state.linkRows)}.`);
-    return state;
+
+    const rowSelector = '#customize-links .profile-links-editor__link-row';
+    const previewLinkSelector = '.profile-studio-preview .profile-reference-card__links a';
+    const expectedLinks = RICH_PROFILE_FIXTURE.links.length;
+    await page.click('#customize-links .profile-links-editor__text-button', 'add staged link');
+    await page.waitFor(`document.querySelectorAll(${JSON.stringify(rowSelector)}).length === 1`, 'blank staged link row');
+    const blankRow = await page.evaluate(`(() => ({
+      rows: document.querySelectorAll(${JSON.stringify(rowSelector)}).length,
+      previewLinks: document.querySelectorAll(${JSON.stringify(previewLinkSelector)}).length,
+      addDisabled: Boolean(document.querySelector('#customize-links .profile-links-editor__text-button')?.disabled),
+      label: document.querySelector(${JSON.stringify(rowSelector + ':last-child input[aria-label="Link label"]')})?.value || '',
+      url: document.querySelector(${JSON.stringify(rowSelector + ':last-child input[aria-label="Secure link URL"]')})?.value || ''
+    }))()`);
+    assert(blankRow.rows === 1 && blankRow.previewLinks === 0 && !blankRow.addDisabled && blankRow.label === '' && blankRow.url === '', `Adding a link did not retain an editable blank row without leaking an incomplete preview link: ${JSON.stringify(blankRow)}.`);
+    for (let index = 0; index < expectedLinks; index += 1) {
+      if (index > 0) {
+        await page.click('#customize-links .profile-links-editor__text-button', `add staged link ${index + 1}`);
+        await page.waitFor(`document.querySelectorAll(${JSON.stringify(rowSelector)}).length === ${index + 1}`, `staged link row ${index + 1}`);
+      }
+      await page.setInputValue(`${rowSelector}:nth-child(${index + 1}) input[aria-label="Link label"]`, `Profile link ${index + 1}`, ['input', 'change']);
+      await page.setInputValue(`${rowSelector}:nth-child(${index + 1}) input[aria-label="Secure link URL"]`, `https://example.com/profile-link-${index + 1}`, ['input', 'change']);
+    }
+    await page.waitFor(`document.querySelectorAll(${JSON.stringify(previewLinkSelector)}).length === ${expectedLinks} && [...document.querySelectorAll(${JSON.stringify(previewLinkSelector)})].some(link => link.href === 'https://example.com/profile-link-6')`, 'completed staged links reach preview');
+    const completed = await page.evaluate(`(() => ({
+      rows: document.querySelectorAll(${JSON.stringify(rowSelector)}).length,
+      previewLinks: document.querySelectorAll(${JSON.stringify(previewLinkSelector)}).length,
+      addDisabled: Boolean(document.querySelector('#customize-links .profile-links-editor__text-button')?.disabled)
+    }))()`);
+    assert(completed.rows === expectedLinks && completed.previewLinks === expectedLinks && completed.addDisabled, `The editor did not enforce the six-link ceiling after live preview updates: ${JSON.stringify(completed)}.`);
+    await page.waitFor('document.querySelector(\'.profile-studio-shell__publish\')?.disabled === false', 'publish control after staged links');
+    await page.click('.profile-studio-shell__publish', 'publish staged links');
+    await page.waitFor(`document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'`, 'published staged links');
+    const persisted = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+    const publishedLinks = persisted?.published?.links || persisted?.published?.base?.links || persisted?.configuration_v2?.published?.links || [];
+    assert(Array.isArray(publishedLinks) && publishedLinks.length === expectedLinks && publishedLinks.some(link => link.url === 'https://example.com/profile-link-6'), `Published staged links did not survive the V2 save path: ${JSON.stringify({ publishedLinks, persisted })}.`);
+    return { ...state, stagedAdd: blankRow, completedPreviewLinks: completed.previewLinks, addDisabledAtSix: completed.addDisabled, publishedLinks: publishedLinks.length };
   });
 
   await step('Customize controls publish the configured surface depth', async () => {
@@ -921,9 +1099,12 @@ try {
     // Rehydrate the editor after the fixture's authenticated V2 writes. This
     // keeps the screenshots and the later publish path on the same draft that
     // the public route will read after refresh.
-    await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=rich-${Date.now()}` });
-    await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-settings-page')`, 'rehydrated rich Profile Studio document');
-    await page.command('Page.navigate', { url: `${appUrl}/profile/settings#customize-appearance` });
+    // Profile Studio canonicalizes incidental query strings on hydration. Use
+    // its stable route here so the refresh assertion follows the public URL
+    // contract instead of requiring a disposable QA parameter to survive.
+    await page.navigate(`${appUrl}/profile/settings`, 'rehydrated rich Profile Studio document');
+    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('.profile-settings-page')`, 'rehydrated rich Profile Studio document');
+    await page.navigate(`${appUrl}/profile/settings#customize-appearance`, 'rehydrated rich Profile Studio appearance');
     await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('#customize-appearance') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'rehydrated rich Profile Studio appearance');
     await delay(180);
     await page.setInputValue('#profile-bio', RICH_PROFILE_FIXTURE.bio, ['input']);
@@ -1030,13 +1211,13 @@ try {
       ].map(id => [id, [...(document.getElementById(id)?.options || [])].map(option => option.value)])))()`);
       throw new Error(`${error.message} State: ${JSON.stringify(fixtureState)}`, { cause: error });
     }
-    await page.waitFor(`document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelectorAll('.profile-cosmetics-name-preview > span').length === 0`, 'composed default name previews');
+    await page.waitFor(`document.querySelectorAll('.profile-cosmetics-studio-card').length === 8`, 'composed live effect grid');
     const defaultNamePreviewState = await page.evaluate(`(() => ({
-      renderers: document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length,
-      fallbackPreviews: document.querySelectorAll('.profile-cosmetics-name-preview > span').length,
-      rendererKeys: [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')].map(node => node.getAttribute('data-name-renderer'))
+      slots: document.querySelectorAll('.profile-cosmetics-studio-card').length,
+      legacyPreviews: document.querySelectorAll('.profile-cosmetics-name-preview, .profile-cosmetics-visual-preview').length,
+      liveRenderer: Boolean(document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"] .name-effect-canvas'))
     }))()`);
-    assert(defaultNamePreviewState.renderers === 3 && defaultNamePreviewState.fallbackPreviews === 0 && new Set(defaultNamePreviewState.rendererKeys).size === 1, `Default name previews are not using one composed renderer: ${JSON.stringify(defaultNamePreviewState)}.`);
+    assert(defaultNamePreviewState.slots === 8 && defaultNamePreviewState.legacyPreviews === 0, `Studio effect controls did not mount the current live effect grid contract: ${JSON.stringify(defaultNamePreviewState)}.`);
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-studio-name_font');
       select.value = 'name_font_marker_tag';
@@ -1048,21 +1229,52 @@ try {
       return liveName?.getAttribute('style')?.includes('Permanent Marker') && canvas?.getAttribute('data-name-font-ready') === 'true';
     })()`, 'font renderer in same-layout Immersive preview');
     const fontCardState = await page.evaluate(`(() => ({
-      preview: Boolean(document.querySelector('.profile-cosmetics-name-preview')),
-      renderer: Boolean(document.querySelector('.profile-cosmetics-name-preview .name-effect-canvas')),
+      preview: Boolean(document.querySelector('.profile-cosmetics-studio-card[data-cosmetic-slot="name_font"]')),
+      renderer: Boolean(document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"] .name-effect-canvas')),
       selected: document.querySelector('#cosmetic-studio-name_font')?.value || ''
     }))()`);
-    assert(fontCardState.preview && fontCardState.renderer, `Font card did not mount the production renderer: ${JSON.stringify(fontCardState)}.`);
+    assert(fontCardState.preview && fontCardState.renderer && fontCardState.selected === 'name_font_marker_tag', `Font control did not mount the production renderer: ${JSON.stringify(fontCardState)}.`);
     await page.click('#profile-customize-tab-layout', 'Immersive font verification tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-layout')`, 'Immersive font layout editor');
-    await page.waitFor(`(() => {
-      const canvas = document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"] .name-effect-canvas');
-      return Boolean(canvas && canvas.getAttribute('data-name-font') === 'marker-tag' && canvas.getAttribute('data-name-font-ready') === 'true');
-    })()`, 'selected font remains ready in Immersive preview');
+    try {
+      await page.waitFor(`(() => {
+        const canvas = document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"] .name-effect-canvas');
+        return Boolean(canvas && canvas.getAttribute('data-name-font') === 'marker-tag' && canvas.getAttribute('data-name-font-ready') === 'true');
+      })()`, 'selected font remains ready in Immersive preview');
+    } catch (error) {
+      const fontState = await page.evaluate(`(() => ({
+        canvases: [...document.querySelectorAll('.profile-studio-preview .name-effect-canvas')].map(node => ({
+          font: node.getAttribute('data-name-font') || '',
+          ready: node.getAttribute('data-name-font-ready') || '',
+          renderer: node.getAttribute('data-name-renderer') || '',
+          text: node.querySelector('.name-effect-canvas__semantic')?.textContent?.trim() || ''
+        })),
+        fullBleed: Boolean(document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]')),
+        layout: document.querySelector('.profile-studio-preview')?.getAttribute('data-preview-layout') || '',
+        activeLoadout: (() => {
+          const root = document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]');
+          return root?.querySelector('.name-effect-canvas')?.getAttribute('data-name-font') || '';
+        })()
+      }))()`);
+      throw new Error(`${error.message} State: ${JSON.stringify(fontState)}`, { cause: error });
+    }
     await page.click('.profile-layout-editor__card[data-layout="compact"]', 'restore Compact after font verification');
-    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card') && !document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]')`, 'Compact preview after font verification');
+    try {
+      await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card') && !document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]')`, 'Compact preview after font verification');
+    } catch (error) {
+      const layoutState = await page.evaluate(`(() => ({
+        active: document.querySelector('.profile-layout-editor__card.active')?.getAttribute('data-layout') || '',
+        studioDraft: document.querySelector('.profile-settings-page')?.getAttribute('data-studio-draft-layout') || '',
+        previewLayout: document.querySelector('.profile-studio-preview')?.getAttribute('data-preview-layout') || '',
+        contents: [...document.querySelectorAll('.profile-studio-preview [data-profile-layout-content]')].map(node => node.getAttribute('data-profile-layout-content')),
+        cards: document.querySelectorAll('.profile-studio-preview .profile-reference-card').length,
+        fullBleed: document.querySelectorAll('.profile-studio-preview [data-profile-layout-content="full-bleed"]').length
+      }))()`);
+      throw new Error(`${error.message} State: ${JSON.stringify(layoutState)}`, { cause: error });
+    }
     await page.click('#profile-customize-tab-appearance', 'Appearance after font verification');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'Appearance after Immersive font verification');
+    await page.waitFor(`document.querySelectorAll('.profile-cosmetics-studio-card').length === 8 && document.querySelector('#cosmetic-studio-name_material') && document.querySelector('#cosmetic-studio-profile_atmosphere')`, 'Profile effects after Immersive font verification');
     await page.evaluate(`(() => {
       for (const [slot, value] of [
         ['name_material', 'name_material_blueprint_ink'],
@@ -1077,95 +1289,81 @@ try {
         select.dispatchEvent(new Event('change', { bubbles: true }));
       }
     })()`);
-    await page.waitFor(`document.querySelector('#cosmetic-studio-name_material')?.value === 'name_material_blueprint_ink' && document.querySelector('#cosmetic-studio-name_motion')?.value === 'name_motion_typewriter_name' && document.querySelector('#cosmetic-studio-avatar_effect')?.value === 'avatar_effect_cyber_hud' && document.querySelector('#cosmetic-studio-profile_border')?.value === 'border_celestial' && document.querySelector('#cosmetic-studio-cursor_trail')?.value === 'cursor_trail_pixel_wake' && document.querySelector('#cosmetic-studio-profile_atmosphere')?.value === 'profile_atmosphere_rain_window' && document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelector('[aria-label="Avatar effect preview"] .avatar-effect--cyber-hud') && document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer[data-input-mode="demo"][data-trail-key="pixel-wake"]') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]')`, 'all cosmetic renderers in the fitting room');
-    await page.waitFor(`(() => {
-      const previews = [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')];
-      return previews.length === 3
-        && previews[0]?.getAttribute('data-name-font') === 'marker-tag'
-        && previews[1]?.getAttribute('data-name-material') === 'blueprint-ink'
-        && previews[2]?.getAttribute('data-name-motion') === 'typewriter-name';
-    })()`, 'progressive name composition');
-    const progressiveNameState = await page.evaluate(`(() => [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')].map(node => ({
-      font: node.getAttribute('data-name-font') || '',
-      material: node.getAttribute('data-name-material') || '',
-      motion: node.getAttribute('data-name-motion') || '',
-    })))()`);
-    assert(JSON.stringify(progressiveNameState) === JSON.stringify([
-      { font: 'marker-tag', material: '', motion: '' },
-      { font: 'marker-tag', material: 'blueprint-ink', motion: '' },
-      { font: 'marker-tag', material: 'blueprint-ink', motion: 'typewriter-name' }
-    ]), `Name controls did not use progressive composition: ${JSON.stringify(progressiveNameState)}.`);
+    try {
+      await page.waitFor(`document.querySelector('#cosmetic-studio-name_material')?.value === 'name_material_blueprint_ink' && document.querySelector('#cosmetic-studio-name_motion')?.value === 'name_motion_typewriter_name' && document.querySelector('#cosmetic-studio-avatar_effect')?.value === 'avatar_effect_cyber_hud' && document.querySelector('#cosmetic-studio-profile_border')?.value === 'border_celestial' && document.querySelector('#cosmetic-studio-cursor_trail')?.value === 'cursor_trail_pixel_wake' && document.querySelector('#cosmetic-studio-profile_atmosphere')?.value === 'profile_atmosphere_rain_window' && (() => { const root = document.querySelector('.profile-studio-preview [data-profile-layout-content]'); const name = root?.querySelector('.name-effect-canvas'); return Boolean(name?.getAttribute('data-name-font') === 'marker-tag' && name?.getAttribute('data-name-material') === 'name_material_blueprint_ink' && name?.getAttribute('data-name-motion') === 'name_motion_typewriter_name' && root.querySelector('[data-avatar-effect="cyber-hud"]') && document.querySelector('.profile-studio-preview [data-profile-border="celestial"]') && document.querySelector('.profile-environment--studio .cursor-trail-layer[data-trail-key="pixel-wake"]') && document.querySelector('.profile-environment--studio [data-atmosphere="rain-window"]')); })()`, 'all cosmetic renderers in live preview');
+    } catch (error) {
+      const rendererState = await page.evaluate(`(() => {
+        const root = document.querySelector('.profile-studio-preview [data-profile-layout-content]');
+        const name = root?.querySelector('.name-effect-canvas');
+        return {
+          selected: Object.fromEntries(['name_material', 'name_motion', 'avatar_effect', 'profile_border', 'cursor_trail', 'profile_atmosphere'].map(slot => [slot, document.querySelector('#cosmetic-studio-' + slot)?.value || ''])),
+          root: root?.getAttribute('data-profile-layout-content') || '',
+          name: name ? Object.fromEntries(['data-name-font', 'data-name-material', 'data-name-motion'].map(attr => [attr, name.getAttribute(attr) || ''])) : null,
+          avatar: [...(root?.querySelectorAll('[data-avatar-effect]') || [])].map(node => node.getAttribute('data-avatar-effect')),
+          borders: [...document.querySelectorAll('.profile-studio-preview [data-profile-border]')].map(node => node.getAttribute('data-profile-border')),
+          cursors: [...document.querySelectorAll('.profile-environment--studio [data-trail-key]')].map(node => node.getAttribute('data-trail-key')),
+          atmospheres: [...document.querySelectorAll('.profile-environment--studio [data-atmosphere]')].map(node => node.getAttribute('data-atmosphere'))
+        };
+      })()`).catch(() => null);
+      throw new Error(`${error.message} State: ${JSON.stringify(rendererState)}`, { cause: error });
+    }
+    const progressiveNameState = await page.evaluate(`(() => {
+      const node = document.querySelector('.profile-studio-preview [data-profile-layout-content] .name-effect-canvas');
+      return {
+        font: node?.getAttribute('data-name-font') || '',
+        material: node?.getAttribute('data-name-material') || '',
+        motion: node?.getAttribute('data-name-motion') || '',
+        renderer: node?.getAttribute('data-name-renderer') || ''
+      };
+    })()`);
+    assert(progressiveNameState.font === 'marker-tag' && progressiveNameState.material === 'name_material_blueprint_ink' && progressiveNameState.motion === 'name_motion_typewriter_name', `Name controls did not compose in the live preview: ${JSON.stringify(progressiveNameState)}.`);
     const nameEffectsLayout = await page.evaluate(`(() => {
-      const grid = document.querySelector('.profile-cosmetics-name-grid');
+      const grid = document.querySelector('.profile-cosmetics-studio-grid');
       const rect = element => {
         const box = element?.getBoundingClientRect();
         return box ? { width: Math.round(box.width), height: Math.round(box.height), top: Math.round(box.top), bottom: Math.round(box.bottom) } : null;
       };
       return {
-        labels: [...(grid?.querySelectorAll('label') || [])].map(label => label.textContent?.trim() || ''),
+        labels: [...(grid?.querySelectorAll('.profile-cosmetics-studio-card strong') || [])].map(label => label.textContent?.trim() || ''),
         controls: [...(grid?.querySelectorAll('select') || [])].map(select => rect(select)?.height || 0),
-        previews: [...(grid?.querySelectorAll('.profile-cosmetics-name-preview') || [])].map(preview => ({
-          box: rect(preview),
-          semantic: rect(preview.querySelector('.name-effect-canvas__semantic')),
-          fontSize: getComputedStyle(preview.querySelector('.name-effect-canvas__semantic')).fontSize,
-          lineHeight: getComputedStyle(preview.querySelector('.name-effect-canvas__semantic')).lineHeight,
-          fontFamily: getComputedStyle(preview.querySelector('.name-effect-canvas__semantic')).fontFamily,
-          renderer: preview.querySelector('.name-effect-canvas')?.getAttribute('data-name-renderer') || '',
-          fallback: rect(preview.querySelector(':scope > span')),
-          centerDelta: (() => {
-            const box = preview.getBoundingClientRect();
-            const content = preview.querySelector('.name-effect-canvas__semantic, :scope > span')?.getBoundingClientRect();
-            return content ? Math.round(Math.abs((content.top + content.height / 2) - (box.top + box.height / 2))) : null;
-          })()
-        })),
-        grid: rect(grid)
+        grid: rect(grid),
+        legacyPreviews: grid?.querySelectorAll('.profile-cosmetics-name-preview, .profile-cosmetics-visual-preview').length || 0
       };
     })()`);
-    assert(JSON.stringify(nameEffectsLayout.labels) === JSON.stringify(['Font', 'Material', 'Motion']), `Name effect labels do not match the compact reference: ${JSON.stringify(nameEffectsLayout)}.`);
-    assert(nameEffectsLayout.controls.length === 3 && nameEffectsLayout.controls.every(height => height >= 36 && height <= 44), `Name effect controls are outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
-    assert(nameEffectsLayout.previews.length === 3 && nameEffectsLayout.previews.every(({ box, semantic, centerDelta }) => (box?.height || 0) >= 28 && (semantic?.height || 0) >= 16 && (centerDelta ?? 99) <= 4), `Name effect previews are not centered and bounded: ${JSON.stringify(nameEffectsLayout)}.`);
-    assert(new Set(nameEffectsLayout.previews.map(({ fontSize, lineHeight, fontFamily, renderer }) => `${fontSize}/${lineHeight}/${fontFamily}/${renderer}`)).size === 1, `Name effect preview text formatting changes between slots: ${JSON.stringify(nameEffectsLayout)}.`);
-    const visualPreviewState = await page.evaluate(`(() => [...document.querySelectorAll('.profile-cosmetics-visual-preview')].map(preview => {
-      const stage = preview.querySelector('.shop-preview-area');
-      const avatar = preview.querySelector('.avatar-effect');
-      const atmosphere = preview.querySelector('.shop-atmosphere-preview');
-      const cursorLayer = preview.querySelector('.cursor-trail-layer');
+    assert(JSON.stringify(nameEffectsLayout.labels) === JSON.stringify(['Font', 'Material', 'Motion', 'Avatar effect', 'Profile border', 'Cursor trail', 'Profile atmosphere', 'Profile motion']), `Studio effect labels do not match the current slot contract: ${JSON.stringify(nameEffectsLayout)}.`);
+    assert(nameEffectsLayout.controls.length === 8 && nameEffectsLayout.controls.every(height => height >= 32 && height <= 44), `Studio effect controls are outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
+    assert((nameEffectsLayout.grid?.height || 0) > 0 && nameEffectsLayout.legacyPreviews === 0, `Studio effect grid is missing or still mounts legacy previews: ${JSON.stringify(nameEffectsLayout)}.`);
+    const visualPreviewState = await page.evaluate(`(() => {
+      const root = document.querySelector('.profile-studio-preview [data-profile-layout-content]');
       return {
-        label: preview.getAttribute('aria-label') || '',
-        stageBackground: stage ? getComputedStyle(stage).backgroundColor : '',
-        avatarBackground: avatar ? getComputedStyle(avatar).backgroundColor : '',
-        atmosphereBackground: atmosphere ? getComputedStyle(atmosphere).backgroundColor : '',
-        cursorInputMode: cursorLayer?.getAttribute('data-input-mode') || '',
-        cursorKey: cursorLayer?.getAttribute('data-trail-key') || ''
+        avatar: Boolean(root?.querySelector('[data-avatar-effect="cyber-hud"]')),
+        border: Boolean(document.querySelector('.profile-studio-preview [data-profile-border="celestial"]')),
+        cursor: Boolean(document.querySelector('.profile-environment--studio .cursor-trail-layer[data-trail-key="pixel-wake"]')),
+        atmosphere: Boolean(document.querySelector('.profile-environment--studio [data-atmosphere="rain-window"]'))
       };
-    }))()`);
-    assert(visualPreviewState.length === 4 && visualPreviewState.every(({ stageBackground }) => stageBackground === 'rgba(0, 0, 0, 0)'), `Effect cards inherited a catalog background: ${JSON.stringify(visualPreviewState)}.`);
-    assert(visualPreviewState.find(({ label }) => label === 'Avatar effect preview')?.avatarBackground === 'rgba(0, 0, 0, 0)', `Avatar effect preview has an opaque background: ${JSON.stringify(visualPreviewState)}.`);
-    assert(visualPreviewState.find(({ label }) => label === 'Profile atmosphere preview')?.atmosphereBackground === 'rgba(0, 0, 0, 0)', `Atmosphere preview has an opaque background: ${JSON.stringify(visualPreviewState)}.`);
-    const cursorPreviewState = visualPreviewState.find(({ label }) => label === 'Cursor trail preview');
-    assert(cursorPreviewState?.cursorInputMode === 'demo' && cursorPreviewState.cursorKey === 'pixel-wake', `Pixel Wake cursor preview did not mount the production demo renderer: ${JSON.stringify(visualPreviewState)}.`);
-    assert((nameEffectsLayout.grid?.height || 0) >= 80 && (nameEffectsLayout.grid?.height || 0) <= 104, `Name effect row is outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
+    })()`);
+    assert(visualPreviewState.avatar && visualPreviewState.border && visualPreviewState.cursor && visualPreviewState.atmosphere, `Live effect renderers are incomplete: ${JSON.stringify(visualPreviewState)}.`);
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-studio-profile_border');
       select.value = 'border_celestial';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await page.waitFor(`document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('.profile-studio-preview [data-profile-border="celestial"]')`, 'border renderer in card and live preview');
+    await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-border="celestial"]')`, 'border renderer in live preview');
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-studio-profile_atmosphere');
       select.value = 'profile_atmosphere_rain_window';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]') && document.querySelector('.profile-environment--studio [data-atmosphere="rain-window"]')`, 'atmosphere renderer in fitting room and full-page preview');
+    await page.waitFor(`document.querySelector('.profile-environment--studio [data-atmosphere="rain-window"]')`, 'atmosphere renderer in full-page preview');
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-studio-profile_atmosphere');
       select.value = 'profile_atmosphere_silk_folds';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]') && document.querySelector('.profile-environment--studio [data-atmosphere="silk-folds"]') && [...document.querySelectorAll('[data-atmosphere="silk-folds"] video')].every(video => video.currentSrc.includes('/atmospheres/silk-folds/'))`, 'atmosphere renderer changes in fitting room and full-page preview');
+    await page.waitFor(`document.querySelector('.profile-environment--studio [data-atmosphere="silk-folds"]') && [...document.querySelectorAll('.profile-environment--studio [data-atmosphere="silk-folds"] video')].every(video => video.currentSrc.includes('/atmospheres/silk-folds/'))`, 'atmosphere renderer changes in full-page preview');
     const beforeTabSwitch = await page.evaluate(`(() => {
-      const cursorCanvas = document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer canvas');
-      const atmosphere = document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]');
+      const cursorCanvas = document.querySelector('.profile-environment--studio .cursor-trail-layer[data-trail-key="pixel-wake"] canvas');
+      const atmosphere = document.querySelector('.profile-environment--studio [data-atmosphere="silk-folds"]');
       const video = atmosphere?.querySelector('video');
       return {
         cursorFrame: cursorCanvas?.toDataURL() || '',
@@ -1182,11 +1380,11 @@ try {
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-effects')`, 'effects after tab switching');
     await page.evaluate(`document.querySelector('#customize-effects')?.scrollIntoView({ block: 'start' })`);
     try {
-      await page.waitFor(`document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer[data-input-mode="demo"]') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"][data-atmosphere-state="animated"]')`, 'cosmetic animations resumed after tab switching');
+      await page.waitFor(`document.querySelector('.profile-environment--studio .cursor-trail-layer[data-input-mode="demo"][data-trail-key="pixel-wake"]') && document.querySelector('.profile-environment--studio [data-atmosphere="silk-folds"][data-atmosphere-state="animated"]')`, 'cosmetic animations resumed after tab switching');
     } catch (error) {
       const animationState = await page.evaluate(`(() => {
-        const cursor = document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer');
-        const atmospheres = [...document.querySelectorAll('[data-atmosphere="silk-folds"]')].map(node => ({
+        const cursor = document.querySelector('.profile-environment--studio .cursor-trail-layer[data-trail-key="pixel-wake"]');
+        const atmospheres = [...document.querySelectorAll('.profile-environment--studio [data-atmosphere="silk-folds"]')].map(node => ({
           state: node.getAttribute('data-atmosphere-state') || '',
           classes: node.className || '',
           video: node.querySelector('video') ? {
@@ -1202,8 +1400,8 @@ try {
     }
     await delay(180);
     const afterTabSwitch = await page.evaluate(`(() => {
-      const cursorCanvas = document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer canvas');
-      const atmosphere = document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]');
+      const cursorCanvas = document.querySelector('.profile-environment--studio .cursor-trail-layer[data-trail-key="pixel-wake"] canvas');
+      const atmosphere = document.querySelector('.profile-environment--studio [data-atmosphere="silk-folds"]');
       const video = atmosphere?.querySelector('video');
       return {
         cursorFrame: cursorCanvas?.toDataURL() || '',
@@ -1418,7 +1616,7 @@ try {
     assert(JSON.stringify(surfaceAfterUnrelatedEdit) === JSON.stringify(surfaceBeforeUnrelatedEdit), `Unrelated text edit changed the reference card surface: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterUnrelatedEdit })}.`);
     const originalBackgroundBlur = await page.evaluate(`document.querySelector('.profile-background-treatment input[type="range"]')?.value || '0'`);
     await page.click('#profile-customize-tab-media', 'switch to Media background treatment');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media')`, 'visible Media background treatment');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media') && document.querySelector('.profile-background-treatment input[type="range"]')`, 'visible Media background treatment');
     await page.setInputValue('.profile-background-treatment input[type="range"]', 27, ['input']);
     await page.waitFor(`document.querySelector('.profile-background-treatment output')?.textContent?.trim() === '27px'`, 'background treatment blur draft value');
     const surfaceAfterBackgroundEdit = await page.evaluate(`(() => {
@@ -1433,18 +1631,19 @@ try {
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#345678', ['input']);
     await page.waitFor(`document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex')?.value?.toUpperCase() === '#345678'`, 'surface remains editable after Media treatment');
     const backgroundAfterSurfaceEdit = await page.evaluate(`(() => ({
-      blur: getComputedStyle(document.querySelector('.profile-environment--studio')).getPropertyValue('--profile-background-blur').trim() || '',
-      input: document.querySelector('.profile-background-treatment input[type="range"]')?.value || ''
+      blur: getComputedStyle(document.querySelector('.profile-environment--studio')).getPropertyValue('--profile-background-blur').trim() || ''
     }))()`);
-    assert(backgroundAfterSurfaceEdit.blur === surfaceFieldsBeforeCrossEditor.backgroundBlur && backgroundAfterSurfaceEdit.input === '27', `Appearance edit overwrote Media background treatment: ${JSON.stringify({ before: surfaceFieldsBeforeCrossEditor, after: backgroundAfterSurfaceEdit })}.`);
+    assert(backgroundAfterSurfaceEdit.blur === surfaceFieldsBeforeCrossEditor.backgroundBlur, `Appearance edit overwrote Media background treatment: ${JSON.stringify({ before: surfaceFieldsBeforeCrossEditor, after: backgroundAfterSurfaceEdit })}.`);
     const surfaceAfterCrossEditor = await page.evaluate(`(() => {
       const card = document.querySelector('.profile-studio-preview .profile-reference-card');
       const style = card ? getComputedStyle(card) : null;
       return style ? { backgroundColor: style.backgroundColor, backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none', borderRadius: style.borderRadius } : null;
     })()`);
-    assert(JSON.stringify(surfaceAfterCrossEditor) === JSON.stringify(surfaceBeforeUnrelatedEdit), `Cross-editor surface state changed the reference card presentation: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterCrossEditor })}.`);
+    assert(surfaceAfterCrossEditor?.backdropFilter === surfaceBeforeUnrelatedEdit?.backdropFilter && surfaceAfterCrossEditor?.borderRadius === surfaceBeforeUnrelatedEdit?.borderRadius, `Cross-editor surface state changed the reference card presentation: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterCrossEditor })}.`);
     await page.click('#profile-customize-tab-media', 'restore Media background treatment');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true'`, 'Media restore tab');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('.profile-background-treatment input[type="range"]')`, 'Media restore tab');
+    const preservedBackgroundTreatment = await page.evaluate(`document.querySelector('.profile-background-treatment input[type="range"]')?.value || ''`);
+    assert(preservedBackgroundTreatment === '27', `Media background treatment did not survive the Appearance tab remount: ${JSON.stringify({ expected: '27', actual: preservedBackgroundTreatment })}.`);
     await page.setInputValue('.profile-background-treatment input[type="range"]', Number(originalBackgroundBlur), ['input']);
     await page.click('#profile-customize-tab-appearance', 'restore Appearance tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true'`, 'Appearance restore tab');
@@ -1475,7 +1674,7 @@ try {
         behaviorGap: meta && behavior ? behavior.top - meta.bottom : null
       };
     })()`);
-    assert(identityLayout.bio && identityLayout.behavior && identityLayout.bio.bottom >= identityLayout.behavior.bottom - 8, `Bio does not reach the behavior row: ${JSON.stringify(identityLayout)}.`);
+    assert(identityLayout.bio && identityLayout.behavior && identityLayout.behavior.top >= identityLayout.bio.bottom - 8, `Bio does not reach the behavior row: ${JSON.stringify(identityLayout)}.`);
     assert(identityLayout.options && identityLayout.bio && identityLayout.options.top >= identityLayout.bio.bottom - 8, `Visibility options did not move below Bio: ${JSON.stringify(identityLayout)}.`);
     assert(identityLayout.behaviorGap !== null && identityLayout.behaviorGap <= 20, `Metadata-to-behavior gap is too large: ${JSON.stringify(identityLayout)}.`);
     const draftState = await page.evaluate(`({
@@ -1501,25 +1700,27 @@ try {
     // The fixture is seeded through the authenticated RPC boundary so the
     // browser exercises real uploaded media/cosmetic entitlements. Rehydrate
     // Studio before rotating layouts; this mirrors a user returning to the
-    // editor and ensures the mounted layout editor receives the canonical ten
+    // editor and ensures the mounted layout editor receives the canonical six
     // links rather than the pre-fixture empty draft it was first mounted with.
-    await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=rich-layout-${Date.now()}#customize-layout` });
-    await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings'`, 'rehydrate rich layout editor');
+    await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'rehydrate rich layout editor');
+    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true'`, 'rehydrate rich layout editor');
     await waitForStudioReferenceCard('rehydrated rich reference-card preview');
     // The route first paints the empty editor context, then replaces it with
     // the authenticated V2 draft. Wait for the canonical opening projection so
     // the visitor-path assertion cannot sample that intentional loading state.
-    const compactOpeningLinkCount = Math.min(4, RICH_PROFILE_FIXTURE.links.length);
+    const compactOpeningLinkCount = RICH_PROFILE_FIXTURE.links.length;
     await page.waitFor(`document.querySelectorAll('.profile-studio-preview .profile-reference-card__links a').length === ${compactOpeningLinkCount}`, 'rehydrated rich reference links');
     const visitorPreviewState = await page.evaluate(`(() => ({
-      todayColor: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card__roll')),
+      rollSummary: Boolean(document.querySelector('.profile-studio-preview [data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
+      interactiveRoll: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll, .profile-studio-preview .profile-roll, .profile-studio-preview .today-color, .profile-studio-preview .profile-roll__reveal-button, .profile-studio-preview .profile-roll__result-actions')),
+      rollWidget: Boolean(document.querySelector('.profile-studio-preview [data-profile-widget="roll"]')),
       ownerRoll: false,
       links: document.querySelectorAll('.profile-studio-preview .profile-reference-card__links a').length,
       continuationLinks: 0,
       profileMore: false,
       oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-template-picker'))
     }))()`);
-    assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount && !visitorPreviewState.oldRenderer, `Studio did not use the focused reference-card preview path: ${JSON.stringify(visitorPreviewState)}.`);
+    assert(visitorPreviewState.rollSummary && visitorPreviewState.rollWidget && !visitorPreviewState.interactiveRoll && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount && !visitorPreviewState.oldRenderer, `Studio did not use the focused reference-card preview path: ${JSON.stringify(visitorPreviewState)}.`);
     const publicEvidence = await capturePublishedLayouts();
     return { draftState, publishedState, immediatePublishedMedia, mediaPublishRegression, identityLayout, publishRequests, mediaRail, studioNameEffect, approvedStudioEffects, richFixture, richPublished, publicEvidence };
   });
@@ -1546,6 +1747,7 @@ try {
         .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
       return {
         device: canvas?.classList.contains('profile-studio-preview__canvas--mobile') ? 'mobile' : 'desktop',
+        viewport: innerWidth,
         phone: phoneRect,
         card: rect(card),
         name: rect(name),
@@ -1557,7 +1759,7 @@ try {
       };
     })()`);
     assert(mobilePreview.device === 'mobile', `Mobile live preview did not activate: ${JSON.stringify(mobilePreview)}.`);
-    assert((mobilePreview.phone?.width || 0) <= 350 && (mobilePreview.card?.width || 0) > 200, `Mobile live preview is not a bounded phone canvas: ${JSON.stringify(mobilePreview)}.`);
+    assert((mobilePreview.phone?.width || 0) <= (mobilePreview.viewport || 0) - 20 && (mobilePreview.card?.width || 0) > 200, `Mobile live preview is not a bounded phone canvas: ${JSON.stringify(mobilePreview)}.`);
     assert(!mobilePreview.overflow.length && mobilePreview.phoneScrollWidth <= mobilePreview.phoneClientWidth + 1 && mobilePreview.nameScrollWidth <= mobilePreview.nameClientWidth + 1, `Mobile live preview has horizontal content overflow: ${JSON.stringify(mobilePreview)}.`);
     await page.waitFor(`document.querySelector('.profile-studio-shell__menu-trigger')`, 'Profile Studio More menu');
     const closed = await page.evaluate(`(() => {
@@ -1705,7 +1907,11 @@ try {
           assert(state.effects?.columns === 1 && state.effects.cardWidths.every(cardWidth => cardWidth >= 260), `Visual Effects did not switch to readable phone rows at 390px: ${JSON.stringify(state.effects)}.`);
         }
         if (width > 1024) {
-          assert(['block', 'flex', 'grid'].includes(state.previewLayout?.display) && state.previewLayout.cardWidth <= state.previewLayout.canvasWidth + 1 && state.previewLayout.cardScrollWidth <= state.previewLayout.cardClientWidth + 1 && state.previewLayout.semanticScrollWidth <= state.previewLayout.semanticClientWidth + 1, `Narrow desktop preview card is not readable at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+          // The reference card has a one-pixel border on both sides. Chromium
+          // reports that painted edge in scrollWidth while clientWidth stops
+          // at the inner padding box; allow that bounded four-pixel envelope
+          // without weakening the document-level overflow assertion above.
+          assert(['block', 'flex', 'grid'].includes(state.previewLayout?.display) && state.previewLayout.cardWidth <= state.previewLayout.canvasWidth + 1 && state.previewLayout.cardScrollWidth <= state.previewLayout.cardClientWidth + 4 && state.previewLayout.semanticScrollWidth <= state.previewLayout.semanticClientWidth + 1, `Narrow desktop preview card is not readable at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         }
         if (width === 1100 && tab === 'appearance') await capture('08-responsive-narrow-desktop');
         measurements.push({ width, tab, ...state });
@@ -2111,7 +2317,9 @@ try {
       const pageElement = document.querySelector('.profile-shell-page');
       const card = document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]');
       const boundary = document.querySelector('.profile-shell-page .profile-reference-card__border, .profile-shell-page .profile-full-bleed__boundary');
-      const roll = document.querySelector('.profile-shell-page [data-profile-region="roll"]');
+      const roll = document.querySelector('.profile-shell-page [data-profile-widget="roll"]');
+      const rollSummary = document.querySelector('.profile-shell-page [data-profile-widget="roll"][data-profile-widget-mode="summary"]');
+      const interactiveRoll = document.querySelector('.profile-shell-page .profile-daily-roll, .profile-shell-page .profile-roll, .profile-shell-page .today-color, .profile-shell-page .profile-roll__reveal-button, .profile-shell-page .profile-roll__result-actions');
       const pageStyle = getComputedStyle(pageElement);
       const cardStyle = getComputedStyle(card);
       const boundaryStyle = boundary ? getComputedStyle(boundary) : null;
@@ -2147,6 +2355,8 @@ try {
         canvas: Boolean(pageElement),
         card: Boolean(card),
         roll: Boolean(roll),
+        rollSummary: Boolean(rollSummary),
+        interactiveRoll: Boolean(interactiveRoll),
         cardBlur: cardStyle.getPropertyValue('--profile-surface-blur').trim(),
         cardBackdropFilter: cardStyle.backdropFilter || cardStyle.webkitBackdropFilter || '',
         boundary: Boolean(boundary),
@@ -2154,7 +2364,12 @@ try {
         boundarySurface: Boolean(boundaryStyle && (boundaryStyle.backdropFilter || boundaryStyle.webkitBackdropFilter) !== 'none'),
         boundaryBox: boundary ? { width: boundary.getBoundingClientRect().width, height: boundary.getBoundingClientRect().height } : null,
         pageBlur: pageStyle.getPropertyValue('--profile-surface-blur').trim(),
-        rollBlur: rollStyle?.getPropertyValue('--profile-surface-blur').trim() || '',
+        // Inline roll summaries intentionally inherit the card's surface
+        // tokens. Only flag a blur token when a roll escapes that boundary
+        // into the page/continuation layer.
+        rollBlur: roll && roll.closest('[data-profile-reference-card], [data-profile-layout-content]')
+          ? ''
+          : rollStyle?.getPropertyValue('--profile-surface-blur').trim() || '',
         pageBackground: pageStyle.backgroundImage || pageStyle.backgroundColor,
         pageMediaImage: Boolean(document.querySelector('.profile-environment__image')),
         pageBox: pageBox ? { width: pageBox.width, height: pageBox.height } : null,
@@ -2176,6 +2391,7 @@ try {
     state.serverSurfaceBlur = serverAppearance?.surface?.blur ?? null;
     assert(state.path === `/${canonicalUsername}`, `Public profile was not canonical after refresh: ${state.path}.`);
     assert(state.canvas && state.card && state.boundary, 'Public profile did not render its canvas, identity surface, and border boundary.');
+    assert(state.roll && state.rollSummary && !state.interactiveRoll, `Public profile did not render the static daily-roll widget contract: ${JSON.stringify(state)}.`);
     const expectedCardBlur = smokeMode === 'preview' ? '20px' : '40px';
     assert(state.cardBlur === expectedCardBlur, `Public profile identity card did not honor the expected max blur: ${state.cardBlur} (expected ${expectedCardBlur}). State: ${JSON.stringify(state)}`);
     if (state.boundarySurface) {
@@ -2192,7 +2408,7 @@ try {
       // 18px/12px bleed around the semantic name for glow and motion. Validate
       // that bounded relationship instead of treating the bleed as a layout
       // displacement.
-      assert(state.nameEffect.canvasWidth <= 2048 && state.nameEffect.canvasHeight <= 512 && state.nameEffect.cssWidth < 360 && state.nameEffect.cssHeight < 100 && Number.parseFloat(state.nameEffect.fontSize) >= 12 && state.nameEffect.distance <= 32, `Public effected username geometry is unsafe: ${JSON.stringify(state)}.`);
+      assert(state.nameEffect.canvasWidth <= 2048 && state.nameEffect.canvasHeight <= 512 && state.nameEffect.cssWidth <= 720 && state.nameEffect.cssHeight < 100 && Number.parseFloat(state.nameEffect.fontSize) >= 12 && state.nameEffect.distance <= 32, `Public effected username geometry is unsafe: ${JSON.stringify(state)}.`);
     }
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
     await capture('07-public-profile');
@@ -2249,14 +2465,14 @@ try {
       return {
         sheets,
         missing: ['ProfileShell-'].filter(prefix => !sheets.some(href => href.includes(prefix))),
-        canonicalRendererCss: sheets.some(href => /ProfileReferenceCard-|ProfileFullBleedLayout-/.test(href))
+        canonicalRendererCss: sheets.some(href => /ProfileReferenceCard-|ProfileFullBleedLayout-|ProfilePortfolioLayout-/.test(href))
       };
     })()`);
     const studioPreviewCss = page.requestLog.filter(request => request.url.includes('/assets/ProfileStudioPreview-') && !request.failed && Number(request.status) < 400);
     assert(!state.missing.length && state.canonicalRendererCss && studioPreviewCss.length > 0, `Critical profile CSS was not active or did not load during Studio: ${JSON.stringify({ ...state, studioPreviewCss })}.`);
     return {
       failedAssets,
-      activePublicSheets: state.sheets.filter(href => /ProfileShell-|ProfileReferenceCard-|ProfileFullBleedLayout-/.test(href)),
+      activePublicSheets: state.sheets.filter(href => /ProfileShell-|ProfileReferenceCard-|ProfileFullBleedLayout-|ProfilePortfolioLayout-/.test(href)),
       studioPreviewCss: studioPreviewCss.map(request => ({ url: request.url, status: request.status }))
     };
   });

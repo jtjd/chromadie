@@ -357,7 +357,7 @@ const launchExpectedCosts = Object.freeze({
   avatar_effect_liquid_blob: 380000, avatar_effect_cyber_hud: 520000,
   avatar_effect_butterfly_orbit: 0, avatar_effect_bat_orbit: 0,
   profile_layout_compact: 0,
-  profile_layout_full_bleed: 0, profile_layout_framed: 0,
+  profile_layout_full_bleed: 0, profile_layout_sleek: 0, profile_layout_framed: 0, profile_layout_portfolio: 0,
   profile_motion_perspective_tilt: 0, profile_motion_halo_offset: 0, profile_motion_wavefront: 0,
   profile_atmosphere_rain_window: 260000, profile_atmosphere_droplets_glass: 240000,
   profile_atmosphere_dust_light: 280000, profile_atmosphere_ink_bloom: 520000,
@@ -402,10 +402,10 @@ const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profi
   launchRows.filter(row => row.slot === slot).length
 ]));
 if (
-    launchRows.length !== 42
-    || new Set(launchRows.map(row => row.itemKey)).size !== 42
+    launchRows.length !== 44
+    || new Set(launchRows.map(row => row.itemKey)).size !== 44
     || launchInvalidRows.length > 0
-    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 17, avatar_effect: 6, profile_layout: 3, profile_atmosphere: 13, profile_motion: 3 })
+    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 17, avatar_effect: 6, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 })
 ) {
   console.error('Launch cosmetic catalog balance/drift check failed.');
   console.error(JSON.stringify({

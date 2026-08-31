@@ -18,7 +18,7 @@ CHM uses **R2 Standard only** for profile media.
 - No Cloudflare Images, Stream, Cache Reserve, or paid media proxy in this
   migration.
 - R2 billing alerts are notifications, not hard service shutoffs.
-- Application quotas and the 8 GB active/public safety cap are enforced by CHM
+- Application quotas and the 1 TiB global emergency safety cap are enforced by CHM
   control-plane/database policy, independently of Cloudflare billing alerts.
 
 The operator must verify both R2 buckets have no lifecycle rule that changes
@@ -151,13 +151,14 @@ and deletion. It skips cleanly without credentials and is not evidence of
 Cloudflare acceptance until it reports a live success.
 
 Completion reads and hashes the actual private R2 bytes and validates the
-allowlisted container signature (WebP, ANI, MP4, WebM, or MP3) before the
+allowlisted container signature (WebP, animated WebP, GIF, JPEG, ANI, MP4,
+WebM, or MP3) before the
 asset can become ready or selectable. The R2 intent RPC counts physical
-private/public bytes, staged uploads, failed cleanup rows, and per-kind
-pending/active objects against the application safety limits. Historical
-limits remain server-side: three background videos, five audio assets, and
-one banner, cursor, or pointer cursor; one-slot replacement excludes only the
-asset being replaced.
+private/public bytes and staged/active objects against the application safety
+limits. Plus/staff accounts receive 1 GiB with a 200-asset operational ceiling;
+the active selection remains one background video, one animated avatar with a
+static fallback, one share image, normal/pointer cursors, and five playlist
+tracks. Per-file limits remain server-side.
 
 Explicit public deletion is the only normal media operation that purges the
 exact immutable `media.chm.lol` URL. Replacement and unequip do not purge.
@@ -196,7 +197,7 @@ purge verification is an operator task outside the runtime contract.
 | Current use | Migration disposition |
 | --- | --- |
 | `ProfileExpressionEditor.svelte` avatar/background/standalone-audio upload and deletion | R2 control plane only; legacy references fail closed and can be re-uploaded |
-| `ProfileRichMediaEditor.svelte` video/banner/cursor/audio upload and selection | R2 control plane only; retired Storage RPCs are inert/revoked |
+| `ProfileRichMediaEditor.svelte` video/animated-avatar/share-preview/cursor/audio upload and selection | R2 control plane only; retired Storage RPCs are inert/revoked |
 | `profileMedia.js` resolver | R2 object keys and local Blob previews only; no legacy URL fallback |
 | `profileRenderModel.js`, ProfileShell, ProfileMusic | Provider-aware R2 `media_references`; legacy paths remain metadata only |
 | Discovery, homepage, leaderboard, cosmetics, Shop previews | Updated to consume the same `avatarReference`/`media_references` contract |
@@ -271,8 +272,9 @@ required in this phase.
 ### Phase C — direct R2 new uploads
 
 Enable the flag for an internal cohort. Verify auth, kind/extension/MIME,
-post-upload object metadata, byte size, SHA-256, entitlement, and the 150 MB
-per-user quota before readiness. Register only `ready` assets and reject
+post-upload object metadata, byte size, SHA-256, entitlement, the 1 GiB
+Plus/staff quota, and the 200-asset operational ceiling before readiness.
+Register only `ready` assets and reject
 failed/incomplete assets from selection.
 
 Rollback by disabling the flag. Existing Supabase uploads remain readable.
@@ -336,11 +338,10 @@ MEDIA_PUBLIC_ORIGIN=https://media.chm.lol
 R2_ACCOUNT_CLEANUP_SECRET
 ```
 
-Recommended application alarms are below the free allowance rather than
-assuming billing alerts will stop traffic: 8 GB active/public R2 storage cap,
-an approximately 800,000 Class A soft warning, and a Class B warning threshold
-below the free allowance. Cloudflare billing notifications at $1/$5/$10/$15
-are review signals, not service shutoffs.
+Recommended application alarms should be well below the global emergency cap:
+alert on aggregate physical R2 bytes before 1 TiB, and separately warn when a
+Plus/staff account approaches its 1 GiB quota or 200 active/staged assets.
+Cloudflare billing notifications are review signals, not service shutoffs.
 
 ## Verification and tests
 

@@ -1,6 +1,8 @@
 <script>
   import RollPreview from './RollPreview.svelte';
+  import RollResultBreakdown from './RollResultBreakdown.svelte';
   import { getBadgeMeta } from './badgeData.js';
+  import { getRarityPresentation } from './rarityPresentation.js';
   import { normalizeHexColor } from './utils.js';
 
   /** @type {Record<string, any> | null} */
@@ -11,10 +13,11 @@
 
   let detailsOpen = true;
 
-  $: safeHex = normalizeHexColor(result?.hex_code, accentColor);
+  $: safeHex = normalizeHexColor(result?.hex_code || result?.hex, accentColor);
   $: title = result?.identity || 'The latest color';
   $: rarity = result?.rarity || 'Unranked';
   $: score = Number(result?.score) || 0;
+  $: rarityColor = getRarityPresentation(rarity === 'Unranked' ? 'Common' : rarity).color;
   $: conditionSource = Array.isArray(result?.contributors) && result.contributors.length
     ? result.contributors.map((contributor, index) => ({
         id: contributor?.id || `contributor-${index}`,
@@ -31,9 +34,10 @@
         }))
       : [];
   $: headlineConditions = conditionSource.slice(0, 3);
+  $: baseScore = Math.max(0, score - conditionSource.reduce((total, condition) => total + condition.points, 0));
 </script>
 
-<div class={'today-color' + (quiet ? ' today-color--quiet' : '') + (presentation ? ' today-color--presentation today-color--presentation-' + presentation : '')} aria-label={result ? 'Latest canonical color' : 'No color rolled yet'}>
+<div class={'today-color' + (quiet ? ' today-color--quiet' : '') + (presentation ? ' today-color--presentation today-color--presentation-' + presentation : '')} style={presentation === 'compact' ? `--roll-accent:${safeHex};--roll-result-color:${safeHex};--roll-rarity:${rarityColor};--roll-score-color:#f5c26f;` : undefined} aria-label={result ? 'Latest canonical color' : 'No color rolled yet'}>
   {#if result}
     <div class="today-color__result-head">
       <div class="today-color__preview" aria-hidden="true">
@@ -44,6 +48,7 @@
       </div>
       <div class="today-color__copy">
         <p class="today-color__label">{quiet ? 'Daily color' : 'Today’s color'}</p>
+        {#if result?.identity}<p class="today-color__identity">{title}</p>{/if}
         <div class="today-color__identity-row">
           <strong>{safeHex}</strong>
           <span class="today-color__rarity">{rarity}</span>
@@ -52,7 +57,13 @@
       </div>
     </div>
 
-    {#if headlineConditions.length}
+    {#if presentation === 'compact'}
+      <RollResultBreakdown
+        contributors={result?.contributors || []}
+        {baseScore}
+        totalScore={score}
+      />
+    {:else if headlineConditions.length}
       <div class="today-color__condition-rail" aria-label="Top scoring conditions">
         <div class="today-color__condition-list">
           {#each headlineConditions as condition (condition.id)}
@@ -126,6 +137,7 @@
   .today-color__preview :global(.final-color-display) { width: 8rem; height: 8rem; }
   .today-color__copy { min-width: 0; }
   .today-color__label { margin: 0; color: color-mix(in srgb, var(--profile-accent) 48%, white); font: 700 0.68rem / 1.2 var(--font-mono-stack); letter-spacing: 0.14em; text-transform: uppercase; }
+  .today-color__identity { min-width: 0; margin: 0.38rem 0 0; overflow: hidden; color: rgba(248,250,255,0.98); font: 600 clamp(1.15rem, 2.8vw, 1.65rem) / 1.06 var(--font-display-stack); letter-spacing: -0.035em; text-overflow: ellipsis; white-space: nowrap; }
   .today-color__identity-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.45rem; }
   .today-color__copy strong { display: block; color: rgba(248,250,255,0.98); font: 600 clamp(1.9rem, 3vw, 2.45rem) / 1.08 var(--font-display-stack); letter-spacing: -0.035em; overflow-wrap: anywhere; }
   .today-color__rarity { padding: 0.25rem 0.55rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 55%, transparent); border-radius: var(--radius-pill); color: color-mix(in srgb, var(--profile-accent) 70%, white); font: 700 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -162,6 +174,7 @@
   .today-color--presentation .today-color__preview :global(.final-color-display) { width: 2.25rem; height: 2.25rem; }
   .today-color--presentation .today-color__copy strong { font-size: .95rem; }
   .today-color--presentation .today-color__label { font-size: .55rem; }
+  .today-color--presentation .today-color__identity { font-size: .78rem; }
   .today-color--presentation .today-color__score { margin-top: .2rem; font-size: .78rem; }
   .today-color--presentation .today-color__rarity,
   .today-color--presentation .today-color__condition-rail,
@@ -170,5 +183,143 @@
   .today-color--presentation .today-color__empty-state .today-color__preview,
   .today-color--presentation .today-color__empty-state .today-color__preview :global(.roll-preview-frame),
   .today-color--presentation .today-color__empty-state .today-color__preview :global(.final-color-display) { width: 2.25rem; height: 2.25rem; }
+  /* Compact profile cards get a small result surface that still communicates
+     the color's identity, score, and visual signal at a glance. */
+  .today-color--presentation-compact { gap: .55rem; }
+  .today-color--presentation-compact .today-color__result-head { grid-template-columns: 3.15rem minmax(0, 1fr); gap: .65rem; }
+  .today-color--presentation-compact .today-color__preview,
+  .today-color--presentation-compact .today-color__preview :global(.roll-preview-frame),
+  .today-color--presentation-compact .today-color__preview :global(.final-color-display) { width: 3.15rem; height: 3.15rem; }
+  .today-color--presentation-compact .today-color__identity { margin-top: .25rem; font-size: .78rem; }
+  .today-color--presentation-compact .today-color__identity-row { gap: .45rem; margin-top: .28rem; }
+  .today-color--presentation-compact .today-color__copy strong { font-size: .82rem; }
+  .today-color--presentation-compact .today-color__score { margin-top: .35rem; font-size: .82rem; }
+  .today-color--presentation-compact .today-color__score span { margin-left: .3rem; padding-left: .35rem; font-size: .54rem; }
+  .today-color--presentation-compact .today-color__rarity,
+  .today-color--presentation-compact .today-color__condition-rail,
+  .today-color--presentation-compact .today-color__details { display: none; }
+  .today-color--presentation-compact .today-color__empty-state { grid-template-columns: 3.15rem minmax(0, 1fr); gap: .65rem; }
+  .today-color--presentation-compact .today-color__empty-state .today-color__preview,
+  .today-color--presentation-compact .today-color__empty-state .today-color__preview :global(.roll-preview-frame),
+  .today-color--presentation-compact .today-color__empty-state .today-color__preview :global(.final-color-display) { width: 3.15rem; height: 3.15rem; }
+  .today-color--presentation-compact .today-color__empty-state .today-color__copy strong { font-size: .9rem; }
+  .today-color--presentation-compact .today-color__meta { margin-top: .28rem; font-size: .62rem; }
+
+  /* Compact public results share the dedicated roll card's display and
+     breakdown surfaces instead of retaining the legacy inline summary. */
+  .today-color--presentation-compact .today-color__result-head {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .75rem;
+    padding: .75rem;
+    border: 1px solid var(--roll-border, rgba(255, 255, 255, .09));
+    border-radius: .85rem;
+    background: var(--surface-2, #1e1e22);
+  }
+
+  .today-color--presentation-compact .today-color__preview,
+  .today-color--presentation-compact .today-color__preview :global(.roll-preview-frame),
+  .today-color--presentation-compact .today-color__preview :global(.final-color-display) {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .today-color--presentation-compact .today-color__preview :global(.final-color-display) {
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: .75rem;
+    box-shadow: 0 .6rem 1.5rem -0.55rem color-mix(in srgb, var(--roll-result-color, var(--roll-accent)) 48%, transparent), inset 0 0 1rem rgba(0, 0, 0, .35);
+  }
+
+  .today-color--presentation-compact .today-color__label {
+    color: var(--roll-muted, #8d8c92);
+    font: 700 .58rem / 1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .1em;
+  }
+
+  .today-color--presentation-compact .today-color__identity {
+    margin-top: .42rem;
+    color: var(--roll-text, #f5f5f6);
+    font: 800 .98rem / 1.05 var(--site-display, 'Manrope Variable', sans-serif);
+    letter-spacing: -.035em;
+  }
+
+  .today-color--presentation-compact .today-color__identity-row {
+    gap: .55rem;
+    margin-top: .38rem;
+  }
+
+  .today-color--presentation-compact .today-color__identity-row strong {
+    color: var(--roll-muted, #8d8c92);
+    font: 400 .75rem / 1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: 0;
+  }
+
+  .today-color--presentation-compact .today-color__rarity {
+    display: inline-flex;
+    padding: .25rem .45rem;
+    border-color: color-mix(in srgb, var(--roll-rarity, var(--roll-accent)) 56%, var(--roll-border, rgba(255, 255, 255, .09)));
+    background: color-mix(in srgb, var(--roll-rarity, var(--roll-accent)) 13%, transparent);
+    color: var(--roll-rarity, var(--roll-accent));
+    font: 600 .58rem / 1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .02em;
+    text-shadow: 0 0 1rem color-mix(in srgb, var(--roll-rarity, var(--roll-accent)) 76%, transparent);
+  }
+
+  .today-color--presentation-compact .today-color__score { display: none; }
+  .today-color--presentation-compact .today-color__condition-rail,
+  .today-color--presentation-compact .today-color__details { display: none; }
+
+  .today-color--presentation-compact .today-color__empty-state {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .75rem;
+    padding: .75rem;
+    border: 1px solid var(--roll-border, rgba(255, 255, 255, .09));
+    border-radius: .85rem;
+    background: var(--surface-2, #1e1e22);
+  }
+
+  .today-color--presentation-compact .today-color__empty-state .today-color__preview,
+  .today-color--presentation-compact .today-color__empty-state .today-color__preview :global(.roll-preview-frame),
+  .today-color--presentation-compact .today-color__empty-state .today-color__preview :global(.final-color-display) {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .today-color--presentation-compact .today-color__empty-state .today-color__preview :global(.final-color-display) {
+    border-radius: .75rem;
+  }
+
+  :global(.today-color--presentation-compact .roll-result-summary) {
+    --roll-accent: var(--roll-result-color, #8B7CF6);
+    --roll-score-color: #f5c26f;
+  }
+
+  :global(.today-color--presentation-compact .roll-result-summary__condition) {
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto auto;
+    gap: .35rem;
+    min-height: 2rem;
+    padding: .25rem .4rem;
+  }
+
+  :global(.today-color--presentation-compact .roll-result-summary__condition-icon) {
+    width: 1.4rem;
+    height: 1.4rem;
+    font-size: .68rem;
+  }
+
+  :global(.today-color--presentation-compact .roll-result-summary__condition strong) { font-size: .62rem; }
+  :global(.today-color--presentation-compact .roll-result-summary__condition-rarity) { padding: .25rem .35rem; font-size: .5rem; }
+  :global(.today-color--presentation-compact .roll-result-summary__condition-points) { font-size: .58rem; }
+
+  @media (max-width: 22rem) {
+    .today-color--presentation-compact .today-color__result-head,
+    .today-color--presentation-compact .today-color__empty-state { grid-template-columns: 2.75rem minmax(0, 1fr); gap: .55rem; }
+    .today-color--presentation-compact .today-color__preview,
+    .today-color--presentation-compact .today-color__preview :global(.roll-preview-frame),
+    .today-color--presentation-compact .today-color__preview :global(.final-color-display),
+    .today-color--presentation-compact .today-color__empty-state .today-color__preview,
+    .today-color--presentation-compact .today-color__empty-state .today-color__preview :global(.roll-preview-frame),
+    .today-color--presentation-compact .today-color__empty-state .today-color__preview :global(.final-color-display) { width: 2.75rem; height: 2.75rem; }
+  }
+
   @media (max-width: 36rem) { .today-color__result-head { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.85rem; } .today-color__preview, .today-color__preview :global(.roll-preview-frame), .today-color__preview :global(.final-color-display) { width: 5.5rem; height: 5.5rem; } .today-color__copy strong { font-size: 1.35rem; } .today-color__condition-chip strong { max-width: 8rem; } .today-color__empty-state { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.85rem; } .today-color__condition-record { grid-template-columns: auto 1fr; } .today-color__condition-record small { grid-column: 2; } }
 </style>

@@ -62,10 +62,29 @@ Provider widgets:
 Atelier expression restoration:
 
 - `migrations/20260809000000_atelier_expression_catalog.sql` restores the
-  stable `name_prism_atelier` and `bg_prism_atmosphere` keys as active,
+  stable `name_prism_atelier` and `bg_prism_atmosphere` keys as historical,
   entitlement-gated `name_motion` and `profile_atmosphere` renderer rows.
-  It uses only the finite `haunt-rainbow` and `silk-folds` renderers and bumps
-  `shop_version`; the retired raw-CSS slots remain absent.
+  The Plus paid-media distillation migration retires those rows from the
+  active catalog while preserving their finite `haunt-rainbow` and
+  `silk-folds` renderer mappings for historical ownership/equipped profiles.
+
+Plus paid-media distillation:
+
+- `migrations/20260829120000_plus_paid_media_distillation.sql` keeps profile
+  structure and the active cosmetics catalog free, then gates hosted video,
+  animated avatars, audio playlists, cursors, and share previews behind the
+  existing Plus/staff boundary. Plus receives a 1 GiB quota and a 200-asset
+  operational ceiling; legacy banner data remains only as metadata fallback.
+- Checkout is separately held behind the client rollout flag and the server
+  `PROFILE_MEDIA_R2_READY=true` gate until R2 buckets and the control plane are
+  verified. The migration is additive and keeps the old media selection RPC.
+
+Compact six-link contract:
+
+- `migrations/20260830100000_profile_six_link_contract.sql` makes six the hard
+  total-link maximum across V1 and V2. It replaces the V2 link normalizer,
+  trims and reindexes existing seventh-plus entries, tightens JSONB length
+  checks, and keeps the cleanup helpers unavailable to browser roles.
 
 Rich-media Storage RLS correction:
 
@@ -223,17 +242,17 @@ Privacy-conscious profile insights:
   collection; do not remove the aggregate table or RPC boundary during the
   migration period.
 
-Structured profile templates and premium expression:
+Historical structured profile templates and premium expression:
 
 - `migrations/20260808180000_profile_templates.sql` adds a bounded
   `templateKey` to the existing profile configuration normalizer and
   composition RPCs, backfills legacy configurations from their layout variant,
   and preserves the existing draft/publish contracts.
-- The three free templates and the optional Atelier preset are code-owned
-  composition shapes. Atelier is accepted by the server only for an owner who
-  already has the service-granted `atelier_plus` entitlement; this migration
-  never grants entitlements or changes purchases, rank, rolls, rewards, or
-  equipped cosmetics.
+- This is retained as historical migration context. The three structural
+  presets remain free; the optional Atelier preset and its `atelier_plus`
+  entitlement are no longer an active paid benefit. The later Plus paid-media
+  distillation migration retires those catalog rows while preserving old
+  configuration, ownership, and equipped rendering.
 - Recovery is additive: old JSON remains readable, manual composition remains
   available as `custom`, and the migration can be followed by a corrective
   normalizer update without deleting configuration, media, or history.

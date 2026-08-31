@@ -18,6 +18,9 @@ Deno.serve(async request => {
     const { url: supabaseUrl, publishableKey: anonKey, secretKey: serviceRoleKey } = getSupabaseKeys();
     const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
     if (!supabaseUrl || !anonKey || !serviceRoleKey || !stripeSecret) throw new Error('Billing service is not configured.');
+    if (Deno.env.get('PROFILE_MEDIA_R2_READY') !== 'true') {
+      return jsonResponse({ error: 'Purchases are temporarily paused while hosted media is being verified.' }, 503);
+    }
 
     const bearerToken = getBearerToken(request);
     if (!bearerToken) return jsonResponse({ error: 'Authentication required.' }, 401);
@@ -45,7 +48,7 @@ Deno.serve(async request => {
       'line_items[0][price_data][currency]': CHROMADIE_PLUS_CURRENCY,
       'line_items[0][price_data][unit_amount]': String(CHROMADIE_PLUS_AMOUNT),
       'line_items[0][price_data][product_data][name]': 'Chromadie Plus — Lifetime',
-      'line_items[0][price_data][product_data][description]': 'Lifetime profile expression features. Gameplay prestige is never sold.',
+      'line_items[0][price_data][product_data][description]': 'Background video, animated avatar, audio playlists, custom cursors, a custom share preview, and 1 GB of media storage.',
       'line_items[0][price_data][product_data][tax_code]': CHROMADIE_PLUS_TAX_CODE,
       client_reference_id: userId,
       'metadata[user_id]': userId,

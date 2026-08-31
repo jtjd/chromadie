@@ -123,7 +123,7 @@
         {:else if activeSection === 'profile-collection'}
           <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={editorProfileConfig} {entitlements} {staff} />
         {:else if activeSection === 'profile-layout'}
-          <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('profile-layout', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardStudioPatch('layout', event)} />
+          <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:dirty={event => forwardDirty('profile-layout', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardStudioPatch('layout', event)} />
         {:else if activeSection === 'profile-social'}
           <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} {isAuthenticated} social={context.social} settings={context.socialSettings} socialDepthEnabled={featureFlags.socialDepth} on:socialchange={forward} />
         {:else if activeSection === 'profile-insights'}

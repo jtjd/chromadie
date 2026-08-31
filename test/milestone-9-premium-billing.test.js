@@ -108,6 +108,7 @@ test('checkout, restore, and webhook endpoints preserve the authority boundary',
   assert.match(checkout, /managed_payments\[enabled\]/);
   assert.match(checkout, /CHROMADIE_PLUS_TAX_CODE/);
   assert.match(checkout, /success_url/);
+  assert.match(checkout, /PROFILE_MEDIA_R2_READY/);
   assert.doesNotMatch(checkout, /grant_profile_entitlement|process_stripe_billing_event/);
   assert.match(restore, /billing_checkout_sessions/);
   assert.match(restore, /session_id/);
@@ -117,6 +118,10 @@ test('checkout, restore, and webhook endpoints preserve the authority boundary',
   assert.match(pricing, /\$7\.99/);
   assert.match(pricing, /create-premium-checkout/);
   assert.match(pricing, /restore-premium-checkout/);
+  assert.match(pricing, /profileMediaR2/);
+  assert.match(pricing, /Background video hosting/);
+  assert.match(pricing, /Animated avatar hosting/);
+  assert.match(pricing, /Up to 1 GB hosted media/);
   assert.doesNotMatch(pricing, /grant_profile_entitlement|profile_entitlements.*insert/s);
   assert.match(routes, /\/pricing/);
   assert.match(config, /\[functions\.stripe-premium-webhook\][\s\S]*verify_jwt = false/);
@@ -131,9 +136,46 @@ test('pricing presentation follows the homepage visual language without weakenin
   assert.match(header, /activeView === 'pricing'/);
   assert.match(header, /prefetch\('pricing'\)/);
   assert.match(pricing, /class="pricing-hero"/);
-  assert.match(pricing, /class="pricing-page__promise"/);
-  assert.match(pricing, /The color stays earned/);
-  assert.match(pricing, /one identity \/ lifetime access/);
+  assert.match(pricing, /<h1 id="pricing-title">Pick your plan<\/h1>/);
+  assert.match(pricing, /A complete profile is free\. Plus adds hosted media for a one-time \$7\.99\./);
+  assert.match(pricing, /class="pricing-plans"/);
+  assert.match(pricing, /class="pricing-claim"/);
+  assert.match(pricing, /class="pricing-faq"/);
+  assert.match(pricing, /What is Chromadie Plus\?/);
+  assert.doesNotMatch(pricing, /The color stays earned|one identity \/ lifetime access/);
   assert.match(pricing, /prefers-reduced-motion/);
   assert.match(pricing, /aria-label="Free profile and Chromadie Plus comparison"/);
+});
+
+test('pricing includes a responsive feature comparison matrix for the current offer', async () => {
+  const pricing = await read('src/lib/Pricing.svelte');
+  assert.match(pricing, /class="pricing-comparison"/);
+  assert.match(pricing, /<table class="pricing-comparison__table" aria-label="Free and Chromadie Plus feature comparison">/);
+  assert.match(pricing, /Background video hosting/);
+  assert.match(pricing, /Animated avatar hosting/);
+  assert.match(pricing, /Profile audio and playlists/);
+  assert.match(pricing, /Custom OG\/share image/);
+  assert.match(pricing, /Up to 1 GB hosted media/);
+  assert.match(pricing, /scope="row"/);
+  assert.match(pricing, /pricing-comparison__plan-col \{ width: 6\.4rem; \}/);
+  assert.match(pricing, /pricing-card__terms">USD · lifetime access · one identity · up to 1 GB shared media/);
+  assert.match(pricing, /Available soon/);
+  assert.match(pricing, /How does the media limit work\?/);
+  assert.doesNotMatch(pricing, /pricing-comparison__detail|pricing-comparison__chevron/);
+});
+
+test('pricing uses stacked section headings and ends with the chm.lol handle claim', async () => {
+  const pricing = await read('src/lib/Pricing.svelte');
+
+  assert.match(pricing, /class="pricing-section-heading"/);
+  assert.match(pricing, /<h2 id="pricing-plans-title">Plans<\/h2>/);
+  assert.match(pricing, /Compare features/);
+  assert.match(pricing, /Claim your handle/);
+  assert.match(pricing, /<HomepageClaim/);
+  assert.match(pricing, /inputId="pricing-claim-username"/);
+  assert.match(pricing, /buttonLabel="Claim"/);
+  assert.match(pricing, /on:claim={forwardClaim}/);
+  assert.doesNotMatch(pricing, /pricing-hero__side/);
+  assert.doesNotMatch(pricing, /pricing-comparison__heading/);
+  assert.doesNotMatch(pricing, /pricing-page__promise|pricing-page__eyebrow|pricing-hero__signal/);
 });

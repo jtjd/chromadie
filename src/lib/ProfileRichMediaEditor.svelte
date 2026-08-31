@@ -13,7 +13,7 @@
     normalizeRichMediaConfig,
     validateRichMediaFile
   } from './profileRichMedia.js';
-  import { prepareProfileAudioFile, processProfileRichImage } from './profileMediaProcessing.js';
+  import { prepareProfileAudioFile, processAnimatedAvatarPoster, processProfileRichImage, processProfileShareImage } from './profileMediaProcessing.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { deleteProfileMediaAsset, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
@@ -45,7 +45,8 @@
   let audioControls = true;
   let loadedAssetKey = '';
   let videoInput;
-  let bannerInput;
+  let animatedAvatarInput;
+  let shareImageInput;
   let cursorInput;
   let pointerCursorInput;
   let audioInput;
@@ -63,12 +64,14 @@
   $: if (!busy && nextIncomingKey !== incomingKey) syncIncoming(incomingConfig, nextIncomingKey);
   $: activeAssets = assets.filter(asset => asset.status === 'active');
   $: videoAssets = activeAssets.filter(asset => asset.kind === 'background_video');
-  $: bannerAssets = activeAssets.filter(asset => asset.kind === 'banner');
+  $: animatedAvatarAssets = activeAssets.filter(asset => asset.kind === 'animated_avatar');
+  $: shareImageAssets = activeAssets.filter(asset => asset.kind === 'share_image');
   $: cursorAssets = activeAssets.filter(asset => asset.kind === 'cursor');
   $: pointerCursorAssets = activeAssets.filter(asset => asset.kind === 'pointer_cursor');
   $: audioAssets = activeAssets.filter(asset => asset.kind === 'audio');
   $: activeBackgroundVideo = assetForPath(richConfig.background_video_path, richConfig.background_video_asset_id);
-  $: activeBanner = assetForPath(richConfig.banner_path, richConfig.banner_asset_id);
+  $: activeAnimatedAvatar = assetForPath(richConfig.animated_avatar_path, richConfig.animated_avatar_asset_id);
+  $: activeShareImage = assetForPath(richConfig.share_image_path, richConfig.share_image_asset_id);
   $: activeCursor = assetForPath(richConfig.cursor_path, richConfig.cursor_asset_id);
   $: activePointerCursor = assetForPath(richConfig.pointer_cursor_path, richConfig.pointer_cursor_asset_id);
   $: primaryAudioTrack = audioTracks[0] || null;
@@ -166,9 +169,16 @@
   }
 
   async function saveSelection(next = {}) {
-    const { data, error: rpcError } = await supabase.rpc('select_my_profile_r2_media', {
+    const animatedAvatarId = next.animated_avatar_id === undefined ? selectedAssetId('animated_avatar') : next.animated_avatar_id;
+    const { data, error: rpcError } = await supabase.rpc('select_my_profile_r2_media_v2', {
       p_background_video_id: next.background_video_id === undefined ? selectedAssetId('background_video') : next.background_video_id,
-      p_banner_id: next.banner_id === undefined ? selectedAssetId('banner') : next.banner_id,
+      p_animated_avatar_id: animatedAvatarId,
+      p_avatar_fallback_id: animatedAvatarId
+        ? (next.avatar_fallback_id === undefined
+          ? (activeAnimatedAvatar?.metadata?.fallback_asset_id || config?.draft?.avatar_asset_id || config?.published?.avatar_asset_id || null)
+          : next.avatar_fallback_id)
+        : null,
+      p_share_image_id: next.share_image_id === undefined ? selectedAssetId('share_image') : next.share_image_id,
       p_cursor_id: next.cursor_id === undefined ? selectedAssetId('cursor') : next.cursor_id,
       p_pointer_cursor_id: next.pointer_cursor_id === undefined ? selectedAssetId('pointer_cursor') : next.pointer_cursor_id,
       p_audio_config: next.audio_config || audioConfigPayload()
@@ -198,6 +208,10 @@
         if (audioTracks.length >= 5) throw new Error('You can select up to five audio tracks.');
         audioTracks = [...audioTracks, { asset_id: asset.id, path: null, media_reference: { storage_provider: 'r2', r2_public_key: asset.r2_public_key }, label: asset.label || `Track ${audioTracks.length + 1}`, duration_ms: asset.duration_ms || 0, trim_start_ms: 0, trim_end_ms: asset.duration_ms || 0 }];
         await saveSelection({ audio_config: audioConfigPayload() });
+      } else if (kind === 'animated_avatar') {
+        const fallbackAssetId = asset.metadata?.fallback_asset_id;
+        if (!fallbackAssetId) throw new Error('That animated avatar is missing its static fallback.');
+        await saveSelection({ animated_avatar_id: asset.id, avatar_fallback_id: fallbackAssetId });
       } else {
         const field = kind === 'background_video' ? 'background_video_path' : `${kind}_path`;
         const idField = kind === 'background_video' ? 'background_video_id' : `${kind}_id`;
@@ -221,6 +235,9 @@
       // storage_path values are inert and never enter a provider delete path.
       const data = await deleteProfileMediaAsset(asset.id);
       if (!data?.success) throw new Error(data?.error || 'The media asset could not be removed.');
+      if (asset.kind === 'animated_avatar' && asset.metadata?.fallback_asset_id) {
+        await deleteProfileMediaAsset(asset.metadata.fallback_asset_id).catch(() => {});
+      }
       audioTracks = audioTracks.filter(track => track.asset_id !== asset.id);
       await loadAssets();
       const field = asset.kind === 'background_video' ? 'background_video_path' : `${asset.kind}_path`;
@@ -249,6 +266,7 @@
     busy = true;
     setFeedback('', `Preparing ${kind.replace('_', ' ')}…`);
     let stagedAssetId = null;
+    let fallbackAssetId = null;
     let replacementCommitted = false;
     try {
       let blob = file;
@@ -262,13 +280,30 @@
         extension = 'ani';
         metadata.width = 128;
         metadata.height = 128;
-      } else if (['banner', 'cursor', 'pointer_cursor'].includes(kind)) {
+      } else if (kind === 'animated_avatar') {
+        const fallbackBlob = await processAnimatedAvatarPoster(file);
+        const fallbackUpload = await uploadProfileMediaToR2({
+          kind: 'avatar',
+          blob: fallbackBlob,
+          extension: 'webp',
+          mimeType: 'image/webp',
+          label: `${file.name.replace(/\.[^.]+$/, '').slice(0, 64)} fallback`,
+          metadata: { generated_from: 'animated_avatar' }
+        });
+        fallbackAssetId = fallbackUpload.asset_id || fallbackUpload.asset?.id;
+        if (!fallbackAssetId) throw new Error('The static avatar fallback could not be created.');
+        await promoteProfileMediaR2(fallbackAssetId);
+        metadata.fallback_asset_id = fallbackAssetId;
+      } else if (kind === 'share_image') {
+        blob = await processProfileShareImage(file);
+        extension = 'jpg';
+        metadata.width = 1200;
+        metadata.height = 630;
+      } else if (['cursor', 'pointer_cursor'].includes(kind)) {
         blob = await processProfileRichImage(file, kind);
         extension = 'webp';
-        if (kind !== 'banner') {
-          metadata.width = 128;
-          metadata.height = 128;
-        }
+        metadata.width = 128;
+        metadata.height = 128;
       } else if (kind === 'audio') {
         blob = await prepareProfileAudioFile(file);
         extension = 'mp3';
@@ -276,9 +311,6 @@
       if (['audio', 'background_video'].includes(kind)) metadata.duration_ms = await readMediaDuration(file, kind);
       if (!extension) throw new Error('That file type is not supported.');
 
-      const replacingAssetId = ['banner', 'cursor', 'pointer_cursor'].includes(kind)
-        ? selectedAssetId(kind)
-        : null;
       const uploaded = await uploadProfileMediaToR2({
         kind,
         blob,
@@ -286,7 +318,7 @@
         mimeType: blob.type || file.type || (extension === 'ani' ? PROFILE_ANIMATED_CURSOR_MIME : ''),
         label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
         metadata,
-        replaceAssetId: replacingAssetId
+        replaceAssetId: null
       });
       stagedAssetId = uploaded.asset_id || uploaded.asset?.id;
       if (!stagedAssetId) throw new Error('The R2 upload did not return a media asset.');
@@ -301,17 +333,26 @@
         storage_path: null,
         label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
         duration_ms: metadata.duration_ms || 0,
-        mime_type: blob.type || file.type
+        mime_type: blob.type || file.type,
+        metadata
       };
-      await selectAsset(kind, created, true);
-      if (replacingAssetId && replacingAssetId !== stagedAssetId) {
-        await deleteProfileMediaAsset(replacingAssetId).catch(() => {});
+      if (kind === 'audio' && audioTracks.length >= 5) {
+        replacementCommitted = true;
+        setFeedback('', 'Audio uploaded to your library. Remove an active track to add it to the playlist.');
+        return;
+      } else if (kind === 'animated_avatar') {
+        await saveSelection({ animated_avatar_id: stagedAssetId, avatar_fallback_id: fallbackAssetId });
+      } else {
+        await selectAsset(kind, created, true);
       }
       replacementCommitted = true;
       setFeedback('', `${kind.replace('_', ' ')} uploaded and selected.`);
     } catch (uploadError) {
       if (stagedAssetId && !replacementCommitted) {
         await deleteProfileMediaAsset(stagedAssetId).catch(() => {});
+      }
+      if (fallbackAssetId && !replacementCommitted) {
+        await deleteProfileMediaAsset(fallbackAssetId).catch(() => {});
       }
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The rich media upload failed.');
     } finally {
@@ -353,19 +394,19 @@
 </script>
 
 {#if hasAccess}
-  <Module size="wide" tone="quiet" className={compact ? 'rich-media-editor--compact' : ''} title="Rich media" description="Premium cosmetics stay bounded, reusable, and server-verified.">
+  <Module size="wide" tone="quiet" className={compact ? 'rich-media-editor--compact' : ''} title="Hosted media" description="Your Plus media stays reusable, bounded, and server-verified.">
     {#if compact}
       {#if compactKinds.includes('audio')}
         <article class="rich-media-editor__compact-card rich-media-editor__compact-card--audio">
           <input bind:this={audioInput} class="rich-media-editor__compact-file" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={(event) => uploadFile(event, 'audio')} />
-          <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--audio" type="button" disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()} aria-label="Add audio track">
+          <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--audio" type="button" disabled={busy} on:click={() => audioInput?.click()} aria-label="Upload audio track">
             <ProfileMediaIcon kind="audio" />
           </button>
           <div class="rich-media-editor__compact-copy">
             <strong>Profile audio</strong>
             <small>MP3 · reusable audio library / playlist support</small>
             <div class="rich-media-editor__compact-actions">
-              <button type="button" class="rich-media-editor__compact-replace" disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()}>{audioTracks.length >= 5 ? 'Library full' : 'Upload audio'}</button>
+              <button type="button" class="rich-media-editor__compact-replace" disabled={busy} on:click={() => audioInput?.click()}>Upload audio</button>
             </div>
           </div>
         </article>
@@ -396,7 +437,7 @@
     {#if !compact}
     <details class="rich-media-editor__advanced" open>
     {#if loading}<p class="rich-media-editor__status" role="status">Loading your rich media library…</p>{/if}
-    <p class="rich-media-editor__hint">Three muted background videos (MP4/WebM), five MP3 tracks, one banner, and two cursor styles. The library is capped at 150 MB.</p>
+    <p class="rich-media-editor__hint">Upload background video, an animated avatar, profile audio, custom cursors, and a share preview. Plus includes 1 GB of media storage; up to five audio tracks can be active at once.</p>
 
     <div class="rich-media-editor__upload-grid">
       <div class="rich-media-editor__upload-card">
@@ -409,11 +450,19 @@
       </div>
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--wide">
-          {#if activeBanner}<img src={assetMediaUrl(activeBanner)} alt="Active profile banner" />{:else}<span aria-hidden="true">▬</span><small>No banner selected</small>{/if}
+          {#if activeAnimatedAvatar}<img src={assetMediaUrl(activeAnimatedAvatar)} alt="Active animated avatar" />{:else}<span aria-hidden="true">◉</span><small>No animated avatar selected</small>{/if}
         </div>
-        <strong>Banner</strong><small>Processed to bounded WebP</small>
-        <input bind:this={bannerInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'banner')} />
-        <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => bannerInput?.click()}>{activeBanner ? 'Replace banner' : 'Upload banner'}</button>
+        <strong>Animated avatar</strong><small>Animated GIF or WebP · up to 5 MB</small>
+        <input bind:this={animatedAvatarInput} type="file" accept="image/gif,image/webp,.gif,.webp" on:change={(event) => uploadFile(event, 'animated_avatar')} />
+        <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => animatedAvatarInput?.click()}>{activeAnimatedAvatar ? 'Replace avatar' : 'Upload avatar'}</button>
+      </div>
+      <div class="rich-media-editor__upload-card">
+        <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--wide">
+          {#if activeShareImage}<img src={assetMediaUrl(activeShareImage)} alt="Active share preview" />{:else}<span aria-hidden="true">↗</span><small>No share preview selected</small>{/if}
+        </div>
+        <strong>Share preview</strong><small>Centered and prepared at 1200×630</small>
+        <input bind:this={shareImageInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'share_image')} />
+        <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => shareImageInput?.click()}>{activeShareImage ? 'Replace preview' : 'Upload preview'}</button>
       </div>
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--cursor">
@@ -437,13 +486,14 @@
         </div>
         <strong>Audio tracks <span class="rich-media-editor__count">{audioTracks.length}/5</span></strong><small>MP3 · up to 10 MB each</small>
         <input bind:this={audioInput} type="file" accept="audio/mpeg,.mp3" on:change={(event) => uploadFile(event, 'audio')} />
-        <button type="button" style={actionButtonStyle} disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()}>Add audio</button>
+        <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => audioInput?.click()}>Upload audio</button>
       </div>
     </div>
 
     {#each [
       ['background_video', 'Background videos', videoAssets, 'background_video_path', 'background_video_asset_id'],
-      ['banner', 'Banners', bannerAssets, 'banner_path', 'banner_asset_id'],
+      ['animated_avatar', 'Animated avatars', animatedAvatarAssets, 'animated_avatar_path', 'animated_avatar_asset_id'],
+      ['share_image', 'Share previews', shareImageAssets, 'share_image_path', 'share_image_asset_id'],
       ['cursor', 'Cursors', cursorAssets, 'cursor_path', 'cursor_asset_id'],
       ['pointer_cursor', 'Pointer cursors', pointerCursorAssets, 'pointer_cursor_path', 'pointer_cursor_asset_id']
     ] as group (group[0])}
@@ -515,8 +565,8 @@
     </div>
   </article>
 {:else}
-  <Module size="wide" tone="quiet" title="Rich media" description="Make the profile yours with a deeper media library.">
-    <p class="rich-media-editor__hint">Chromadie Plus adds bounded video, audio, banner, and cursor cosmetics. Your free profile keeps the full image, atmosphere, Spotify, and earned-cosmetic experience.</p>
+  <Module size="wide" tone="quiet" title="Hosted media" description="Bring motion, sound, and a custom share preview to your profile.">
+    <p class="rich-media-editor__hint">Chromadie Plus adds background video hosting, animated avatar hosting, profile audio playlists, custom cursors, a custom share preview, and 1 GB of media storage.</p>
   </Module>
 {/if}
 

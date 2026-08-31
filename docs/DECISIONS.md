@@ -1,5 +1,56 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-30 — Keep Compact's daily roll to a small profile summary
+
+Compact's roll role is a static widget summary, not a second copy of the game.
+It shows the latest color swatch, identity, HEX, rarity, and earned score inside
+the profile card. The interactive owner/visitor game stays on the dedicated
+authenticated roll surface; no public layout mounts a second playable game.
+This keeps the profile expressive and story-bearing without letting roll
+controls, timers, condition ledgers, sharing, or rewards overpower identity and
+links.
+
+## 2026-08-30 — Make the compact card a balanced profile-and-game widget
+
+Compact is one authored profile surface with three responsibilities in a
+deliberate order: identity, a static daily-roll summary widget, and a finite
+six-link rail.
+On desktop-sized cards, identity and roll share the opening row; on narrow
+cards they stack. The roll keeps the dedicated game's color, identity, HEX,
+rarity, and score signals, but remains visually subordinate to the profile
+surface. It is a visual widget role, not a second persisted provider widget or
+a second gameplay authority. Owner interactions, visitor projections, scoring,
+and roll eligibility continue to use their existing server-authoritative paths.
+
+Six is the hard maximum for total profile links across free and Plus accounts.
+There is no continuation link section. Existing seventh-plus entries are
+removed by the additive cleanup migration after preserving the first six in
+their current order. The editor, live Studio preview, V1/V2 normalizers, and
+public renderers all consume the same six-link contract.
+
+## 2026-08-30 — Reuse the dedicated roll hierarchy in compact profiles
+
+Compact stays inline with the profile identity card and is treated as one
+composed product surface, not a smaller dedicated game card nested inside the
+profile. The profile owns the background and primary rhythm; the roll borrows
+the dedicated result's typography, square color signal, score treatment, and
+condition evidence. `RollResultBreakdown` is flattened for compact use, and
+the reset/share controls become a restrained footer. Owner and visitor states
+keep their existing specialized data and event paths without duplicating
+scoring or moving authority into the client.
+
+## 2026-08-30 — Treat Compact as a real daily-roll surface
+
+Compact profiles keep the daily roll inline with the identity card, but the
+roll is presented as a small game surface rather than a compressed desktop
+module. The ready state keeps the reset timer and one clear `Roll today`
+action; result states keep the color preview, identity, and earned score. The
+owner and visitor paths still use the same server-authoritative roll and
+canonical result components. On narrow public viewports the compact opening is
+auto-sized and top-anchored so the card grows with content instead of clipping
+inside a fixed-height centered canvas. Studio previews retain their own stage
+geometry.
+
 ## 2026-08-27 — Separate score emphasis from roll color and integrate the reset timer
 
 The result summary now stacks its `Score` label above the total so the metric
@@ -6462,3 +6513,107 @@ Enable RLS without adding browser policies so the queue is protected if a table
 grant changes later while the existing service path remains functional. Keep
 `FORCE ROW LEVEL SECURITY` disabled because these owner-backed RPCs are the
 intended access boundary.
+
+## 2026-08-29 — Sell hosted media once, not profile structure
+
+Chromadie Plus is a $7.99 lifetime hosted-media purchase. Its current benefits
+are background video, animated avatar, custom cursor, profile audio/playlist,
+and custom OG/share-image hosting within 1 GiB and a 200-asset operational
+ceiling. File validation, per-file limits, and five active playlist tracks stay
+bounded; processing is implementation quality, not a marketed benefit.
+
+Links, projects, widgets, and layouts are profile fundamentals. Every account
+receives the current maxima of six links, ten projects, and four widgets. The two
+Atelier Plus cosmetics leave the active catalog, while stable keys and renderer
+mappings remain for historical ownership and equipped profiles.
+
+New banner uploads are retired. Historical banner data is retained only as a
+share-image fallback after the new paid 1200×630 JPEG and before the generated
+profile image. Existing Plus purchases and legacy-compatible entitlements keep
+working. Checkout remains unavailable until R2 readiness is enabled on both the
+client rollout flag and the server deployment gate.
+
+## 2026-08-30 — Put Free and Plus in one comparison matrix
+
+The pricing page now pairs the existing plan cards with a responsive comparison
+matrix. The matrix leads with the free profile fundamentals—layouts, links,
+projects, widgets, atmosphere, and earned progression—then shows the six Plus
+hosted-media benefits and the 1 GB allowance. Native disclosure rows provide
+short explanations without turning the page into a dense feature wall. The
+Plus column is highlighted with existing pricing tokens, and the matrix keeps
+  the same checkout and R2-readiness boundaries as the plan cards.
+
+## 2026-08-30 — Keep pricing headings simple and end with identity claim
+
+Pricing now uses direct Plans, Compare, and Claim sections instead of placing a
+headline beside explanatory filler. Editorial promise copy and decorative
+numbering were removed because the plan cards and comparison matrix already
+state the offer. The final section reuses the existing `HomepageClaim` control
+so username validation, analytics, authenticated-profile behavior, and signup
+routing remain governed by one implementation. It is presented at the bottom
+of pricing because a public `chm.lol/` identity is the product foundation; Plus
+remains an optional expression layer on top of it.
+
+## 2026-08-30 — Use a direct plan-picker hierarchy for pricing
+
+The pricing surface now follows the useful parts of the Linktree reference:
+one direct plan-picker heading, concise plan cards with an explicit “Includes”
+list, a feature comparison, and a short FAQ before the final handle claim.
+Chromadie keeps its own dark product language and lifetime offer; recurring
+plans, testimonials, growth claims, and decorative marketing sections are not
+carried over. FAQ answers state only current limits and product boundaries.
+
+## 2026-08-30 — Keep pricing actions aligned and states truthful
+
+Plan cards use one shared action footer so Free and Plus actions align even
+when Plus includes checkout disclosure. A gated rollout is represented as the
+neutral “Available soon” status rather than a disabled purchase control that
+looks broken. Price labels and hosted-media limits use plain language; the
+comparison header does not repeat prices already shown in the cards.
+
+## 2026-08-30 — Make the pricing audit actionable
+
+The comparison is a semantic HTML table rather than a grid of expandable rows.
+This keeps the two plan columns scannable, gives assistive technology native
+row and column relationships, and preserves horizontal containment on narrow
+screens. Feature names are direct and the matrix does not repeat explanatory
+copy that belongs in the plan cards or FAQ.
+
+Plus now states its purchase terms next to the price (USD, one identity,
+lifetime access, and the shared 1 GB allowance), lists each hosted-media
+benefit separately, and explains the Stripe/refund boundary in the card. When
+checkout is gated, the card shows an honest availability status with a support
+path instead of presenting a disabled button as if it were actionable. The FAQ
+covers shared storage and non-transferability because those are the two
+purchase questions most likely to block a confident decision.
+## 2026-08-30 — Publish five structural profile layout archetypes
+
+The public profile layout picker now has parity with the observed guns.lol
+layout family: Default, Modern, Simplistic, Sleek, and Portfolio. These are
+structural compositions, not vendor code or copied assets. Default keeps
+identity, a static daily-roll summary widget, and a six-link rail in one
+banner-capable card; Modern is the wide framed composition; Simplistic is
+cardless; Sleek is the compact rounded card with an overlapping avatar; and
+Portfolio is the long-form hero composition. Every layout uses the same static
+roll widget contract, safe HTTPS link rail, and server-side layout catalog/RPC
+boundary.
+
+## 2026-08-30 — Validate parity against populated competitor profiles
+
+The layout decisions were based on direct inspection of populated public
+profiles, not only competitor documentation or sample markup. The observed
+profiles included [guns.lol/1234](https://guns.lol/1234) for the centered
+banner-card default, [guns.lol/$](https://guns.lol/$) and
+[guns.lol/drixs](https://guns.lol/drixs) for the wide Modern/widget surface,
+[guns.lol/.jamal.](https://guns.lol/.jamal.) for the rounded Sleek card, and
+[guns.lol/s0v](https://guns.lol/s0v) and [guns.lol/veso](https://guns.lol/veso)
+for long-form Portfolio composition. The implementation matches their
+observable reading order, surface relationships, responsive containment, and
+link/icon treatment while keeping Chromadie's renderer, assets, security
+boundaries, and game data code-owned.
+
+The browser audit now publishes each layout through the real Studio flow and
+checks its public desktop/mobile render, six links, static roll widget, safe
+targets, and absence of the interactive game. Studio uses the staged draft as
+the preview source after tab remounts; the fitting-room cursor uses deterministic
+demo input while public profiles retain window input.

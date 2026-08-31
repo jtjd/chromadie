@@ -112,7 +112,7 @@ test('M13 client surfaces retain reversible gates and V1 fallbacks', async () =>
     read('docs/milestones/COMPETITOR_PARITY_M13_CERTIFICATION_ROLLOUT.md')
   ]);
   assert.match(pricing, /isProfileFeatureEnabled\('commerce'/);
-  assert.match(pricing, /Purchases temporarily paused/);
+  assert.match(pricing, /Available soon/);
   assert.match(expression, /isProfileFeatureEnabled\('richMedia'/);
   assert.match(expression, /image-based profile remains available/);
   assert.match(contract, /SECTION_FLAGS/);

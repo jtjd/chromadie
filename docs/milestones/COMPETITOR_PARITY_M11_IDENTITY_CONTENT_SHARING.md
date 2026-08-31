@@ -14,10 +14,9 @@ structured renderer as the center of the profile.
 - Added finite identity presentation controls: location, timezone, join-month
   display, avatar visibility, plain/typewriter description rhythm, and
   reduced-motion-aware entry animation.
-- Expanded validated links to 25 stable-keyed HTTPS entries. The first six stay
-  in the identity opening; the existing secondary links region is the
-  continuation for the remaining entries. Link alignment, monochrome, size,
-  and glow are finite structured controls.
+- Bounded validated links to six stable-keyed HTTPS entries. All six share one
+  finite link rail in every profile layout; there is no overflow continuation.
+  Link alignment, monochrome, size, and glow are finite structured controls.
 - Added a safe Markdown subset for About content. Markdown is parsed into an
   AST containing only paragraphs, lists, emphasis, strong text, code, and
   HTTPS links. Raw HTML, scripts, and non-HTTPS link targets are discarded.
@@ -28,7 +27,8 @@ structured renderer as the center of the profile.
   Chromadie Plus and staff profiles may use four.
 - Added a canonical/alias share dialog with copy, downloadable QR, and
   crawler-safe structured metadata controls. Metadata is normalized server-side
-  and may select only validated profile media for banner and favicon output.
+  and may select only validated profile media for custom share-preview output;
+  historical banner data remains a compatibility fallback only.
 - Kept the public acquisition surface within the blocking payload budgets by
   loading the identity card and QR dialog at their explicit interaction/render
   boundaries; the aggregate asset catalog remains advisory.
@@ -44,7 +44,7 @@ rendering and stored data intact.
 
 ## Acceptance and rollback
 
-- V1/V2 normalization, 25-link bounds, unsafe Markdown/URL rejection,
+- V1/V2 normalization, six-link bounds, unsafe Markdown/URL rejection,
   provider allowlists, metadata path validation, and QR/share contracts have
   source and unit coverage.
 - Local schema lint and reset pass after applying the migration. Public pages

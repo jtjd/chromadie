@@ -3,6 +3,7 @@
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileReferenceCard from './ProfileReferenceCard.svelte';
   import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
+  import ProfilePortfolioLayout from './profile-layout/ProfilePortfolioLayout.svelte';
   import { requestNameFontLoad } from './name/nameFonts.js';
 
   /** @type {any} */
@@ -103,11 +104,37 @@
             className="profile-studio-preview__motion"
           >
             {#key layoutVariant}
-            {#if layoutVariant === 'full-bleed'}
+            {#if layoutVariant === 'portfolio'}
+              <ProfilePortfolioLayout
+                displayName={identity.displayName || identity.username}
+                bio={identity.bio}
+                avatarSrc={identity.avatarUrl}
+                bannerSrc={media.bannerUrl || ''}
+                avatarEffectKey={avatarEffectKey}
+                {nameLoadout}
+                {nameTodayColor}
+                {nameBaseColor}
+                {nameRecentColors}
+                profileBorderKey={profileBorderKey}
+                surfaceStyle={appearanceStyle}
+                location={identity.location}
+                timezone={identity.timezone}
+                joinedLabel={identity.joinedLabel}
+                showJoinDate={identity.showJoinDate}
+                showAvatar={identity.showAvatar !== false}
+                descriptionMode={identity.descriptionMode}
+                entryAnimation={identity.entryAnimation}
+                {links}
+                {linkStyle}
+                roll={latestRoll}
+                {accentColor}
+              />
+            {:else if ['full-bleed', 'sleek'].includes(layoutVariant)}
               <ProfileFullBleedLayout
                 displayName={identity.displayName || identity.username}
                 bio={identity.bio}
                 avatarSrc={identity.avatarUrl}
+                bannerSrc={media.bannerUrl || ''}
                 avatarEffectKey={avatarEffectKey}
                 {nameLoadout}
                 {nameTodayColor}
@@ -124,6 +151,9 @@
                 {links}
                 {linkStyle}
                 {accentColor}
+                roll={latestRoll}
+                surfaceStyle={appearanceStyle}
+                layoutVariant={layoutVariant}
               />
             {:else}
               <ProfileReferenceCard
@@ -131,6 +161,7 @@
                 bio={identity.bio}
                 meta={metadata}
                 avatarSrc={identity.avatarUrl}
+                bannerSrc={media.bannerUrl || ''}
                 avatarEffectKey={avatarEffectKey}
                 {nameLoadout}
                 {nameTodayColor}
@@ -143,11 +174,11 @@
                 entryAnimation={identity.entryAnimation}
                 {links}
                 {linkStyle}
-                roll={layoutVariant === 'framed' ? null : latestRoll}
+                roll={latestRoll}
                 {accentColor}
                 {audioAvailable}
                 audioStatus={audioStatus}
-                rollLabel="Today's color"
+                rollLabel="Daily roll"
                 presentation="studio"
                 {layoutVariant}
                 ariaLabel="Live public-profile preview card"
@@ -172,17 +203,17 @@
 
 <style>
   .profile-studio-preview { position: relative; display: grid; align-content: start; width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 100%; overflow: visible; }
-  .profile-studio-preview__header { position: relative; z-index: 0; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: min(350px, 100%); min-height: 2rem; margin: 0 auto 17px; }
+  .profile-studio-preview__header { position: relative; z-index: 0; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: min(52rem, 100%); min-height: 2rem; margin: 0 auto 17px; }
   .profile-studio-preview__label { display: inline-flex; align-items: center; gap: 8px; color: var(--studio-atmosphere-muted, #f4f4f4); font: 500 .63rem/1 'Inter', sans-serif; letter-spacing: .1em; text-transform: uppercase; mix-blend-mode: difference; }
   .profile-studio-preview__label i { width: 6px; height: 6px; border-radius: 50%; background: var(--studio-accent, var(--white, #ffffff)); box-shadow: 0 0 8px var(--studio-accent-glow, rgba(255,255,255,.16)); }
   .profile-studio-preview__close { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--studio-atmosphere-line, rgba(255,255,255,.72)); border-radius: .4rem; background: transparent; color: var(--studio-atmosphere-muted, #f4f4f4); font-size: 1.1rem; cursor: pointer; mix-blend-mode: difference; }
   .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-atmosphere-ink, #ffffff); color: var(--studio-atmosphere-ink, #ffffff); }
   .profile-studio-preview__canvas { position: relative; z-index: 1; display: grid; width: 100%; min-width: 0; place-items: start center; overflow: visible; }
-  .profile-studio-preview__viewport { width: min(350px, 100%); min-width: 0; }
+  .profile-studio-preview__viewport { width: min(52rem, 100%); min-width: 0; }
   .profile-studio-preview__stage { width: 100%; min-width: 0; overflow: visible; }
   .profile-studio-preview__loading { position: relative; z-index: 1; display: grid; min-height: 22rem; place-items: center; gap: .55rem; color: var(--studio-atmosphere-muted, #f4f4f4); font: 400 .8rem/1.45 'Inter', sans-serif; text-align: center; mix-blend-mode: difference; }
   .profile-studio-preview__loading span { color: var(--studio-accent, var(--white, #ffffff)); font-size: 1.2rem; }
-  .profile-studio-preview__footer { position: relative; z-index: 2; display: flex; align-items: center; justify-content: flex-end; gap: .7rem; width: min(350px, 100%); min-height: 2.8rem; margin: 15px auto 0; padding-top: 12px; border-top: 1px solid var(--studio-atmosphere-line, rgba(255,255,255,.72)); color: var(--studio-atmosphere-muted, #f4f4f4); font: 400 .6rem/1 'Inter', sans-serif; mix-blend-mode: difference; }
+  .profile-studio-preview__footer { position: relative; z-index: 2; display: flex; align-items: center; justify-content: flex-end; gap: .7rem; width: min(52rem, 100%); min-height: 2.8rem; margin: 15px auto 0; padding-top: 12px; border-top: 1px solid var(--studio-atmosphere-line, rgba(255,255,255,.72)); color: var(--studio-atmosphere-muted, #f4f4f4); font: 400 .6rem/1 'Inter', sans-serif; mix-blend-mode: difference; }
   .profile-studio-preview__devices { display: inline-flex; align-items: center; gap: .2rem; }
   .profile-studio-preview__devices button { min-height: 1.8rem; padding: .25rem .45rem; border: 0; border-radius: .3rem; background: transparent; color: var(--studio-atmosphere-muted, #f4f4f4); font: 500 .6rem/1 'Inter', sans-serif; cursor: pointer; }
   .profile-studio-preview__devices button.active { background: rgba(255,255,255,.08); color: var(--studio-atmosphere-ink, #ffffff); }
@@ -212,7 +243,7 @@
   @media (max-width: 700px) {
     .profile-studio-preview__header { margin-bottom: 11px; }
     .profile-studio-preview__canvas { padding: .5rem 0 1rem; }
-    .profile-studio-preview__viewport { width: min(350px, 100%); }
+    .profile-studio-preview__viewport { width: min(52rem, 100%); }
     .profile-studio-preview__footer { margin-top: 0; }
   }
 

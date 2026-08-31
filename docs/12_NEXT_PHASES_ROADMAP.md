@@ -158,10 +158,13 @@ and must begin one at a time.
    visitor consent, owner opt-in, daily aggregate storage, owner-only reads,
    and 90-day retention. See
    [`milestones/DASHBOARD_PARITY_M6_PRIVACY_ANALYTICS.md`](milestones/DASHBOARD_PARITY_M6_PRIVACY_ANALYTICS.md).
-10. Completed and deployed: structured templates and premium expression. Profile
-    owners can choose three free composition presets, while the existing
-    `atelier_plus` entitlement unlocks the optional Atelier expression preset.
-    See [`milestones/DASHBOARD_PARITY_M7_TEMPLATES_PREMIUM_EXPRESSION.md`](milestones/DASHBOARD_PARITY_M7_TEMPLATES_PREMIUM_EXPRESSION.md).
+10. Completed and deployed: structured profile composition. Profile owners can
+    choose the free composition presets; the former Atelier expression preset
+    and its `atelier_plus` catalog rows are historical and retired from active
+    paid benefits. Chromadie Plus now focuses on hosted media through the
+    dedicated paid-media distillation milestone. See
+    [`milestones/DASHBOARD_PARITY_M7_TEMPLATES_PREMIUM_EXPRESSION.md`](milestones/DASHBOARD_PARITY_M7_TEMPLATES_PREMIUM_EXPRESSION.md)
+    and [`milestones/PLUS_PAID_MEDIA_DISTILLATION.md`](milestones/PLUS_PAID_MEDIA_DISTILLATION.md).
 11. Completed and deployed: bounded owner-managed `/a/<alias>` profile paths
     that redirect to canonical usernames, with no second public renderer. See
     [`milestones/DASHBOARD_PARITY_M8_PROFILE_ALIASES.md`](milestones/DASHBOARD_PARITY_M8_PROFILE_ALIASES.md).

@@ -19,7 +19,7 @@ export const PROFILE_MODULE_IDS = Object.freeze([
   'explore'
 ]);
 export const PROFILE_MODULE_SIZES = Object.freeze(['wide', 'medium', 'narrow']);
-export const PROFILE_LINK_LIMITS = Object.freeze({ freeLinks: 6, maxLinks: 25, openingLinks: 6 });
+export const PROFILE_LINK_LIMITS = Object.freeze({ freeLinks: 6, maxLinks: 6, openingLinks: 6 });
 export const PROFILE_LINK_ALIGNMENTS = Object.freeze(['left', 'center', 'right']);
 
 export const PROFILE_APPEARANCE_DEFAULTS = Object.freeze({
@@ -345,23 +345,25 @@ export function getProfileOpeningLinks(config) {
   return getVisibleProfileLinks(config).slice(0, PROFILE_LINK_LIMITS.openingLinks);
 }
 
-export function getProfileContinuationLinks(config) {
-  return getVisibleProfileLinks(config).slice(PROFILE_LINK_LIMITS.openingLinks);
+export function getProfileContinuationLinks() {
+  // The profile has one finite link rail. Keep this compatibility helper so
+  // older callers receive the same shape while making continuation impossible.
+  return [];
 }
 
-/** Keep the opening Compact card useful without changing stored link order. */
+/** Keep every supported link in the opening composition without changing order. */
 export function getProfileLayoutLinkPartitions(config, layoutVariant = 'compact') {
   const visibleLinks = getVisibleProfileLinks(config);
   const normalizedLayout = normalizeProfileLayoutKey(layoutVariant, 'compact');
   if (normalizedLayout === 'full-bleed') {
     return {
-      opening: visibleLinks,
+      opening: visibleLinks.slice(0, PROFILE_LINK_LIMITS.maxLinks),
       continuation: []
     };
   }
   return {
     opening: visibleLinks.slice(0, PROFILE_LINK_LIMITS.openingLinks),
-    continuation: visibleLinks.slice(PROFILE_LINK_LIMITS.openingLinks)
+    continuation: []
   };
 }
 

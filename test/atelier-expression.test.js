@@ -6,10 +6,11 @@ import { getAtmosphereDefinition } from '../src/lib/profile-atmosphere/atmospher
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Atelier cosmetics are restored as two canonical Plus renderer rows', async () => {
-  const [seed, migration] = await Promise.all([
+test('retired Atelier cosmetics preserve their canonical renderer mappings', async () => {
+  const [seed, migration, retirement] = await Promise.all([
     read('supabase/seed.sql'),
-    read('supabase/migrations/20260809000000_atelier_expression_catalog.sql')
+    read('supabase/migrations/20260809000000_atelier_expression_catalog.sql'),
+    read('supabase/migrations/20260829120000_plus_paid_media_distillation.sql')
   ]);
 
   for (const [itemKey, slot, renderer] of [
@@ -20,6 +21,9 @@ test('Atelier cosmetics are restored as two canonical Plus renderer rows', async
     assert.match(migration, new RegExp(`'${itemKey}'[\\s\\S]*'${slot}'[\\s\\S]*'${renderer}'[\\s\\S]*'premium'[\\s\\S]*'chromadie_plus'`));
   }
 
+  assert.match(seed, /'chromadie_plus', 'retired'/);
+  assert.match(retirement, /catalog_status = 'retired'/);
+
   assert.match(migration, /Expected 99 active catalog rows/);
   assert.match(migration, /Expected 11 active Name Motion rows/);
   assert.match(migration, /Expected 13 active Profile Atmosphere rows/);
@@ -28,7 +32,7 @@ test('Atelier cosmetics are restored as two canonical Plus renderer rows', async
   assert.equal(getAtmosphereDefinition('bg_prism_atmosphere')?.key, 'silk-folds');
 });
 
-test('Customize exposes the Atelier-backed cosmetic layers without a Shop surface', async () => {
+test('Customize preserves renderer support for historically equipped Atelier layers', async () => {
   const [editor, workspace] = await Promise.all([
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileStudioWorkspace.svelte')

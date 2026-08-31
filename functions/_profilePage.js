@@ -84,10 +84,15 @@ export async function renderPublicProfilePage({ request, env, username, legacyPr
     : 'This ChromaDie profile could not be found.';
   const robots = legacyProfile || !profile ? 'noindex,follow' : 'index,follow';
   const faviconUrl = getPublicMediaUrl(metadata.faviconPath, env);
-  const metadataBanner = getPublicMediaUrl(profile?.configuration?.media_references?.banner || metadata.bannerPath, env);
+  const shareReference = profile?.configuration?.media_references?.share_image;
+  const legacyBannerReference = profile?.configuration?.media_references?.banner || metadata.bannerPath;
+  const shareImageUrl = getPublicMediaUrl(shareReference, env);
+  const legacyBannerUrl = getPublicMediaUrl(legacyBannerReference, env);
   const ogImage = profile
-    ? (metadataBanner || `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}`)
+    ? (shareImageUrl || legacyBannerUrl || `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}`)
     : `${origin}/og-default-v4.png`;
+  const ogImageType = shareImageUrl ? 'image/jpeg' : legacyBannerUrl ? 'image/webp' : profile ? 'image/svg+xml' : 'image/png';
+  const ogImageAlt = profile ? `${displayName}'s ChromaDie profile` : 'ChromaDie daily color game';
   const summary = profile
     ? `<section><h1>${escapeHtml(displayName)} (@${escapeHtml(profile.username)}) | ChromaDie</h1><p>${escapeHtml(profile.bio || 'A public color identity shaped by daily rolls.')}</p></section>`
     : '<section><h1>Profile not found</h1><p>This player profile is unavailable.</p></section>';
@@ -122,6 +127,10 @@ export async function renderPublicProfilePage({ request, env, username, legacyPr
     .replace(/<meta property="og:description"[^>]*>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`)
     .replace(/<meta property="og:url"[^>]*>/i, `<meta property="og:url" content="${escapeHtml(canonical)}" />`)
     .replace(/<meta property="og:image"[^>]*>/i, `<meta property="og:image" content="${escapeHtml(ogImage)}" />`)
+    .replace(/<meta property="og:image:alt"[^>]*>/i, `<meta property="og:image:alt" content="${escapeHtml(ogImageAlt)}" />`)
+    .replace(/<meta property="og:image:width"[^>]*>/i, '<meta property="og:image:width" content="1200" />')
+    .replace(/<meta property="og:image:height"[^>]*>/i, '<meta property="og:image:height" content="630" />')
+    .replace('</head>', `<meta property="og:image:type" content="${ogImageType}" /></head>`)
     .replace(/<meta name="theme-color"[^>]*>/i, `<meta name="theme-color" content="${escapeHtml(metadata.embedColor)}" />`)
     .replace(/<meta name="twitter:title"[^>]*>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`)
     .replace(/<meta name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`)

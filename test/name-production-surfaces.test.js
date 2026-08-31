@@ -35,10 +35,14 @@ test('every production identity surface uses the shared Name renderer path', asy
   const canvas = await readProjectFile('src/lib/name/NameEffectCanvas.svelte');
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(identity, /semanticClass="profile-reference-card__name"/);
+  const portfolio = await readProjectFile('src/lib/profile-layout/ProfilePortfolioLayout.svelte');
+  assert.match(portfolio, /semanticClass="profile-portfolio__name"/);
   assert.match(canvas, /name-effect-canvas__semantic\.profile-reference-card__name/);
+  assert.match(canvas, /'profile-portfolio__name'/);
   assert.match(canvas, /getNameFont/);
   assert.match(canvas, /requestNameFontLoad/);
   assert.match(canvas, /data-name-font-ready/);
+  assert.match(canvas, /data-name-font=\{resolvedFontKey\}/);
   assert.match(canvas, /style=\{semanticStyle\}/);
   assert.match(canvas, /aria-hidden="true"/);
   assert.match(canvas, /\$:\s*if \(mounted && renderer && fontLoadKey\) requestFontLoad\(fontLoadKey, resolvedFontKey, text\);/);

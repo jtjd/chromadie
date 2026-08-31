@@ -2,6 +2,44 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-30 — Reduce Compact to a daily-roll summary
+
+- Compact now shows a small daily-roll widget with the color swatch, color
+  identity, HEX, rarity, and earned score.
+- Removed the embedded timer, roll action, condition breakdown, share action,
+  reward surface, and other game controls from the profile card.
+- The full interactive roll remains available on its dedicated/alternate
+  profile surface, so the profile summary and the game each keep a clear job.
+
+## 2026-08-30 — Finish the compact profile/link contract
+
+- Redesigned Compact as a balanced profile-and-game surface: identity first,
+  a small static Daily Roll summary second, and a six-link rail last.
+- Fixed links in the public compact card and the Customize live preview,
+  including safe external targets and profile click tracking.
+- Enforced six total links across the editor, preview, V1/V2 normalization,
+  and stored configuration cleanup. Link overflow no longer creates a second
+  continuation surface.
+
+## 2026-08-30 — Align the compact profile roll with the result card
+
+- Rebalanced compact owner and visitor results as one profile-and-game surface:
+  the profile owns the card while the roll borrows the dedicated game's square
+  color signal, score treatment, and condition evidence.
+- Flattened the shared breakdown and reduced reset/share controls to an
+  integrated footer so the inline card does not read like a full game card
+  nested inside the profile.
+
+## 2026-08-30 — Refine the compact profile roll
+
+- Reworked the compact profile's daily roll into a legible inline game surface
+  with a reset timer, focused `Roll today` action, color preview, identity, and
+  score.
+- Kept the same owner reveal flow, visitor result projection, server authority,
+  and reduced-motion behavior as the full roll game.
+- Fixed narrow public compact profiles so content can grow without clipping or
+  being vertically centered outside the viewport.
+
 ## 2026-08-27 — Harden account media cleanup
 
 - Enabled row-level security on the internal account-media cleanup queue while
@@ -4109,3 +4147,73 @@ direct route behavior.
 - Kept the performance budget failure visible: only the existing
   `publicProfile`, `dashboard`, and `progression` JavaScript route budgets
   remain over their configured limits.
+
+## Chromadie Plus hosted media — 2026-08-29
+
+- Changed Plus to a $7.99 lifetime hosted-media offer: background video,
+  animated avatar, custom cursors, profile audio/playlists, a custom share
+  preview, and 1 GB of bounded storage.
+- Added animated GIF/WebP uploads with static reduced-motion fallbacks and
+  processed 1200×630 JPEG social previews.
+- Made the existing 25-link, ten-project, and four-widget maxima free.
+- Removed banner uploads and active Plus-only Atelier cosmetics while retaining
+  legacy data, ownership, rendering, and share-preview fallback compatibility.
+- Added checkout readiness gates so the product cannot be sold before the R2
+  delivery path is enabled.
+
+## Pricing comparison matrix — 2026-08-30
+
+- Added a responsive Free-versus-Plus feature comparison matrix to the pricing
+  page using the current hosted-media offer and free profile allowances.
+- Added native expandable feature explanations, accessible status labels, and
+  reduced-motion-safe interaction styling.
+
+## Pricing page hierarchy and handle claim — 2026-08-30
+
+- Reorganized pricing into direct Plans, Compare, and Claim sections using the
+  same concise product language as the other routes.
+- Removed editorial promise copy, decorative numbering, and split heading
+  filler; the final section uses the existing `chm.lol/` handle claim form.
+
+## Pricing plan-picker refinement — 2026-08-30
+
+- Reworked the pricing hero and plan cards around a direct “Pick your plan”
+  hierarchy, with concise Includes lists and no editorial marketing filler.
+- Added a short factual FAQ below the feature comparison for current Plus,
+  free-profile, storage, lifetime-access, and gameplay boundaries.
+- Kept the comparison matrix, Stripe checkout states, responsive behavior, and
+  the final homepage-style `chm.lol/` handle claim unchanged.
+
+## Pricing card polish — 2026-08-30
+
+- Aligned Free and Plus actions in shared card footers and removed the Free
+  profile link arrow.
+- Replaced the gated disabled purchase CTA with a neutral “Available soon”
+  state while preserving the checkout gate and active-entitlement state.
+- Clarified hosted-media copy, raised supporting-text legibility, tightened
+  section spacing, and removed repeated prices from the comparison header.
+
+## Pricing audit follow-through — 2026-08-30
+
+- Converted the comparison to a semantic responsive table with accessible
+  feature rows and explicit Free/Chromadie Plus columns.
+- Made purchase terms, shared media storage, Stripe checkout, and refund
+  behavior visible in the Plus card; listed every hosted-media benefit
+  separately.
+- Added FAQ coverage for the shared storage limit and non-transferable access,
+  and provided a support link while Plus checkout is unavailable.
+## Profile layout parity — 2026-08-30
+
+- Added five distinct structural profile layouts: Default, Modern,
+  Simplistic, Sleek, and Portfolio, with shared public and Studio renderer
+  paths.
+- Added the Sleek layout to the validated catalog/RPC contract and retained
+  compatibility with existing layout values.
+- Added Portfolio through an additive catalog migration and a long-form public
+  hero renderer.
+- Kept the daily roll as one concise static profile widget and capped visible
+  profile links at six across every layout; the interactive game remains on the
+  authenticated roll surface.
+- Audited populated competitor profiles directly and checked each Chromadie
+  renderer through Studio publication at desktop and mobile widths, including
+  safe external link targets and the absence of the interactive game.

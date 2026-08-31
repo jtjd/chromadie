@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Chromadie Name Catalog — 64 Effects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Archivo+Black&family=Archivo+Narrow:wght@500;600;700&family=Black+Ops+One&family=Cormorant+Garamond:wght@500;600&family=DM+Serif+Display:ital@0;1&family=Fredoka:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&family=Libre+Franklin:wght@500;600;700&family=Michroma&family=Permanent+Marker&family=Pirata+One&family=Pixelify+Sans:wght@500;600&family=Roboto+Slab:wght@600;700&family=Sono:wght@500;600&family=Syne:wght@500;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#090a0d;--surface:#111319;--surface2:#17191f;--line:#32353e;--line2:#484c57;
+  --text:#f2f0eb;--muted:#9da0aa;--accent:#cdd2ff;--today:#d84b8e;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;min-width:320px;color:var(--text);font-family:"Instrument Sans",sans-serif;
+  background:linear-gradient(180deg,#121419 0,#0c0e12 38%,#090a0d 100%);
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.008) 0 1px,transparent 1px 4px);
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.shell{width:min(calc(100% - 34px),1480px);margin:auto}
+.site-header{position:sticky;top:0;z-index:20;padding:10px 0;background:rgba(9,10,13,.95)}
+.nav{
+  height:44px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:0 10px 0 16px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:#111217;
+}
+.brand{font:600 12px "IBM Plex Mono",monospace}.brand b{color:var(--accent)}
+.nav-label{color:#a4a7af;font-size:12px}.user{justify-self:end;color:#92959e;font:11px "IBM Plex Mono",monospace}
+main{padding:28px 0 80px}
+.hero{display:flex;justify-content:space-between;align-items:end;gap:24px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.hero h1{margin:0;font-size:44px;letter-spacing:-.05em}.hero h1 span{color:var(--accent)}
+.hero p{max-width:760px;margin:8px 0 0;color:#aaaeb7;font-size:16px;line-height:1.55}
+.hero-meta{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.hero-meta span{padding:8px 10px;border:1px solid #3b3f48;border-radius:4px;color:#9ca0ab;font:10px "IBM Plex Mono",monospace;background:#111319}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 510px;gap:18px;padding-top:18px}
+.tabs{display:flex;gap:6px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.tabs button{min-height:40px;padding:0 14px;border:1px solid transparent;border-radius:5px;background:transparent;color:#999ca6}
+.tabs button.active{border-color:#484c57;background:#17191f;color:#fff}
+.section-head{display:flex;justify-content:space-between;align-items:end;padding:18px 0 12px}
+.section-head h2{margin:0;font-size:25px}.section-head p{margin:5px 0 0;color:#92959e;font-size:14px}
+.count{color:var(--accent);font:12px "IBM Plex Mono",monospace}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.card{position:relative;padding:14px;border:1px solid var(--line);border-radius:6px;background:#111319;text-align:left;overflow:hidden}
+.card:hover{border-color:#555a67;background:#14171d}.card.active{border-color:#7c8394;box-shadow:inset 3px 0 0 var(--accent)}
+.card-top,.card-bottom{display:flex;justify-content:space-between;gap:9px;align-items:start}
+.card h3{margin:0;font-size:15px;line-height:1.25}.price{color:var(--accent);font:600 13px "IBM Plex Mono",monospace;white-space:nowrap}
+.new-badge{position:absolute;top:48px;left:20px;z-index:3;padding:4px 6px;border:1px solid #59617a;border-radius:3px;background:#121621;color:#cdd2ff;font:600 8px "IBM Plex Mono",monospace;letter-spacing:.08em}
+.canvas-wrap{position:relative;height:78px;margin:12px 0 10px;border:1px solid #2b2f37;border-radius:4px;background:#090b0f;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+.live{position:absolute;right:6px;bottom:5px;color:#8f94a3;font:600 8px "IBM Plex Mono",monospace;letter-spacing:.08em}
+.rarity{padding:5px 7px;border:1px solid;border-radius:4px;font:600 10px "IBM Plex Mono",monospace;text-transform:uppercase}
+.rare{color:#b7d2ff;border-color:#5875a4}.epic{color:#dcc3ff;border-color:#745c9e}.anomaly{color:#ffd09a;border-color:#8e673d}
+.uncommon{color:#b9ead7;border-color:#4f7d6d}.free{color:#d2d4da;border-color:#595d66}.mythic{color:#ffb3cb;border-color:#a64e6d}
+.collection{color:#858994;font:10px "IBM Plex Mono",monospace}.note{margin:9px 0 0;min-height:34px;color:#90949e;font-size:12px;line-height:1.4}
+.preview-panel{position:sticky;top:74px;align-self:start;border:1px solid var(--line);border-radius:7px;background:#0b0d11;overflow:hidden}
+.preview-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:13px 15px;border-bottom:1px solid var(--line);background:#111319}
+.preview-head strong{font-size:14px}.preview-context{margin-top:4px;color:#8f929c;font:10px "IBM Plex Mono",monospace}
+.mode{display:flex;gap:3px;margin-top:7px;padding:3px;border:1px solid #343740;border-radius:5px;background:#0d0f14}
+.mode button{min-height:27px;padding:0 9px;border:0;border-radius:3px;background:transparent;color:#858892;font-size:10px}
+.mode button.active{background:#1d2027;color:var(--accent)}
+.preview-actions{display:flex;gap:7px}.preview-actions button{min-height:30px;padding:0 10px;border:1px solid #3a3e47;border-radius:4px;background:#17191f;color:#b5b8c1;font-size:11px}
+.profile{min-height:415px;padding:24px;background:#080a0e}
+.profile-card{margin-top:28px;padding:22px;border:1px solid #393d46;border-radius:7px;background:#121419}
+.profile-top{display:flex;justify-content:space-between;align-items:center}
+.today{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid #3a3e47;border-radius:4px;color:#a6a9b1;font:10px "IBM Plex Mono",monospace;text-transform:uppercase}
+.today i{width:9px;height:9px;border-radius:50%;background:var(--today)}
+.identity{display:grid;grid-template-columns:68px minmax(0,1fr);gap:15px;align-items:center;margin-top:46px}
+.avatar{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#d84b8e,#5d6fb0);border:1px solid rgba(255,255,255,.15)}
+.live-canvas{height:84px;min-width:0}.bio{margin:2px 0 0;color:#999ca5;font-size:13px}
+.links{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:20px}.links span{padding:11px;border:1px solid #353942;border-radius:4px;text-align:center;color:#a4a7af;font-size:11px}
+.controls{padding:15px;border-top:1px solid var(--line);background:#111319}
+.control-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.control{padding:10px;border:1px solid #343740;border-radius:5px;background:#0e1015}
+.control label{display:block;margin-bottom:7px;color:#9699a3;font-size:11px}.control input{width:100%;border:0;outline:0;background:transparent}input[type=range]{accent-color:var(--accent)}
+.stack{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.stack div{padding:9px;border:1px solid #343740;border-radius:5px;background:#0e1015}
+.stack span{display:block;color:#777b85;font:9px "IBM Plex Mono",monospace;text-transform:uppercase}.stack strong{display:block;margin-top:5px;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.architecture{margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:6px;color:#999da7;font-size:13px;line-height:1.55;background:#0f1116}
+@media(max-width:1190px){.workspace{grid-template-columns:1fr 440px}.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.workspace{grid-template-columns:1fr}.preview-panel{position:relative;top:auto;grid-row:1}.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.hero{align-items:flex-start;flex-direction:column}.hero-meta{justify-content:flex-start}.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.shell{width:min(calc(100% - 20px),1480px)}.nav-label{display:none}.grid{grid-template-columns:1fr}.identity{grid-template-columns:52px 1fr}.avatar{width:52px;height:52px}.control-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="site-header"><nav class="shell nav"><div class="brand">chm<b>.lol</b></div><div class="nav-label">Name Catalog · 64 paid items</div><div class="user">Admin</div></nav></header>
+<main class="shell">
+<section class="hero">
+  <div><h1>More identity. <span>Same renderer.</span></h1><p>The expanded Name catalog doubles the paid selection while keeping every card and live profile on one Canvas rendering system.</p></div>
+  <div class="hero-meta"><span>18 fonts</span><span>22 materials</span><span>24 motions</span><span>64 paid</span></div>
+</section>
+<section class="workspace">
+<div>
+  <div class="tabs"><button class="active" data-tab="fonts">Fonts</button><button data-tab="materials">Materials</button><button data-tab="motions">Motion</button></div>
+  <div class="section-head"><div><h2 id="sectionTitle">Fonts</h2><p id="sectionDescription">The structural voice of the username.</p></div><div class="count" id="sectionCount"></div></div>
+  <div class="grid" id="grid"></div>
+  <div class="architecture"><strong>Implementation rule:</strong> one renderer definition powers cards, product detail, Studio, profile, leaderboard, and rivals. Effects are data plus bounded Canvas primitives—not custom CSS per surface.</div>
+</div>
+<aside class="preview-panel">
+  <div class="preview-head">
+    <div><strong>Live profile preview</strong><div class="preview-context" id="previewContext">Font only · plain material</div><div class="mode"><button class="active" data-mode="isolated">Isolated</button><button data-mode="combined">Combined</button></div></div>
+    <div class="preview-actions"><button id="replay">Replay</button><button id="toggleMotion">Pause</button></div>
+  </div>
+  <div class="profile">
+    <div class="profile-card">
+      <div class="profile-top"><div class="today"><i></i>Today · #D84B8E</div><span style="font:11px 'IBM Plex Mono'">#01</span></div>
+      <div class="identity"><div class="avatar"></div><div><div class="live-canvas"><canvas id="liveCanvas" aria-label="Admin name preview"></canvas></div><p class="bio">creating things</p></div></div>
+      <div class="links"><span>GitHub</span><span>YouTube</span><span>ChromaDie</span></div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="control-row"><div class="control"><label>Sample name</label><input id="nameInput" value="Admin" maxlength="18"></div><div class="control"><label>Name size</label><input id="sizeRange" type="range" min="34" max="68" value="56"></div></div>
+    <div class="stack"><div><span>Font</span><strong id="fontLabel">Soft Grotesk</strong></div><div><span>Material</span><strong id="materialLabel">Polished Chrome</strong></div><div><span>Motion</span><strong id="motionLabel">Still</strong></div></div>
+  </div>
+</aside>
+</section>
+</main>
+<script>
+const DATA={"fonts": [{"id": "editorial-serif", "name": "Editorial Serif", "collection": "Archive", "rarity": "Rare", "price": "180K EP", "family": "'Cormorant Garamond', Georgia, serif", "weight": 600}, {"id": "condensed-sans", "name": "Condensed Sans", "collection": "Nocturne", "rarity": "Rare", "price": "180K EP", "family": "'Archivo Narrow', 'Arial Narrow', sans-serif", "weight": 700}, {"id": "wide-geometric", "name": "Wide Geometric", "collection": "Prism", "rarity": "Rare", "price": "180K EP", "family": "'Syne', sans-serif", "weight": 700}, {"id": "mono-compact", "name": "Mono Compact", "collection": "Signal", "rarity": "Uncommon", "price": "120K EP", "family": "'IBM Plex Mono', monospace", "weight": 600}, {"id": "rounded-mono", "name": "Rounded Mono", "collection": "Static Bloom", "rarity": "Rare", "price": "170K EP", "family": "'Sono', monospace", "weight": 600}, {"id": "soft-grotesk", "name": "Soft Grotesk", "collection": "Nocturne", "rarity": "Uncommon", "price": "130K EP", "family": "'Instrument Sans', sans-serif", "weight": 650}, {"id": "humanist-display", "name": "Humanist Display", "collection": "Archive", "rarity": "Rare", "price": "190K EP", "family": "'Libre Franklin', sans-serif", "weight": 600}, {"id": "modern-fraktur", "name": "Modern Fraktur", "collection": "Nocturne", "rarity": "Epic", "price": "320K EP", "family": "'Pirata One', Georgia, serif", "weight": 400}, {"id": "pixel-display", "name": "Pixel Display", "collection": "Static Bloom", "rarity": "Rare", "price": "190K EP", "family": "'Pixelify Sans', monospace", "weight": 600}, {"id": "high-contrast-italic", "name": "High-Contrast Italic", "collection": "Archive", "rarity": "Epic", "price": "310K EP", "family": "'DM Serif Display', Georgia, serif", "weight": 400, "style": "italic"}, {"id": "neo-slab", "name": "Neo Slab", "collection": "Archive", "rarity": "Rare", "price": "210K EP", "family": "'Roboto Slab', Georgia, serif", "weight": 700, "new": true}, {"id": "reverse-contrast", "name": "Reverse Contrast", "collection": "Archive", "rarity": "Epic", "price": "330K EP", "family": "'Abril Fatface', Georgia, serif", "weight": 400, "new": true}, {"id": "industrial-stencil", "name": "Industrial Stencil", "collection": "Signal", "rarity": "Epic", "price": "340K EP", "family": "'Black Ops One', sans-serif", "weight": 400, "new": true}, {"id": "futurist-extended", "name": "Futurist Extended", "collection": "Prism", "rarity": "Rare", "price": "230K EP", "family": "'Michroma', sans-serif", "weight": 400, "new": true}, {"id": "terminal-bitmap", "name": "Terminal Bitmap", "collection": "Static Bloom", "rarity": "Rare", "price": "190K EP", "family": "'VT323', monospace", "weight": 400, "new": true}, {"id": "rounded-display", "name": "Rounded Display", "collection": "Prism", "rarity": "Rare", "price": "210K EP", "family": "'Fredoka', sans-serif", "weight": 600, "new": true}, {"id": "marker-tag", "name": "Marker Tag", "collection": "Ember", "rarity": "Epic", "price": "350K EP", "family": "'Permanent Marker', cursive", "weight": 400, "new": true}, {"id": "newspaper-black", "name": "Newspaper Black", "collection": "Archive", "rarity": "Epic", "price": "320K EP", "family": "'Archivo Black', sans-serif", "weight": 400, "new": true}], "materials": [{"id": "plain", "name": "Plain", "collection": "Baseline", "rarity": "Free", "price": "Free"}, {"id": "polished-chrome", "name": "Polished Chrome", "collection": "Nocturne", "rarity": "Epic", "price": "340K EP"}, {"id": "copper-press", "name": "Copper Press", "collection": "Ember", "rarity": "Rare", "price": "220K EP"}, {"id": "glass-emboss", "name": "Glass Emboss", "collection": "Prism", "rarity": "Epic", "price": "350K EP"}, {"id": "fine-outline", "name": "Fine Outline", "collection": "Archive", "rarity": "Uncommon", "price": "140K EP"}, {"id": "ink-bleed", "name": "Ink Bleed", "collection": "Archive", "rarity": "Rare", "price": "210K EP"}, {"id": "pearl-foil", "name": "Pearl Foil", "collection": "Prism", "rarity": "Epic", "price": "360K EP"}, {"id": "carbon-cut", "name": "Carbon Cut", "collection": "Nocturne", "rarity": "Rare", "price": "230K EP"}, {"id": "frosted-edge", "name": "Frosted Edge", "collection": "Signal", "rarity": "Rare", "price": "210K EP"}, {"id": "holographic-film", "name": "Holographic Film", "collection": "Prism", "rarity": "Anomaly", "price": "540K EP"}, {"id": "cut-paper", "name": "Cut Paper", "collection": "Archive", "rarity": "Rare", "price": "200K EP"}, {"id": "neon-tube", "name": "Neon Tube", "collection": "Signal", "rarity": "Epic", "price": "380K EP", "new": true}, {"id": "liquid-mercury", "name": "Liquid Mercury", "collection": "Nocturne", "rarity": "Anomaly", "price": "560K EP", "new": true}, {"id": "oil-slick", "name": "Oil Slick", "collection": "Prism", "rarity": "Epic", "price": "390K EP", "new": true}, {"id": "thermal-ink", "name": "Thermal Ink", "collection": "Signal", "rarity": "Epic", "price": "380K EP", "new": true}, {"id": "velvet-ink", "name": "Velvet Ink", "collection": "Ember", "rarity": "Rare", "price": "250K EP", "new": true}, {"id": "embroidered-thread", "name": "Embroidered Thread", "collection": "Archive", "rarity": "Epic", "price": "370K EP", "new": true}, {"id": "engraved-stone", "name": "Engraved Stone", "collection": "Nocturne", "rarity": "Rare", "price": "260K EP", "new": true}, {"id": "crt-phosphor", "name": "CRT Phosphor", "collection": "Static Bloom", "rarity": "Epic", "price": "350K EP", "new": true}, {"id": "gold-leaf", "name": "Gold Leaf", "collection": "Archive", "rarity": "Anomaly", "price": "570K EP", "new": true}, {"id": "chroma-glass", "name": "Chroma Glass", "collection": "Prism", "rarity": "Epic", "price": "400K EP", "new": true}, {"id": "ceramic-glaze", "name": "Ceramic Glaze", "collection": "Ember", "rarity": "Epic", "price": "390K EP", "new": true}, {"id": "blueprint-ink", "name": "Blueprint Ink", "collection": "Signal", "rarity": "Rare", "price": "240K EP", "new": true}], "motions": [{"id": "none", "name": "Still", "collection": "Baseline", "rarity": "Free", "price": "Free", "note": "No animation."}, {"id": "velvet-sweep", "name": "Velvet Sweep", "collection": "Ember", "rarity": "Epic", "price": "360K EP", "note": "A soft satin highlight travels across the name."}, {"id": "refraction-sweep", "name": "Refraction Sweep", "collection": "Prism", "rarity": "Epic", "price": "350K EP", "note": "Cyan and rose refraction bands cross the letters."}, {"id": "ghost-offset", "name": "Ghost Offset", "collection": "Static Bloom", "rarity": "Epic", "price": "320K EP", "note": "Slow chromatic echoes drift behind the name."}, {"id": "focus-resolve", "name": "Focus Resolve", "collection": "Nocturne", "rarity": "Rare", "price": "230K EP", "note": "The name resolves from controlled blur."}, {"id": "mask-reveal", "name": "Mask Reveal", "collection": "Archive", "rarity": "Rare", "price": "210K EP", "note": "A clean horizontal reveal."}, {"id": "quiet-afterimage", "name": "Quiet Afterimage", "collection": "Static Bloom", "rarity": "Rare", "price": "240K EP", "note": "A restrained delayed copy trails the text."}, {"id": "soft-rise", "name": "Soft Rise", "collection": "Ember", "rarity": "Uncommon", "price": "150K EP", "note": "A subtle entrance from below."}, {"id": "scanline-reveal", "name": "Scanline Reveal", "collection": "Signal", "rarity": "Epic", "price": "330K EP", "note": "A scanning line reveals the name."}, {"id": "particle-drift", "name": "Particle Drift", "collection": "Prism", "rarity": "Epic", "price": "370K EP", "note": "Small particles lift from the letterforms."}, {"id": "letter-shuffle", "name": "Letter Shuffle", "collection": "Static Bloom", "rarity": "Anomaly", "price": "520K EP", "note": "Characters rearrange before locking into place."}, {"id": "fuzzy-signal", "name": "Fuzzy Signal", "collection": "Signal", "rarity": "Epic", "price": "340K EP", "note": "Controlled horizontal signal slices distort the name."}, {"id": "typewriter-name", "name": "Typewriter Name", "collection": "Archive", "rarity": "Rare", "price": "230K EP", "note": "Characters appear one by one."}, {"id": "chromatic-ripple", "name": "Chromatic Ripple", "collection": "Prism", "rarity": "Epic", "price": "410K EP", "note": "A colored wave bends vertical sections of the letters.", "new": true}, {"id": "liquid-fill", "name": "Liquid Fill", "collection": "Prism", "rarity": "Anomaly", "price": "580K EP", "note": "Today\u2019s color rises inside the name and settles.", "new": true}, {"id": "pixel-dissolve", "name": "Pixel Dissolve", "collection": "Static Bloom", "rarity": "Epic", "price": "390K EP", "note": "The name assembles from a field of square fragments.", "new": true}, {"id": "echo-collapse", "name": "Echo Collapse", "collection": "Nocturne", "rarity": "Epic", "price": "380K EP", "note": "Distant copies converge into the final name.", "new": true}, {"id": "heat-shimmer", "name": "Heat Shimmer", "collection": "Ember", "rarity": "Rare", "price": "270K EP", "note": "Thin horizontal bands refract like rising heat.", "new": true}, {"id": "signal-lock", "name": "Signal Lock", "collection": "Signal", "rarity": "Epic", "price": "370K EP", "note": "Misaligned signal slices snap cleanly into place.", "new": true}, {"id": "letter-cascade", "name": "Letter Cascade", "collection": "Archive", "rarity": "Epic", "price": "380K EP", "note": "Characters fall individually into their final positions.", "new": true}, {"id": "orbiting-spark", "name": "Orbiting Spark", "collection": "Prism", "rarity": "Epic", "price": "400K EP", "note": "A bright spark traces around the name.", "new": true}, {"id": "color-memory", "name": "Color Memory", "collection": "Prism", "rarity": "Anomaly", "price": "600K EP", "note": "Recent rolled colors pass through the lettering in sequence.", "new": true}, {"id": "daily-pulse", "name": "Daily Pulse", "collection": "Ember", "rarity": "Epic", "price": "410K EP", "note": "Today\u2019s color blooms outward from the center.", "new": true}, {"id": "prism-shatter", "name": "Prism Shatter", "collection": "Prism", "rarity": "Mythic", "price": "760K EP", "note": "Faceted fragments separate and reassemble.", "new": true}, {"id": "ink-spread", "name": "Ink Spread", "collection": "Archive", "rarity": "Epic", "price": "390K EP", "note": "Soft ink expands into crisp finished letterforms.", "new": true}]};
+const TODAY="#d84b8e";
+const HISTORY=["#d84b8e","#8e7cff","#5cb8a8","#e6a65d","#658fd6"];
+
+const state={
+  tab:"fonts",mode:"isolated",
+  font:DATA.fonts.find(x=>x.id==="soft-grotesk"),
+  material:DATA.materials.find(x=>x.id==="polished-chrome"),
+  motion:DATA.motions.find(x=>x.id==="none"),
+  name:"Admin",size:56,paused:false,epoch:performance.now()
+};
+
+const descriptions={
+  fonts:["Fonts","Ten original faces plus eight genuinely different additions."],
+  materials:["Materials","Surface, depth, print, light, and daily-color behavior."],
+  motions:["Motion","Twelve original motions plus twelve new Canvas-native effects."]
+};
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const easeInOut=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const easeOut=t=>1-Math.pow(1-t,3);
+const smoothstep=t=>t*t*(3-2*t);
+const fract=x=>x-Math.floor(x);
+const hash=n=>fract(Math.sin(n*127.1)*43758.5453);
+
+class NameRenderer{
+  constructor(canvas,options){
+    this.canvas=canvas;
+    this.ctx=canvas.getContext("2d",{alpha:true});
+    this.options=options;
+    this.visible=true;
+    this.resize();
+    this.observer=new IntersectionObserver(entries=>{this.visible=entries[0]?.isIntersecting??true},{rootMargin:"140px"});
+    this.observer.observe(canvas);
+  }
+  destroy(){this.visible=false;this.observer?.disconnect()}
+  resize(){
+    const rect=this.canvas.getBoundingClientRect();
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const w=Math.max(2,Math.round(rect.width*dpr)),h=Math.max(2,Math.round(rect.height*dpr));
+    if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h}
+    this.dpr=dpr;this.width=rect.width;this.height=rect.height;
+  }
+  setOptions(options){this.options={...this.options,...options}}
+  fontString(size=this.options.size){
+    const f=this.options.font,style=f.style?f.style+" ":"";
+    return `${style}${f.weight||600} ${size}px ${f.family}`;
+  }
+  measure(text,size=this.options.size){this.ctx.font=this.fontString(size);return this.ctx.measureText(text).width}
+  prepareText(text,size){
+    const pad=22;let final=size,width=this.measure(text,final),max=this.width-pad*2;
+    if(width>max){final*=max/width;width=max}
+    return {size:final,width,x:(this.width-width)/2,y:this.height/2+final*.34};
+  }
+  createLayer(draw){
+    const off=document.createElement("canvas");off.width=this.canvas.width;off.height=this.canvas.height;
+    const c=off.getContext("2d");c.scale(this.dpr,this.dpr);draw(c);
+    return off;
+  }
+  textMask(text,m){
+    return this.createLayer(c=>{
+      c.font=this.fontString(m.size);c.textBaseline="alphabetic";c.fillStyle="#fff";c.fillText(text,m.x,m.y);
+    });
+  }
+  materialLayer(text,m,p,material=this.options.material){
+    return this.createLayer(c=>this.drawMaterial(c,text,m,p,1,0,0,material));
+  }
+  drawMaskedFill(ctx,text,m,fill,alpha=1){
+    const mask=this.textMask(text,m);
+    const layer=document.createElement("canvas");layer.width=this.canvas.width;layer.height=this.canvas.height;
+    const c=layer.getContext("2d");c.scale(this.dpr,this.dpr);
+    c.drawImage(mask,0,0,this.width,this.height);
+    c.globalCompositeOperation="source-in";c.fillStyle=fill;c.fillRect(0,0,this.width,this.height);
+    ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(layer,0,0,this.width,this.height);ctx.restore();
+  }
+  drawMaterial(ctx,text,m,p,alpha=1,ox=0,oy=0,material=this.options.material){
+    const x=m.x+ox,y=m.y+oy,w=m.width,id=material.id;
+    ctx.save();ctx.globalAlpha=alpha;ctx.font=this.fontString(m.size);ctx.textBaseline="alphabetic";ctx.textAlign="left";
+    if(id==="plain"){
+      ctx.fillStyle="#f0eee8";ctx.fillText(text,x,y);
+    }else if(id==="polished-chrome"||id==="liquid-mercury"){
+      const shift=(id==="liquid-mercury"?Math.sin(p*Math.PI*2)*w*.18:p*w*.6);
+      const g=ctx.createLinearGradient(x-w*.25+shift,0,x+w*.9+shift,0);
+      const colors=id==="liquid-mercury"?["#31343b","#eef1f5","#555a64","#ffffff","#24272d","#cfd3d9"]:["#626771","#e7ebef","#777d87","#fff","#9ca3ad","#e7ebef"];
+      colors.forEach((c,i)=>g.addColorStop(i/(colors.length-1),c));ctx.fillStyle=g;ctx.fillText(text,x,y);
+    }else if(id==="copper-press"){
+      const g=ctx.createLinearGradient(x,y-m.size,x,y);g.addColorStop(0,"#efc09a");g.addColorStop(.45,"#a95637");g.addColorStop(.7,"#e08d5d");g.addColorStop(1,"#6f3321");
+      ctx.fillStyle=g;ctx.shadowColor="rgba(0,0,0,.55)";ctx.shadowOffsetY=2;ctx.fillText(text,x,y);
+    }else if(id==="glass-emboss"){
+      ctx.fillStyle="rgba(218,232,255,.12)";ctx.strokeStyle="rgba(220,233,255,.78)";ctx.lineWidth=1.2;ctx.shadowColor="rgba(125,160,220,.35)";ctx.shadowBlur=10;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);
+    }else if(id==="fine-outline"){
+      ctx.strokeStyle="#efede7";ctx.lineWidth=1.3;ctx.strokeText(text,x,y);
+    }else if(id==="ink-bleed"){
+      ctx.fillStyle="#e7e1d7";ctx.shadowColor="rgba(231,225,215,.32)";ctx.shadowBlur=1.4;ctx.fillText(text,x,y);ctx.globalAlpha*=.25;ctx.fillText(text,x+.8,y+.4);
+    }else if(id==="pearl-foil"){
+      const g=ctx.createLinearGradient(x+p*w*.4,y-m.size,x+w+p*w*.4,y);
+      ["#f7f5fb","#d8e8f3","#f0dfe9","#dcece7","#f6efdf"].forEach((c,i)=>g.addColorStop(i/4,c));ctx.fillStyle=g;ctx.fillText(text,x,y);
+    }else if(id==="carbon-cut"){
+      ctx.strokeStyle="#838993";ctx.lineWidth=1.35;ctx.fillStyle="#17191f";ctx.shadowColor="rgba(0,0,0,.8)";ctx.shadowOffsetX=2;ctx.shadowOffsetY=3;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);
+    }else if(id==="frosted-edge"){
+      ctx.fillStyle="#e7effe";ctx.strokeStyle="rgba(255,255,255,.7)";ctx.lineWidth=.8;ctx.shadowColor="rgba(184,210,255,.3)";ctx.shadowBlur=9;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);
+    }else if(id==="holographic-film"||id==="oil-slick"){
+      const palette=id==="oil-slick"?["#161a24","#564078","#187078","#9c7044","#32224e","#161a24"]:["#8fd8e8","#c2b7e8","#e3b8cc","#ddd3a6","#a9d8ca","#8fd8e8"];
+      const g=ctx.createLinearGradient(x-p*w,y,x+w-p*w,y);palette.forEach((c,i)=>g.addColorStop(i/(palette.length-1),c));ctx.fillStyle=g;ctx.fillText(text,x,y);
+    }else if(id==="cut-paper"){
+      ctx.fillStyle="#716a63";ctx.fillText(text,x+3,y+3);ctx.fillStyle="#e8e1d6";ctx.fillText(text,x,y);
+    }else if(id==="neon-tube"){
+      ctx.strokeStyle="#f7eaf2";ctx.lineWidth=1.4;ctx.shadowColor=TODAY;ctx.shadowBlur=13;ctx.strokeText(text,x,y);ctx.shadowBlur=3;ctx.strokeStyle="#fff";ctx.strokeText(text,x,y);
+    }else if(id==="thermal-ink"){
+      const g=ctx.createLinearGradient(x-p*w*.3,y,x+w-p*w*.3,y);
+      ["#24123a","#5d4dd7","#2bc4c9","#f3d34a",TODAY].forEach((c,i)=>g.addColorStop(i/4,c));ctx.fillStyle=g;ctx.fillText(text,x,y);
+    }else if(id==="velvet-ink"){
+      ctx.fillStyle="#3c172a";ctx.fillText(text,x,y);
+      const g=ctx.createLinearGradient(x+p*w*.6,y,x+p*w*.6+w*.25,y);g.addColorStop(0,"transparent");g.addColorStop(.5,"rgba(255,180,210,.48)");g.addColorStop(1,"transparent");
+      ctx.globalCompositeOperation="source-atop";ctx.fillStyle=g;ctx.fillRect(x,0,w,this.height);
+    }else if(id==="embroidered-thread"){
+      ctx.fillStyle="#d9d0c7";ctx.strokeStyle="#8f8275";ctx.lineWidth=1;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);
+      ctx.globalAlpha=.45;for(let i=0;i<14;i++){const yy=y-m.size*.78+i*m.size*.06;ctx.beginPath();ctx.moveTo(x,yy);ctx.lineTo(x+w,yy+2);ctx.stroke()}
+    }else if(id==="engraved-stone"){
+      ctx.fillStyle="#666b72";ctx.shadowColor="rgba(255,255,255,.18)";ctx.shadowOffsetY=-1;ctx.fillText(text,x,y);ctx.shadowColor="rgba(0,0,0,.8)";ctx.shadowOffsetY=2;ctx.strokeStyle="#292c31";ctx.lineWidth=1;ctx.strokeText(text,x,y);
+    }else if(id==="crt-phosphor"){
+      ctx.fillStyle="#9df5c3";ctx.shadowColor="#5cff9a";ctx.shadowBlur=7;ctx.fillText(text,x,y);
+      ctx.globalCompositeOperation="source-atop";ctx.fillStyle="rgba(0,0,0,.3)";for(let yy=0;yy<this.height;yy+=3)ctx.fillRect(0,yy,this.width,1);
+    }else if(id==="gold-leaf"){
+      const g=ctx.createLinearGradient(x,y-m.size,x+w,y);["#5c3d0b","#f7dc7b","#a86d11","#ffe59a","#6f470c"].forEach((c,i)=>g.addColorStop(i/4,c));ctx.fillStyle=g;ctx.fillText(text,x,y);
+      ctx.globalCompositeOperation="source-atop";ctx.fillStyle="rgba(28,15,2,.55)";for(let i=0;i<18;i++){const px=x+hash(i+13)*w,py=y-m.size*.82+hash(i+31)*m.size*.9;ctx.fillRect(px,py,1+hash(i)*2,1)}
+    }else if(id==="chroma-glass"){
+      ctx.fillStyle="rgba(216,75,142,.22)";ctx.strokeStyle="rgba(255,220,238,.8)";ctx.lineWidth=1.1;ctx.shadowColor=TODAY;ctx.shadowBlur=9;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);
+    }else if(id==="ceramic-glaze"){
+      const g=ctx.createLinearGradient(x,y-m.size,x,y);g.addColorStop(0,"#fff1e9");g.addColorStop(.2,"#d88463");g.addColorStop(.7,"#8b3d2f");g.addColorStop(1,"#4a1c18");ctx.fillStyle=g;ctx.shadowColor="rgba(255,220,195,.35)";ctx.shadowBlur=5;ctx.fillText(text,x,y);
+    }else if(id==="blueprint-ink"){
+      ctx.fillStyle="#7ec7ff";ctx.strokeStyle="#d8efff";ctx.lineWidth=.7;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);ctx.globalAlpha=.35;ctx.strokeStyle="#6eb1e3";ctx.beginPath();ctx.moveTo(x,y+4);ctx.lineTo(x+w,y+4);ctx.stroke();
+    }
+    ctx.restore();
+  }
+  drawTextBand(ctx,text,m,left,width,color,{blur=0,offsetX=0,alpha=1,slant=.16}={}){
+    const skew=width*slant;ctx.save();ctx.beginPath();ctx.moveTo(left+skew,0);ctx.lineTo(left+width+skew,0);ctx.lineTo(left+width-skew,this.height);ctx.lineTo(left-skew,this.height);ctx.closePath();ctx.clip();
+    ctx.globalAlpha=alpha;ctx.font=this.fontString(m.size);ctx.textBaseline="alphabetic";ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=blur;ctx.fillText(text,m.x+offsetX,m.y);ctx.restore();
+  }
+  drawSlices(ctx,layer,m,count,offsetFor,alpha=1){
+    for(let i=0;i<count;i++){
+      const y0=(i/count)*this.height,h=this.height/count+1,dx=offsetFor(i);
+      ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(layer,0,y0*this.dpr,this.canvas.width,h*this.dpr,dx,y0,this.width,h);ctx.restore();
+    }
+  }
+  drawMotion(ctx,text,m,t){
+    const id=this.options.motion.id,p=fract(t);
+    if(id==="none")return false;
+    if(id==="velvet-sweep"){
+      this.drawMaterial(ctx,text,m,p);const x=lerp(m.x-m.width*.32,m.x+m.width*1.08,easeInOut(p));
+      this.drawTextBand(ctx,text,m,x,m.width*.25,"rgba(255,238,247,.98)",{blur:5,alpha:.95,slant:.22});
+      this.drawTextBand(ctx,text,m,x+m.width*.055,m.width*.07,"#fff",{blur:1.5,alpha:1,slant:.22});return true;
+    }
+    if(id==="refraction-sweep"){
+      this.drawMaterial(ctx,text,m,p);const x=lerp(m.x-m.width*.34,m.x+m.width*1.08,easeInOut(p));
+      this.drawTextBand(ctx,text,m,x,m.width*.22,"rgba(78,222,255,.94)",{blur:3,offsetX:3,alpha:.9});
+      this.drawTextBand(ctx,text,m,x-4,m.width*.22,"rgba(255,99,181,.84)",{blur:3,offsetX:-3,alpha:.82});return true;
+    }
+    if(id==="ghost-offset"){
+      const d=Math.sin(p*Math.PI*2);ctx.save();ctx.font=this.fontString(m.size);ctx.textBaseline="alphabetic";ctx.globalCompositeOperation="screen";ctx.globalAlpha=.5;
+      ctx.fillStyle="#4ddaff";ctx.shadowColor="#4ddaff";ctx.shadowBlur=4;ctx.fillText(text,m.x+4+d*3,m.y-1);
+      ctx.fillStyle="#ff5bae";ctx.shadowColor="#ff5bae";ctx.fillText(text,m.x-4-d*3,m.y+1.5);ctx.restore();this.drawMaterial(ctx,text,m,p);return true;
+    }
+    if(id==="focus-resolve"){
+      const phase=p<.28?p/.28:p>.84?(1-p)/.16:1;ctx.save();ctx.filter=`blur(${lerp(4,0,clamp(phase,0,1))}px)`;ctx.globalAlpha=lerp(.35,1,clamp(phase,0,1));this.drawMaterial(ctx,text,m,p);ctx.restore();return true;
+    }
+    if(id==="mask-reveal"){
+      const reveal=p<.32?easeOut(p/.32):p>.86?1-easeOut((p-.86)/.14):1;ctx.save();ctx.beginPath();ctx.rect(m.x,0,m.width*reveal,this.height);ctx.clip();this.drawMaterial(ctx,text,m,p);ctx.restore();return true;
+    }
+    if(id==="quiet-afterimage"){
+      const d=1+3*smoothstep(Math.sin(p*Math.PI)**2);this.drawMaterial(ctx,text,m,p,.18,d,1.5);this.drawMaterial(ctx,text,m,p);return true;
+    }
+    if(id==="soft-rise"){
+      const phase=p<.28?easeOut(p/.28):p>.87?1-(p-.87)/.13:1;this.drawMaterial(ctx,text,m,p,clamp(phase,0,1),0,lerp(9,0,clamp(phase,0,1)));return true;
+    }
+    if(id==="scanline-reveal"){
+      const reveal=p<.4?easeOut(p/.4):p>.88?1-(p-.88)/.12:1;ctx.save();ctx.beginPath();ctx.rect(0,this.height*(1-reveal),this.width,this.height*reveal);ctx.clip();this.drawMaterial(ctx,text,m,p);ctx.restore();
+      if(p<.45){const y=this.height*(1-easeOut(p/.45)),g=ctx.createLinearGradient(0,0,this.width,0);g.addColorStop(0,"transparent");g.addColorStop(.5,"#cdd2ff");g.addColorStop(1,"transparent");ctx.fillStyle=g;ctx.fillRect(0,y-1,this.width,2)}return true;
+    }
+    if(id==="particle-drift"){
+      this.drawMaterial(ctx,text,m,p);for(let i=0;i<10;i++){const seed=hash(i+3),phase=fract(p+seed),x=m.x+m.width*hash(i+19),y=m.y-m.size*.05-phase*m.size*.85;ctx.globalAlpha=Math.sin(phase*Math.PI)*.75;ctx.fillStyle=i%2?"#cdd2ff":TODAY;ctx.beginPath();ctx.arc(x,y,1+hash(i+8)*1.2,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;return true;
+    }
+    if(id==="letter-shuffle"){
+      let shown=text;if(p<.42){const chars=[...text],locked=Math.floor((p/.42)*chars.length),tail=chars.slice(locked),shift=tail.length>1?1+(Math.floor(p*40)%(tail.length-1)):0;shown=chars.slice(0,locked).concat(tail.slice(shift),tail.slice(0,shift)).join("")}
+      this.drawMaterial(ctx,shown,{...m,width:this.measure(shown,m.size)},p);return true;
+    }
+    if(id==="fuzzy-signal"){
+      this.drawMaterial(ctx,text,m,p);const slices=8,frame=Math.floor(p*30);
+      for(let i=0;i<slices;i++){const y0=(i/slices)*this.height,h=this.height/slices+1,amp=(hash(i+frame*7)-.5)*12;ctx.save();ctx.beginPath();ctx.rect(0,y0,this.width,h);ctx.clip();ctx.font=this.fontString(m.size);ctx.textBaseline="alphabetic";ctx.globalCompositeOperation="screen";ctx.globalAlpha=.52;ctx.fillStyle=i%2?"#4ddaff":"#ff5bae";ctx.fillText(text,m.x+amp,m.y);ctx.restore()}return true;
+    }
+    if(id==="typewriter-name"){
+      const reveal=.42,hold=.82;let count;if(p<reveal)count=Math.floor((p/reveal)*text.length);else if(p<hold)count=text.length;else count=Math.max(0,text.length-Math.floor(((p-hold)/(1-hold))*text.length));
+      const shown=text.slice(0,count),mm={...m,width:this.measure(shown,m.size)};this.drawMaterial(ctx,shown,mm,p);if(Math.floor(p*18)%2===0&&p<hold){ctx.fillStyle="#cdd2ff";ctx.fillRect(mm.x+mm.width+2,mm.y-mm.size*.82,2,mm.size*.9)}return true;
+    }
+
+    if(id==="chromatic-ripple"){
+      const layer=this.materialLayer(text,m,p),count=12;
+      this.drawSlices(ctx,layer,m,count,i=>Math.sin(p*Math.PI*2+i*.7)*4,.95);
+      ctx.save();ctx.globalCompositeOperation="screen";ctx.globalAlpha=.22;this.drawSlices(ctx,layer,m,count,i=>Math.sin(p*Math.PI*2+i*.7+1.2)*7,.7);ctx.restore();return true;
+    }
+    if(id==="liquid-fill"){
+      ctx.save();ctx.globalAlpha=.18;this.drawMaterial(ctx,text,m,p);ctx.restore();
+      const rise=p<.65?easeOut(p/.65):1,top=this.height*(1-rise);
+      ctx.save();ctx.beginPath();ctx.rect(0,top,this.width,this.height-top);ctx.clip();
+      const g=ctx.createLinearGradient(0,top,0,this.height);g.addColorStop(0,"#ffd9ea");g.addColorStop(.16,TODAY);g.addColorStop(1,"#5b1537");
+      this.drawMaskedFill(ctx,text,m,g,1);ctx.restore();
+      ctx.fillStyle="rgba(255,221,236,.75)";ctx.fillRect(m.x,top,m.width,1.5);return true;
+    }
+    if(id==="pixel-dissolve"){
+      const layer=this.materialLayer(text,m,p),block=Math.max(3,Math.round(m.size/10)),threshold=p<.55?p/.55:1;
+      for(let y=0;y<this.height;y+=block)for(let x=0;x<this.width;x+=block){const seed=hash(x*.17+y*.31);if(seed<threshold){const drift=(1-threshold)*(seed-.5)*18;ctx.drawImage(layer,x*this.dpr,y*this.dpr,block*this.dpr,block*this.dpr,x+drift,y-drift*.35,block,block)}}
+      return true;
+    }
+    if(id==="echo-collapse"){
+      const settle=easeOut(clamp(p/.58,0,1));for(let i=4;i>=1;i--){const spread=(1-settle)*i*8;this.drawMaterial(ctx,text,m,p,.11+i*.035,(i%2?1:-1)*spread,(i-2)*1.5)}
+      this.drawMaterial(ctx,text,m,p);return true;
+    }
+    if(id==="heat-shimmer"){
+      const layer=this.materialLayer(text,m,p),count=14;this.drawSlices(ctx,layer,m,count,i=>Math.sin(i*.85+p*Math.PI*4)*3.5,.98);return true;
+    }
+    if(id==="signal-lock"){
+      const layer=this.materialLayer(text,m,p),lock=easeOut(clamp(p/.42,0,1)),count=9,frame=Math.floor(p*18);
+      this.drawSlices(ctx,layer,m,count,i=>(hash(i+frame*3)-.5)*18*(1-lock),1);return true;
+    }
+    if(id==="letter-cascade"){
+      ctx.save();ctx.font=this.fontString(m.size);ctx.textBaseline="alphabetic";let x=m.x;
+      [...text].forEach((char,i)=>{const local=clamp((p*1.45-i*.08),0,1),settle=easeOut(local),dy=lerp(-m.size*.9,0,settle),a=clamp(local*1.7,0,1);this.drawMaterial(ctx,char,{...m,x,y:m.y+dy,width:this.measure(char,m.size)},p,a);x+=this.measure(char,m.size)});
+      ctx.restore();return true;
+    }
+    if(id==="orbiting-spark"){
+      this.drawMaterial(ctx,text,m,p);const a=p*Math.PI*2,x=m.x+m.width/2+Math.cos(a)*m.width*.58,y=m.y-m.size*.38+Math.sin(a)*m.size*.64;
+      const g=ctx.createRadialGradient(x,y,0,x,y,8);g.addColorStop(0,"#fff");g.addColorStop(.28,"#cdd2ff");g.addColorStop(1,"transparent");ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.fill();return true;
+    }
+    if(id==="color-memory"){
+      const g=ctx.createLinearGradient(m.x-p*m.width,0,m.x+m.width-p*m.width,0);const colors=[...HISTORY,...HISTORY];
+      colors.forEach((c,i)=>g.addColorStop(i/(colors.length-1),c));this.drawMaskedFill(ctx,text,m,g,1);return true;
+    }
+    if(id==="daily-pulse"){
+      this.drawMaterial(ctx,text,m,p);const radius=lerp(0,m.width*.75,easeOut(p)),g=ctx.createRadialGradient(m.x+m.width/2,m.y-m.size*.35,0,m.x+m.width/2,m.y-m.size*.35,radius||1);
+      g.addColorStop(0,"rgba(255,235,245,.98)");g.addColorStop(.18,TODAY);g.addColorStop(1,"rgba(216,75,142,0)");this.drawMaskedFill(ctx,text,m,g,.75);return true;
+    }
+    if(id==="prism-shatter"){
+      const layer=this.materialLayer(text,m,p),cols=8,rows=4,phase=p<.5?easeOut(p/.5):easeOut((1-p)/.5),scatter=(1-phase)*18;
+      const tw=this.width/cols,th=this.height/rows;
+      for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const seed=hash(r*17+c*31),ox=(seed-.5)*scatter,oy=(hash(seed*99)-.5)*scatter,rot=(seed-.5)*(1-phase)*.25;
+        ctx.save();ctx.translate(c*tw+tw/2+ox,r*th+th/2+oy);ctx.rotate(rot);ctx.drawImage(layer,c*tw*this.dpr,r*th*this.dpr,tw*this.dpr,th*this.dpr,-tw/2,-th/2,tw,th);ctx.restore()}
+      return true;
+    }
+    if(id==="ink-spread"){
+      const phase=easeOut(clamp(p/.58,0,1));for(let i=5;i>=1;i--){ctx.save();ctx.filter=`blur(${(1-phase)*i*1.5}px)`;ctx.globalAlpha=.05+i*.035;this.drawMaterial(ctx,text,m,p,1,0,(1-phase)*(i-3));ctx.restore()}
+      ctx.save();ctx.globalAlpha=phase;this.drawMaterial(ctx,text,m,p);ctx.restore();return true;
+    }
+    return false;
+  }
+  draw(time){
+    if(!this.visible)return;
+    this.resize();const ctx=this.ctx;ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.clearRect(0,0,this.width,this.height);
+    const o=this.options,text=o.text||"Admin",m=this.prepareText(text,o.size),cycle=o.compact?3.2:4.8,p=o.paused?o.pauseAt:fract((time-o.epoch)/1000/cycle);
+    if(!this.drawMotion(ctx,text,m,p))this.drawMaterial(ctx,text,m,p);
+  }
+}
+
+const renderers=new Set(),cardRenderers=new Map();let liveRenderer;
+function effective(){
+  if(state.mode==="combined")return{font:state.font,material:state.material,motion:state.motion};
+  if(state.tab==="fonts")return{font:state.font,material:DATA.materials[0],motion:DATA.motions[0]};
+  if(state.tab==="materials")return{font:DATA.fonts.find(x=>x.id==="soft-grotesk"),material:state.material,motion:DATA.motions[0]};
+  return{font:DATA.fonts.find(x=>x.id==="soft-grotesk"),material:DATA.materials[0],motion:state.motion};
+}
+function rarityClass(r){return r.toLowerCase().replace(/\s+/g,"-")}
+function activeItem(item){const key=state.tab.slice(0,-1);return state[key]?.id===item.id}
+function layerFor(item){
+  if(state.tab==="fonts")return{font:item,material:DATA.materials[0],motion:DATA.motions[0]};
+  if(state.tab==="materials")return{font:DATA.fonts.find(x=>x.id==="soft-grotesk"),material:item,motion:DATA.motions[0]};
+  return{font:DATA.fonts.find(x=>x.id==="soft-grotesk"),material:DATA.materials[0],motion:item};
+}
+function isAnimated(item){
+  if(state.tab==="motions")return item.id!=="none";
+  return state.tab==="materials"&&["polished-chrome","pearl-foil","holographic-film","liquid-mercury","oil-slick","thermal-ink","velvet-ink","crt-phosphor","gold-leaf"].includes(item.id);
+}
+function renderGrid(){
+  for(const r of cardRenderers.values()){r.destroy();renderers.delete(r)}cardRenderers.clear();
+  const list=DATA[state.tab];sectionTitle.textContent=descriptions[state.tab][0];sectionDescription.textContent=descriptions[state.tab][1];sectionCount.textContent=`${list.length} items`;
+  grid.innerHTML=list.map(item=>`<button class="card ${activeItem(item)?"active":""}" data-id="${item.id}">
+    <div class="card-top"><h3>${item.name}</h3><span class="price">${item.price}</span></div>
+    ${item.new?'<span class="new-badge">NEW</span>':""}
+    <div class="canvas-wrap"><canvas aria-label="${item.name} preview"></canvas>${isAnimated(item)?'<span class="live">MOTION</span>':""}</div>
+    <div class="card-bottom"><span class="rarity ${rarityClass(item.rarity)}">${item.rarity}</span><span class="collection">${item.collection}</span></div>
+    <p class="note">${item.note||""}</p>
+  </button>`).join("");
+  grid.querySelectorAll(".card").forEach(card=>{
+    const item=list.find(x=>x.id===card.dataset.id),layers=layerFor(item),renderer=new NameRenderer(card.querySelector("canvas"),{...layers,text:"Admin",size:31,compact:true,paused:false,epoch:state.epoch,pauseAt:.52});
+    cardRenderers.set(item.id,renderer);renderers.add(renderer);
+    card.addEventListener("click",()=>{const key=state.tab.slice(0,-1);state[key]=item;state.epoch=performance.now();renderGrid();updateLive()});
+  });
+}
+function updateLive(){
+  const layers=effective();fontLabel.textContent=state.font.name;materialLabel.textContent=state.material.name;motionLabel.textContent=state.motion.name;
+  previewContext.textContent=state.mode==="combined"?"Combined selection":state.tab==="fonts"?"Font only · plain material":state.tab==="materials"?"Material only · neutral font":"Motion only · plain text";
+  liveRenderer.setOptions({...layers,text:state.name,size:state.size,paused:state.paused,epoch:state.epoch,pauseAt:.52});
+}
+const grid=document.getElementById("grid"),sectionTitle=document.getElementById("sectionTitle"),sectionDescription=document.getElementById("sectionDescription"),sectionCount=document.getElementById("sectionCount");
+const fontLabel=document.getElementById("fontLabel"),materialLabel=document.getElementById("materialLabel"),motionLabel=document.getElementById("motionLabel"),previewContext=document.getElementById("previewContext");
+liveRenderer=new NameRenderer(document.getElementById("liveCanvas"),{...effective(),text:state.name,size:state.size,compact:false,paused:false,epoch:state.epoch,pauseAt:.52});renderers.add(liveRenderer);
+function tick(t){for(const r of renderers)r.draw(t);requestAnimationFrame(tick)}
+document.querySelectorAll("[data-tab]").forEach(btn=>btn.addEventListener("click",()=>{state.tab=btn.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===btn));state.epoch=performance.now();renderGrid();updateLive()}));
+document.querySelectorAll("[data-mode]").forEach(btn=>btn.addEventListener("click",()=>{state.mode=btn.dataset.mode;document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("active",x===btn));state.epoch=performance.now();updateLive()}));
+nameInput.addEventListener("input",e=>{state.name=e.target.value||"Admin";state.epoch=performance.now();updateLive()});
+sizeRange.addEventListener("input",e=>{state.size=+e.target.value;updateLive()});
+replay.addEventListener("click",()=>{state.epoch=performance.now();state.paused=false;toggleMotion.textContent="Pause";updateLive()});
+toggleMotion.addEventListener("click",e=>{state.paused=!state.paused;e.currentTarget.textContent=state.paused?"Play":"Pause";if(!state.paused)state.epoch=performance.now();updateLive()});
+window.addEventListener("resize",()=>renderers.forEach(r=>r.resize()));
+renderGrid();updateLive();requestAnimationFrame(tick);
+window.__NAME_CATALOG__={
+  DATA,state,renderers,cardRenderers,liveRenderer,effective,
+  drawCardAt(id,p){const r=cardRenderers.get(id);if(!r)return false;r.visible=true;r.setOptions({paused:true,pauseAt:p});r.draw(performance.now());return true},
+  drawLiveAt(id,p){const motion=DATA.motions.find(x=>x.id===id),base=effective();liveRenderer.visible=true;liveRenderer.setOptions({...base,motion,paused:true,pauseAt:p});liveRenderer.draw(performance.now());return true}
+};
+</script>
+</body>
+</html>

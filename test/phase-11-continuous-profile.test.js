@@ -14,7 +14,8 @@ test('phase 11 profile composition uses one opening canvas and quiet supporting 
   assert.match(shell, /profile-shell__supporting/);
   assert.match(shell, /profile-shell__identity/);
   assert.match(shell, /ProfileReferenceCard/);
-  assert.match(card, /<ProfileDailyRoll/);
+  assert.match(card, /<ProfileRollSummary/);
+  assert.doesNotMatch(card, /<ProfileDailyRoll|liveRoll=/);
   assert.doesNotMatch(shell, /More of the color story|Connect with this profile|Public boundary/);
   assert.doesNotMatch(featured, /Featured accomplishment/);
   assert.doesNotMatch(expression, /<Module/);

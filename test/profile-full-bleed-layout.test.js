@@ -16,12 +16,12 @@ import {
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Immersive is an active structural layout with cardless centered identity semantics', () => {
+test('Simplistic is an active structural layout with cardless centered identity semantics', () => {
   assert(PROFILE_LAYOUT_KEYS.includes('full-bleed'));
   assert.equal(normalizeProfileLayoutKey('profile_layout_full_bleed'), 'full-bleed');
   assert.deepEqual(PROFILE_LAYOUT_DEFINITIONS['full-bleed'].structure, {
     identity: 'centered',
-    roll: 'below-fold',
+    roll: 'widget',
     surface: 'cardless'
   });
   assert.equal(getProfileLayoutMotionTarget('full-bleed'), 'full-bleed-identity');
@@ -44,7 +44,7 @@ test('Immersive is an active structural layout with cardless centered identity s
   assert.deepEqual(partitions.opening.map(link => link.label), ['Website', 'Spotify', 'Discord', 'Archive']);
 });
 
-test('Immersive uses one purpose-built identity composition in public and Studio render paths', async () => {
+test('Simplistic uses one purpose-built identity composition in public and Studio render paths', async () => {
   const [layout, shell, studio, renderModel, editor, migration] = await Promise.all([
     read('src/lib/profile-layout/ProfileFullBleedLayout.svelte'),
     read('src/lib/ProfileShell.svelte'),
@@ -54,7 +54,7 @@ test('Immersive uses one purpose-built identity composition in public and Studio
     read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql')
   ]);
 
-  assert.match(layout, /data-profile-layout-content="full-bleed"/);
+  assert.match(layout, /data-profile-layout-content=\{layoutVariant\}/);
   assert.match(layout, /profile-full-bleed__avatar/);
   assert.match(layout, /profile-full-bleed__bio/);
   assert.match(layout, /profile-full-bleed__links/);
@@ -62,20 +62,21 @@ test('Immersive uses one purpose-built identity composition in public and Studio
   assert.doesNotMatch(layout, /ProfileLayoutFrame|ProfileReferenceCard|profile-preview/);
 
   assert.match(shell, /import ProfileFullBleedLayout/);
-  assert.match(shell, /profilePresentationLayoutVariant === 'full-bleed'/);
+  assert.match(shell, /\['full-bleed', 'sleek'\]\.includes\(profilePresentationLayoutVariant\)/);
   assert.match(shell, /inputSurface=\{previewMode \? 'container' : 'viewport'\}/);
-  assert.match(shell, /\{#if profilePresentationLayoutVariant === 'full-bleed'\}/);
-  assert.match(renderModel, /layoutVariant === 'full-bleed'/);
+  assert.match(shell, /profileHasBelowFoldRoll = false/);
+  assert.match(shell, /roll=\{showRoll && !refreshing \? latestRoll : null\}/);
+  assert.match(renderModel, /const hasBelowFoldRoll = false/);
 
   assert.match(studio, /import ProfileFullBleedLayout/);
-  assert.match(studio, /layoutVariant === 'full-bleed'/);
+  assert.match(studio, /\['full-bleed', 'sleek'\]\.includes\(layoutVariant\)/);
   assert.match(studio, /inputSurface="container"/);
   assert.match(editor, /data-layout='full-bleed'/);
   assert.match(migration, /profile_layout_full_bleed/);
   assert.match(migration, /css_value IN \('compact', 'full-bleed'\)/);
 });
 
-test('Immersive matches the reference identity scale and exposes bounded link styling', async () => {
+test('Simplistic matches the reference identity scale and exposes bounded link styling', async () => {
   const layout = await read('src/lib/profile-layout/ProfileFullBleedLayout.svelte');
 
   assert.match(layout, /margin: 0 auto clamp\(\.7rem, 1\.5vw, 1rem\);/);

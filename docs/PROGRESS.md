@@ -1,5 +1,46 @@
 # Chromadie 2.0 Progress
 
+## Compact daily-roll summary — 2026-08-30
+
+- Replaced the interactive roll mounted inside Compact with a small static
+  summary widget showing the latest color, identity, HEX, rarity, and score.
+- Kept the full owner/visitor game available on the authenticated `/roll`
+  surface; public layouts expose only the static summary widget and never
+  duplicate timers, condition breakdowns, share controls, or reward surfaces.
+- Added browser and source contracts proving the Studio preview and published
+  card render the summary without mounting an interactive roll surface.
+
+## Compact profile link and widget audit — 2026-08-30
+
+- Rebuilt the compact reference card around one responsive composition: the
+  identity and static daily-roll summary share the desktop opening, while six links
+  form the full-width rail and stack into two columns on narrow cards.
+- Fixed compact and Studio preview link rendering by removing the stale
+  four-link renderer slice and wiring the live preview to the staged link
+  projection. Link activation keeps safe HTTPS targets and click tracking.
+- Set six as the hard V1/V2 link maximum for every tier. The additive database
+  migration permanently trims seventh-plus stored entries, reindexes the
+  retained six, updates V2 normalization, and adds storage checks.
+- Kept the roll as a visual widget role while preserving the existing owner,
+  visitor, scoring, eligibility, and server-authoritative event contracts.
+
+## Compact result-card convergence — 2026-08-30
+
+- Superseded the earlier inline result-card experiment with a small static
+  summary: the profile card owns the background and rhythm, while the widget
+  carries only the latest color identity and score signals.
+- Kept the full canonical result, eligibility, scoring, and server event path
+  in the dedicated game surface rather than duplicating it in Compact.
+
+## Compact profile roll surface — 2026-08-30
+
+- Reworked the compact profile's daily roll into a bounded game surface with a
+  clear ready action, reset timer, color preview, identity, and score.
+- Kept the owner roll state, visitor result state, server eligibility, and
+  reveal events shared with the full roll implementation.
+- Made the compact opening auto-size on narrow public profiles so longer names,
+  links, and roll states do not clip or center outside the viewport.
+
 ## Score and timer hierarchy — 2026-08-27
 
 - Stacked the result score label over its total to keep the metric visually
@@ -5165,3 +5206,81 @@ responsive desktop two-column/mobile stacked composition.
   and service cleanup RPC availability.
 - Applied the migration to the linked Supabase database and verified the live
   table flags and service-role claim privilege.
+
+## Plus paid-media distillation — 2026-08-29
+
+- Distilled Chromadie Plus to background video, animated avatar, cursor,
+  profile audio/playlist, and OG/share-image hosting for $7.99 lifetime.
+- Added animated GIF/WebP validation, static avatar fallbacks, 1200×630 JPEG
+  share-image processing, public rendering, and server-rendered OG precedence.
+- Replaced per-kind library-count limits with a 1 GiB Plus/staff quota and a
+  200-asset operational ceiling while preserving per-file and active-selection
+  limits.
+- Made 25 links, ten projects, and four widgets available to free accounts and
+  retired the two active Atelier Plus cosmetics without removing compatibility.
+- Kept checkout paused behind client and server R2-readiness gates.
+- Final validation passes build, svelte-check, source lint, 465 automated
+  tests, links, CSP, username-policy, balance, catalog, scoring parity,
+  database-security, schema lint, and local database reset. The existing
+  performance-budget check remains red for the publicProfile, dashboard, and
+  progression JavaScript route budgets plus advisory catalog targets.
+
+## Pricing comparison matrix — 2026-08-30
+
+- Added a responsive Free-versus-Plus comparison matrix to `/pricing`.
+- The matrix makes the free structural allowances and the six current hosted
+  media benefits scannable in one place, with expandable row explanations.
+- Plus remains the highlighted column without changing the existing checkout,
+  entitlement, or R2 readiness boundaries.
+
+## Pricing page hierarchy and handle claim — 2026-08-30
+
+- Reorganized the pricing page into direct sections for Plans, Compare, and
+  Claim, matching the concise hierarchy used by the product routes.
+- Removed editorial promise copy, decorative numbering, and split title/filler
+  blocks while keeping the current offer and comparison details intact.
+- Added the existing validated `chm.lol/` handle-claim control as the final
+  pricing section, forwarding claim and authenticated-profile actions through
+  the existing route boundary.
+
+## Pricing plan-picker refinement — 2026-08-30
+
+- Reworked the page around a direct “Pick your plan” heading and concise Free
+  and Chromadie Plus cards modeled on the useful hierarchy of the Linktree
+  pricing reference.
+- Added a factual FAQ below Compare features; removed recurring-plan language,
+  testimonials, growth claims, and other reference-page marketing sections.
+- Preserved the current $7.99 lifetime checkout, comparison matrix, responsive
+  containment, and bottom `chm.lol/` claim input.
+
+## Pricing card polish — 2026-08-30
+
+- Aligned Free and Plus card actions, removed the Free CTA arrow, and made
+  rollout-gated Plus availability read as “Available soon.”
+- Replaced awkward price and storage labels with plain-language copy and
+  removed duplicate comparison-header prices.
+- Improved supporting-text contrast and tightened the vertical rhythm without
+  adding new marketing sections.
+
+## Pricing audit follow-through — 2026-08-30
+
+- Replaced the expandable comparison grid with a semantic, responsive HTML
+  table and native row/column accessibility relationships.
+- Split Plus benefits into individually scannable hosted-media features and
+  made the one-time payment, identity scope, shared storage allowance, Stripe
+  checkout, and refund boundary explicit.
+- Added storage-limit and account-transfer FAQ answers and linked rollout-gated
+  availability to support without changing the checkout feature flag.
+## Profile layout parity — 2026-08-30
+
+- Added distinct Default, Modern, Simplistic, Sleek, and Portfolio structural
+  layout presets instead of expanding one compact card into every composition.
+- Published Sleek through the profile layout catalog and server-side layout
+  normalizer, preserving existing saved layout keys and the six-link limit.
+- Added Portfolio through an additive migration and paired renderer path.
+- Kept the daily roll as one bounded static profile widget in every layout;
+  the interactive game remains on the authenticated roll surface.
+- Validated desktop/mobile renderer paths, Studio preview selection, link
+  rendering, live populated-profile screenshots, and the complete automated
+  test suite. The browser audit confirms six links and no public game surface
+  across all five layouts.

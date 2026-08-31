@@ -165,7 +165,15 @@
       ...(mediaReference ? { [kind]: mediaReference } : {})
     };
     syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
-    dispatch('expressionchange', { ...expression, media_references: expressionMediaReferences, updatedAt: data.updated_at || null });
+    dispatch('expressionchange', {
+      ...expression,
+      ...(kind === 'avatar' ? {
+        animated_avatar_asset_id: data.animated_avatar_asset_id || null,
+        animated_avatar_path: null
+      } : {}),
+      media_references: expressionMediaReferences,
+      updatedAt: data.updated_at || null
+    });
     return data;
   }
 
@@ -837,7 +845,7 @@
       <ProfileRichMediaEditor profileId={profileId} {config} {staff} {entitlements} on:expressionchange={(event) => dispatch('expressionchange', event.detail)} />
     {:else if !compact}
       <div class="profile-expression-editor__rollout-notice" role="status">
-        Rich media cosmetics are temporarily paused while this rollout is verified. Your image-based profile remains available.
+        Hosted media uploads are temporarily paused while this rollout is verified. Your image-based profile remains available.
       </div>
     {/if}
   </div>

@@ -4,7 +4,7 @@
 import { PROFILE_EXPRESSION_TYPES, parseSpotifyUrl, spotifyUrlFromParts } from './profileExpression.js';
 
 export const PROFILE_WIDGET_VERSION = 1;
-export const PROFILE_WIDGET_LIMITS = Object.freeze({ freeWidgets: 2, maxWidgets: 4 });
+export const PROFILE_WIDGET_LIMITS = Object.freeze({ freeWidgets: 4, maxWidgets: 4 });
 export const PROFILE_WIDGET_PROVIDERS = Object.freeze({
   spotify: Object.freeze({ label: 'Spotify', types: PROFILE_EXPRESSION_TYPES, help: 'Track, playlist, or album URL from open.spotify.com.' }),
   youtube: Object.freeze({ label: 'YouTube', types: Object.freeze(['video']), help: 'A single public video URL from youtube.com or youtu.be.' }),

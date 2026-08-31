@@ -27,13 +27,15 @@ import { RICH_PROFILE_FIXTURE } from '../scripts/browser/profile-rich-fixture.mj
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('the active layout definitions carry distinct structural contracts', () => {
-  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed', 'framed']);
+  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']);
   assert.deepEqual(
     PROFILE_LAYOUT_KEYS.map(key => PROFILE_LAYOUT_DEFINITIONS[key].structure),
     [
-      { identity: 'centered', roll: 'integrated', surface: 'reference-card' },
-      { identity: 'centered', roll: 'below-fold', surface: 'cardless' },
-      { identity: 'left', roll: 'below-fold', surface: 'reference-card' }
+      { identity: 'centered', roll: 'widget', surface: 'banner-card' },
+      { identity: 'centered', roll: 'widget', surface: 'cardless' },
+      { identity: 'left', roll: 'widget', surface: 'sleek-card' },
+      { identity: 'split', roll: 'widget', surface: 'modern-card' },
+      { identity: 'centered', roll: 'widget', surface: 'portfolio' }
     ]
   );
 });
@@ -41,7 +43,7 @@ test('the active layout definitions carry distinct structural contracts', () => 
 test('Framed preserves the bounded profile layout contract', () => {
   assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'framed' }), 'framed');
   assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'profile_layout_framed' }), 'framed');
-  assert.equal(PROFILE_LAYOUT_DEFINITIONS.framed.label, 'Framed');
+  assert.equal(PROFILE_LAYOUT_DEFINITIONS.framed.label, 'Modern');
   assert.equal(PROFILE_LAYOUT_DEFINITIONS.framed.motionTarget, 'framed-card');
   const patch = createProfileLayoutPatch('framed');
   assert.equal(patch.templateKey, 'framed');
@@ -49,12 +51,25 @@ test('Framed preserves the bounded profile layout contract', () => {
   assert.deepEqual(patch.modules.map(module => module.id), ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore']);
 });
 
+test('Portfolio is an additive long-form layout with the same bounded opening contract', () => {
+  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'profile_layout_portfolio' }), 'portfolio');
+  assert.equal(PROFILE_LAYOUT_DEFINITIONS.portfolio.label, 'Portfolio');
+  assert.deepEqual(PROFILE_LAYOUT_DEFINITIONS.portfolio.structure, {
+    identity: 'centered',
+    roll: 'widget',
+    surface: 'portfolio'
+  });
+  const patch = createProfileLayoutPatch('portfolio');
+  assert.equal(patch.templateKey, 'portfolio');
+  assert.equal(patch.layoutVariant, 'portfolio');
+});
+
 test('public layout authority comes from profile configuration', () => {
   assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_full_bleed', layoutVariant: 'compact' }), 'compact');
   assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_modern', layoutVariant: 'not-real' }), 'compact');
 });
 
-test('opening and continuation link helpers partition a rich profile without overlap', () => {
+test('the profile link contract keeps only the first six entries', () => {
   const config = normalizeProfileConfig({
     ...createDefaultProfileConfig(),
     configurationVersion: 2,
@@ -73,13 +88,13 @@ test('opening and continuation link helpers partition a rich profile without ove
   const continuationUrls = continuation.map(link => link.url);
 
   assert.equal(opening.length, 6);
-  assert.equal(continuation.length, 4);
+  assert.equal(continuation.length, 0);
   assert.deepEqual(openingUrls, Array.from({ length: 6 }, (_, index) => `https://example.com/fixture-${index + 1}`));
-  assert.deepEqual(continuationUrls, Array.from({ length: 4 }, (_, index) => `https://example.com/fixture-${index + 7}`));
-  assert.equal(new Set([...openingUrls, ...continuationUrls]).size, 10);
+  assert.deepEqual(continuationUrls, []);
+  assert.equal(new Set([...openingUrls, ...continuationUrls]).size, 6);
 });
 
-test('layout link partitions keep Compact and Immersive deterministic', () => {
+test('layout link partitions keep all layout variants deterministic', () => {
   const config = normalizeProfileConfig({
     ...createDefaultProfileConfig(),
     configurationVersion: 2,
@@ -87,17 +102,19 @@ test('layout link partitions keep Compact and Immersive deterministic', () => {
   });
   const compact = getProfileLayoutLinkPartitions(config, 'compact');
   const immersive = getProfileLayoutLinkPartitions(config, 'full-bleed');
+  const sleek = getProfileLayoutLinkPartitions(config, 'sleek');
 
   assert.deepEqual(compact.opening.map(link => link.label), ['GitHub', 'YouTube', 'Twitch', 'Instagram', 'Personal site', 'Portfolio']);
-  assert.deepEqual(compact.continuation.map(link => link.label), ['Project notes', 'Now playing', 'Field guide', 'Contact']);
+  assert.deepEqual(compact.continuation, []);
   assert.deepEqual(immersive.opening.map(link => link.label), RICH_PROFILE_FIXTURE.links.map(link => link.label));
   assert.deepEqual(immersive.continuation, []);
-  for (const partition of [compact, immersive]) {
-    assert.equal(new Set([...partition.opening, ...partition.continuation].map(link => link.url)).size, 10);
+  assert.deepEqual(sleek.opening.map(link => link.label), RICH_PROFILE_FIXTURE.links.map(link => link.label));
+  for (const partition of [compact, immersive, sleek]) {
+    assert.equal(new Set([...partition.opening, ...partition.continuation].map(link => link.url)).size, 6);
   }
 });
 
-test('layout link partitions keep later social services in the opening', () => {
+test('layout link partitions discard entries after the finite rail', () => {
   const config = normalizeProfileConfig({
     ...createDefaultProfileConfig(),
     configurationVersion: 2,
@@ -115,11 +132,13 @@ test('layout link partitions keep later social services in the opening', () => {
   });
   const compact = getProfileLayoutLinkPartitions(config, 'compact');
   const immersive = getProfileLayoutLinkPartitions(config, 'full-bleed');
+  const sleek = getProfileLayoutLinkPartitions(config, 'sleek');
 
   assert.deepEqual(compact.opening.map(link => link.label), ['Website', 'Portfolio', 'Blog', 'Project', 'Store', 'Contact']);
-  assert.deepEqual(compact.continuation.map(link => link.label), ['GitHub', 'YouTube', 'Twitch']);
-  assert.deepEqual(immersive.opening.map(link => link.label), ['Website', 'Portfolio', 'Blog', 'Project', 'Store', 'Contact', 'GitHub', 'YouTube', 'Twitch']);
-  assert.equal(new Set([...compact.opening, ...compact.continuation].map(link => link.url)).size, 9);
+  assert.deepEqual(compact.continuation, []);
+  assert.deepEqual(immersive.opening.map(link => link.label), ['Website', 'Portfolio', 'Blog', 'Project', 'Store', 'Contact']);
+  assert.equal(new Set([...compact.opening, ...compact.continuation].map(link => link.url)).size, 6);
+  assert.equal(sleek.opening.length, 6);
 });
 
 test('an incomplete publish envelope preserves dedicated expression fields defensively', () => {
@@ -176,7 +195,7 @@ test('the canonical browser fixture contains the rich renderer coverage data', (
   assert(RICH_PROFILE_FIXTURE.bio.length > 40);
   assert.equal(RICH_PROFILE_FIXTURE.background.width, 637);
   assert.equal(RICH_PROFILE_FIXTURE.background.height, 311);
-  assert.equal(RICH_PROFILE_FIXTURE.links.length, 10);
+  assert.equal(RICH_PROFILE_FIXTURE.links.length, 6);
   assert(RICH_PROFILE_FIXTURE.links.slice(0, 4).every(link => isProfileSocialLink(link.type)));
   assert(RICH_PROFILE_FIXTURE.links.slice(4).every(link => !isProfileSocialLink(link.type)));
   assert(RICH_PROFILE_FIXTURE.links.every(link => /^https:\/\//.test(link.url)));
@@ -242,10 +261,11 @@ test('link size and glow settings reach every active profile link renderer', asy
   assert.match(shell, /<ProfileFullBleedLayout[\s\S]*linkStyle=\{effectiveProfileConfig\.linkStyle\}/);
 });
 
-test('layout renderer composes Compact and Immersive through distinct presentation regions', async () => {
-  const [card, fullBleed, dailyRoll, shell, preview, customize, settings, roll, content, widgets, renderModel] = await Promise.all([
+test('layout renderer composes every published layout through bounded presentation regions', async () => {
+  const [card, fullBleed, portfolio, dailyRoll, shell, preview, customize, settings, roll, content, widgets, renderModel] = await Promise.all([
     read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/profile-layout/ProfileFullBleedLayout.svelte'),
+    read('src/lib/profile-layout/ProfilePortfolioLayout.svelte'),
     read('src/lib/ProfileDailyRoll.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
@@ -258,26 +278,31 @@ test('layout renderer composes Compact and Immersive through distinct presentati
   ]);
   assert.match(shell, /ProfileReferenceCard/);
   assert.match(shell, /<ProfileFullBleedLayout/);
-  assert.match(card, /ProfileDailyRoll/);
-  assert.match(fullBleed, /data-profile-layout-content="full-bleed"/);
+  assert.match(card, /ProfileRollSummary/);
+  assert.doesNotMatch(card, /ProfileDailyRoll|liveRoll/);
+  assert.match(fullBleed, /data-profile-layout-content=\{layoutVariant\}/);
+  assert.match(portfolio, /data-profile-layout-content=\"portfolio\"|data-profile-layout-content=\{layoutVariant\}/);
+  assert.match(portfolio, /ProfileRollSummary/);
   assert.doesNotMatch(shell, /ProfileLayoutFrame|IdentityCard|profile-layout-frame/);
   assert.doesNotMatch(dailyRoll, /profile-daily-roll--(?:sleek|minimal|modern|portfolio)/);
   assert.doesNotMatch(shell, /profileLayoutFrameComponent|Profile layout pending/);
-  assert.match(shell, /isOwner=\{isOwnProfile\}/);
+  assert.doesNotMatch(card, /isOwner|liveRoll/);
+  assert.match(shell, /profile-shell__approved-game/);
   assert.match(shell, /compact=\{true\}/);
   assert.match(shell, /links=\{openingLinks\}/);
-  assert.match(shell, /continuationLinks/);
+  assert.match(shell, /onEntryClick=\{recordProfileClick\}/);
+  assert.doesNotMatch(shell, /profile-shell__continuation-links/);
   assert.match(shell, /buildProfileRenderSnapshot/);
   assert.match(renderModel, /getProfileLayoutLinkPartitions/);
   assert.match(renderModel, /continuationSocialLinks/);
   assert.match(renderModel, /continuationNavigationLinks/);
-  assert.match(renderModel, /hasBelowFoldRoll = showRoll[\s\S]*full-bleed[\s\S]*framed/);
+  assert.match(renderModel, /const hasBelowFoldRoll = false/);
   assert.match(shell, /\{#if renderProfileMore\}[\s\S]*<div id="profile-more"/);
   assert.match(renderModel, /hasLowerExpression = hasProfileMusic/);
   const mediaDeleteMigration = await read('supabase/migrations/20260812160000_profile_media_delete_token_guard.sql');
   assert.match(mediaDeleteMigration, /v_selected := v_selected OR EXISTS/);
   assert.doesNotMatch(mediaDeleteMigration, /v_selected := EXISTS/);
-  assert.match(shell, /profilePresentationLayoutVariant === 'full-bleed'/);
+  assert.match(shell, /\['full-bleed', 'sleek'\]\.includes\(profilePresentationLayoutVariant\)/);
   assert.match(shell, /<ProfileFullBleedLayout/);
   assert.match(shell, /profile-shell__more-cue--continuation/);
   assert.doesNotMatch(shell, /links=\{visibleLinks\}/);
@@ -287,20 +312,25 @@ test('layout renderer composes Compact and Immersive through distinct presentati
   assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
   assert.doesNotMatch(fullBleed, /role="tab"|presenceLabel|daily color profile/);
   assert.doesNotMatch(preview, /@container profile-preview \(max-width: 31rem\)/);
-  assert.match(preview, /profile-studio-preview__viewport[\s\S]*width: min\(350px, 100%\)/);
+  assert.match(preview, /profile-studio-preview__viewport[\s\S]*width: min\(52rem, 100%\)/);
   assert.match(preview, /profile-studio-preview__footer/);
   assert.doesNotMatch(preview, /device-sample/);
   assert.match(dailyRoll, /presentation=\{variant\}/);
   assert.match(roll, /profile-roll--presentation[\s\S]*final-color-display/);
   assert.match(dailyRoll, /final-color-display/);
   assert.match(shell, /profile-shell__continuation-column/);
-  assert.match(shell, /data-profile-continuation="content"[\s\S]*data-profile-continuation="links"[\s\S]*data-profile-continuation="media"/);
-  assert.match(shell, /formatLinkDestination/);
+  assert.match(shell, /data-profile-continuation="content"[\s\S]*data-profile-continuation="media"/);
+  assert.doesNotMatch(shell, /data-profile-continuation="links"/);
+  assert.doesNotMatch(shell, /formatLinkDestination/);
   assert.match(content, /About me/);
   assert.doesNotMatch(content, /↗/);
   assert.doesNotMatch(widgets, /↗/);
   assert.match(preview, /profile-studio-preview__canvas/);
   assert.match(preview, /ProfileReferenceCard/);
+  assert.doesNotMatch(preview, /liveRoll=/);
+  assert.match(card, /profile-reference-card__opening/);
+  assert.match(card, /data-profile-widget="roll"/);
+  assert.match(card, /on:click=\{\(\) => onEntryClick/);
   assert.doesNotMatch(preview, /profile-studio-preview__scroll-cue|previewContentOverflow|previewOpeningOverflow|overflow-y:\s*auto/);
   assert.doesNotMatch(shell, /data-preview-opening-overflow/);
   assert.match(preview, /export let previewRenderSnapshot/);
@@ -397,9 +427,14 @@ test('public profile does not inject filler bio copy or obsolete handle styles',
   assert.doesNotMatch(identity, /identity-card__handle-row|identity-card__handle/);
 });
 
-test('the layout reset leaves only Compact and Immersive in the active catalog', async () => {
-  const migration = await read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql');
+test('the active catalog preserves the historical reset and publishes the fifth profile composition additively', async () => {
+  const [migration, portfolioMigration] = await Promise.all([
+    read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql'),
+    read('supabase/migrations/20260830130000_profile_portfolio_layout.sql')
+  ]);
   assert.match(migration, /css_value IN \('compact', 'full-bleed'\)/);
   assert.match(migration, /Expected 2 active Profile Layout rows/);
   assert.match(migration, /DELETE FROM public\.shop_items/);
+  assert.match(portfolioMigration, /profile_layout_portfolio/);
+  assert.match(portfolioMigration, /css_value IN \('compact', 'full-bleed', 'sleek', 'framed', 'portfolio'\)/);
 });

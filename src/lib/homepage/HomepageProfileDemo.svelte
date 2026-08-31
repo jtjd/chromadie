@@ -81,7 +81,7 @@
           {links}
           roll={latestRoll}
           accentColor={fixture.accent}
-          rollLabel="Today's roll"
+          rollLabel="Daily roll"
           presentation="homepage"
           layoutVariant={useFramedLayout ? 'framed' : ''}
           ariaLabel={profileLabel}

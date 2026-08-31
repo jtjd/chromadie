@@ -195,7 +195,7 @@
     <button type="button" class="profile-music__load" on:click={() => spotifyActive = true}>Load player</button>
   </div>
 {:else if PROFILE_MUSIC_ENABLED}
-  <div class:profile-music--compact={compact} class="profile-music profile-music--configured" data-music-state="configured" aria-label="Profile cosmetics">
+  <div class:profile-music--compact={compact} class="profile-music profile-music--configured" data-music-state="configured" aria-label="Profile audio">
     <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
     <div class="profile-music__copy"><span>Cosmetics</span><strong>Profile atmosphere</strong></div>
     <span class="profile-music__status">configured</span>

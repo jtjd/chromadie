@@ -130,8 +130,9 @@ media library, entitlement gates, structured configuration, and owner RPCs.
 
 The follow-up correction keeps the same destination but removes the remaining
 nested interaction model. Customize is now one continuous workspace with direct
-section headings. Active avatar/background media and Plus rich media (video,
-banner, cursors, and audio) appear beside their upload/replace actions, with
+section headings. Active avatar/background media and Plus hosted media (video,
+animated avatar, share preview, cursors, and audio) appear beside their
+upload/replace actions, with
 saved assets immediately below for reuse. Repeated module headers are hidden in
 this context. Color Customization now contains only renderer-backed color roles
 and a Surface group containing its real depth controls, and

@@ -58,8 +58,9 @@ from (
 ) quota;
 ```
 
-Alert when overdue staged rows remain after a cleanup run, when any profile
-approaches 150 MB, or when the cleanup function fails. Deleting an active
+Alert when overdue staged rows remain after a cleanup run, when any Plus/staff
+profile approaches 1 GiB or 200 active/staged assets, or when the cleanup
+function fails. Deleting an active
 asset must clear its selected configuration reference before removing the
 object; a dashboard alert must never trigger a destructive manual delete.
 

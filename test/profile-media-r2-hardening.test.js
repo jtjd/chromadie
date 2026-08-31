@@ -69,11 +69,18 @@ test('server-side media signatures accept supported containers and reject mismat
   const mp4 = new Uint8Array([...new Uint8Array([0, 0, 0, 20]), ...Buffer.from('ftypisom')]);
   const webm = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, ...Buffer.from('webm')]);
   const mp3 = new Uint8Array([...Buffer.from('ID3'), 4, 0, 0, 0, 0, 0, 0]);
+  const gif = new Uint8Array([...Buffer.from('GIF89a'), 0x2c, 0, 0, 0x2c]);
+  const animatedWebp = new Uint8Array([...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WEBPVP8XANIM')]);
+  const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xdb, 0, 0xff, 0xd9]);
   assert.equal(validateProfileMediaSignature({ bytes: webp, kind: 'avatar', extension: 'webp', mimeType: 'image/webp' }), true);
   assert.equal(validateProfileMediaSignature({ bytes: ani, kind: 'cursor', extension: 'ani', mimeType: 'application/x-navi-animation' }), true);
   assert.equal(validateProfileMediaSignature({ bytes: mp4, kind: 'background_video', extension: 'mp4', mimeType: 'video/mp4' }), true);
   assert.equal(validateProfileMediaSignature({ bytes: webm, kind: 'background_video', extension: 'webm', mimeType: 'video/webm' }), true);
   assert.equal(validateProfileMediaSignature({ bytes: mp3, kind: 'audio', extension: 'mp3', mimeType: 'audio/mpeg' }), true);
+  assert.equal(validateProfileMediaSignature({ bytes: gif, kind: 'animated_avatar', extension: 'gif', mimeType: 'image/gif' }), true);
+  assert.equal(validateProfileMediaSignature({ bytes: animatedWebp, kind: 'animated_avatar', extension: 'webp', mimeType: 'image/webp' }), true);
+  assert.equal(validateProfileMediaSignature({ bytes: webp, kind: 'animated_avatar', extension: 'webp', mimeType: 'image/webp' }), false);
+  assert.equal(validateProfileMediaSignature({ bytes: jpeg, kind: 'share_image', extension: 'jpg', mimeType: 'image/jpeg' }), true);
   assert.equal(validateProfileMediaSignature({ bytes: new TextEncoder().encode('not a webp'), kind: 'avatar', extension: 'webp', mimeType: 'image/webp' }), false);
   assert.equal(validateProfileMediaSignature({ bytes: webp, kind: 'avatar', extension: 'zip', mimeType: 'image/webp' }), false);
 });

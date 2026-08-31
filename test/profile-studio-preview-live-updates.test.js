@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
-import { createProfileStudioPreviewModel } from '../src/lib/profile-studio/draftModel.js';
+import { applyProfileStudioDraftPatch, createProfileStudioPreviewModel } from '../src/lib/profile-studio/draftModel.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -73,4 +73,41 @@ test('the bounded Studio card consumes the shared appearance and cosmetic leaf r
   assert.match(card, /borderKey={profileBorderKey}/);
   assert.match(card, /style={cardStyle}/);
   assert.match(nameCanvas, /'profile-reference-card__name'/);
+});
+
+test('staged link edits reach the compact preview and stop at six entries', () => {
+  const base = createDefaultProfileConfig('#112233');
+  const targetProfile = { id: 'preview-links', username: 'linkkeeper', bio: 'A bounded profile.' };
+  const makeLink = index => ({
+    key: `preview-link-${index}`,
+    type: 'website',
+    label: `Link ${index + 1}`,
+    url: `https://example.com/${index + 1}`,
+    visible: true,
+    order: index
+  });
+  const initial = createProfileStudioPreviewModel({
+    targetProfile,
+    profileConfig: { draft: base, published: base },
+    studioDraft: base
+  });
+  assert.deepEqual(initial.snapshot.links.opening, []);
+
+  const staged = applyProfileStudioDraftPatch(base, {
+    scope: 'links',
+    detail: { config: { ...base, links: [makeLink(0)] } }
+  });
+  const preview = createProfileStudioPreviewModel({
+    targetProfile,
+    profileConfig: { draft: base, published: base },
+    studioDraft: staged
+  });
+  assert.deepEqual(preview.snapshot.links.opening.map(link => link.url), ['https://example.com/1']);
+
+  const capped = applyProfileStudioDraftPatch(base, {
+    scope: 'links',
+    detail: { config: { ...base, links: Array.from({ length: 10 }, (_, index) => makeLink(index)) } }
+  });
+  assert.equal(capped.links.length, 6);
+  assert.deepEqual(capped.links.map(link => link.label), ['Link 1', 'Link 2', 'Link 3', 'Link 4', 'Link 5', 'Link 6']);
 });

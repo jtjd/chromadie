@@ -138,9 +138,11 @@ INSERT INTO public.shop_items (
   ('avatar_effect_cyber_hud', 'Cyber HUD', 'avatar_effect', 0, 'renderer', 'cyber-hud', NULL, NULL, 'Anomaly', 'Precision rings and corner ticks frame the portrait like a clean instrument readout.', 'Signal', false, 'earned', NULL, 'active'),
   ('avatar_effect_butterfly_orbit', 'Butterfly Orbit', 'avatar_effect', 0, 'renderer', 'butterfly-orbit', NULL, NULL, 'Epic', 'A ring of glowing butterflies orbits the real avatar through a projected 3D depth field.', 'Prism', false, 'free', NULL, 'active'),
   ('avatar_effect_bat_orbit', 'Bat Orbit', 'avatar_effect', 0, 'renderer', 'bat-orbit', NULL, NULL, 'Anomaly', 'A flock of dark bats sweeps around the real avatar with curved wings and true front-back depth.', 'Nocturne', false, 'free', NULL, 'active'),
-  ('profile_layout_compact', 'Compact', 'profile_layout', 0, 'renderer', 'compact', NULL, NULL, 'Uncommon', 'A small centered identity surface that leaves the user background in charge.', 'Layouts', false, 'free', NULL, 'active'),
-  ('profile_layout_full_bleed', 'Immersive', 'profile_layout', 0, 'renderer', 'full-bleed', NULL, NULL, 'Uncommon', 'A full-viewport identity scene with a large avatar, bio, and icon links.', 'Layouts', false, 'free', NULL, 'active'),
-  ('profile_layout_framed', 'Framed', 'profile_layout', 0, 'renderer', 'framed', NULL, NULL, 'Uncommon', 'A left-aligned identity card with an overlapping avatar and icon links.', 'Layouts', false, 'earned', NULL, 'active'),
+  ('profile_layout_compact', 'Default', 'profile_layout', 0, 'renderer', 'compact', NULL, NULL, 'Uncommon', 'A focused glass profile with identity, daily color, and a finite link rail.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_full_bleed', 'Simplistic', 'profile_layout', 0, 'renderer', 'full-bleed', NULL, NULL, 'Uncommon', 'A cardless identity scene with a large avatar and icon links.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_sleek', 'Sleek', 'profile_layout', 0, 'renderer', 'sleek', NULL, NULL, 'Uncommon', 'A restrained rounded profile card with a tighter identity footprint and overlapping avatar.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_framed', 'Modern', 'profile_layout', 0, 'renderer', 'framed', NULL, NULL, 'Uncommon', 'A wide identity surface with a roll widget and separated media.', 'Layouts', false, 'earned', NULL, 'active'),
+  ('profile_layout_portfolio', 'Portfolio', 'profile_layout', 0, 'renderer', 'portfolio', NULL, NULL, 'Uncommon', 'A long-form profile hero that opens into story and project sections.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_motion_perspective_tilt', '3D Tilt', 'profile_motion', 0, 'renderer', 'perspective-tilt', NULL, NULL, 'Uncommon', 'A restrained perspective shift follows the pointer across the profile surface.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_motion_halo_offset', 'Halo Offset', 'profile_motion', 0, 'renderer', 'halo-offset', NULL, NULL, 'Epic', 'Detached profile shells lag the card motion in three measured layers.', 'Prism', false, 'free', NULL, 'active'),
   ('profile_motion_wavefront', 'Wavefront', 'profile_motion', 0, 'renderer', 'wavefront', NULL, NULL, 'Epic', 'A physical-looking wave crosses the profile once, displaces nearby elements, and settles exactly.', 'Signal', false, 'free', NULL, 'active')
@@ -196,8 +198,8 @@ INSERT INTO public.shop_items (
   item_key, name, slot, cost, css_type, css_value, available_from, available_until,
   rarity, description, collection, stackable, access_tier, entitlement_key, catalog_status
 ) VALUES
-  ('name_prism_atelier', 'Prism Atelier Name', 'name_motion', 0, 'renderer', 'haunt-rainbow', NULL, NULL, 'Mythic', 'The original Atelier name treatment: a restrained spectral pass across the identity.', 'Atelier Expression', false, 'premium', 'chromadie_plus', 'active'),
-  ('bg_prism_atmosphere', 'Prism Atmosphere', 'profile_atmosphere', 0, 'renderer', 'silk-folds', NULL, NULL, 'Mythic', 'The original Atelier atmosphere: black silk folds with a quiet prismatic sheen behind the profile.', 'Atelier Expression', false, 'premium', 'chromadie_plus', 'active')
+  ('name_prism_atelier', 'Prism Atelier Name', 'name_motion', 0, 'renderer', 'haunt-rainbow', NULL, NULL, 'Mythic', 'A retired Atelier name treatment retained for historical ownership and equipped rendering.', 'Atelier Expression', false, 'premium', 'chromadie_plus', 'retired'),
+  ('bg_prism_atmosphere', 'Prism Atmosphere', 'profile_atmosphere', 0, 'renderer', 'silk-folds', NULL, NULL, 'Mythic', 'A retired Atelier atmosphere retained for historical ownership and equipped rendering.', 'Atelier Expression', false, 'premium', 'chromadie_plus', 'retired')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,
@@ -220,8 +222,8 @@ INSERT INTO public.meta (key, value) VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -- Customize is the active profile-expression surface for this phase. Keep a
--- generous free baseline, but preserve the acquisition contract for journey
--- rewards and Plus-only Atelier expressions when the database is reset.
+-- generous free baseline, while preserving historical Atelier rows and the
+-- acquisition contract for journey rewards when the database is reset.
 UPDATE public.shop_items
 SET access_tier = 'free',
     cost = 0,

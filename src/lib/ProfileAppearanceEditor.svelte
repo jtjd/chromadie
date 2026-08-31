@@ -27,7 +27,7 @@
   let pickerOpen = false;
 
   $: incomingKey = JSON.stringify(draftConfig?.appearance || draftConfig?.signatureColor || '');
-  $: cardlessLayout = layoutVariant === 'full-bleed';
+  $: cardlessLayout = ['full-bleed', 'portfolio'].includes(layoutVariant);
   $: if (cardlessLayout && activeColor === 'surface') activeColor = 'accent';
 
   function clone(value) {

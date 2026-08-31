@@ -39,6 +39,10 @@ const EXPRESSION_FIELDS = Object.freeze([
   'spotify_id',
   'background_video_path',
   'background_video_asset_id',
+  'animated_avatar_path',
+  'animated_avatar_asset_id',
+  'share_image_path',
+  'share_image_asset_id',
   'banner_path',
   'banner_asset_id',
   'cursor_path',
@@ -285,6 +289,8 @@ export function buildProfileRenderSnapshot(input = {}) {
   const media = {
     avatarPath: configuration.avatar_path,
     avatarUrl: resolveMediaUrl(configuration.avatar_path, { ...input, mediaReferences }, 'avatar'),
+    animatedAvatarPath: richMedia.animated_avatar_path,
+    animatedAvatarUrl: resolveMediaUrl(richMedia.animated_avatar_path, { ...input, mediaReferences }, 'animated_avatar'),
     backgroundPath: configuration.background_path,
     backgroundUrl: resolveMediaUrl(configuration.background_path, { ...input, mediaReferences }, 'background'),
     backgroundVideoPath: richMedia.background_video_path,
@@ -293,6 +299,8 @@ export function buildProfileRenderSnapshot(input = {}) {
     audioUrl: resolveMediaUrl(configuration.audio_path, { ...input, mediaReferences }, 'audio'),
     bannerPath: richMedia.banner_path,
     bannerUrl: resolveMediaUrl(richMedia.banner_path, { ...input, mediaReferences }, 'banner'),
+    shareImagePath: richMedia.share_image_path,
+    shareImageUrl: resolveMediaUrl(richMedia.share_image_path, { ...input, mediaReferences }, 'share_image'),
     cursorPath: richMedia.cursor_path,
     cursorUrl: resolveMediaUrl(richMedia.cursor_path, { ...input, mediaReferences }, 'cursor'),
     pointerCursorPath: richMedia.pointer_cursor_path,
@@ -324,10 +332,10 @@ export function buildProfileRenderSnapshot(input = {}) {
   const storyModules = composition.secondaryModules.filter(module => module.id !== 'links');
   const showRoll = getProfileRollVisible(configuration);
   const showLowerExpression = hasLowerExpression;
-  const hasBelowFoldRoll = showRoll && (
-    layoutVariant === 'full-bleed'
-    || layoutVariant === 'framed'
-  );
+  // The daily roll is a small identity widget in every public composition.
+  // The interactive roll remains on the authenticated game surface instead of
+  // becoming a second page inside a visitor's profile.
+  const hasBelowFoldRoll = false;
   const storyUnlocks = getProfileStoryUnlocks(profile);
   const rank = profile ? getRank(profile.lifetime_ep || 0) : null;
   const rankState = profile ? getRankState(profile.lifetime_ep || 0) : null;

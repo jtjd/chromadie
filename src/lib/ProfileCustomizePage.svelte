@@ -128,7 +128,7 @@
         <header class="studio-section__head">
           <div>
             <h2 id="studio-media-title">Profile media</h2>
-            <p>Avatar, background, audio, and cursor media are managed here through the profile media library.</p>
+            <p>Avatar, background video, animated avatar, audio, cursor, and share-preview media are managed here through the profile media library.</p>
           </div>
         </header>
         {#if mediaComponent}
@@ -167,8 +167,6 @@
             draftConfig={profileConfig?.draft}
             publishedConfig={profileConfig?.published}
             updatedAt={profileConfig?.updatedAt}
-            {entitlements}
-            {staff}
             studio={true}
             presentation="customize"
             on:dirty={event => forwardDirty('customize:links', event)}

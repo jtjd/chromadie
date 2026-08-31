@@ -1,0 +1,69 @@
+:root {
+    --bg-dark: var(--color-canvas);
+    --bg-gradient: var(--gradient-canvas);
+    --card-bg: var(--surface-panel);
+    --card-border: var(--color-line-subtle);
+    --card-border-hover: var(--color-line-strong);
+    --text-main: var(--color-ink-strong);
+    --text-muted: var(--color-ink-muted);
+    --accent-purple: var(--color-accent-cyan);
+    --accent-green: var(--color-accent-roll);
+    --terminal-bg: rgba(0, 0, 0, 0.6);
+    --error-red: #ef4444;
+    --spectrum: var(--gradient-spectrum);
+    --font-display: var(--font-display-stack);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+#app {
+width: 100%;
+display: flex;
+flex-direction: column;
+align-items: stretch;
+}
+
+body {
+    font-family: var(--font-body-stack);
+    background: var(--bg-dark);
+    background-image: none;
+    background-attachment: fixed;
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-y: visible;
+    overflow-x: clip;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+::selection {
+    background: var(--color-ink-strong);
+    color: var(--color-canvas-deep);
+}
+
+.background-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+    background: repeating-linear-gradient(180deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+}
+
+@keyframes spectrumFlow { to { background-position: 300% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 4px; }
+
+img, canvas, svg {
+    max-width: 100%;
+    display: block;
+}
+
+button, input, textarea, select {
+    font: inherit;
+}

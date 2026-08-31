@@ -2,11 +2,16 @@
   import AvatarEffect from '../avatar-effect/AvatarEffect.svelte';
   import NameEffectCanvas from '../name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from '../profile-border/ProfileBorderEffect.svelte';
+  import ProfileRollSummary from '../ProfileRollSummary.svelte';
   import { getProfileLinkDefinition } from '../profileLinkTypes.js';
+  import { PROFILE_LINK_LIMITS } from '../profileConfig.js';
+  import { normalizeHexColor } from '../utils.js';
 
   export let displayName = 'Unknown Player';
   export let bio = '';
   export let avatarSrc = '';
+  export let avatarFallbackSrc = '';
+  export let bannerSrc = '';
   export let avatarEffectKey = '';
   export let nameLoadout = null;
   export let nameTodayColor = '#8B7CF6';
@@ -23,21 +28,28 @@
   export let links = [];
   export let linkStyle = null;
   export let accentColor = '#00FFB3';
+  export let roll = null;
+  export let surfaceStyle = '';
+  export let layoutVariant = 'full-bleed';
   export let colorizeAvatarEffect = false;
   export let onEntryClick = entryKey => { void entryKey; };
 
   let failedAvatarSource = '';
+  let failedBannerSource = '';
 
   $: safeDisplayName = String(displayName || 'Unknown Player').trim().slice(0, 80) || 'Unknown Player';
   $: safeInitial = safeDisplayName.slice(0, 1).toUpperCase() || '✦';
-  $: activeAvatarSource = avatarSrc && failedAvatarSource !== avatarSrc ? avatarSrc : '';
+  $: activeAvatarSource = avatarSrc && failedAvatarSource !== avatarSrc ? avatarSrc : avatarFallbackSrc;
+  $: activeBannerSource = bannerSrc && failedBannerSource !== bannerSrc ? bannerSrc : '';
+  $: rollHex = normalizeHexColor((/** @type {any} */ (roll || {})).hex_code || (/** @type {any} */ (roll || {})).hex, '');
   $: safeDescriptionMode = descriptionMode === 'typewriter' ? 'typewriter' : 'plain';
   $: safeEntryAnimation = ['none', 'fade', 'focus'].includes(entryAnimation) ? entryAnimation : 'none';
-  $: safeAccent = /^#[0-9a-f]{6}$/i.test(String(accentColor || '')) ? accentColor : '#00FFB3';
+  $: safeAccent = normalizeHexColor(accentColor, '#00FFB3');
   $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .16;
   $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0);
   $: visibleLinks = (Array.isArray(links) ? links : [])
     .filter(link => link && typeof link.url === 'string' && link.url)
+    .slice(0, PROFILE_LINK_LIMITS.maxLinks)
     .map(link => ({ ...link, definition: getProfileLinkDefinition(link.type) }));
   $: metadata = [
     location,
@@ -52,15 +64,21 @@
 
 <ProfileBorderEffect
   borderKey={profileBorderKey}
+  surfaceStyle={surfaceStyle}
   className="profile-full-bleed__boundary profile-border-effect--content"
   animated={true}
 >
   <section
-    class={`profile-full-bleed profile-full-bleed--entry-${safeEntryAnimation}`}
-    style={`--profile-full-bleed-accent:${safeAccent};--profile-full-bleed-link-scale:${safeLinkScale};--profile-full-bleed-link-glow:${safeLinkGlow};`}
+    class={`profile-full-bleed profile-full-bleed--${layoutVariant} profile-full-bleed--entry-${safeEntryAnimation}`}
+    style={`${surfaceStyle || ''};--profile-full-bleed-accent:${safeAccent};--profile-full-bleed-link-scale:${safeLinkScale};--profile-full-bleed-link-glow:${safeLinkGlow};`}
     aria-label={`${safeDisplayName} profile`}
-    data-profile-layout-content="full-bleed"
+    data-profile-layout-content={layoutVariant}
   >
+    {#if activeBannerSource && layoutVariant === 'sleek'}
+      <div class="profile-full-bleed__banner" aria-hidden="true">
+        <img src={activeBannerSource} alt="" loading="eager" decoding="async" on:error={() => failedBannerSource = bannerSrc} />
+      </div>
+    {/if}
     {#if showAvatar}
       <div class="profile-full-bleed__avatar-shell">
         <AvatarEffect
@@ -120,6 +138,12 @@
       </div>
     {/if}
 
+    {#if rollHex}
+      <div class="profile-full-bleed__roll" data-profile-widget="roll" data-profile-widget-mode="summary">
+        <ProfileRollSummary result={roll} accentColor={safeAccent} label="Daily color" compact={layoutVariant === 'sleek'} />
+      </div>
+    {/if}
+
     {#if visibleLinks.length}
       <nav class="profile-full-bleed__links" aria-label={`${safeDisplayName} profile links`}>
         {#each visibleLinks as link, index (link.key || link.order || link.url || index)}
@@ -156,6 +180,75 @@
     color: var(--profile-text, #f8f8f8);
     text-align: center;
   }
+
+  .profile-full-bleed__banner {
+    width: min(100%, 40rem);
+    height: clamp(6rem, 18vw, 9rem);
+    margin: 0 auto 1.2rem;
+    overflow: hidden;
+    border-radius: var(--profile-border-radius, 2rem);
+    background: rgba(255,255,255,.04);
+  }
+
+  .profile-full-bleed__banner img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+  .profile-full-bleed--sleek .profile-full-bleed__avatar-shell {
+    width: clamp(6.25rem, 12vw, 8rem);
+    height: clamp(6.25rem, 12vw, 8rem);
+  }
+
+  .profile-full-bleed--sleek .profile-full-bleed__links { margin-top: .85rem; }
+
+  .profile-full-bleed--sleek {
+    position: relative;
+    display: grid;
+    width: min(100%, 40rem);
+    min-height: 16.875rem;
+    box-sizing: border-box;
+    align-content: start;
+    justify-items: start;
+    padding: 6.4rem 2rem 1.65rem;
+    border: 1px solid color-mix(in srgb, var(--profile-border-color, #ffffff) calc(var(--profile-border-opacity, .18) * 100%), transparent);
+    border-radius: var(--profile-border-radius, 3.125rem);
+    background: var(--profile-surface-fill, rgba(25,25,25,.49));
+    box-shadow: 0 1.8rem 4rem rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.035);
+    text-align: left;
+  }
+
+  .profile-full-bleed--sleek .profile-full-bleed__banner {
+    position: absolute;
+    inset: 0 0 auto;
+    width: 100%;
+    height: 7rem;
+    margin: 0;
+    border-radius: var(--profile-border-radius, 2rem) var(--profile-border-radius, 2rem) 0 0;
+    opacity: .55;
+  }
+
+  .profile-full-bleed--sleek .profile-full-bleed__avatar-shell {
+    position: absolute;
+    top: 0;
+    left: 2rem;
+    z-index: 2;
+    width: clamp(6rem, 11vw, 7.5rem);
+    height: clamp(6rem, 11vw, 7.5rem);
+    margin: 0;
+    transform: translateY(-48%);
+  }
+
+  .profile-full-bleed--sleek .profile-full-bleed__name { max-width: min(100%, 24rem); text-align: left; }
+  .profile-full-bleed--sleek .profile-full-bleed__bio { max-width: 29rem; margin-left: 0; text-align: left; }
+  .profile-full-bleed--sleek .profile-full-bleed__metadata { justify-content: flex-start; margin-top: .75rem; text-align: left; }
+  .profile-full-bleed--sleek .profile-full-bleed__roll { position: absolute; top: 1.2rem; right: 1.4rem; width: min(42%, 14rem); }
+  .profile-full-bleed--sleek .profile-full-bleed__links { justify-content: flex-start; margin-top: 1rem; }
+
+  .profile-full-bleed__roll {
+    width: min(100%, 26rem);
+    min-width: 0;
+    margin: 1rem auto 0;
+  }
+
+  .profile-full-bleed--sleek .profile-full-bleed__roll :global(.profile-roll-summary) { width: 100%; }
 
   .profile-full-bleed__avatar-shell {
     display: grid;
@@ -311,6 +404,18 @@
       row-gap: .3rem;
       margin-top: 1rem;
     }
+
+    .profile-full-bleed--sleek {
+      width: 100%;
+      min-height: 19.4rem;
+      padding: 6.1rem 1.8rem 1.5rem;
+      border-radius: var(--profile-border-radius, 2rem);
+    }
+
+    .profile-full-bleed--sleek .profile-full-bleed__avatar-shell { left: 1.8rem; width: 7.5rem; height: 7.5rem; }
+    .profile-full-bleed--sleek .profile-full-bleed__roll { position: static; width: min(100%, 20rem); margin: .85rem 0 0; }
+    .profile-full-bleed--sleek .profile-full-bleed__links { margin-top: .8rem; }
+    .profile-full-bleed--sleek .profile-full-bleed__metadata { margin-top: 1rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {

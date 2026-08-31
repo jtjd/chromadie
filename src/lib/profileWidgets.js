@@ -5,7 +5,7 @@ import {
 } from './profileExpression.js';
 
 export const PROFILE_WIDGET_VERSION = 1;
-export const PROFILE_WIDGET_LIMITS = Object.freeze({ freeWidgets: 2, maxWidgets: 4 });
+export const PROFILE_WIDGET_LIMITS = Object.freeze({ freeWidgets: 4, maxWidgets: 4 });
 
 export const PROFILE_WIDGET_PROVIDERS = Object.freeze({
   spotify: Object.freeze({

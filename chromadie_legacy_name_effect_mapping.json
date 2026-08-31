@@ -1,0 +1,319 @@
+{
+  "status": "proposed",
+  "policy": {
+    "delete_legacy_rows": false,
+    "preserve_inventory": true,
+    "preserve_equipped_profiles": true,
+    "automatic_replacement_grants_initially": false,
+    "public_shop_behavior": "Hide legacy rows from new sales while continuing to show owned legacy items in Collection.",
+    "renderer_behavior": "New composable slots take priority. Otherwise resolve legacy name_effect through a code-owned canvas preset."
+  },
+  "items": [
+    {
+      "item_key": "name_prism_atelier",
+      "current_name": "Prism Atelier Name",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_font_wide_geometric",
+        "name_material_holographic_film",
+        "name_motion_refraction_sweep"
+      ],
+      "notes": "Preserve its premium entitlement behavior. Do not convert it into EP inventory."
+    },
+    {
+      "item_key": "name_drop_shadow",
+      "current_name": "Drop Shadow",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_carbon_cut"
+      ],
+      "notes": "Keep usable for existing owners; no automatic replacement grant."
+    },
+    {
+      "item_key": "name_italic",
+      "current_name": "Italic Font",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_font_high_contrast_italic"
+      ],
+      "notes": "Keep usable for existing owners; new font is a distinct premium product."
+    },
+    {
+      "item_key": "name_glow_blue",
+      "current_name": "Blue Glow",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_neon_tube"
+      ],
+      "notes": "Legacy preset retains its fixed blue palette."
+    },
+    {
+      "item_key": "name_glow_green",
+      "current_name": "Green Glow",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_neon_tube"
+      ],
+      "notes": "Legacy preset retains its fixed green palette."
+    },
+    {
+      "item_key": "name_smallcaps",
+      "current_name": "Small Caps",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_font_mono_compact"
+      ],
+      "notes": "Keep the original treatment for owners; do not pretend Mono Compact is an exact replacement."
+    },
+    {
+      "item_key": "name_glow_purple",
+      "current_name": "Purple Glow",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_neon_tube"
+      ],
+      "notes": "Legacy preset retains its fixed purple palette."
+    },
+    {
+      "item_key": "name_glow_red",
+      "current_name": "Red Glow",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_neon_tube"
+      ],
+      "notes": "Legacy preset retains its fixed red palette."
+    },
+    {
+      "item_key": "name_glow_pink_neon",
+      "current_name": "Neon Pink Glow",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_neon_tube"
+      ],
+      "notes": "Legacy preset retains its fixed pink palette."
+    },
+    {
+      "item_key": "name_glow_gold",
+      "current_name": "Gold Glow",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_gold_leaf"
+      ],
+      "notes": "Keep legacy glow for owners; Gold Leaf is a related but different material."
+    },
+    {
+      "item_key": "name_gradient_purple",
+      "current_name": "Purple Gradient",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_oil_slick"
+      ],
+      "notes": "Keep usable; archive the generic gradient from new sales."
+    },
+    {
+      "item_key": "name_gradient_fire",
+      "current_name": "Fire Gradient",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_thermal_ink"
+      ],
+      "notes": "Keep usable; archive the generic gradient from new sales."
+    },
+    {
+      "item_key": "name_ice",
+      "current_name": "Ice Gradient",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_frosted_edge"
+      ],
+      "notes": "Frosted Edge is the cleaner future direction."
+    },
+    {
+      "item_key": "name_toxic",
+      "current_name": "Toxic Gradient",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_thermal_ink"
+      ],
+      "notes": "Legacy preset keeps the acid palette."
+    },
+    {
+      "item_key": "name_slow_pulse",
+      "current_name": "Slow Pulse",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_motion_daily_pulse"
+      ],
+      "notes": "Port to canvas and retain for existing owners."
+    },
+    {
+      "item_key": "name_signal",
+      "current_name": "Signal Name",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive_after_collection_update",
+      "suggested_equivalents": [
+        "name_material_blueprint_ink",
+        "name_motion_signal_lock"
+      ],
+      "notes": "Keep visible until the Signal Garden collection receives its new replacements."
+    },
+    {
+      "item_key": "name_flicker_neon",
+      "current_name": "Flickering Neon",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_neon_tube",
+        "name_motion_fuzzy_signal"
+      ],
+      "notes": "Legacy version may keep its intermittent flicker; new catalog splits surface and motion."
+    },
+    {
+      "item_key": "name_matrix_rain",
+      "current_name": "Matrix Rain",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_crt_phosphor",
+        "name_motion_scanline_reveal"
+      ],
+      "notes": "Port the old look to a code-owned legacy canvas preset."
+    },
+    {
+      "item_key": "name_rainbow",
+      "current_name": "Rainbow Shift",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_holographic_film",
+        "name_motion_color_memory"
+      ],
+      "notes": "Color Memory is Chromadie-specific and should replace generic rainbow merchandising."
+    },
+    {
+      "item_key": "name_diamond_shimmer",
+      "current_name": "Diamond Shimmer",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_pearl_foil",
+        "name_motion_velvet_sweep"
+      ],
+      "notes": "The old combined effect becomes a material-plus-motion suggestion."
+    },
+    {
+      "item_key": "name_holographic",
+      "current_name": "Holographic",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_holographic_film",
+        "name_motion_refraction_sweep"
+      ],
+      "notes": "Keep exact ownership; stop selling the older combined implementation."
+    },
+    {
+      "item_key": "name_pulsing_glow",
+      "current_name": "Pulsing Glow",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_chroma_glass",
+        "name_motion_daily_pulse"
+      ],
+      "notes": "The new combination ties the pulse to daily color."
+    },
+    {
+      "item_key": "name_shining_gold",
+      "current_name": "Shining Gold Name",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_gold_leaf",
+        "name_motion_velvet_sweep"
+      ],
+      "notes": "The new material is more distinctive than another generic gold gradient."
+    },
+    {
+      "item_key": "name_glitch_effect",
+      "current_name": "Glitch Effect",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_motion_signal_lock"
+      ],
+      "notes": "Replace constant jitter merchandising with a controlled signal-lock effect."
+    },
+    {
+      "item_key": "name_ocean_wave",
+      "current_name": "Ocean Wave",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_chroma_glass",
+        "name_motion_chromatic_ripple"
+      ],
+      "notes": "The new renderer can reproduce the wave behavior without CSS gradients."
+    },
+    {
+      "item_key": "name_inferno",
+      "current_name": "Inferno Name",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_thermal_ink",
+        "name_motion_heat_shimmer"
+      ],
+      "notes": "Retire the large stacked text-shadow implementation."
+    },
+    {
+      "item_key": "name_sunset_blur",
+      "current_name": "Sunset Blur",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_oil_slick",
+        "name_motion_heat_shimmer"
+      ],
+      "notes": "Retire the skew-and-blur CSS implementation."
+    },
+    {
+      "item_key": "name_void",
+      "current_name": "Void Name",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive_after_voidwalker_update",
+      "suggested_equivalents": [
+        "name_material_liquid_mercury",
+        "name_motion_ghost_offset"
+      ],
+      "notes": "Keep visible until Voidwalker has a full replacement set; preserve existing owners."
+    },
+    {
+      "item_key": "name_chroma",
+      "current_name": "Chroma Name",
+      "disposition": "legacy_preset",
+      "public_catalog": "archive",
+      "suggested_equivalents": [
+        "name_material_holographic_film",
+        "name_motion_color_memory",
+        "name_motion_prism_shatter"
+      ],
+      "notes": "Its high legacy price warrants a premium-looking suggested replacement, but no automatic grants in the first migration."
+    }
+  ]
+}

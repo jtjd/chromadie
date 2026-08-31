@@ -11,7 +11,7 @@ import { createProfileLayoutPatch } from '../src/lib/profile-layout/profileLayou
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Framed keeps the avatar and identity in one bounded left-aligned card', async () => {
+test('Modern keeps the avatar, identity, roll widget, and links in one wide surface', async () => {
   const [card, shell, preview, editor, migration, seed] = await Promise.all([
     read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/ProfileShell.svelte'),
@@ -22,10 +22,10 @@ test('Framed keeps the avatar and identity in one bounded left-aligned card', as
   ]);
 
   assert.equal(normalizeProfileLayoutKey('profile_layout_framed'), 'framed');
-  assert.equal(PROFILE_LAYOUT_DEFINITIONS.framed.structure.identity, 'left');
+  assert.equal(PROFILE_LAYOUT_DEFINITIONS.framed.structure.identity, 'split');
   assert.equal(normalizeProfileConfig({ ...createDefaultProfileConfig(), ...createProfileLayoutPatch('framed') }).layoutVariant, 'framed');
   assert.match(card, /profile-reference-card--framed/);
-  assert.match(card, /data-profile-layout-content=\{framedLayout \? 'framed'/);
+  assert.match(card, /data-profile-layout-content=\{layoutVariant \|\| \(framedLayout \? 'framed'/);
   assert.match(card, /getProfileLinkDefinition/);
   assert.match(card, /\/link-icons\/\$\{link\.definition\.icon\}\.svg/);
   assert.match(card, /profile-reference-card__link-label/);
@@ -35,11 +35,12 @@ test('Framed keeps the avatar and identity in one bounded left-aligned card', as
   assert.match(card, /profile-reference-card--framed :global\(\.name-effect-canvas\) \{[\s\S]*?display: inline-block;[\s\S]*?width: fit-content;/);
   assert.match(card, /profile-reference-card--framed :global\(\.name-effect-canvas__semantic\.profile-reference-card__name\) \{[\s\S]*?width: auto;[\s\S]*?text-align: left;/);
   assert.match(shell, /layoutVariant=\{profilePresentationLayoutVariant\}/);
-  assert.match(shell, /profileHasBelowFoldRoll = profilePresentationLayoutVariant === 'full-bleed' \|\| profilePresentationLayoutVariant === 'framed'/);
-  assert.match(preview, /roll=\{layoutVariant === 'framed' \? null : latestRoll\}/);
+  assert.match(shell, /profileCardKeepsRollInline = true/);
+  assert.match(shell, /profileHasBelowFoldRoll = false/);
+  assert.match(preview, /roll=\{latestRoll\}/);
   assert.match(editor, /data-layout='framed'/);
   assert.match(migration, /profile_layout_framed/);
   assert.match(migration, /css_value IN \('compact', 'full-bleed', 'framed'\)/);
   assert.match(migration, /Expected 3 active Profile Layout rows/);
-  assert.match(seed, /'profile_layout_framed', 'Framed', 'profile_layout'/);
+  assert.match(seed, /'profile_layout_framed', 'Modern', 'profile_layout'/);
 });

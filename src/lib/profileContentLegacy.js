@@ -7,7 +7,7 @@ export const PROFILE_CONTENT_LIMITS = Object.freeze({
   aboutHeading: 40,
   aboutBody: 600,
   aboutMarkdown: 1200,
-  projects: 4,
+  projects: 10,
   premiumProjects: 10,
   projectTitle: 60,
   projectDescription: 180,

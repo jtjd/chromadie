@@ -32,11 +32,12 @@ test('profile content is bounded, structured, and safe by default', () => {
 
   assert.equal(normalized.about.heading, '<b>About</b>');
   assert.equal(normalized.about.body, 'Line one\nLine two');
-  assert.equal(normalized.projects.length, PROFILE_CONTENT_LIMITS.projects);
+  assert.equal(normalized.projects.length, 5);
+  assert.ok(normalized.projects.length <= PROFILE_CONTENT_LIMITS.projects);
   assert.equal(normalized.projects[1].url, '');
-  assert.deepEqual(normalized.projects.map(project => project.order), [0, 1, 2, 3]);
+  assert.deepEqual(normalized.projects.map(project => project.order), [0, 1, 2, 3, 4]);
   assert.ok(normalized.projects.every(project => Number.isFinite(project.order)));
-  assert.deepEqual(getVisibleProfileContent(normalized).projects.map(project => project.title), ['Chromadie', 'Too many', 'Four']);
+  assert.deepEqual(getVisibleProfileContent(normalized).projects.map(project => project.title), ['Chromadie', 'Too many', 'Four', 'Dropped']);
 });
 
 test('content renderer and editor stay inside the structured public boundary', async () => {

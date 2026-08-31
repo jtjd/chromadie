@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Digify Name Effect Recreation</title>
+<style>
+  :root{
+    --bg:#05070b;
+    --panel:#0d1016;
+    --line:rgba(255,255,255,.08);
+    --text:#f3f6fb;
+    --muted:#a8b0be;
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;min-height:100%;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(0,120,255,.12), transparent 28%),
+      radial-gradient(circle at 85% 0%, rgba(170,60,255,.12), transparent 22%),
+      linear-gradient(180deg,#030408,#070911 44%,#040507);
+    color:var(--text);
+    font-family:Inter,Manrope,system-ui,sans-serif;
+  }
+  body{padding:34px 18px 56px}
+  .shell{max-width:1280px;margin:auto}
+  header{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:24px}
+  .pill{
+    display:inline-flex;padding:7px 10px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.11);
+    background:rgba(255,255,255,.035);
+    color:#dfe6f2;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  h1{margin:0 0 10px;font-size:clamp(34px,5vw,60px);line-height:.95;letter-spacing:-.055em}
+  .intro{max-width:780px;margin:0;color:var(--muted);font-size:15px;line-height:1.58}
+  .controls{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    padding:12px 14px;border-radius:16px;border:1px solid rgba(255,255,255,.07);
+    background:rgba(255,255,255,.03);
+  }
+  .controls label{font-size:12px;color:#bac2cf}
+  .controls input{width:120px}
+  .main-card,.sample-card{
+    overflow:hidden;border-radius:24px;border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(15,17,23,.96),rgba(8,10,14,.98));
+    box-shadow:0 26px 70px rgba(0,0,0,.28);
+  }
+  .main-card{margin-bottom:22px}
+  .meta{padding:18px 20px 15px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .meta small{display:block;margin-bottom:7px;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#7e8796}
+  .meta h2{margin:0 0 6px;font-size:28px;letter-spacing:-.04em}
+  .meta p{margin:0;color:#a9b1bf;font-size:13px;line-height:1.5;max-width:74ch}
+  .stage{position:relative;aspect-ratio:2.5/1;min-height:340px;background:linear-gradient(180deg,#040507,#080b11);overflow:hidden}
+  .samples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .sample-stage{position:relative;aspect-ratio:16/10;min-height:260px;background:linear-gradient(180deg,#05070b,#090b10);overflow:hidden}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .tag,.hint{
+    position:absolute;z-index:4;pointer-events:none;padding:7px 10px;border-radius:999px;
+    backdrop-filter:blur(10px);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  }
+  .tag{right:12px;top:12px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.10);color:#f3f6fb}
+  .hint{left:12px;bottom:12px;background:rgba(0,0,0,.50);border:1px solid rgba(255,255,255,.08);color:#aeb6c4}
+  footer{margin-top:18px;color:#707887;font-size:12px;line-height:1.55}
+  @media(max-width:900px){
+    header{flex-direction:column;align-items:flex-start}
+    .samples{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div>
+      <div class="pill">guns.lol / digify recreation study</div>
+      <h1>Digify-inspired name effect</h1>
+      <p class="intro">This is a focused recreation study of the effect used on the name <strong>“digify”</strong>, interpreted as a premium particle-heavy neon text treatment with dense micro-particles, hot white glints, flowing inner energy, and edge emission. I also included two follow-up samples using the same effect language on other text so you can judge whether the effect is worth adapting into Chromadie.</p>
+    </div>
+    <div class="controls">
+      <label for="intensity">Intensity</label>
+      <input id="intensity" type="range" min="0.7" max="1.6" step="0.01" value="1">
+      <label for="speed">Speed</label>
+      <input id="speed" type="range" min="0.6" max="1.5" step="0.01" value="1">
+    </div>
+  </header>
+
+  <section class="main-card">
+    <div class="meta">
+      <small>Direct recreation study</small>
+      <h2>“digify”</h2>
+      <p>Main reference recreation. The letters use an internal moving energy field, bright perimeter lift, micro sparkles, drifting edge particles, and occasional sharp star glints.</p>
+    </div>
+    <div class="stage">
+      <canvas id="heroCanvas"></canvas>
+      <div class="tag">Main study</div>
+      <div class="hint">Move your cursor through the name</div>
+    </div>
+  </section>
+
+  <section class="samples">
+    <article class="sample-card">
+      <div class="meta">
+        <small>Adaptation sample</small>
+        <h2>“chromadie”</h2>
+        <p>Same effect language applied to the Chromadie name to see whether the style translates cleanly outside the original word.</p>
+      </div>
+      <div class="sample-stage">
+        <canvas id="chromaCanvas"></canvas>
+        <div class="tag">Adaptation</div>
+        <div class="hint">Same effect system</div>
+      </div>
+    </article>
+
+    <article class="sample-card">
+      <div class="meta">
+        <small>Profile context</small>
+        <h2>Name inside a card</h2>
+        <p>The effect composited into a profile-like card surface instead of floating on an empty scene.</p>
+      </div>
+      <div class="sample-stage">
+        <canvas id="cardCanvas"></canvas>
+        <div class="tag">In context</div>
+        <div class="hint">Profile preview</div>
+      </div>
+    </article>
+  </section>
+
+  <footer>This is a direct visual study, not a claim of exact one-to-one source code parity with guns.lol. If this is close to the look you want, I can do the next pass as a tighter HTML renderer specifically for production integration.</footer>
+</div>
+
+<script>
+const intensityInput = document.getElementById('intensity');
+const speedInput = document.getElementById('speed');
+let FX_INTENSITY = 1;
+let FX_SPEED = 1;
+intensityInput.addEventListener('input', e => FX_INTENSITY = Number(e.target.value));
+speedInput.addEventListener('input', e => FX_SPEED = Number(e.target.value));
+
+function setupCanvas(id){
+  const canvas=document.getElementById(id);
+  const ctx=canvas.getContext('2d');
+  const stage=canvas.parentElement;
+  const pointer={x:.5,y:.5,tx:.5,ty:.5,active:false};
+  function resize(){
+    const r=stage.getBoundingClientRect();
+    const d=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=Math.max(2,Math.round(r.width*d));
+    canvas.height=Math.max(2,Math.round(r.height*d));
+    canvas.style.width=r.width+'px';
+    canvas.style.height=r.height+'px';
+    ctx.setTransform(d,0,0,d,0,0);
+  }
+  stage.addEventListener('pointermove',e=>{
+    const r=stage.getBoundingClientRect();
+    pointer.tx=(e.clientX-r.left)/r.width;
+    pointer.ty=(e.clientY-r.top)/r.height;
+    pointer.active=true;
+  });
+  stage.addEventListener('pointerleave',()=>{pointer.tx=.5;pointer.ty=.5;pointer.active=false;});
+  window.addEventListener('resize',resize); resize();
+  return {canvas,ctx,stage,pointer};
+}
+function lerp(a,b,t){return a+(b-a)*t;}
+function rand(a,b){return a+Math.random()*(b-a);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function circle(ctx,x,y,r,c,a=1){ctx.globalAlpha=a;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();ctx.globalAlpha=1;}
+function rr(ctx,x,y,w,h,r,fill,style){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  if(fill){ if(style) ctx.fillStyle=style; ctx.fill(); } else { ctx.stroke(); }
+}
+
+class DigifyEffect {
+  constructor(canvasObj, word, mode='plain'){
+    this.cv = canvasObj;
+    this.word = word;
+    this.mode = mode;
+    this.maskCanvas = document.createElement('canvas');
+    this.maskCtx = this.maskCanvas.getContext('2d');
+    this.fieldCanvas = document.createElement('canvas');
+    this.fieldCtx = this.fieldCanvas.getContext('2d');
+    this.textParticles = [];
+    this.edgeParticles = [];
+    this.glints = [];
+    this.initialized = false;
+  }
+
+  buildMask(w,h){
+    const m=this.maskCanvas, ctx=this.maskCtx;
+    m.width = Math.max(2,Math.round(w));
+    m.height = Math.max(2,Math.round(h));
+    ctx.clearRect(0,0,w,h);
+    const fontSize = this.word.length > 8 ? h*0.30 : h*0.40;
+    ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const metrics = ctx.measureText(this.word);
+    const x = w/2, y = h/2;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(this.word, x, y);
+    // gradient stroke for extra edge structure in the mask
+    ctx.lineWidth = Math.max(2,fontSize*0.018);
+    ctx.strokeStyle = '#fff';
+    ctx.strokeText(this.word, x, y);
+
+    this.bounds = {
+      x: x - metrics.width/2 - fontSize*0.08,
+      y: y - fontSize*0.43,
+      w: metrics.width + fontSize*0.16,
+      h: fontSize*0.86,
+      fontSize
+    };
+
+    const img = ctx.getImageData(0,0,w,h).data;
+    this.solidPoints = [];
+    this.edgePoints = [];
+    const getA=(xx,yy)=>{
+      if(xx<0||yy<0||xx>=w||yy>=h) return 0;
+      return img[(yy*w+xx)*4+3];
+    };
+    for(let yy=Math.max(0,Math.floor(this.bounds.y)); yy<Math.min(h,Math.ceil(this.bounds.y+this.bounds.h)); yy+=2){
+      for(let xx=Math.max(0,Math.floor(this.bounds.x)); xx<Math.min(w,Math.ceil(this.bounds.x+this.bounds.w)); xx+=2){
+        const a=getA(xx,yy);
+        if(a>20){
+          this.solidPoints.push({x:xx,y:yy});
+          const neighbors = getA(xx-2,yy)<20 || getA(xx+2,yy)<20 || getA(xx,yy-2)<20 || getA(xx,yy+2)<20;
+          if(neighbors) this.edgePoints.push({x:xx,y:yy});
+        }
+      }
+    }
+    this.textParticles = [];
+    this.edgeParticles = [];
+    const solidSampleCount = Math.min(680, this.solidPoints.length);
+    const edgeSampleCount = Math.min(240, this.edgePoints.length);
+    for(let i=0;i<solidSampleCount;i++){
+      const p=this.solidPoints[(Math.random()*this.solidPoints.length)|0];
+      this.textParticles.push({
+        x:p.x+rand(-1.5,1.5), y:p.y+rand(-1.5,1.5),
+        homeX:p.x, homeY:p.y,
+        vx:rand(-.25,.25), vy:rand(-.25,.25),
+        size:rand(.9,2.4), tw:rand(0,6.28), hot:Math.random()<.18
+      });
+    }
+    for(let i=0;i<edgeSampleCount;i++){
+      const p=this.edgePoints[(Math.random()*this.edgePoints.length)|0];
+      this.edgeParticles.push({
+        x:p.x, y:p.y, vx:rand(-.9,.9), vy:rand(-.9,.9),
+        life:rand(.1,1), maxLife:rand(.5,1.4), size:rand(1,2.6), seed:rand(0,999)
+      });
+    }
+    this.initialized = true;
+  }
+
+  drawBackground(ctx,w,h,t){
+    if(this.mode==='card'){
+      const g=ctx.createLinearGradient(0,0,0,h);
+      g.addColorStop(0,'#06070b'); g.addColorStop(1,'#0a0c12');
+      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+      rr(ctx,w*0.08,h*0.14,w*0.84,h*0.72,28,true,'rgba(18,20,28,.94)');
+      ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.lineWidth=1; rr(ctx,w*0.08,h*0.14,w*0.84,h*0.72,28,false);
+      rr(ctx,w*0.13,h*0.28,84,84,20,true,'rgba(255,255,255,.05)');
+      rr(ctx,w*0.26,h*0.30,w*0.40,14,7,true,'rgba(255,255,255,.09)');
+      rr(ctx,w*0.26,h*0.34,w*0.30,11,6,true,'rgba(255,255,255,.06)');
+    } else {
+      const bg=ctx.createRadialGradient(w*0.5,h*0.48,0,w*0.5,h*0.48,w*0.65);
+      bg.addColorStop(0,'#070911'); bg.addColorStop(.45,'#05070c'); bg.addColorStop(1,'#020306');
+      ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+      for(let i=0;i<22;i++){
+        circle(ctx, rand(0,w), rand(0,h), rand(.4,1.4), '#ffffff', rand(.02,.14));
+      }
+    }
+  }
+
+  draw(t){
+    const ctx=this.cv.ctx;
+    const r=this.cv.stage.getBoundingClientRect();
+    const w=r.width, h=r.height;
+    if(!this.initialized || this.maskCanvas.width!==Math.round(w) || this.maskCanvas.height!==Math.round(h)){
+      this.buildMask(Math.round(w), Math.round(h));
+    }
+    this.cv.pointer.x=lerp(this.cv.pointer.x,this.cv.pointer.tx,.08);
+    this.cv.pointer.y=lerp(this.cv.pointer.y,this.cv.pointer.ty,.08);
+    const px=this.cv.pointer.x*w, py=this.cv.pointer.y*h;
+
+    ctx.clearRect(0,0,w,h);
+    this.drawBackground(ctx,w,h,t);
+
+    // energy field rendered first, then masked into the text
+    const fc=this.fieldCanvas, fctx=this.fieldCtx;
+    fc.width = Math.round(w); fc.height = Math.round(h);
+    fctx.clearRect(0,0,w,h);
+
+    // big soft atmospheric glow behind the text
+    const bg1=fctx.createRadialGradient(this.bounds.x+this.bounds.w*.25,this.bounds.y+this.bounds.h*.35,0,this.bounds.x+this.bounds.w*.25,this.bounds.y+this.bounds.h*.35,this.bounds.h*0.8);
+    bg1.addColorStop(0,'rgba(0,220,255,.26)');
+    bg1.addColorStop(.5,'rgba(55,110,255,.12)');
+    bg1.addColorStop(1,'rgba(0,0,0,0)');
+    fctx.fillStyle=bg1; fctx.fillRect(this.bounds.x-40,this.bounds.y-40,this.bounds.w+80,this.bounds.h+80);
+
+    const bg2=fctx.createRadialGradient(this.bounds.x+this.bounds.w*.74,this.bounds.y+this.bounds.h*.48,0,this.bounds.x+this.bounds.w*.74,this.bounds.y+this.bounds.h*.48,this.bounds.h*0.9);
+    bg2.addColorStop(0,'rgba(255,45,215,.26)');
+    bg2.addColorStop(.5,'rgba(148,40,255,.12)');
+    bg2.addColorStop(1,'rgba(0,0,0,0)');
+    fctx.fillStyle=bg2; fctx.fillRect(this.bounds.x-40,this.bounds.y-40,this.bounds.w+80,this.bounds.h+80);
+
+    // moving plasma streaks inside the letters
+    fctx.save();
+    fctx.globalCompositeOperation='lighter';
+    for(let i=0;i<13;i++){
+      const prog=(t*0.00006*FX_SPEED + i*0.12)%1;
+      const bandX=this.bounds.x + this.bounds.w*prog;
+      const grad=fctx.createLinearGradient(bandX-70,0,bandX+70,0);
+      grad.addColorStop(0,'rgba(0,0,0,0)');
+      grad.addColorStop(.2,'rgba(40,225,255,.14)');
+      grad.addColorStop(.5,i%2?'rgba(255,60,230,.18)':'rgba(80,100,255,.16)');
+      grad.addColorStop(.8,'rgba(255,255,255,.11)');
+      grad.addColorStop(1,'rgba(0,0,0,0)');
+      fctx.fillStyle=grad;
+      const waveY = Math.sin(t*0.0012 + i)*8;
+      fctx.fillRect(bandX-80, this.bounds.y-12+waveY, 160, this.bounds.h+24);
+    }
+    fctx.restore();
+
+    // mask field to text
+    fctx.globalCompositeOperation='destination-in';
+    fctx.drawImage(this.maskCanvas,0,0);
+    fctx.globalCompositeOperation='source-over';
+
+    // draw masked field with glow
+    ctx.save();
+    ctx.shadowColor='rgba(95,130,255,.34)';
+    ctx.shadowBlur=24*FX_INTENSITY;
+    ctx.drawImage(fc,0,0,w,h);
+    ctx.restore();
+
+    // edge glow stroke from the mask
+    ctx.save();
+    ctx.globalAlpha=.16*FX_INTENSITY;
+    ctx.drawImage(this.maskCanvas,0,0,w,h);
+    ctx.globalCompositeOperation='lighter';
+    ctx.filter='blur(7px)';
+    ctx.globalAlpha=.55*FX_INTENSITY;
+    ctx.drawImage(this.maskCanvas,0,0,w,h);
+    ctx.restore();
+
+    // internal micro particles
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    for(let i=0;i<this.textParticles.length;i++){
+      const p=this.textParticles[i];
+      p.tw += 0.025*FX_SPEED;
+      const dx = px - p.x, dy = py - p.y, dist = Math.hypot(dx,dy)||1;
+      const force = this.cv.pointer.active && dist<90 ? (1-dist/90)*0.12*FX_INTENSITY : 0;
+      p.vx += (p.homeX - p.x)*0.006 + Math.cos(p.tw+i)*0.010 - dx/dist*force;
+      p.vy += (p.homeY - p.y)*0.006 + Math.sin(p.tw*1.2+i)*0.010 - dy/dist*force;
+      p.vx *= .92; p.vy *= .92;
+      p.x += p.vx*FX_SPEED; p.y += p.vy*FX_SPEED;
+
+      const pulse=(Math.sin(p.tw*1.4+i)+1)/2;
+      const c = p.hot ? '#ffffff' : (i%3===0 ? '#00EFFF' : (i%3===1 ? '#6E5CFF' : '#FF4AD4'));
+      circle(ctx,p.x,p.y,p.size*3.6,c,.04*FX_INTENSITY*(.5+pulse*.5));
+      circle(ctx,p.x,p.y,p.size,c,(p.hot?.88:.52)*FX_INTENSITY*(.5+pulse*.5));
+      if(p.hot){
+        circle(ctx,p.x,p.y,p.size*.35,'#ffffff',.98*(.6+pulse*.4));
+      }
+    }
+
+    // edge emission particles
+    for(let i=0;i<this.edgeParticles.length;i++){
+      const p=this.edgeParticles[i];
+      p.life -= 0.010*FX_SPEED;
+      if(p.life<=0){
+        const q=this.edgePoints[(Math.random()*this.edgePoints.length)|0];
+        p.x=q.x; p.y=q.y; p.vx=rand(-.8,.8); p.vy=rand(-.8,.8); p.life=1; p.maxLife=rand(.45,1.3); p.size=rand(.9,2.4);
+      }
+      p.x += p.vx*FX_SPEED; p.y += p.vy*FX_SPEED;
+      p.vx *= .985; p.vy *= .985;
+      const alpha = p.life * 0.55 * FX_INTENSITY;
+      circle(ctx,p.x,p.y,p.size*2.5,'#00EFFF',alpha*.08);
+      circle(ctx,p.x,p.y,p.size,'#FF4FD7',alpha*.22);
+      circle(ctx,p.x,p.y,p.size*.55,'#ffffff',alpha*.6);
+    }
+
+    // occasional glints directly on edges
+    if(Math.random() < 0.10*FX_SPEED){
+      const g=this.edgePoints[(Math.random()*this.edgePoints.length)|0];
+      this.glints.push({x:g.x,y:g.y,life:1,maxLife:rand(.18,.45),size:rand(4,9)});
+    }
+    for(let i=this.glints.length-1;i>=0;i--){
+      const g=this.glints[i];
+      g.life -= 0.045*FX_SPEED;
+      if(g.life<=0){ this.glints.splice(i,1); continue; }
+      const a=g.life*FX_INTENSITY;
+      circle(ctx,g.x,g.y,g.size*1.8,'#ffffff',0.08*a);
+      ctx.strokeStyle='rgba(255,255,255,'+(0.75*a)+')';
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(g.x-g.size,g.y); ctx.lineTo(g.x+g.size,g.y);
+      ctx.moveTo(g.x,g.y-g.size); ctx.lineTo(g.x,g.y+g.size);
+      ctx.stroke();
+      ctx.strokeStyle='rgba(0,238,255,'+(0.30*a)+')';
+      ctx.beginPath();
+      ctx.moveTo(g.x-g.size*1.6,g.y); ctx.lineTo(g.x+g.size*1.6,g.y);
+      ctx.moveTo(g.x,g.y-g.size*1.6); ctx.lineTo(g.x,g.y+g.size*1.6);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // crisp text outline on top
+    ctx.save();
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.font = `900 ${this.bounds.fontSize}px Inter, Arial, sans-serif`;
+    const grad = ctx.createLinearGradient(this.bounds.x,0,this.bounds.x+this.bounds.w,0);
+    grad.addColorStop(0,'rgba(0,236,255,.62)');
+    grad.addColorStop(.5,'rgba(255,255,255,.40)');
+    grad.addColorStop(1,'rgba(255,80,214,.62)');
+    ctx.lineWidth = Math.max(1.2,this.bounds.fontSize*0.010);
+    ctx.strokeStyle = grad;
+    ctx.globalAlpha = 0.75;
+    ctx.strokeText(this.word, w/2, h/2);
+    ctx.restore();
+  }
+}
+
+const hero = new DigifyEffect(setupCanvas('heroCanvas'),'digify','plain');
+const chroma = new DigifyEffect(setupCanvas('chromaCanvas'),'chromadie','plain');
+const card = new DigifyEffect(setupCanvas('cardCanvas'),'chromadie','card');
+
+function loop(t){
+  hero.draw(t);
+  chroma.draw(t);
+  card.draw(t);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

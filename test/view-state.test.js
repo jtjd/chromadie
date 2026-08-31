@@ -46,7 +46,9 @@ test('only UI-only views persist session state; Profile Studio profile data does
   assert.doesNotMatch(leaderboard, /readViewState|writeViewState|VIEW_STATE_NAMESPACE/);
   assert.match(stores, /clearAllViewState/);
   assert.match(settings, /function createStudioEditorProfileConfig/);
-  assert.match(settings, /return base && studioDraft \? \{ \.\.\.base, draft: studioDraft \} : base/);
+  assert.match(settings, /function createStudioEditorProfileConfig\(value, stagedDraft = studioDraft\)/);
+  assert.match(settings, /return base && stagedDraft \? \{ \.\.\.base, draft: stagedDraft \} : base/);
+  assert.match(settings, /editorProfileConfig = createStudioEditorProfileConfig\(context\?\.profileConfig, studioDraft\)/);
   assert.match(customize, /identityDraft\?\.bio/);
   assert.doesNotMatch(customize, /contentComponent|widgetComponent|id="customize-content"|id="customize-widgets"/);
   assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-collection', 'profile-layout', 'profile-aliases']);

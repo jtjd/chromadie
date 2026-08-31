@@ -10,9 +10,9 @@
 <section class="profile-premium-page" aria-labelledby="profile-premium-title">
   <header class="profile-premium-page__hero">
     <div>
-      <p class="profile-premium-page__eyebrow">Chromadie Plus / cosmetics, once</p>
-      <h2 id="profile-premium-title">More room for your profile.</h2>
-      <p>Keep the daily ritual and everything you earn. Plus gives the page around your identity more room to become yours.</p>
+      <p class="profile-premium-page__eyebrow">Chromadie Plus / hosted media, once</p>
+      <h2 id="profile-premium-title">Bring your profile to life.</h2>
+      <p>Keep the complete free profile. Plus adds hosted motion, sound, cursors, and a custom share preview.</p>
     </div>
     <span class="profile-premium-page__mark" aria-hidden="true">◇</span>
   </header>
@@ -22,9 +22,9 @@
   {:else}
     <div class="profile-premium-page__upsell">
       <div>
-        <p class="profile-premium-page__eyebrow">Unlock the full studio</p>
-        <h3>One identity. More cosmetics.</h3>
-        <p>Premium adds creative capacity without changing rolls, rank, rewards, or earned prestige.</p>
+        <p class="profile-premium-page__eyebrow">Hosted media, once</p>
+        <h3>One identity. More expression.</h3>
+        <p>Plus adds hosted media without changing rolls, rank, rewards, or earned prestige.</p>
       </div>
       <a href="/pricing">See Plus · $7.99 lifetime</a>
     </div>
@@ -33,23 +33,23 @@
   <div class="profile-premium-page__grid">
     <article>
       <span>01</span>
-      <h3>Rich media</h3>
-      <p>Background video, audio tracks, banners, and custom cursors within a safe profile quota.</p>
+      <h3>Motion</h3>
+      <p>Background video hosting, animated avatar hosting, and custom cursors.</p>
     </article>
     <article>
       <span>02</span>
-      <h3>More capacity</h3>
-      <p>Up to 25 links, ten projects, four provider cards, and premium structured share metadata.</p>
+      <h3>Sound</h3>
+      <p>Profile audio hosting and playlists with up to five active tracks.</p>
     </article>
     <article>
       <span>03</span>
-      <h3>Cosmetic layers</h3>
-      <p>Atelier templates, name motion, atmospheres, and the complete premium cosmetics catalog.</p>
+      <h3>Share and storage</h3>
+      <p>A custom uploaded OG/share preview image and 1 GB of bounded media storage.</p>
     </article>
   </div>
 
   <footer class="profile-premium-page__footer">
-    <span>Premium buys cosmetics. Gameplay earns prestige.</span>
+    <span>Plus hosts expression. Gameplay earns prestige.</span>
     <a href="/pricing">Compare Free and Plus</a>
   </footer>
 </section>

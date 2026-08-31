@@ -26,7 +26,7 @@ test('Studio preview is a bounded reference card, not a public-profile renderer'
   assert.match(card, /backdrop-filter: blur\(var\(--profile-surface-blur, 30px\)\) saturate\(160%\)/);
   assert.match(card, /profile-reference-card--studio[\s\S]*border: 1px solid rgba\(255,255,255,\.11\)/);
   assert.doesNotMatch(card, /profile-reference-card__head|headerValue/);
-  assert.match(preview, /profile-studio-preview__header[\s\S]*width: min\(350px, 100%\)/);
+  assert.match(preview, /profile-studio-preview__header[\s\S]*width: min\(52rem, 100%\)/);
   assert.match(preview, /@media \(min-width: 1101px\)[\s\S]*padding-top: 5\.1rem/);
 });
 
@@ -48,7 +48,7 @@ test('Studio and homepage share the reference card without sharing public layout
   assert.match(layout, /PROFILE_LAYOUT_DEFINITIONS/);
   assert.match(layout, /PROFILE_LAYOUT_KEYS/);
   assert.doesNotMatch(layout, /Link alignment|Visible sections|profile-layout-alignment|profile-layout-modules/);
-  for (const key of ['compact', 'full-bleed', 'framed']) {
+  for (const key of ['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']) {
     assert.match(layout, new RegExp(`data-layout=\\{key\\}|['"]${key}['"]`));
   }
   assert.doesNotMatch(layout, /ProfileTemplatePicker/);

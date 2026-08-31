@@ -9,24 +9,38 @@
 const PROFILE_LAYOUTS = {
   compact: {
     key: 'compact',
-    label: 'Compact',
-    description: 'A centered glass profile card with your identity, links, and daily color.',
-    structure: Object.freeze({ identity: 'centered', roll: 'integrated', surface: 'reference-card' }),
+    label: 'Default',
+    description: 'A banner-led identity card with a small daily color widget.',
+    structure: Object.freeze({ identity: 'centered', roll: 'widget', surface: 'banner-card' }),
     motionTarget: 'compact-card'
   },
   'full-bleed': {
     key: 'full-bleed',
-    label: 'Immersive',
-    description: 'A full-viewport identity scene with a large avatar, bio, and icon links.',
-    structure: Object.freeze({ identity: 'centered', roll: 'below-fold', surface: 'cardless' }),
+    label: 'Simplistic',
+    description: 'A cardless identity scene with a small color widget and icon links.',
+    structure: Object.freeze({ identity: 'centered', roll: 'widget', surface: 'cardless' }),
     motionTarget: 'full-bleed-identity'
+  },
+  sleek: {
+    key: 'sleek',
+    label: 'Sleek',
+    description: 'A compact rounded identity card with an overlapping avatar.',
+    structure: Object.freeze({ identity: 'left', roll: 'widget', surface: 'sleek-card' }),
+    motionTarget: 'framed-card'
   },
   framed: {
     key: 'framed',
-    label: 'Framed',
-    description: 'A left-aligned identity card with an overlapping avatar and icon links.',
-    structure: Object.freeze({ identity: 'left', roll: 'below-fold', surface: 'reference-card' }),
+    label: 'Modern',
+    description: 'A wide identity surface with a roll widget and separated media.',
+    structure: Object.freeze({ identity: 'split', roll: 'widget', surface: 'modern-card' }),
     motionTarget: 'framed-card'
+  },
+  portfolio: {
+    key: 'portfolio',
+    label: 'Portfolio',
+    description: 'A long-form profile hero that opens into story and project sections.',
+    structure: Object.freeze({ identity: 'centered', roll: 'widget', surface: 'portfolio' }),
+    motionTarget: 'full-bleed-identity'
   }
 };
 

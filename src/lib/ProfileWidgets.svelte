@@ -44,7 +44,7 @@
       {@const label = getProfileWidgetLabel(widget.provider)}
       {@const embedUrl = profileWidgetEmbedUrl(widget.provider, widget.type, widget.id)}
       {@const widgetKind = getProfileWidgetKind(widget.provider)}
-      <section class="profile-widget" data-provider-widget={widget.provider} aria-labelledby={'profile-widget-' + widget.order}>
+      <section class="profile-widget" data-profile-widget="provider" data-provider-widget={widget.provider} aria-labelledby={'profile-widget-' + widget.order}>
         <div class="profile-widget__heading">
           <span class="profile-widget__provider" id={'profile-widget-' + widget.order}>{label}</span>
           <span class="profile-widget__type">{widget.type}</span>

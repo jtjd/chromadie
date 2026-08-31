@@ -97,7 +97,8 @@ SELECT pg_temp.audit_assert(
     AND public.profile_layout_key('full-bleed', 'compact') = 'full-bleed'
     AND public.profile_layout_key('profile_layout_framed', 'compact') = 'framed'
     AND public.profile_layout_key('immersive', 'compact') = 'compact'
-    AND public.profile_layout_key('sleek', 'full-bleed') = 'full-bleed'
+    AND public.profile_layout_key('sleek', 'full-bleed') = 'sleek'
+    AND public.profile_layout_key('profile_layout_portfolio', 'compact') = 'portfolio'
     AND (
       public.normalize_profile_configuration(
         jsonb_set(public.profile_default_configuration(), '{layoutVariant}', '"immersive"'::jsonb, true),
@@ -369,15 +370,15 @@ SELECT pg_temp.audit_assert(
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.shop_items'::regclass AND conname = 'shop_items_catalog_status_check'
   )
-  AND (SELECT count(*) = 32 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
+  AND (SELECT count(*) = 31 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
   AND (SELECT count(*) = 10 FROM public.shop_items WHERE slot = 'name_font' AND catalog_status = 'active')
   AND (SELECT count(*) = 7 FROM public.shop_items WHERE slot = 'name_material' AND catalog_status = 'active')
-  AND (SELECT count(*) = 15 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
+  AND (SELECT count(*) = 14 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
   AND (SELECT count(*) = 10 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
   AND (SELECT count(*) = 17 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
   AND (SELECT count(*) = 6 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
-  AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
-  AND (SELECT count(*) = 14 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
+  AND (SELECT count(*) = 5 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
+  AND (SELECT count(*) = 13 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
   AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
   AND (SELECT count(*) = 87 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
@@ -1621,6 +1622,18 @@ SELECT pg_temp.audit_assert(
   'a public database function still touches Supabase Storage objects'
 );
 
+-- Hosted image and cursor selections must carry the dimensions that the
+-- browser processor promises. Missing JSON keys must fail closed rather than
+-- becoming SQL NULLs that bypass an IF condition.
+SELECT pg_temp.audit_expect_error(
+  $share_metadata$SELECT public.prepare_my_profile_media_upload_r2('share_image', 'jpg', 'image/jpeg', 100, repeat('a', 64), '', '{}'::jsonb, NULL)$share_metadata$,
+  'share preview upload accepted missing dimensions'
+);
+SELECT pg_temp.audit_expect_error(
+  $cursor_metadata$SELECT public.prepare_my_profile_media_upload_r2('cursor', 'webp', 'image/webp', 100, repeat('b', 64), '', '{}'::jsonb, NULL)$cursor_metadata$,
+  'cursor upload accepted missing dimensions'
+);
+
 -- R2 deletion must use typed asset IDs when available. A provider-native row
 -- has no legacy storage_path; two NULL paths are not evidence that an unused
 -- row is selected. This exercises avatar, background, video, and cursor rows
@@ -1636,7 +1649,8 @@ INSERT INTO public.profile_media_assets (
   ('30000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'background_video', NULL, 'r2', 'profiles/v-unused.mp4', 'active', 'ready', true, 'video/mp4', 1, 'Unused video'),
   ('30000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000001', 'background_video', NULL, 'r2', 'profiles/v-selected.mp4', 'active', 'ready', true, 'video/mp4', 1, 'Selected video'),
   ('30000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000001', 'cursor', NULL, 'r2', 'profiles/c-unused.webp', 'active', 'ready', true, 'image/webp', 1, 'Unused cursor'),
-  ('30000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000001', 'cursor', NULL, 'r2', 'profiles/c-selected.webp', 'active', 'ready', true, 'image/webp', 1, 'Selected cursor');
+  ('30000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000001', 'cursor', NULL, 'r2', 'profiles/c-selected.webp', 'active', 'ready', true, 'image/webp', 1, 'Selected cursor'),
+  ('30000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000001', 'animated_avatar', NULL, 'r2', 'profiles/a-animated.webp', 'active', 'ready', true, 'image/webp', 1, 'Animated avatar');
 UPDATE public.profile_configurations
 SET avatar_asset_id = '30000000-0000-0000-0000-000000000002',
     background_asset_id = '30000000-0000-0000-0000-000000000004',
@@ -1648,6 +1662,27 @@ SET avatar_asset_id = '30000000-0000-0000-0000-000000000002',
     cursor_path = NULL,
     updated_at = clock_timestamp()
 WHERE user_id = '10000000-0000-0000-0000-000000000001';
+UPDATE public.profile_configurations
+SET animated_avatar_asset_id = '30000000-0000-0000-0000-000000000011'
+WHERE user_id = '10000000-0000-0000-0000-000000000001';
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
+  true
+);
+INSERT INTO audit_results VALUES (
+  'r2_switch_static_avatar',
+  public.select_my_profile_expression_assets('30000000-0000-0000-0000-000000000002', NULL, false, false)
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->>'animated_avatar_asset_id' IS NULL
+   FROM audit_results WHERE name = 'r2_switch_static_avatar')
+    AND (SELECT animated_avatar_asset_id IS NULL
+         FROM public.profile_configurations
+         WHERE user_id = '10000000-0000-0000-0000-000000000001'),
+  'selecting a static avatar left the animated avatar active'
+);
 CREATE TEMP TABLE profile_media_delete_state AS
 SELECT user_id, updated_at
 FROM public.profile_configurations

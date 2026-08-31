@@ -130,8 +130,8 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(audioLimitMigration, /file_size_limit = 5242880/);
   assert.match(audioMigration, /profile_audio\/.*profile[.]mp3/);
   assert.match(settings, /export let staff = false/);
-  assert.match(identity, /slice\(0, 4\)/);
   assert.match(identity, /visibleLinks/);
+  assert.match(identity, /slice\(0, PROFILE_LINK_LIMITS\.maxLinks\)/);
   assert.match(await read('src/lib/profileLinkTypes.js'), /instagram.*instagram/);
   assert.match(await read('src/lib/profileLinkTypes.js'), /tiktok.*tiktok/);
   assert.match(await read('src/lib/profileLinkTypes.js'), /twitch.*twitch/);

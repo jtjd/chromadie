@@ -774,7 +774,7 @@
         : routeMode === 'app' && view === 'leaderboard'
           ? 'Explore ChromaDie players, public color stories, exceptional rolls, and leaderboard results.'
         : routeMode === 'app' && view === 'pricing'
-          ? 'Compare the complete free profile with Chromadie Plus lifetime profile cosmetics.'
+          ? 'Compare the complete free profile with Chromadie Plus lifetime hosted media.'
           : 'Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score.';
   $: canonicalPath = routeMode === 'not-found'
     ? '/'

@@ -59,6 +59,8 @@ test('V1 profiles upgrade into a bounded V2 envelope without losing the opening 
     }))
   });
   assert.equal(expanded.links.length, PROFILE_CONFIGURATION_V2_LIMITS.maxLinks);
+  assert.equal(expanded.links.length, 6);
+  assert.deepEqual(expanded.links.map(link => link.label), ['Link 0', 'Link 1', 'Link 2', 'Link 3', 'Link 4', 'Link 5']);
   assert.equal(expanded.base.links.length, 6);
   assert.equal(new Set(expanded.links.map(link => link.key)).size, expanded.links.length);
   assert.match(expanded.links[0].key, /^[a-z0-9][a-z0-9_-]{0,31}$/);

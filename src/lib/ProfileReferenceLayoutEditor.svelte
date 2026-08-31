@@ -100,6 +100,12 @@
   .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini { border-color: rgba(255,255,255,.22); background: rgba(24, 28, 40, .78); }
   .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini::before { top: 10px; left: 10px; width: 27px; height: 27px; border-radius: 6px; transform: translateY(-22%); }
   .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini::after { top: 29px; right: 11px; left: 46px; height: 5px; box-shadow: 0 13px 0 rgba(255,255,255,.1), 0 35px 0 rgba(255,255,255,.08), 0 49px 0 color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 20%, transparent); }
+  .profile-layout-editor__card[data-layout='sleek'] .profile-layout-editor__mini { border-color: rgba(255,255,255,.22); border-radius: 11px; background: rgba(24, 24, 28, .78); }
+  .profile-layout-editor__card[data-layout='sleek'] .profile-layout-editor__mini::before { top: 9px; left: 10px; width: 24px; height: 24px; transform: translateY(-18%); }
+  .profile-layout-editor__card[data-layout='sleek'] .profile-layout-editor__mini::after { top: 30px; right: 11px; left: 43px; height: 4px; box-shadow: 0 10px 0 rgba(255,255,255,.1), 0 25px 0 color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 24%, transparent); }
+  .profile-layout-editor__card[data-layout='portfolio'] .profile-layout-editor__mini { border-color: transparent; background: transparent; }
+  .profile-layout-editor__card[data-layout='portfolio'] .profile-layout-editor__mini::before { top: 10px; left: 50%; width: 27px; height: 27px; transform: translateX(-50%); }
+  .profile-layout-editor__card[data-layout='portfolio'] .profile-layout-editor__mini::after { top: 46px; right: 28%; left: 28%; height: 4px; box-shadow: 0 10px 0 rgba(255,255,255,.1), 0 20px 0 color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 24%, transparent); }
   @media (max-width: 52rem) { .profile-layout-editor__layouts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 38rem) { .profile-layout-editor__layouts { grid-template-columns: minmax(0, 1fr); } .profile-layout-editor__head { flex-direction: column; } }
 </style>

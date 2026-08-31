@@ -420,6 +420,21 @@ function hasMpegFrame(bytes) {
   return false;
 }
 
+function containsAscii(bytes, value) {
+  const limit = bytes.length - value.length;
+  for (let offset = 0; offset <= limit; offset += 1) {
+    if (hasAscii(bytes, value, offset)) return true;
+  }
+  return false;
+}
+
+function isAnimatedGif(bytes) {
+  if (!(hasAscii(bytes, 'GIF87a') || hasAscii(bytes, 'GIF89a'))) return false;
+  let frames = 0;
+  for (const byte of bytes) if (byte === 0x2c && ++frames > 1) return true;
+  return false;
+}
+
 /**
  * Validate the small container signatures that correspond to the allowlisted
  * upload contract. This runs after the actual R2 bytes have been hashed; it
@@ -434,6 +449,8 @@ export function validateProfileMediaSignature({ bytes, kind, extension, mimeType
     avatar: ['webp', 'image/webp'],
     background: ['webp', 'image/webp'],
     banner: ['webp', 'image/webp'],
+    animated_avatar: ['gif|webp', 'image/gif|image/webp'],
+    share_image: ['jpg', 'image/jpeg'],
     cursor: ['webp|ani', 'image/webp|application/x-navi-animation|application/octet-stream|application/x-ani|image/x-ani|application/vnd.microsoft.ani'],
     pointer_cursor: ['webp|ani', 'image/webp|application/x-navi-animation|application/octet-stream|application/x-ani|image/x-ani|application/vnd.microsoft.ani'],
     background_video: ['mp4|webm', 'video/mp4|video/webm'],
@@ -442,7 +459,12 @@ export function validateProfileMediaSignature({ bytes, kind, extension, mimeType
   if (!expected || !new RegExp(`^(?:${expected[0]})$`).test(normalizedExtension)
     || !new RegExp(`^(?:${expected[1]})$`).test(normalizedMime)) return false;
 
+  if (normalizedKind === 'animated_avatar' && normalizedExtension === 'gif') return isAnimatedGif(data);
+  if (normalizedKind === 'animated_avatar' && normalizedExtension === 'webp') {
+    return hasAscii(data, 'RIFF') && hasAscii(data, 'WEBP', 8) && (containsAscii(data, 'ANIM') || containsAscii(data, 'ANMF'));
+  }
   if (normalizedExtension === 'webp') return hasAscii(data, 'RIFF') && hasAscii(data, 'WEBP', 8);
+  if (normalizedExtension === 'jpg') return data.length >= 4 && data[0] === 0xff && data[1] === 0xd8 && data[data.length - 2] === 0xff && data[data.length - 1] === 0xd9;
   if (normalizedExtension === 'ani') return hasAscii(data, 'RIFF') && hasAscii(data, 'ACON', 8);
   if (normalizedExtension === 'mp4') return data.length >= 12 && hasAscii(data, 'ftyp', 4);
   if (normalizedExtension === 'webm') {

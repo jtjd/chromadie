@@ -798,7 +798,7 @@ body {
   background: transparent;
 }
 
-.app-main--site :is(.guide h1, .terms h1, .legal-hero h1, .pricing-hero h1, .pricing-card h2, .pricing-card__price, .pricing-page__promise-heading h2) {
+.app-main--site :is(.guide h1, .terms h1, .legal-hero h1, .pricing-hero h1, .pricing-section-heading h2, .pricing-card h2, .pricing-card__price) {
   font-family: var(--site-display) !important;
   font-weight: 600;
 }
@@ -813,11 +813,6 @@ body {
 .app-main--site .pricing-page {
   min-height: 100%;
   background: transparent !important;
-}
-
-.app-main--site .pricing-page::before,
-.app-main--site .pricing-page__atmosphere {
-  display: none;
 }
 
 .app-main--site .pricing-card--plus {

@@ -27,7 +27,7 @@ export async function onRequestPost({ request, env }) {
   const label = String(body?.label || '').trim().slice(0, 80);
   const replaceAssetId = body?.replace_asset_id ? String(body.replace_asset_id).trim() : null;
   const metadata = body?.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata) ? body.metadata : {};
-  if (!['avatar', 'background', 'background_video', 'banner', 'audio', 'cursor', 'pointer_cursor'].includes(kind)
+  if (!['avatar', 'background', 'background_video', 'animated_avatar', 'share_image', 'audio', 'cursor', 'pointer_cursor'].includes(kind)
     || !/^[a-z0-9]{1,8}$/.test(extension)
     || !mimeType
     || !Number.isSafeInteger(byteSize)

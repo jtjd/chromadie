@@ -1,5 +1,10 @@
 # Competitor Profile Parity Milestone 10 — Bounded Rich Media
 
+> Superseded on 2026-08-29 by
+> `docs/milestones/PLUS_PAID_MEDIA_DISTILLATION.md`. This file records the
+> historical implementation; its banner, per-kind library-count, and 150 MB
+> product contracts are no longer current.
+
 ## Goal
 
 Give Chromadie Plus and authoritative staff profiles the practical media depth

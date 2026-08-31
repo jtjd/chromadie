@@ -35,6 +35,7 @@
     'profile-name',
     'profile-reference-card__name',
     'profile-full-bleed__name',
+    'profile-portfolio__name',
     'profile-username-large',
     'lb-username',
     'studio-player-name'
@@ -351,7 +352,7 @@
   bind:this={host}
   class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')}
   data-name-renderer={safeRendererKey}
-  data-name-font={activeFontKey}
+  data-name-font={resolvedFontKey}
   data-name-font-ready={fontReady ? 'true' : 'false'}
   data-name-material={explicitMaterialKey}
   data-name-motion={explicitMotionKey}

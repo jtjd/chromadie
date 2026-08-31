@@ -2,35 +2,79 @@
   import { createEventDispatcher } from 'svelte';
   import { areProfileConfigsEqual, normalizeProfileConfig, PROFILE_LINK_LIMITS } from './profileConfig.js';
   import { PROFILE_LINK_DEFINITIONS, isProfileLinkUrlValid } from './profileLinkTypes.js';
-  import { hasChromadiePlus } from './premiumEntitlements.js';
 
   export let profileId = null;
   export let draftConfig = null;
   export let publishedConfig = null;
   export let updatedAt = null;
-  export let entitlements = [];
-  export let staff = false;
   export let studio = false;
   export let presentation = '';
 
   const dispatch = createEventDispatcher();
-  let draft = normalizeProfileConfig(draftConfig || publishedConfig);
+  const linkLimit = PROFILE_LINK_LIMITS.maxLinks;
+  let draft = normalizeDraft(draftConfig || publishedConfig);
   let baseline = draft;
   let status = '';
   let error = '';
   let lastIncomingKey = '';
 
-  $: isDirty = !areProfileConfigsEqual(draft, baseline);
+  // A blank row is an intentional editor state. The public normalizer drops
+  // it from the preview, but it must still keep the editor dirty so an
+  // incoming preview projection cannot erase the row before it is completed.
+  $: isDirty = !areProfileConfigsEqual(draft, baseline)
+    || hasIncompleteLinks(draft);
   $: incomingKey = JSON.stringify({ profileId, draft: draftConfig, published: publishedConfig, updatedAt });
   $: if (incomingKey !== lastIncomingKey && !isDirty) syncIncoming();
-  $: linkLimit = staff || hasChromadiePlus(entitlements) ? PROFILE_LINK_LIMITS.maxLinks : PROFILE_LINK_LIMITS.freeLinks;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
 
+  function hasIncompleteLinks(value) {
+    return Array.isArray(value?.links)
+      && value.links.some(link => !String(link.label || '').trim() || !isProfileLinkUrlValid(link.type, link.url));
+  }
+
+  function draftLinkFallback(value, index) {
+    const candidate = value && typeof value === 'object' ? value : {};
+    const keyCandidate = String(candidate.key || '').trim().toLowerCase();
+    const key = /^[a-z0-9][a-z0-9_-]{0,31}$/.test(keyCandidate) ? keyCandidate : `draft-link-${index}`;
+    const type = PROFILE_LINK_DEFINITIONS.some(definition => definition.key === candidate.type) ? candidate.type : 'website';
+    const clamp = (next, fallback, minimum, maximum) => {
+      const number = Number(next);
+      return Number.isInteger(number) ? Math.min(maximum, Math.max(minimum, number)) : fallback;
+    };
+    return {
+      key,
+      type,
+      label: String(candidate.label || '').trim().slice(0, 40),
+      url: String(candidate.url || '').trim().slice(0, 2048),
+      visible: candidate.visible !== false,
+      order: index,
+      alignment: ['left', 'center', 'right'].includes(candidate.alignment) ? candidate.alignment : 'left',
+      monochrome: candidate.monochrome === true,
+      size: clamp(candidate.size, 1, 0, 2),
+      glow: clamp(candidate.glow, 0, 0, 2)
+    };
+  }
+
   function normalizeDraft(value) {
-    return normalizeProfileConfig(value || draftConfig || publishedConfig);
+    const source = value && typeof value === 'object' ? value : {};
+    const normalized = normalizeProfileConfig(source);
+    const sourceLinks = Array.isArray(source.links)
+      ? source.links
+      : Array.isArray(source.base?.links)
+        ? source.base.links
+        : [];
+    // The public normalizer correctly rejects incomplete links, but the editor
+    // must keep a newly-added blank row long enough for the user to complete
+    // it. The row remains bounded and structured; only valid rows reach the
+    // live renderer and publish RPC.
+    const links = sourceLinks.slice(0, linkLimit).map((link, index) => {
+      const valid = normalizeProfileConfig({ ...source, links: [link] }).links[0];
+      return valid ? { ...valid, order: index } : draftLinkFallback(link, index);
+    });
+    return { ...normalized, links };
   }
 
   function syncIncoming() {
@@ -43,7 +87,7 @@
   }
 
   function emitDirty(value = null) {
-    dispatch('dirty', { dirty: typeof value === 'boolean' ? value : !areProfileConfigsEqual(draft, baseline) });
+    dispatch('dirty', { dirty: typeof value === 'boolean' ? value : !areProfileConfigsEqual(draft, baseline) || hasIncompleteLinks(draft) });
   }
 
   function updateDraft(next) {
@@ -155,7 +199,7 @@
     <label><span>Embed color</span><input type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" value={draft.metadata?.embedColor || '#CDD2FF'} on:input={event => updateDraft({ metadata: { ...(draft.metadata || {}), embedColor: event.currentTarget.value } })} /></label>
   </div>
 
-  <p class="profile-links-editor__helper">Links must use HTTPS. Social services stay in the opening; custom destinations continue below according to the selected layout.</p>
+  <p class="profile-links-editor__helper">Up to {linkLimit} links appear together in the profile card. Links must use HTTPS and can be reordered above.</p>
   {#if error}<p class="profile-links-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-links-editor__message" role="status" aria-live="polite">{status}</p>{/if}
   <p class="profile-links-editor__hint">Changes are staged in this workspace. Publish the profile from the dashboard controls.</p>

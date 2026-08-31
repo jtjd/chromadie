@@ -134,11 +134,11 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(referenceLayout, /data-layout-editor="reference-first"/);
   assert.match(referenceLayout, /PROFILE_LAYOUT_DEFINITIONS/);
   assert.match(referenceLayout, /PROFILE_LAYOUT_KEYS/);
-  for (const layout of ['compact', 'full-bleed', 'framed']) {
+  for (const layout of ['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']) {
     assert.match(referenceLayout, new RegExp(`data-layout=\\{key\\}|['"]${layout}['"]`));
   }
   assert.match(premium, /\$7\.99 lifetime/);
-  assert.match(premium, /Premium buys cosmetics\. Gameplay earns prestige\./);
+  assert.match(premium, /Plus hosts expression\. Gameplay earns prestige\./);
   assert.match(shell, /profile-studio-shell__brand/);
   assert.match(studio, /id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize'/);
   assert.match(contract, /PROFILE_STUDIO_PRIMARY_SECTION_IDS/);

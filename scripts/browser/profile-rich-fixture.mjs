@@ -1,8 +1,8 @@
 /**
  * One deterministic browser-QA profile. The smoke flow applies the fields
- * that the disposable account can author through Profile Studio, while the
- * full link list is also used by the renderer/unit assertions for continuation
- * link coverage.
+ * that the disposable account can author through Profile Studio. Six links is
+ * the complete public link rail; the fixture intentionally exercises the hard
+ * profile contract rather than an overflow continuation.
  */
 export const RICH_PROFILE_FIXTURE = Object.freeze({
   usernamePrefix: 'chromadieqa',
@@ -41,9 +41,5 @@ export const RICH_PROFILE_FIXTURE = Object.freeze({
     Object.freeze({ type: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/chromadie/' }),
     Object.freeze({ type: 'website', label: 'Personal site', url: 'https://chromadie.example/' }),
     Object.freeze({ type: 'website', label: 'Portfolio', url: 'https://chromadie.example/portfolio' }),
-    Object.freeze({ type: 'website', label: 'Project notes', url: 'https://chromadie.example/notes' }),
-    Object.freeze({ type: 'website', label: 'Now playing', url: 'https://chromadie.example/now' }),
-    Object.freeze({ type: 'other', label: 'Field guide', url: 'https://chromadie.example/field-guide' }),
-    Object.freeze({ type: 'other', label: 'Contact', url: 'https://chromadie.example/contact' })
   ])
 });

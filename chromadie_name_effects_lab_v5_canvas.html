@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Chromadie Name Lab v5 — Canvas Renderer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=Cormorant+Garamond:wght@500;600&family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&family=Libre+Franklin:wght@500;600;700&family=Pirata+One&family=Pixelify+Sans:wght@500;600&family=Sono:wght@500;600&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090a0d;--surface:#111319;--surface2:#17191f;--line:#32353e;--text:#f2f0eb;--muted:#9da0aa;--accent:#cdd2ff;--today:#d84b8e}
+*{box-sizing:border-box}
+body{margin:0;min-width:320px;background:linear-gradient(#121419,#090a0d 50%);color:var(--text);font-family:"Instrument Sans",sans-serif}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.shell{width:min(calc(100% - 32px),1460px);margin:auto}
+header{position:sticky;top:0;z-index:20;padding:10px 0;background:rgba(9,10,13,.95)}
+nav{height:44px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 10px 0 16px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:#111217}
+.brand{font:600 12px "IBM Plex Mono",monospace}.brand b{color:var(--accent)}
+.nav-label{font-size:12px;color:#a4a7af}
+.user{justify-self:end;font:11px "IBM Plex Mono",monospace;color:#92959e}
+main{padding:28px 0 80px}
+.hero{display:flex;justify-content:space-between;align-items:end;gap:24px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.hero h1{margin:0;font-size:42px;letter-spacing:-.05em}.hero h1 span{color:var(--accent)}
+.hero p{margin:8px 0 0;max-width:700px;color:#aaaeb7;line-height:1.55}
+.engine-badge{padding:8px 10px;border:1px solid #3b3f48;border-radius:4px;color:#9ca0ab;font:10px "IBM Plex Mono",monospace}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:18px;padding-top:18px}
+.tabs{display:flex;gap:6px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.tabs button{min-height:40px;padding:0 14px;border:1px solid transparent;border-radius:5px;background:transparent;color:#999ca6}
+.tabs button.active{border-color:#484c57;background:#17191f;color:#fff}
+.section-head{display:flex;justify-content:space-between;align-items:end;padding:18px 0 12px}
+.section-head h2{margin:0;font-size:25px}.section-head p{margin:5px 0 0;color:#92959e;font-size:14px}
+.count{font:12px "IBM Plex Mono",monospace;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.card{padding:14px;border:1px solid var(--line);border-radius:6px;background:#111319;text-align:left;overflow:hidden}
+.card:hover{border-color:#555a67;background:#14171d}.card.active{border-color:#7c8394;box-shadow:inset 3px 0 0 var(--accent)}
+.card-top,.card-bottom{display:flex;justify-content:space-between;gap:9px;align-items:start}
+.card h3{margin:0;font-size:15px}.price{font:600 13px "IBM Plex Mono",monospace;color:var(--accent);white-space:nowrap}
+.canvas-wrap{position:relative;height:72px;margin:12px 0 10px;border:1px solid #2b2f37;border-radius:4px;background:#090b0f;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+.live{font:600 8px "IBM Plex Mono",monospace;color:#8f94a3;position:absolute;right:6px;bottom:5px;letter-spacing:.08em}
+.rarity{padding:5px 7px;border:1px solid;border-radius:4px;font:600 10px "IBM Plex Mono",monospace;text-transform:uppercase}
+.rare{color:#b7d2ff;border-color:#5875a4}.epic{color:#dcc3ff;border-color:#745c9e}.anomaly{color:#ffd09a;border-color:#8e673d}.uncommon{color:#b9ead7;border-color:#4f7d6d}.free{color:#d2d4da;border-color:#595d66}
+.collection{font:10px "IBM Plex Mono",monospace;color:#858994}.note{margin:9px 0 0;min-height:34px;color:#90949e;font-size:12px;line-height:1.4}
+.preview-panel{position:sticky;top:74px;align-self:start;border:1px solid var(--line);border-radius:7px;background:#0b0d11;overflow:hidden}
+.preview-head{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line);background:#111319}
+.preview-head strong{font-size:14px}.preview-context{margin-top:4px;color:#8f929c;font:10px "IBM Plex Mono",monospace}
+.mode{display:flex;gap:3px;margin-top:7px;padding:3px;border:1px solid #343740;border-radius:5px;background:#0d0f14}
+.mode button{min-height:27px;padding:0 9px;border:0;border-radius:3px;background:transparent;color:#858892;font-size:10px}
+.mode button.active{background:#1d2027;color:var(--accent)}
+.preview-actions{display:flex;gap:7px}.preview-actions button{min-height:30px;padding:0 10px;border:1px solid #3a3e47;border-radius:4px;background:#17191f;color:#b5b8c1;font-size:11px}
+.profile{position:relative;min-height:405px;padding:24px;background:#080a0e}
+.profile-card{margin-top:28px;padding:22px;border:1px solid #393d46;border-radius:7px;background:#121419}
+.profile-top{display:flex;justify-content:space-between;align-items:center}
+.today{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid #3a3e47;border-radius:4px;color:#a6a9b1;font:10px "IBM Plex Mono",monospace;text-transform:uppercase}
+.today i{width:9px;height:9px;border-radius:50%;background:var(--today)}
+.identity{display:grid;grid-template-columns:68px minmax(0,1fr);gap:15px;align-items:center;margin-top:46px}
+.avatar{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#d84b8e,#5d6fb0);border:1px solid rgba(255,255,255,.15)}
+.live-canvas{height:76px;min-width:0}.bio{margin:4px 0 0;color:#999ca5;font-size:13px}
+.links{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:20px}.links span{padding:11px;border:1px solid #353942;border-radius:4px;text-align:center;color:#a4a7af;font-size:11px}
+.controls{padding:15px;border-top:1px solid var(--line);background:#111319}
+.control-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.control{padding:10px;border:1px solid #343740;border-radius:5px;background:#0e1015}.control label{display:block;margin-bottom:7px;color:#9699a3;font-size:11px}.control input{width:100%;border:0;outline:0;background:transparent}input[type=range]{accent-color:var(--accent)}
+.stack{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.stack div{padding:9px;border:1px solid #343740;border-radius:5px;background:#0e1015}.stack span{display:block;color:#777b85;font:9px "IBM Plex Mono",monospace;text-transform:uppercase}.stack strong{display:block;margin-top:5px;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.architecture{margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:6px;color:#999da7;font-size:13px;line-height:1.55;background:#0f1116}
+@media(max-width:1180px){.workspace{grid-template-columns:1fr 430px}.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.workspace{grid-template-columns:1fr}.preview-panel{position:relative;top:auto;grid-row:1}.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.hero{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.shell{width:min(calc(100% - 20px),1460px)}.nav-label{display:none}.grid{grid-template-columns:1fr}.identity{grid-template-columns:52px 1fr}.avatar{width:52px;height:52px}.control-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><nav class="shell"><div class="brand">chm<b>.lol</b></div><div class="nav-label">Name Lab · Canvas Renderer</div><div class="user">Admin</div></nav></header>
+<main class="shell">
+<section class="hero"><div><h1>One renderer. <span>Every preview.</span></h1><p>Cards and the profile now use the same canvas pipeline, same clock, and same effect definitions. No pseudo-elements, duplicated DOM text, or separate animation implementations.</p></div><div class="engine-badge">Canvas 2D · shared RAF · visibility-aware</div></section>
+<section class="workspace">
+<div>
+  <div class="tabs"><button class="active" data-tab="fonts">Fonts</button><button data-tab="materials">Materials</button><button data-tab="motions">Motion</button></div>
+  <div class="section-head"><div><h2 id="sectionTitle">Fonts</h2><p id="sectionDescription">The structural voice of the username.</p></div><div class="count" id="sectionCount"></div></div>
+  <div class="grid" id="grid"></div>
+  <div class="architecture"><strong>Renderer rule:</strong> one effect definition receives a normalized progress value and draws into the same canvas pipeline at any size. The live profile is not a separate implementation—it is simply a larger renderer instance.</div>
+</div>
+<aside class="preview-panel">
+  <div class="preview-head">
+    <div><strong>Live profile preview</strong><div class="preview-context" id="previewContext">Font only · plain material</div><div class="mode"><button class="active" data-mode="isolated">Isolated</button><button data-mode="combined">Combined</button></div></div>
+    <div class="preview-actions"><button id="replay">Replay</button><button id="toggleMotion">Pause</button></div>
+  </div>
+  <div class="profile">
+    <div class="profile-card">
+      <div class="profile-top"><div class="today"><i></i>Today · #D84B8E</div><span style="font:11px 'IBM Plex Mono'">#01</span></div>
+      <div class="identity"><div class="avatar"></div><div><div class="live-canvas"><canvas id="liveCanvas" aria-label="Admin name preview"></canvas></div><p class="bio">creating things</p></div></div>
+      <div class="links"><span>GitHub</span><span>YouTube</span><span>ChromaDie</span></div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="control-row"><div class="control"><label>Sample name</label><input id="nameInput" value="Admin" maxlength="18"></div><div class="control"><label>Name size</label><input id="sizeRange" type="range" min="34" max="66" value="54"></div></div>
+    <div class="stack"><div><span>Font</span><strong id="fontLabel">Soft Grotesk</strong></div><div><span>Material</span><strong id="materialLabel">Polished Chrome</strong></div><div><span>Motion</span><strong id="motionLabel">Still</strong></div></div>
+  </div>
+</aside>
+</section>
+</main>
+<script>
+const DATA={"fonts": [{"id": "editorial-serif", "name": "Editorial Serif", "collection": "Archive", "rarity": "Rare", "price": "180K EP", "font": "600 54px 'Cormorant Garamond', serif", "family": "'Cormorant Garamond', serif", "weight": 600}, {"id": "condensed-sans", "name": "Condensed Sans", "collection": "Nocturne", "rarity": "Rare", "price": "180K EP", "font": "700 54px 'Archivo Narrow', sans-serif", "family": "'Archivo Narrow', sans-serif", "weight": 700}, {"id": "wide-geometric", "name": "Wide Geometric", "collection": "Prism", "rarity": "Rare", "price": "180K EP", "font": "700 54px 'Syne', sans-serif", "family": "'Syne', sans-serif", "weight": 700}, {"id": "mono-compact", "name": "Mono Compact", "collection": "Signal", "rarity": "Uncommon", "price": "120K EP", "font": "600 54px 'IBM Plex Mono', monospace", "family": "'IBM Plex Mono', monospace", "weight": 600}, {"id": "rounded-mono", "name": "Rounded Mono", "collection": "Static Bloom", "rarity": "Rare", "price": "170K EP", "font": "600 54px 'Sono', monospace", "family": "'Sono', monospace", "weight": 600}, {"id": "soft-grotesk", "name": "Soft Grotesk", "collection": "Nocturne", "rarity": "Uncommon", "price": "130K EP", "font": "650 54px 'Instrument Sans', sans-serif", "family": "'Instrument Sans', sans-serif", "weight": 650}, {"id": "humanist-display", "name": "Humanist Display", "collection": "Archive", "rarity": "Rare", "price": "190K EP", "font": "600 54px 'Libre Franklin', sans-serif", "family": "'Libre Franklin', sans-serif", "weight": 600}, {"id": "modern-fraktur", "name": "Modern Fraktur", "collection": "Nocturne", "rarity": "Epic", "price": "320K EP", "font": "400 54px 'Pirata One', serif", "family": "'Pirata One', serif", "weight": 400}, {"id": "pixel-display", "name": "Pixel Display", "collection": "Static Bloom", "rarity": "Rare", "price": "190K EP", "font": "600 54px 'Pixelify Sans', monospace", "family": "'Pixelify Sans', monospace", "weight": 600}, {"id": "high-contrast-italic", "name": "High-Contrast Italic", "collection": "Archive", "rarity": "Epic", "price": "310K EP", "font": "italic 400 54px 'DM Serif Display', serif", "family": "'DM Serif Display', serif", "weight": 400, "style": "italic"}], "materials": [{"id": "plain", "name": "Plain", "collection": "Baseline", "rarity": "Free", "price": "Free"}, {"id": "polished-chrome", "name": "Polished Chrome", "collection": "Nocturne", "rarity": "Epic", "price": "340K EP"}, {"id": "copper-press", "name": "Copper Press", "collection": "Ember", "rarity": "Rare", "price": "220K EP"}, {"id": "glass-emboss", "name": "Glass Emboss", "collection": "Prism", "rarity": "Epic", "price": "350K EP"}, {"id": "fine-outline", "name": "Fine Outline", "collection": "Archive", "rarity": "Uncommon", "price": "140K EP"}, {"id": "ink-bleed", "name": "Ink Bleed", "collection": "Archive", "rarity": "Rare", "price": "210K EP"}, {"id": "pearl-foil", "name": "Pearl Foil", "collection": "Prism", "rarity": "Epic", "price": "360K EP"}, {"id": "carbon-cut", "name": "Carbon Cut", "collection": "Nocturne", "rarity": "Rare", "price": "230K EP"}, {"id": "frosted-edge", "name": "Frosted Edge", "collection": "Signal", "rarity": "Rare", "price": "210K EP"}, {"id": "holographic-film", "name": "Holographic Film", "collection": "Prism", "rarity": "Anomaly", "price": "540K EP"}, {"id": "cut-paper", "name": "Cut Paper", "collection": "Archive", "rarity": "Rare", "price": "200K EP"}], "motions": [{"id": "none", "name": "Still", "collection": "Baseline", "rarity": "Free", "price": "Free", "note": "No animation."}, {"id": "velvet-sweep", "name": "Velvet Sweep", "collection": "Ember", "rarity": "Epic", "price": "360K EP", "note": "A soft satin highlight travels across the name."}, {"id": "refraction-sweep", "name": "Refraction Sweep", "collection": "Prism", "rarity": "Epic", "price": "350K EP", "note": "Cyan and rose refraction bands cross the letters."}, {"id": "ghost-offset", "name": "Ghost Offset", "collection": "Static Bloom", "rarity": "Epic", "price": "320K EP", "note": "Slow chromatic echoes drift behind the name."}, {"id": "focus-resolve", "name": "Focus Resolve", "collection": "Nocturne", "rarity": "Rare", "price": "230K EP", "note": "The name resolves from controlled blur."}, {"id": "mask-reveal", "name": "Mask Reveal", "collection": "Archive", "rarity": "Rare", "price": "210K EP", "note": "A clean horizontal reveal."}, {"id": "quiet-afterimage", "name": "Quiet Afterimage", "collection": "Static Bloom", "rarity": "Rare", "price": "240K EP", "note": "A restrained delayed copy trails the text."}, {"id": "soft-rise", "name": "Soft Rise", "collection": "Ember", "rarity": "Uncommon", "price": "150K EP", "note": "A subtle entrance from below."}, {"id": "scanline-reveal", "name": "Scanline Reveal", "collection": "Signal", "rarity": "Epic", "price": "330K EP", "note": "A scanning line reveals the name."}, {"id": "particle-drift", "name": "Particle Drift", "collection": "Prism", "rarity": "Epic", "price": "370K EP", "note": "Small particles lift from the letterforms."}, {"id": "letter-shuffle", "name": "Letter Shuffle", "collection": "Static Bloom", "rarity": "Anomaly", "price": "520K EP", "note": "Characters rearrange before locking into place."}, {"id": "fuzzy-signal", "name": "Fuzzy Signal", "collection": "Signal", "rarity": "Epic", "price": "340K EP", "note": "Controlled horizontal signal slices distort the name."}, {"id": "typewriter-name", "name": "Typewriter Name", "collection": "Archive", "rarity": "Rare", "price": "230K EP", "note": "Characters appear one by one."}]};
+const state={
+  tab:"fonts",
+  mode:"isolated",
+  font:DATA.fonts.find(x=>x.id==="soft-grotesk"),
+  material:DATA.materials.find(x=>x.id==="polished-chrome"),
+  motion:DATA.motions.find(x=>x.id==="none"),
+  name:"Admin",
+  size:54,
+  paused:false,
+  epoch:performance.now()
+};
+
+const descriptions={
+  fonts:["Fonts","The structural voice of the username."],
+  materials:["Materials","Surface, edge, light, and print behavior."],
+  motions:["Motion","Every card uses the exact same renderer as the live profile."]
+};
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const easeInOut=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const easeOut=t=>1-Math.pow(1-t,3);
+const smoothstep=t=>t*t*(3-2*t);
+const fract=x=>x-Math.floor(x);
+const hash=n=>fract(Math.sin(n*127.1)*43758.5453);
+
+class NameRenderer{
+  constructor(canvas,options){
+    this.canvas=canvas;
+    this.ctx=canvas.getContext("2d",{alpha:true});
+    this.options=options;
+    this.visible=true;
+    this.resize();
+    this.observer=new IntersectionObserver(entries=>{this.visible=entries[0]?.isIntersecting??true},{rootMargin:"120px"});
+    this.observer.observe(canvas);
+  }
+  resize(){
+    const rect=this.canvas.getBoundingClientRect();
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const w=Math.max(2,Math.round(rect.width*dpr));
+    const h=Math.max(2,Math.round(rect.height*dpr));
+    if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h}
+    this.dpr=dpr;this.width=rect.width;this.height=rect.height;
+  }
+  setOptions(options){this.options={...this.options,...options}}
+  destroy(){
+    this.visible=false;
+    this.observer?.disconnect();
+  }
+  fontString(size=this.options.size){
+    const f=this.options.font;
+    const style=f.style?f.style+" ":"";
+    return `${style}${f.weight||600} ${size}px ${f.family}`;
+  }
+  measure(text,size=this.options.size){
+    this.ctx.font=this.fontString(size);
+    return this.ctx.measureText(text).width;
+  }
+  prepareText(text,size){
+    const pad=24;
+    let finalSize=size;
+    let width=this.measure(text,finalSize);
+    const max=this.width-pad*2;
+    if(width>max){finalSize*=max/width;width=max}
+    return {size:finalSize,width,x:(this.width-width)/2,y:this.height/2+finalSize*.34};
+  }
+  createMask(text,metrics){
+    const off=document.createElement("canvas");
+    off.width=this.canvas.width;off.height=this.canvas.height;
+    const c=off.getContext("2d");
+    c.scale(this.dpr,this.dpr);
+    c.font=this.fontString(metrics.size);
+    c.textBaseline="alphabetic";
+    c.textAlign="left";
+    c.fillStyle="#fff";
+    c.fillText(text,metrics.x,metrics.y);
+    return off;
+  }
+  drawMaterial(ctx,text,m,p,alpha=1,offsetX=0,offsetY=0){
+    const x=m.x+offsetX,y=m.y+offsetY,w=m.width;
+    ctx.save();ctx.globalAlpha=alpha;ctx.font=this.fontString(m.size);ctx.textBaseline="alphabetic";ctx.textAlign="left";
+    const id=this.options.material.id;
+    if(id==="plain"){
+      ctx.fillStyle="#f0eee8";ctx.fillText(text,x,y);
+    }else if(id==="polished-chrome"){
+      const g=ctx.createLinearGradient(x-w*.3+p*w*1.6,0,x+w*.7+p*w*1.6,0);
+      g.addColorStop(0,"#626771");g.addColorStop(.22,"#e7ebef");g.addColorStop(.4,"#777d87");g.addColorStop(.55,"#fff");g.addColorStop(.76,"#9ca3ad");g.addColorStop(1,"#e7ebef");
+      ctx.fillStyle=g;ctx.fillText(text,x,y);
+    }else if(id==="copper-press"){
+      const g=ctx.createLinearGradient(x,y-m.size,x,y);
+      g.addColorStop(0,"#efc09a");g.addColorStop(.45,"#a95637");g.addColorStop(.7,"#e08d5d");g.addColorStop(1,"#6f3321");
+      ctx.fillStyle=g;ctx.shadowColor="rgba(0,0,0,.55)";ctx.shadowOffsetY=2;ctx.fillText(text,x,y);
+    }else if(id==="glass-emboss"){
+      ctx.fillStyle="rgba(218,232,255,.12)";ctx.strokeStyle="rgba(220,233,255,.78)";ctx.lineWidth=1.2;ctx.shadowColor="rgba(125,160,220,.35)";ctx.shadowBlur=10;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);
+    }else if(id==="fine-outline"){
+      ctx.strokeStyle="#efede7";ctx.lineWidth=1.3;ctx.strokeText(text,x,y);
+    }else if(id==="ink-bleed"){
+      ctx.fillStyle="#e7e1d7";ctx.shadowColor="rgba(231,225,215,.32)";ctx.shadowBlur=1.4;ctx.fillText(text,x,y);ctx.globalAlpha*=.26;ctx.fillText(text,x+.7,y+.4);
+    }else if(id==="pearl-foil"){
+      const g=ctx.createLinearGradient(x+p*w*.5,y-m.size,x+w+p*w*.5,y);
+      ["#f7f5fb","#d8e8f3","#f0dfe9","#dcece7","#f6efdf"].forEach((c,i)=>g.addColorStop(i/4,c));
+      ctx.fillStyle=g;ctx.fillText(text,x,y);
+    }else if(id==="carbon-cut"){
+      ctx.strokeStyle="#838993";ctx.lineWidth=1.35;ctx.fillStyle="#17191f";ctx.shadowColor="rgba(0,0,0,.8)";ctx.shadowOffsetX=2;ctx.shadowOffsetY=3;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);
+    }else if(id==="frosted-edge"){
+      ctx.fillStyle="#e7effe";ctx.strokeStyle="rgba(255,255,255,.7)";ctx.lineWidth=.8;ctx.shadowColor="rgba(184,210,255,.3)";ctx.shadowBlur=9;ctx.fillText(text,x,y);ctx.strokeText(text,x,y);
+    }else if(id==="holographic-film"){
+      const shift=p*w;
+      const g=ctx.createLinearGradient(x-shift,y,x+w-shift,y);
+      ["#8fd8e8","#c2b7e8","#e3b8cc","#ddd3a6","#a9d8ca","#8fd8e8"].forEach((c,i)=>g.addColorStop(i/5,c));
+      ctx.fillStyle=g;ctx.fillText(text,x,y);
+    }else if(id==="cut-paper"){
+      ctx.fillStyle="#716a63";ctx.fillText(text,x+3,y+3);ctx.fillStyle="#e8e1d6";ctx.fillText(text,x,y);
+    }
+    ctx.restore();
+  }
+  drawTextBand(ctx,text,m,left,width,color,{blur=0,offsetX=0,alpha=1,slant=.16}={}){
+    const skew=width*slant;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(left+skew,0);
+    ctx.lineTo(left+width+skew,0);
+    ctx.lineTo(left+width-skew,this.height);
+    ctx.lineTo(left-skew,this.height);
+    ctx.closePath();
+    ctx.clip();
+    ctx.globalAlpha=alpha;
+    ctx.font=this.fontString(m.size);
+    ctx.textBaseline="alphabetic";
+    ctx.textAlign="left";
+    ctx.fillStyle=color;
+    ctx.shadowColor=color;
+    ctx.shadowBlur=blur;
+    ctx.fillText(text,m.x+offsetX,m.y);
+    ctx.restore();
+  }
+  drawMotion(ctx,text,m,t){
+    const id=this.options.motion.id;
+    const baseProgress=fract(t);
+    if(id==="none") return false;
+    if(id==="velvet-sweep"){
+      this.drawMaterial(ctx,text,m,baseProgress);
+      const x=lerp(m.x-m.width*.32,m.x+m.width*1.08,easeInOut(baseProgress));
+      this.drawTextBand(ctx,text,m,x,m.width*.25,"rgba(255,238,247,.98)",{blur:5,alpha:.95,slant:.22});
+      this.drawTextBand(ctx,text,m,x+m.width*.055,m.width*.07,"rgba(255,255,255,1)",{blur:1.5,alpha:1,slant:.22});
+      return true;
+    }
+    if(id==="refraction-sweep"){
+      this.drawMaterial(ctx,text,m,baseProgress);
+      const x=lerp(m.x-m.width*.34,m.x+m.width*1.08,easeInOut(baseProgress));
+      this.drawTextBand(ctx,text,m,x,m.width*.22,"rgba(78,222,255,.94)",{blur:3,offsetX:3,alpha:.9,slant:.18});
+      this.drawTextBand(ctx,text,m,x-4,m.width*.22,"rgba(255,99,181,.84)",{blur:3,offsetX:-3,alpha:.82,slant:.18});
+      this.drawTextBand(ctx,text,m,x+m.width*.075,m.width*.045,"rgba(255,255,255,.94)",{blur:1,alpha:.9,slant:.18});
+      return true;
+    }
+    if(id==="ghost-offset"){
+      const drift=Math.sin(baseProgress*Math.PI*2);
+      ctx.save();
+      ctx.font=this.fontString(m.size);
+      ctx.textBaseline="alphabetic";
+      ctx.globalCompositeOperation="screen";
+      ctx.globalAlpha=.5;
+      ctx.fillStyle="rgba(77,218,255,.88)";
+      ctx.shadowColor="rgba(77,218,255,.5)";
+      ctx.shadowBlur=4;
+      ctx.fillText(text,m.x+4+drift*3,m.y-1);
+      ctx.fillStyle="rgba(255,91,174,.78)";
+      ctx.shadowColor="rgba(255,91,174,.42)";
+      ctx.fillText(text,m.x-4-drift*3,m.y+1.5);
+      ctx.restore();
+      this.drawMaterial(ctx,text,m,baseProgress);
+      return true;
+    }
+    if(id==="focus-resolve"){
+      const phase=baseProgress<.28?baseProgress/.28:baseProgress>.84?(1-baseProgress)/.16:1;
+      ctx.save();ctx.filter=`blur(${lerp(4,0,clamp(phase,0,1))}px)`;ctx.globalAlpha=lerp(.35,1,clamp(phase,0,1));this.drawMaterial(ctx,text,m,baseProgress);ctx.restore();return true;
+    }
+    if(id==="mask-reveal"){
+      const reveal=baseProgress<.32?easeOut(baseProgress/.32):baseProgress>.86?1-easeOut((baseProgress-.86)/.14):1;
+      ctx.save();ctx.beginPath();ctx.rect(m.x,0,m.width*reveal,this.height);ctx.clip();this.drawMaterial(ctx,text,m,baseProgress);ctx.restore();return true;
+    }
+    if(id==="quiet-afterimage"){
+      const drift=1+3*smoothstep(Math.sin(baseProgress*Math.PI)**2);
+      this.drawMaterial(ctx,text,m,baseProgress,.18,drift,1.5);this.drawMaterial(ctx,text,m,baseProgress);return true;
+    }
+    if(id==="soft-rise"){
+      const phase=baseProgress<.28?easeOut(baseProgress/.28):baseProgress>.87?1-(baseProgress-.87)/.13:1;
+      this.drawMaterial(ctx,text,m,baseProgress,clamp(phase,0,1),0,lerp(9,0,clamp(phase,0,1)));return true;
+    }
+    if(id==="scanline-reveal"){
+      const reveal=baseProgress<.4?easeOut(baseProgress/.4):baseProgress>.88?1-(baseProgress-.88)/.12:1;
+      ctx.save();ctx.beginPath();ctx.rect(0,this.height*(1-reveal),this.width,this.height*reveal);ctx.clip();this.drawMaterial(ctx,text,m,baseProgress);ctx.restore();
+      if(baseProgress<.45){const y=this.height*(1-easeOut(baseProgress/.45));const g=ctx.createLinearGradient(0,0,this.width,0);g.addColorStop(0,"transparent");g.addColorStop(.5,"rgba(205,210,255,.95)");g.addColorStop(1,"transparent");ctx.fillStyle=g;ctx.fillRect(0,y-1,this.width,2)}return true;
+    }
+    if(id==="particle-drift"){
+      this.drawMaterial(ctx,text,m,baseProgress);
+      for(let i=0;i<10;i++){const seed=hash(i+3),phase=fract(baseProgress+seed),x=m.x+m.width*hash(i+19),y=m.y-m.size*.05-phase*m.size*.85;ctx.globalAlpha=Math.sin(phase*Math.PI)*.75;ctx.fillStyle=i%2?"#cdd2ff":"#d84b8e";ctx.beginPath();ctx.arc(x,y,1+hash(i+8)*1.2,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;return true;
+    }
+    if(id==="letter-shuffle"){
+      const active=.42;let shown=text;
+      if(baseProgress<active){const chars=[...text],locked=Math.floor((baseProgress/active)*chars.length),tail=chars.slice(locked),shift=Math.floor(baseProgress*40)%Math.max(1,tail.length);shown=chars.slice(0,locked).concat(tail.slice(shift),tail.slice(0,shift)).join("")}
+      this.drawMaterial(ctx,shown,{...m,width:this.measure(shown,m.size)},baseProgress);return true;
+    }
+    if(id==="fuzzy-signal"){
+      this.drawMaterial(ctx,text,m,baseProgress);
+      const slices=8;
+      const frame=Math.floor(baseProgress*30);
+      for(let i=0;i<slices;i++){
+        const y0=(i/slices)*this.height;
+        const h=this.height/slices+1;
+        const amp=(hash(i+frame*7)-.5)*12;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0,y0,this.width,h);
+        ctx.clip();
+        ctx.font=this.fontString(m.size);
+        ctx.textBaseline="alphabetic";
+        ctx.globalCompositeOperation="screen";
+        ctx.globalAlpha=.52;
+        ctx.fillStyle=i%2?"rgba(77,218,255,.82)":"rgba(255,91,174,.72)";
+        ctx.fillText(text,m.x+amp,m.y);
+        ctx.restore();
+      }
+      const dropout=Math.floor(baseProgress*18)%7;
+      const y=(dropout/7)*this.height;
+      ctx.save();
+      ctx.globalAlpha=.55;
+      ctx.fillStyle="#090b0f";
+      ctx.fillRect(0,y,this.width,1.5);
+      ctx.restore();
+      return true;
+    }
+    if(id==="typewriter-name"){
+      const reveal=.42,hold=.82;let count;
+      if(baseProgress<reveal)count=Math.floor((baseProgress/reveal)*text.length);else if(baseProgress<hold)count=text.length;else count=Math.max(0,text.length-Math.floor(((baseProgress-hold)/(1-hold))*text.length));
+      const shown=text.slice(0,count);const mm={...m,width:this.measure(shown,m.size)};this.drawMaterial(ctx,shown,mm,baseProgress);
+      if(Math.floor(baseProgress*18)%2===0&&baseProgress<hold){ctx.fillStyle="#cdd2ff";ctx.fillRect(mm.x+mm.width+2,mm.y-mm.size*.82,2,mm.size*.9)}return true;
+    }
+    return false;
+  }
+  draw(time){
+    if(!this.visible)return;
+    this.resize();
+    const ctx=this.ctx;ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.clearRect(0,0,this.width,this.height);
+    const opts=this.options,text=opts.text||"Admin",m=this.prepareText(text,opts.size);
+    const cycle=opts.compact?3.2:4.6;
+    const t=opts.paused?opts.pauseAt:fract((time-opts.epoch)/1000/cycle);
+    if(!this.drawMotion(ctx,text,m,t))this.drawMaterial(ctx,text,m,t);
+  }
+}
+
+const renderers=new Set();
+const cardRenderers=new Map();
+let liveRenderer;
+
+function effective(){
+  if(state.mode==="combined")return{font:state.font,material:state.material,motion:state.motion};
+  if(state.tab==="fonts")return{font:state.font,material:DATA.materials[0],motion:DATA.motions[0]};
+  if(state.tab==="materials")return{font:DATA.fonts.find(x=>x.id==="soft-grotesk"),material:state.material,motion:DATA.motions[0]};
+  return{font:DATA.fonts.find(x=>x.id==="soft-grotesk"),material:DATA.materials[0],motion:state.motion};
+}
+function rarityClass(r){return r.toLowerCase().replace(/\s+/g,"-")}
+function activeItem(item){const key=state.tab.slice(0,-1);return state[key]?.id===item.id}
+function layerFor(item){
+  if(state.tab==="fonts")return{font:item,material:DATA.materials[0],motion:DATA.motions[0]};
+  if(state.tab==="materials")return{font:DATA.fonts.find(x=>x.id==="soft-grotesk"),material:item,motion:DATA.motions[0]};
+  return{font:DATA.fonts.find(x=>x.id==="soft-grotesk"),material:DATA.materials[0],motion:item};
+}
+function renderGrid(){
+  for(const renderer of cardRenderers.values()){
+    renderer.destroy();
+    renderers.delete(renderer);
+  }
+  cardRenderers.clear();
+  document.getElementById("sectionTitle").textContent=descriptions[state.tab][0];
+  document.getElementById("sectionDescription").textContent=descriptions[state.tab][1];
+  const list=DATA[state.tab];document.getElementById("sectionCount").textContent=`${list.length} items`;
+  grid.innerHTML=list.map(item=>`<button class="card ${activeItem(item)?"active":""}" data-id="${item.id}">
+    <div class="card-top"><h3>${item.name}</h3><span class="price">${item.price}</span></div>
+    <div class="canvas-wrap"><canvas aria-label="${item.name} preview"></canvas>${state.tab==="motions"&&item.id!=="none"?'<span class="live">MOTION</span>':""}</div>
+    <div class="card-bottom"><span class="rarity ${rarityClass(item.rarity)}">${item.rarity}</span><span class="collection">${item.collection}</span></div>
+    <p class="note">${item.note||""}</p>
+  </button>`).join("");
+  grid.querySelectorAll(".card").forEach(card=>{
+    const item=list.find(x=>x.id===card.dataset.id),layers=layerFor(item);
+    const renderer=new NameRenderer(card.querySelector("canvas"),{...layers,text:"Admin",size:31,compact:true,paused:false,epoch:state.epoch});
+    cardRenderers.set(item.id,renderer);renderers.add(renderer);
+    card.addEventListener("click",()=>{const key=state.tab.slice(0,-1);state[key]=item;state.epoch=performance.now();renderGrid();updateLive()});
+  });
+}
+function updateLive(){
+  const layers=effective();
+  document.getElementById("fontLabel").textContent=state.font.name;
+  document.getElementById("materialLabel").textContent=state.material.name;
+  document.getElementById("motionLabel").textContent=state.motion.name;
+  document.getElementById("previewContext").textContent=state.mode==="combined"?"Combined selection":state.tab==="fonts"?"Font only · plain material":state.tab==="materials"?"Material only · neutral font":"Motion only · plain text";
+  liveRenderer.setOptions({...layers,text:state.name,size:state.size,paused:state.paused,epoch:state.epoch,pauseAt:.48});
+}
+const grid=document.getElementById("grid");
+liveRenderer=new NameRenderer(document.getElementById("liveCanvas"),{...effective(),text:state.name,size:state.size,compact:false,paused:false,epoch:state.epoch,pauseAt:.48});renderers.add(liveRenderer);
+function tick(t){for(const r of renderers)r.draw(t);requestAnimationFrame(tick)}
+document.querySelectorAll("[data-tab]").forEach(btn=>btn.addEventListener("click",()=>{state.tab=btn.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===btn));state.epoch=performance.now();renderGrid();updateLive()}));
+document.querySelectorAll("[data-mode]").forEach(btn=>btn.addEventListener("click",()=>{state.mode=btn.dataset.mode;document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("active",x===btn));state.epoch=performance.now();updateLive()}));
+document.getElementById("nameInput").addEventListener("input",e=>{state.name=e.target.value||"Admin";state.epoch=performance.now();updateLive()});
+document.getElementById("sizeRange").addEventListener("input",e=>{state.size=+e.target.value;updateLive()});
+document.getElementById("replay").addEventListener("click",()=>{state.epoch=performance.now();state.paused=false;document.getElementById("toggleMotion").textContent="Pause";updateLive()});
+document.getElementById("toggleMotion").addEventListener("click",e=>{state.paused=!state.paused;e.currentTarget.textContent=state.paused?"Play":"Pause";if(!state.paused)state.epoch=performance.now();updateLive()});
+window.addEventListener("resize",()=>renderers.forEach(r=>r.resize()));
+renderGrid();updateLive();requestAnimationFrame(tick);
+window.__NAME_CANVAS__={
+  DATA,state,renderers,cardRenderers,liveRenderer,effective,
+  drawCardAt(id,progress){
+    const renderer=cardRenderers.get(id);
+    if(!renderer)return false;
+    renderer.visible=true;
+    renderer.setOptions({paused:true,pauseAt:progress});
+    renderer.draw(performance.now());
+    return true;
+  },
+  drawLiveAt(id,progress){
+    const motion=DATA.motions.find(x=>x.id===id);
+    const base=effective();
+    liveRenderer.visible=true;
+    liveRenderer.setOptions({...base,motion,paused:true,pauseAt:progress});
+    liveRenderer.draw(performance.now());
+    return true;
+  }
+};
+</script>
+</body>
+</html>

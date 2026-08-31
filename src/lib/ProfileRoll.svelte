@@ -16,6 +16,7 @@
   } from './stores';
   import { getBadgeMeta } from './badgeData';
   import { getPercentileTier } from './rollPresentation.js';
+  import { getRarityPresentation } from './rarityPresentation.js';
   import { canInitiateRoll, normalizeCanonicalRoll } from './rollState.js';
   import { normalizeNewMilestones } from './progressionState.js';
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
@@ -29,6 +30,7 @@
     ROLL_REVEAL_STEPS
   } from './rollReveal.js';
   import Module from './foundation/Module.svelte';
+  import RollResultBreakdown from './RollResultBreakdown.svelte';
   import ProgressionUnlockQueue from './ProgressionUnlockQueue.svelte';
 
   export let moduleSize = 'wide';
@@ -126,6 +128,8 @@
           const badge = getBadge(id);
           return { id: 'badge-' + id, label: badge.name || id, symbol: badge.symbol || '✦', points: 0, category: 'condition', conditionRarity: badge.rarity || 'Common' };
         });
+  $: resultRarityColor = getRarityPresentation(rarity || 'Common').color;
+  $: baseScore = Math.max(0, score - contributors.reduce((total, contributor) => total + (Number(contributor?.awardedPoints ?? contributor?.points) || 0), 0));
   $: headlineConditions = conditionSource.slice(0, integrated ? 3 : 4);
   $: visibleRevealItems = revealItems.slice(0, revealedConditionCount).reverse();
   $: revealIntensity = ['Anomaly', 'Legendary', 'Mythic'].includes(rarity)
@@ -628,7 +632,7 @@
   });
 </script>
 
-<Module size={moduleSize} tone="accent" className={'profile-roll' + (compact ? ' profile-roll--compact' : '') + (integrated ? ' profile-roll--integrated' : '') + (quiet ? ' profile-roll--quiet' : '') + (presentation ? ' profile-roll--presentation' : '')} eyebrow={integrated ? '' : 'Today’s living event'} title={integrated ? '' : 'Roll the next chapter'} description={integrated ? '' : 'Your daily color arrives here, then becomes part of the profile visitors remember.'}>
+<Module size={moduleSize} tone="accent" className={'profile-roll' + (compact ? ' profile-roll--compact' : '') + (integrated ? ' profile-roll--integrated' : '') + (quiet ? ' profile-roll--quiet' : '') + (presentation ? ' profile-roll--presentation profile-roll--presentation-' + presentation : '')} eyebrow={integrated ? '' : 'Today’s living event'} title={integrated ? '' : 'Roll the next chapter'} description={integrated ? '' : 'Your daily color arrives here, then becomes part of the profile visitors remember.'}>
   {#if phase === 'loading'}
     <div class="profile-roll__state" role="status" aria-live="polite">
       <span class="profile-roll__pulse" aria-hidden="true"></span>
@@ -707,13 +711,14 @@
       </div>
     </div>
   {:else if phase === 'results'}
-    <div class={'profile-roll__result profile-roll__result--' + revealIntensity + (freshReveal ? ' profile-roll__result--fresh' : '')} role="status" aria-live="polite">
+    <div class={'profile-roll__result profile-roll__result--' + revealIntensity + (freshReveal ? ' profile-roll__result--fresh' : '')} style={presentation === 'compact' ? `--roll-accent:${displayColor};--roll-result-color:${displayColor};--roll-rarity:${resultRarityColor};--roll-score-color:#f5c26f;` : undefined} role="status" aria-live="polite">
       <div class="profile-roll__result-head">
         <div class="profile-roll__preview">
         <RollPreview displayColor={displayColor} rarity={rarity || 'Common'} />
         </div>
         <div class="profile-roll__result-copy">
           <p class="profile-roll__eyebrow">{quiet ? 'Daily color' : 'Today’s color'}</p>
+          {#if identity}<p class="profile-roll__identity">{identity}</p>{/if}
           <div class="profile-roll__identity-row">
             <p class="profile-roll__hex">{displayHex}</p>
             <span class="profile-roll__rarity">{rarity}</span>
@@ -729,7 +734,13 @@
         </div>
       </div>
 
-      {#if headlineConditions.length}
+      {#if presentation === 'compact'}
+        <RollResultBreakdown
+          contributors={contributors}
+          {baseScore}
+          totalScore={displayScore}
+        />
+      {:else if headlineConditions.length}
         <div class="profile-roll__condition-rail" aria-label="Top scoring conditions">
           <div class="profile-roll__condition-list">
             {#each headlineConditions as condition (condition.id)}
@@ -747,9 +758,15 @@
         </div>
       {/if}
 
-      <div class="profile-roll__result-actions">
+      <div class={'profile-roll__result-actions' + (presentation === 'compact' ? ' profile-roll__result-actions--compact' : '')}>
+        {#if presentation === 'compact'}
+          <span class="profile-roll__compact-next" aria-label={'Next roll in ' + countdownString}>
+            <span aria-hidden="true">◷</span>
+            Next roll · {countdownString}
+          </span>
+        {/if}
         <button type="button" class="profile-roll__button profile-roll__button--share" on:click={shareRoll} disabled={shareInProgress}>
-          {shareInProgress ? 'Sharing…' : 'Share roll'}
+          {shareInProgress ? 'Sharing…' : presentation === 'compact' ? 'Share result' : 'Share roll'}
         </button>
       </div>
 
@@ -760,6 +777,7 @@
           username={$profile?.username || 'You'}
           {displayColor}
           avatarSrc={$profile?.avatar_url || $profile?.avatar_path || ''}
+          compact={presentation === 'compact'}
           on:acknowledge={handleProgressionUnlockAcknowledgement}
         />
       {/if}
@@ -909,6 +927,7 @@
   .profile-roll__result-head { display: grid; grid-template-columns: minmax(8rem, 11rem) 1fr; align-items: center; gap: var(--space-5); }
   .profile-roll__result-copy { min-width: 0; }
   .profile-roll__eyebrow { margin: 0; color: color-mix(in srgb, var(--profile-accent) 48%, white); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.14em; text-transform: uppercase; }
+  .profile-roll__identity { min-width: 0; margin: 0.38rem 0 0; overflow: hidden; color: var(--color-ink-strong); font: 600 clamp(0.92rem, 2vw, 1.2rem) / 1.12 var(--font-display-stack); letter-spacing: -0.025em; text-overflow: ellipsis; white-space: nowrap; }
   .profile-roll__identity-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem; margin-top: 0.35rem; }
   .profile-roll__score-row { display: flex; align-items: baseline; flex-wrap: wrap; margin-top: 0.8rem; }
   .profile-roll__score-row strong { display: inline-flex; align-items: baseline; color: var(--color-ink-strong); font: 600 clamp(2rem, 5vw, 3.5rem) / 0.95 var(--font-display-stack); letter-spacing: -0.06em; }
@@ -1159,6 +1178,583 @@
   :global(.profile-roll--presentation) .profile-roll__condition-rail,
   :global(.profile-roll--presentation) .profile-roll__details,
   :global(.profile-roll--presentation) .profile-roll__result-actions { display: none; }
+
+  /* Compact profiles keep the real roll state and server events, but present
+     them as a focused inline game rather than a shrunken desktop module. */
+  :global(.profile-roll--presentation-compact) {
+    font-size: .8rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__state {
+    min-height: 3.1rem;
+    gap: .65rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__pulse {
+    width: 1.6rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: .75rem;
+    min-height: 0;
+    padding: 0;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready-copy {
+    min-width: 0;
+    gap: .28rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready-copy h3 {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 1.05rem;
+    line-height: 1.05;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready .profile-roll__copy {
+    display: none;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .55rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready-meta .profile-roll__eyebrow {
+    font-size: .56rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__availability {
+    display: inline-flex;
+    gap: .25rem;
+    font-size: .54rem;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 3.25rem;
+    padding: .35rem .55rem;
+    gap: .45rem;
+    border-radius: .65rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-swatch {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-swatch::before {
+    inset: .38rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-copy {
+    gap: .2rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-copy strong {
+    font-size: .7rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-copy small {
+    display: block;
+    font-size: .52rem;
+    letter-spacing: .06em;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-arrow {
+    font-size: .95rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    min-height: 6.25rem;
+    gap: .65rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling .profile-roll__preview {
+    width: 3rem;
+    min-width: 3rem;
+    height: 3rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame),
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling .profile-roll__preview :global(.final-color-display) {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling-copy h3 {
+    margin: .25rem 0 .2rem;
+    font-size: .95rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling-copy > p:not(.profile-roll__eyebrow):not(.profile-roll__hex) {
+    max-width: none;
+    font-size: .68rem;
+    line-height: 1.35;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__stage-track,
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling-conditions,
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling-score {
+    display: none;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__skip {
+    min-height: 2rem;
+    margin-top: .35rem;
+    padding-block: .35rem;
+    font-size: .54rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result {
+    gap: .55rem;
+    padding: 0;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-head {
+    grid-template-columns: 3.15rem minmax(0, 1fr);
+    gap: .65rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview {
+    width: 3.15rem;
+    min-width: 3.15rem;
+    height: 3.15rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.roll-preview-frame),
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.final-color-display) {
+    width: 3.15rem;
+    height: 3.15rem;
+    transform: none;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__identity {
+    margin-top: .25rem;
+    font-size: .78rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__identity-row {
+    gap: .45rem;
+    margin-top: .28rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__hex {
+    font-size: .76rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rarity {
+    padding: .2rem .4rem;
+    font-size: .52rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__score-row {
+    margin-top: .35rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__score-row strong {
+    font-size: 1.05rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__score-row strong span {
+    margin-left: .3rem;
+    padding-left: .35rem;
+    font-size: .54rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__state--error {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    min-height: 3rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__state--error .profile-roll__button {
+    flex: 0 0 auto;
+    min-height: 2.1rem;
+    padding-inline: .7rem;
+    font-size: .66rem;
+  }
+
+  /* Compact borrows the dedicated result vocabulary while leaving the profile
+     card as its only visual surface. */
+  :global(.profile-roll--presentation-compact) {
+    --roll-panel-card: #161619;
+    --roll-border: rgba(255, 255, 255, .09);
+    --roll-text: #f5f5f6;
+    --roll-muted: #8d8c92;
+    --roll-faint: #59585e;
+    font-family: var(--site-font, 'Inter', sans-serif);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready-copy {
+    gap: .35rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready-copy h3 {
+    color: var(--roll-text);
+    font: 800 1.05rem / 1.05 var(--site-display, 'Manrope Variable', sans-serif);
+    letter-spacing: -.035em;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready-meta {
+    color: var(--roll-muted);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__ready-meta .profile-roll__eyebrow,
+  :global(.profile-roll--presentation-compact) .profile-roll__availability {
+    color: var(--roll-muted);
+    font-family: var(--site-font, 'Inter', sans-serif);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__availability strong {
+    color: var(--roll-text);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-button {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 2.75rem;
+    padding: .7rem .85rem;
+    border: 0;
+    border-radius: .7rem;
+    background: var(--profile-daily-roll-accent, var(--profile-accent, #8B7CF6));
+    color: #fff;
+    box-shadow: 0 .55rem 1.6rem color-mix(in srgb, var(--profile-daily-roll-accent, var(--profile-accent, #8B7CF6)) 34%, transparent);
+    text-align: center;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-button:hover:not(:disabled) {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--profile-daily-roll-accent, var(--profile-accent, #8B7CF6)) 88%, white);
+    box-shadow: 0 .75rem 1.9rem color-mix(in srgb, var(--profile-daily-roll-accent, var(--profile-accent, #8B7CF6)) 44%, transparent);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-swatch,
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-arrow {
+    display: none;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-copy {
+    display: block;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-copy strong {
+    color: inherit;
+    font: 700 .82rem / 1 var(--site-display, 'Manrope Variable', sans-serif);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__reveal-copy small { display: none; }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    min-height: 5.5rem;
+    gap: .65rem;
+    padding: .75rem;
+    border: 1px solid var(--roll-border);
+    border-radius: .85rem;
+    background: var(--surface-2, #1e1e22);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling .profile-roll__preview,
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame),
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling .profile-roll__preview :global(.final-color-display) {
+    width: 3rem;
+    min-width: 3rem;
+    height: 3rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling .profile-roll__preview :global(.final-color-display),
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.final-color-display) {
+    border-radius: .7rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling-copy h3 {
+    color: var(--roll-text);
+    font: 800 .9rem / 1.05 var(--site-display, 'Manrope Variable', sans-serif);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rolling-copy p:not(.profile-roll__eyebrow):not(.profile-roll__hex) {
+    color: var(--roll-muted);
+    font-family: var(--site-font, 'Inter', sans-serif);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result {
+    gap: .75rem;
+    padding: 0;
+    color: var(--roll-text);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-head {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .75rem;
+    padding: .75rem;
+    border: 1px solid var(--roll-border);
+    border-radius: .85rem;
+    background: var(--surface-2, #1e1e22);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview,
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.roll-preview-frame),
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.final-color-display) {
+    width: 4rem;
+    min-width: 4rem;
+    height: 4rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.final-color-display) {
+    border: 1px solid rgba(255, 255, 255, .2);
+    box-shadow: 0 .6rem 1.5rem -0.55rem color-mix(in srgb, var(--roll-result-color, var(--roll-accent)) 48%, transparent), inset 0 0 1rem rgba(0, 0, 0, .35);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-copy { min-width: 0; }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__eyebrow {
+    color: var(--roll-muted);
+    font: 700 .58rem / 1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .1em;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__identity {
+    margin-top: .42rem;
+    color: var(--roll-text);
+    font: 800 .98rem / 1.05 var(--site-display, 'Manrope Variable', sans-serif);
+    letter-spacing: -.035em;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__identity-row {
+    gap: .55rem;
+    margin-top: .38rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__hex {
+    color: var(--roll-muted);
+    font: 400 .75rem / 1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: 0;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__rarity {
+    padding: .25rem .45rem;
+    border-color: color-mix(in srgb, var(--roll-rarity, var(--roll-accent)) 56%, var(--roll-border));
+    background: color-mix(in srgb, var(--roll-rarity, var(--roll-accent)) 13%, transparent);
+    color: var(--roll-rarity, var(--roll-accent));
+    font: 600 .58rem / 1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .02em;
+    text-shadow: 0 0 1rem color-mix(in srgb, var(--roll-rarity, var(--roll-accent)) 76%, transparent);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__score-row,
+  :global(.profile-roll--presentation-compact) .profile-roll__percentile,
+  :global(.profile-roll--presentation-compact) .profile-roll__condition-rail,
+  :global(.profile-roll--presentation-compact) .profile-roll__details {
+    display: none;
+  }
+
+  :global(.profile-roll--presentation-compact .roll-result-summary) {
+    --roll-accent: var(--roll-result-color, #8B7CF6);
+    --roll-score-color: #f5c26f;
+    padding: .75rem;
+    border-radius: .85rem;
+  }
+
+  :global(.profile-roll--presentation-compact .roll-result-summary__score strong) {
+    font-size: 1.7rem;
+  }
+
+  :global(.profile-roll--presentation-compact .roll-result-summary__condition) {
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto auto;
+    gap: .35rem;
+    min-height: 2rem;
+    padding: .25rem .4rem;
+  }
+
+  :global(.profile-roll--presentation-compact .roll-result-summary__condition-icon) {
+    width: 1.4rem;
+    height: 1.4rem;
+    font-size: .68rem;
+  }
+
+  :global(.profile-roll--presentation-compact .roll-result-summary__condition strong) { font-size: .62rem; }
+  :global(.profile-roll--presentation-compact .roll-result-summary__condition-rarity) { padding: .25rem .35rem; font-size: .5rem; }
+  :global(.profile-roll--presentation-compact .roll-result-summary__condition-points) { font-size: .58rem; }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__compact-next {
+    display: flex;
+    width: 100%;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .7rem .85rem;
+    border: 0;
+    border-radius: .7rem;
+    background: var(--roll-result-color, var(--profile-accent, #8B7CF6));
+    color: #fff;
+    cursor: default;
+    font: 700 .82rem / 1 var(--site-display, 'Manrope Variable', sans-serif);
+    box-shadow: 0 .55rem 1.6rem color-mix(in srgb, var(--roll-result-color, var(--profile-accent, #8B7CF6)) 34%, transparent);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__compact-next span { font-size: 1rem; }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-actions {
+    display: flex;
+    width: 100%;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-actions .profile-roll__button--share {
+    width: 100%;
+    min-height: 2.65rem;
+    border-color: var(--roll-border);
+    border-radius: .65rem;
+    background: transparent;
+    color: var(--roll-text);
+    font: 650 .76rem / 1 var(--site-font, 'Inter', sans-serif);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-actions .profile-roll__button--share:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--roll-result-color, var(--roll-accent)) 58%, var(--roll-border));
+    background: color-mix(in srgb, var(--roll-result-color, var(--roll-accent)) 8%, transparent);
+    box-shadow: none;
+  }
+
+  @media (max-width: 22rem) {
+    :global(.profile-roll--presentation-compact) .profile-roll__result-head {
+      grid-template-columns: 3.5rem minmax(0, 1fr);
+    }
+
+    :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview,
+    :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.roll-preview-frame),
+    :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.final-color-display) {
+      width: 3.5rem;
+      min-width: 3.5rem;
+      height: 3.5rem;
+    }
+
+    :global(.profile-roll--presentation-compact .roll-result-summary__condition) {
+      grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+    }
+
+    :global(.profile-roll--presentation-compact .roll-result-summary__condition-points) { grid-column: 3; }
+  }
+
+  /* The compact result shares the game's type and signals, but the profile
+     card remains its only surface. Keep the result head and footer integrated
+     with the surrounding identity rather than nesting another result card. */
+  :global(.profile-roll--presentation-compact) .profile-roll__result-head {
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+    gap: .7rem;
+    padding: .65rem 0;
+    border-block: 1px solid var(--roll-border);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview,
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.roll-preview-frame),
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.final-color-display) {
+    width: 3.75rem;
+    min-width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.final-color-display) {
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: .7rem;
+    box-shadow: 0 .5rem 1.3rem -.55rem color-mix(in srgb, var(--roll-result-color, var(--roll-accent)) 42%, transparent), inset 0 0 .8rem rgba(0, 0, 0, .3);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__eyebrow {
+    color: var(--roll-muted);
+    font: 700 .56rem / 1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .1em;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__identity {
+    margin-top: .34rem;
+    color: var(--roll-text);
+    font: 800 .9rem / 1.05 var(--site-display, 'Manrope Variable', sans-serif);
+    letter-spacing: -.03em;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__identity-row { gap: .45rem; margin-top: .3rem; }
+  :global(.profile-roll--presentation-compact) .profile-roll__hex { color: var(--roll-muted); font: 400 .68rem / 1 var(--site-font, 'Inter', sans-serif); letter-spacing: 0; }
+  :global(.profile-roll--presentation-compact) .profile-roll__rarity { display: inline-flex; padding: .2rem .35rem; font: 600 .5rem / 1 var(--site-font, 'Inter', sans-serif); letter-spacing: .02em; }
+  :global(.profile-roll--presentation-compact) .profile-roll__score-row,
+  :global(.profile-roll--presentation-compact) .profile-roll__percentile,
+  :global(.profile-roll--presentation-compact) .profile-roll__condition-rail,
+  :global(.profile-roll--presentation-compact) .profile-roll__details { display: none; }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-actions--compact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .6rem;
+    width: 100%;
+    padding-top: .55rem;
+    border-top: 1px solid var(--roll-border);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__compact-next {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    min-width: 0;
+    color: var(--roll-muted);
+    font: 600 .58rem / 1.2 var(--site-font, 'Inter', sans-serif);
+    white-space: nowrap;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__compact-next > span {
+    color: var(--roll-result-color, var(--roll-accent));
+    font-size: .82rem;
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-actions--compact .profile-roll__button--share {
+    width: auto;
+    min-height: 2.25rem;
+    padding: .55rem .7rem;
+    border-color: var(--roll-border);
+    border-radius: .55rem;
+    background: transparent;
+    color: var(--roll-text);
+    font: 650 .62rem / 1 var(--site-font, 'Inter', sans-serif);
+  }
+
+  :global(.profile-roll--presentation-compact) .profile-roll__result-actions--compact .profile-roll__button--share:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--roll-result-color, var(--roll-accent)) 58%, var(--roll-border));
+    background: color-mix(in srgb, var(--roll-result-color, var(--roll-accent)) 8%, transparent);
+    box-shadow: none;
+  }
+
+  @media (max-width: 22rem) {
+    :global(.profile-roll--presentation-compact) .profile-roll__result-head {
+      grid-template-columns: 3.25rem minmax(0, 1fr);
+    }
+
+    :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview,
+    :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.roll-preview-frame),
+    :global(.profile-roll--presentation-compact) .profile-roll__result .profile-roll__preview :global(.final-color-display) {
+      width: 3.25rem;
+      min-width: 3.25rem;
+      height: 3.25rem;
+    }
+
+    :global(.profile-roll--presentation-compact) .profile-roll__result-actions--compact {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+    }
+
+    :global(.profile-roll--presentation-compact) .profile-roll__result-actions--compact .profile-roll__button--share { width: 100%; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .profile-roll__pulse { animation: none; }

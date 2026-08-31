@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chromadie Particle Effects Batch</title>
+<style>
+  :root{
+    --bg:#050608;
+    --panel:#0c0f14;
+    --line:rgba(255,255,255,.08);
+    --text:#f3f6fb;
+    --muted:#a4adbc;
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;min-height:100%;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(0,110,255,.10), transparent 26%),
+      radial-gradient(circle at 88% 0%, rgba(255,40,180,.08), transparent 22%),
+      linear-gradient(180deg,#050608,#080a0f 40%,#050608);
+    color:var(--text);
+    font-family:Inter,Manrope,system-ui,sans-serif;
+  }
+  body{padding:32px 18px 56px}
+  .shell{max-width:1400px;margin:auto}
+  header{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:22px}
+  .pill{
+    display:inline-flex;padding:7px 10px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.035);
+    color:#dfe6f2;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  h1{margin:0 0 10px;font-size:clamp(36px,5vw,64px);line-height:.95;letter-spacing:-.055em}
+  .intro{max-width:800px;margin:0;color:var(--muted);font-size:15px;line-height:1.58}
+  .controls{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    padding:11px 13px;border-radius:16px;border:1px solid rgba(255,255,255,.07);
+    background:rgba(255,255,255,.03)
+  }
+  .controls label{font-size:12px;color:#b8c1cf}
+  .controls input{width:130px}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .card{
+    overflow:hidden;border-radius:22px;border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(15,17,23,.96),rgba(8,10,14,.98));
+    box-shadow:0 26px 70px rgba(0,0,0,.28);
+  }
+  .card.wide{grid-column:1/-1}
+  .meta{padding:18px 20px 15px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .meta small{display:block;margin-bottom:7px;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#7e8796}
+  .meta h2{margin:0 0 6px;font-size:28px;letter-spacing:-.04em}
+  .meta p{margin:0;color:#a9b1bf;font-size:13px;line-height:1.5;max-width:72ch}
+  .stage{position:relative;aspect-ratio:16/10;min-height:280px;background:linear-gradient(180deg,#040507,#090b10);overflow:hidden}
+  .card.wide .stage{aspect-ratio:2.45/1}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .tag,.hint{
+    position:absolute;z-index:4;pointer-events:none;padding:7px 10px;border-radius:999px;
+    backdrop-filter:blur(10px);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  }
+  .tag{right:12px;top:12px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.10);color:#f3f6fb}
+  .hint{left:12px;bottom:12px;background:rgba(0,0,0,.50);border:1px solid rgba(255,255,255,.08);color:#aeb6c4}
+  footer{margin-top:18px;color:#717987;font-size:12px;line-height:1.55}
+  @media(max-width:900px){
+    header{flex-direction:column;align-items:flex-start}
+    .grid{grid-template-columns:1fr}
+    .card.wide{grid-column:auto}
+    .card.wide .stage{aspect-ratio:16/10}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div>
+      <div class="pill">Particle-focused prototype batch</div>
+      <h1>Five richer VFX directions</h1>
+      <p class="intro">This round is intentionally built around layered particle systems instead of shape stacks. Every effect uses varied particle sizes, lifetimes, motion, and secondary detail so the motion feels more simulated and less like simple lines slapped on top of a card.</p>
+    </div>
+    <div class="controls">
+      <label for="intensity">Motion intensity</label>
+      <input id="intensity" type="range" min="0.6" max="1.5" step="0.01" value="1">
+    </div>
+  </header>
+
+  <section class="grid">
+    <article class="card">
+      <div class="meta">
+        <small>Atmosphere / particles</small>
+        <h2>Ember Storm</h2>
+        <p>White-hot ignition sparks, drifting orange embers, dim ash remnants, and occasional burst flares. The field rises with convection instead of using generic floating dots.</p>
+      </div>
+      <div class="stage" id="emberStage">
+        <canvas id="emberCanvas"></canvas>
+        <div class="tag">Convection + bursts</div>
+        <div class="hint">Continuous ember field</div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="meta">
+        <small>Atmosphere / particles</small>
+        <h2>Prism Dust</h2>
+        <p>Fine refractive particle dust with mixed shard sizes, short-lived glints, and clustered sparkle behavior. More luxurious glitter field than generic rainbow confetti.</p>
+      </div>
+      <div class="stage" id="prismStage">
+        <canvas id="prismCanvas"></canvas>
+        <div class="tag">Shards + glints</div>
+        <div class="hint">Subtle but detailed</div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="meta">
+        <small>Profile / particles</small>
+        <h2>Void Bloom</h2>
+        <p>A dense dark-energy system: particles get pulled inward, swirl near the core, then occasionally eject outward. Bright anomaly particles punctuate the darker mass.</p>
+      </div>
+      <div class="stage" id="voidStage">
+        <canvas id="voidCanvas"></canvas>
+        <div class="tag">Inward + outward flow</div>
+        <div class="hint">Move to disturb the core</div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="meta">
+        <small>Cursor / particles</small>
+        <h2>Plasma Swarm</h2>
+        <p>Charged particle clusters, ionized cloud particles, and short electrical discharges between bright nodes. A denser, more eventful evolution of the plasma idea.</p>
+      </div>
+      <div class="stage" id="swarmStage">
+        <canvas id="swarmCanvas"></canvas>
+        <div class="tag">Charge buildup + arcs</div>
+        <div class="hint">Move through the field</div>
+      </div>
+    </article>
+
+    <article class="card wide">
+      <div class="meta">
+        <small>Cursor / particles</small>
+        <h2>Comet Scatter</h2>
+        <p>A fast comet head with fragment shedding, detached sparks, and trailing decay. Speed changes the density and length of the effect so it feels reactive and expensive.</p>
+      </div>
+      <div class="stage" id="cometStage">
+        <canvas id="cometCanvas"></canvas>
+        <div class="tag">Primary streak + debris</div>
+        <div class="hint">Move quickly and slowly</div>
+      </div>
+    </article>
+  </section>
+
+  <footer>The goal here is to judge effect richness and behavior quality, not to lock final colors or rendering tech. If one of these wins, it can be promoted into a more production-ready renderer later.</footer>
+</div>
+
+<script>
+const intensityInput = document.getElementById('intensity');
+let motionIntensity = 1;
+intensityInput.addEventListener('input', e => motionIntensity = Number(e.target.value));
+
+function setupCanvas(id){
+  const canvas=document.getElementById(id);
+  const ctx=canvas.getContext('2d');
+  const stage=canvas.parentElement;
+  const pointer={x:.5,y:.5,tx:.5,ty:.5,active:false};
+  function resize(){
+    const r=stage.getBoundingClientRect();
+    const d=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=Math.max(2,Math.round(r.width*d));
+    canvas.height=Math.max(2,Math.round(r.height*d));
+    canvas.style.width=r.width+'px';
+    canvas.style.height=r.height+'px';
+    ctx.setTransform(d,0,0,d,0,0);
+  }
+  stage.addEventListener('pointermove',e=>{
+    const r=stage.getBoundingClientRect();
+    pointer.tx=(e.clientX-r.left)/r.width;
+    pointer.ty=(e.clientY-r.top)/r.height;
+    pointer.active=true;
+  });
+  stage.addEventListener('pointerleave',()=>{pointer.tx=.5;pointer.ty=.5;pointer.active=false;});
+  window.addEventListener('resize',resize);
+  resize();
+  return {canvas,ctx,stage,pointer};
+}
+function lerp(a,b,t){return a+(b-a)*t;}
+function rand(a,b){return a+Math.random()*(b-a);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function circle(ctx,x,y,r,c,a=1){
+  ctx.globalAlpha=a; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=c; ctx.fill(); ctx.globalAlpha=1;
+}
+function mix(a,b,t){return a+(b-a)*t;}
+
+const ember = setupCanvas('emberCanvas');
+const prism = setupCanvas('prismCanvas');
+const voidFx = setupCanvas('voidCanvas');
+const swarm = setupCanvas('swarmCanvas');
+const comet = setupCanvas('cometCanvas');
+
+/* Ember Storm */
+const embers=[];
+function spawnEmber(w,h){
+  const kind = Math.random()<0.18 ? 'ash' : (Math.random()<0.32 ? 'spark' : 'ember');
+  const x = rand(w*.1,w*.9), y = h+rand(0,24);
+  let p={x,y,px:x,py:y,life:1,maxLife:rand(.8,1.8),vx:rand(-.5,.5),vy:rand(-3.5,-1.2),size:rand(1.5,4.5),kind,rot:rand(0,Math.PI*2)};
+  if(kind==='spark'){p.vy=rand(-4.6,-2.5); p.size=rand(1,2.3);}
+  if(kind==='ash'){p.vy=rand(-1.8,-.6); p.vx=rand(-.2,.2); p.size=rand(1.6,3.8);}
+  embers.push(p);
+}
+function drawEmber(dt){
+  const ctx=ember.ctx, r=ember.stage.getBoundingClientRect(), w=r.width, h=r.height;
+  ember.pointer.x=lerp(ember.pointer.x,ember.pointer.tx,.05);
+  ember.pointer.y=lerp(ember.pointer.y,ember.pointer.ty,.05);
+  ctx.clearRect(0,0,w,h);
+  const bg=ctx.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,'#08070b'); bg.addColorStop(.55,'#0d0b0a'); bg.addColorStop(1,'#130905');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+  // ignition bed
+  const bed=ctx.createRadialGradient(w*.5,h*1.06,10,w*.5,h*1.02,w*.55);
+  bed.addColorStop(0,'rgba(255,180,0,.22)'); bed.addColorStop(.45,'rgba(255,70,0,.10)'); bed.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bed; ctx.fillRect(0,h*.6,w,h*.5);
+  const spawnCount = Math.floor(3*motionIntensity);
+  for(let i=0;i<spawnCount;i++) spawnEmber(w,h);
+  if(Math.random()<0.08*motionIntensity){
+    for(let i=0;i<14;i++){
+      embers.push({x:rand(w*.3,w*.7),y:h-rand(10,30),px:0,py:0,life:1,maxLife:rand(.35,.7),vx:rand(-2.5,2.5),vy:rand(-5.5,-2.2),size:rand(.8,2.2),kind:'spark',rot:rand(0,6.28)});
+    }
+  }
+  ctx.save();
+  ctx.globalCompositeOperation='lighter';
+  for(let i=embers.length-1;i>=0;i--){
+    const p=embers[i]; p.life -= dt/p.maxLife;
+    if(p.life<=0){embers.splice(i,1); continue;}
+    p.px=p.x; p.py=p.y;
+    const sway = Math.sin((performance.now()*0.0015)+(p.y*0.03))*0.03;
+    p.vx += sway + (ember.pointer.x-.5)*0.008*(p.kind!=='ash'?1:0.3);
+    p.x += p.vx*motionIntensity; p.y += p.vy*motionIntensity;
+    p.vy *= .995;
+    p.vx *= p.kind==='spark' ? .985 : .992;
+    if(p.kind==='ember'){
+      circle(ctx,p.x,p.y,p.size*2.8,'rgba(255,90,0,.09)',p.life*.8);
+      circle(ctx,p.x,p.y,p.size*1.4,'rgba(255,180,30,.24)',p.life);
+      circle(ctx,p.x,p.y,p.size*.52,'#fff7d6',p.life*.95);
+    } else if(p.kind==='spark'){
+      ctx.globalAlpha=p.life*.8;
+      ctx.strokeStyle='rgba(255,220,140,.95)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.vx*3,p.y-p.vy*3); ctx.stroke();
+      ctx.globalAlpha=1;
+      circle(ctx,p.x,p.y,p.size,'#ffffff',p.life);
+    } else {
+      circle(ctx,p.x,p.y,p.size,'rgba(180,180,180,.16)',p.life*.45);
+      circle(ctx,p.x,p.y,p.size*.45,'rgba(255,200,120,.08)',p.life*.25);
+    }
+  }
+  ctx.restore();
+}
+
+/* Prism Dust */
+const prismParticles=[];
+function initPrism(w,h){
+  prismParticles.length=0;
+  for(let i=0;i<180;i++){
+    prismParticles.push({
+      x:rand(w*.12,w*.88), y:rand(h*.16,h*.84),
+      vx:rand(-.12,.12), vy:rand(-.12,.12),
+      size:rand(1.4,5.8), rot:rand(0,6.28), spin:rand(-.02,.02),
+      life:rand(.3,1), tw:rand(0,6.28), cluster:Math.random()<.25
+    });
+  }
+}
+function drawPrism(dt){
+  const ctx=prism.ctx, r=prism.stage.getBoundingClientRect(), w=r.width, h=r.height;
+  if(prismParticles.length===0) initPrism(w,h);
+  prism.pointer.x=lerp(prism.pointer.x,prism.pointer.tx,.05);
+  prism.pointer.y=lerp(prism.pointer.y,prism.pointer.ty,.05);
+  ctx.clearRect(0,0,w,h);
+  const bg=ctx.createLinearGradient(0,0,w,h); bg.addColorStop(0,'#06070b'); bg.addColorStop(1,'#090813');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+  // faint clustered glow
+  for(let i=0;i<4;i++){
+    const gx=w*(.22+i*.19+Math.sin(performance.now()*0.0003+i)*.03), gy=h*(.25+(i%2)*.22);
+    const g=ctx.createRadialGradient(gx,gy,0,gx,gy,90);
+    g.addColorStop(0,'rgba(120,130,255,.07)'); g.addColorStop(.5,'rgba(255,50,210,.04)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(gx-90,gy-90,180,180);
+  }
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  prismParticles.forEach((p,idx)=>{
+    p.tw += 0.04*motionIntensity;
+    p.x += p.vx*motionIntensity + Math.sin(p.tw + idx)*0.05;
+    p.y += p.vy*motionIntensity + Math.cos(p.tw*0.8 + idx)*0.04;
+    p.rot += p.spin*motionIntensity;
+    // pointer attraction
+    const tx=prism.pointer.x*w, ty=prism.pointer.y*h;
+    const dx=tx-p.x, dy=ty-p.y, dist=Math.hypot(dx,dy);
+    if(dist<120){ p.x -= dx/dist*0.15; p.y -= dy/dist*0.15; }
+    if(p.x<0)p.x+=w; if(p.x>w)p.x-=w; if(p.y<0)p.y+=h; if(p.y>h)p.y-=h;
+    const twinkle = (Math.sin(p.tw*1.3 + p.size)+1)/2;
+    const colors=['#7CF7FF','#63A0FF','#B04CFF','#FF58D0','#FFD35A'];
+    const c=colors[idx%colors.length];
+    ctx.save();
+    ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.globalAlpha=.12 + twinkle*.22;
+    if(p.cluster && Math.random()<0.12){
+      circle(ctx,0,0,p.size*3.4,c,.08);
+    }
+    // shard rhombus
+    ctx.beginPath();
+    ctx.moveTo(0,-p.size*1.1); ctx.lineTo(p.size*.65,0); ctx.lineTo(0,p.size*1.1); ctx.lineTo(-p.size*.65,0); ctx.closePath();
+    ctx.fillStyle=c; ctx.fill();
+    ctx.globalAlpha=.8*twinkle;
+    ctx.beginPath();
+    ctx.moveTo(-p.size*.3,-p.size*.2); ctx.lineTo(p.size*.5,-p.size*.05); ctx.strokeStyle='#ffffff'; ctx.lineWidth=.8; ctx.stroke();
+    ctx.restore();
+    if(Math.random()<0.02){
+      circle(ctx,p.x,p.y,rand(2,5),'#ffffff',.75);
+      circle(ctx,p.x,p.y,rand(8,16),c,.08);
+    }
+  });
+  ctx.restore();
+}
+
+/* Void Bloom */
+const voidParticles=[];
+function spawnVoid(w,h){
+  const cx = w*(.5 + (voidFx.pointer.x-.5)*.22);
+  const cy = h*(.5 + (voidFx.pointer.y-.5)*.18);
+  const ang = rand(0,Math.PI*2), dist = rand(18,140);
+  const mode = Math.random()<0.25 ? 'out' : 'in';
+  const color = Math.random()<0.16 ? '#7B61FF' : (Math.random()<0.08 ? '#00EFFF' : '#201435');
+  voidParticles.push({
+    x:cx+Math.cos(ang)*dist, y:cy+Math.sin(ang)*dist,
+    a:ang, dist, life:1, maxLife:rand(.8,1.8), mode,
+    orbit:rand(-.05,.05), speed:rand(.3,2.2), size:rand(1.2,4.2), color
+  });
+}
+function drawVoid(dt){
+  const ctx=voidFx.ctx, r=voidFx.stage.getBoundingClientRect(), w=r.width, h=r.height;
+  voidFx.pointer.x=lerp(voidFx.pointer.x,voidFx.pointer.tx,.06);
+  voidFx.pointer.y=lerp(voidFx.pointer.y,voidFx.pointer.ty,.06);
+  const cx = w*(.5 + (voidFx.pointer.x-.5)*.22);
+  const cy = h*(.5 + (voidFx.pointer.y-.5)*.18);
+  ctx.clearRect(0,0,w,h);
+  const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,w*.55);
+  bg.addColorStop(0,'#07050c'); bg.addColorStop(.42,'#090712'); bg.addColorStop(1,'#030306');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+  for(let i=0;i<Math.floor(4*motionIntensity);i++) spawnVoid(w,h);
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(let i=voidParticles.length-1;i>=0;i--){
+    const p=voidParticles[i]; p.life -= dt/p.maxLife;
+    if(p.life<=0){ voidParticles.splice(i,1); continue; }
+    p.a += p.orbit*motionIntensity;
+    if(p.mode==='in') p.dist -= p.speed*motionIntensity;
+    else p.dist += p.speed*1.3*motionIntensity;
+    if(p.dist<8){ p.mode='out'; p.speed*=1.45; }
+    p.x = cx + Math.cos(p.a)*p.dist;
+    p.y = cy + Math.sin(p.a)*p.dist;
+    if(p.color==='#201435'){
+      circle(ctx,p.x,p.y,p.size*2.4,'rgba(90,50,160,.05)',p.life*.55);
+      circle(ctx,p.x,p.y,p.size,p.color,p.life*.55);
+    } else {
+      circle(ctx,p.x,p.y,p.size*4,p.color,.05*p.life);
+      circle(ctx,p.x,p.y,p.size*1.1,p.color,.7*p.life);
+      circle(ctx,p.x,p.y,p.size*.36,'#ffffff',.92*p.life);
+    }
+  }
+  ctx.restore();
+  // core
+  const ring=ctx.createRadialGradient(cx,cy,0,cx,cy,66);
+  ring.addColorStop(0,'rgba(0,0,0,.92)');
+  ring.addColorStop(.42,'rgba(0,0,0,.78)');
+  ring.addColorStop(.62,'rgba(120,60,255,.18)');
+  ring.addColorStop(.78,'rgba(20,10,40,.0)');
+  ctx.fillStyle=ring; ctx.beginPath(); ctx.arc(cx,cy,72,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(120,90,255,.35)'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(cx,cy,48+Math.sin(performance.now()*0.003)*4,0,Math.PI*2); ctx.stroke();
+}
+
+/* Plasma Swarm */
+const swarmParticles=[], swarmNodes=[];
+function initSwarm(w,h){
+  swarmParticles.length=0; swarmNodes.length=0;
+  for(let i=0;i<4;i++) swarmNodes.push({x:w*(.25+i*.16), y:h*(.35+(i%2)*.18), phase:rand(0,6.28)});
+  for(let i=0;i<130;i++){
+    const node=swarmNodes[i%swarmNodes.length];
+    swarmParticles.push({x:node.x+rand(-40,40), y:node.y+rand(-40,40), vx:rand(-.8,.8), vy:rand(-.8,.8), life:rand(.5,1), size:rand(1.2,3.6), hot:Math.random()<.22});
+  }
+}
+function drawSwarm(dt){
+  const ctx=swarm.ctx, r=swarm.stage.getBoundingClientRect(), w=r.width, h=r.height;
+  if(swarmParticles.length===0) initSwarm(w,h);
+  swarm.pointer.x=lerp(swarm.pointer.x,swarm.pointer.tx,.07);
+  swarm.pointer.y=lerp(swarm.pointer.y,swarm.pointer.ty,.07);
+  ctx.clearRect(0,0,w,h);
+  const bg=ctx.createLinearGradient(0,0,w,h); bg.addColorStop(0,'#04070e'); bg.addColorStop(1,'#08040d');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+  const tx=swarm.pointer.x*w, ty=swarm.pointer.y*h;
+  swarmNodes.forEach((n,i)=>{
+    n.phase += (0.012 + i*0.002)*motionIntensity;
+    n.x += Math.sin(n.phase+i)*0.65*motionIntensity;
+    n.y += Math.cos(n.phase*.8+i)*0.55*motionIntensity;
+    if(swarm.pointer.active){
+      n.x = lerp(n.x, tx + Math.cos(i*1.57)*65, .02);
+      n.y = lerp(n.y, ty + Math.sin(i*1.57)*55, .02);
+    }
+  });
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  // cloud
+  swarmNodes.forEach((n,i)=>{
+    const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,54);
+    g.addColorStop(0,i%2?'rgba(0,255,255,.10)':'rgba(130,70,255,.10)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(n.x-54,n.y-54,108,108);
+  });
+  for(let i=0;i<swarmParticles.length;i++){
+    const p=swarmParticles[i], node=swarmNodes[i%swarmNodes.length];
+    const dx=node.x-p.x, dy=node.y-p.y, dist=Math.hypot(dx,dy)||1;
+    p.vx += dx/dist*0.06*motionIntensity + rand(-.04,.04);
+    p.vy += dy/dist*0.06*motionIntensity + rand(-.04,.04);
+    p.vx *= .94; p.vy *= .94; p.x += p.vx; p.y += p.vy;
+    if(dist<14){ p.vx += rand(-1.2,1.2); p.vy += rand(-1.2,1.2); p.hot = Math.random()<.35; }
+    const c = p.hot ? '#7CFFFA' : '#7A4DFF';
+    circle(ctx,p.x,p.y,p.size*2.8,c,.05);
+    circle(ctx,p.x,p.y,p.size,c,p.hot?.85:.55);
+    if(p.hot) circle(ctx,p.x,p.y,p.size*.35,'#ffffff',.95);
+  }
+  // arcs
+  ctx.lineCap='round';
+  for(let i=0;i<swarmNodes.length;i++){
+    for(let j=i+1;j<swarmNodes.length;j++){
+      const a=swarmNodes[i], b=swarmNodes[j];
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<170){
+        ctx.strokeStyle = i%2 ? 'rgba(120,255,255,.24)' : 'rgba(160,100,255,.22)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        const mx=(a.x+b.x)/2 + rand(-16,16), my=(a.y+b.y)/2 + rand(-16,16);
+        ctx.quadraticCurveTo(mx,my,b.x,b.y);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+
+/* Comet Scatter */
+const comets=[];
+let autoT=0;
+function spawnComet(x,y,vx,vy){
+  const speed=Math.hypot(vx,vy);
+  comets.push({x,y,vx,vy,life:1,maxLife:rand(.45,.95),size:rand(3,6),kind:'head'});
+  const count = Math.floor(4 + speed*0.35);
+  for(let i=0;i<count;i++){
+    comets.push({
+      x,y,
+      vx:vx*rand(.25,.75)+rand(-1.8,1.8),
+      vy:vy*rand(.25,.75)+rand(-1.8,1.8),
+      life:1,maxLife:rand(.25,.85),
+      size:rand(1,3.8),
+      kind:Math.random()<.45?'spark':'frag'
+    });
+  }
+}
+comet.stage.addEventListener('pointermove', e=>{
+  const r=comet.stage.getBoundingClientRect();
+  const x=e.clientX-r.left, y=e.clientY-r.top;
+  const last=comets.filter(p=>p.kind==='head').slice(-1)[0];
+  const vx= last ? x-last.x : 0, vy= last ? y-last.y : 0;
+  spawnComet(x,y,vx,vy);
+});
+function drawComet(dt){
+  const ctx=comet.ctx, r=comet.stage.getBoundingClientRect(), w=r.width, h=r.height;
+  ctx.clearRect(0,0,w,h);
+  const bg=ctx.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#05070d'); bg.addColorStop(1,'#09050b');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+  // autoplay when not interacting
+  if(!comet.pointer.active){
+    autoT += dt*0.0008*motionIntensity;
+    const x=w*(.14 + (autoT%1)*.72);
+    const y=h*(.5 + Math.sin(autoT*6.28)*.18);
+    const vx=Math.cos(autoT*6.28)*4 + 6, vy=Math.sin(autoT*6.28)*2;
+    if(Math.random()<0.42) spawnComet(x,y,vx,vy);
+  }
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(let i=comets.length-1;i>=0;i--){
+    const p=comets[i]; p.life -= dt/p.maxLife;
+    if(p.life<=0){ comets.splice(i,1); continue; }
+    p.x += p.vx*motionIntensity; p.y += p.vy*motionIntensity;
+    p.vx *= .975; p.vy *= .975;
+    if(p.kind==='head'){
+      const tailLen=18 + Math.hypot(p.vx,p.vy)*2;
+      ctx.strokeStyle='rgba(88,210,255,.55)'; ctx.lineWidth=p.size*1.6; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.vx*tailLen*0.35,p.y-p.vy*tailLen*0.35); ctx.stroke();
+      ctx.strokeStyle='rgba(255,90,220,.33)'; ctx.lineWidth=p.size*2.9; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.vx*tailLen*0.48,p.y-p.vy*tailLen*0.48); ctx.stroke();
+      circle(ctx,p.x,p.y,p.size*3.2,'rgba(70,200,255,.09)',p.life);
+      circle(ctx,p.x,p.y,p.size*1.1,'#57EFFF',p.life);
+      circle(ctx,p.x,p.y,p.size*.42,'#ffffff',p.life);
+    } else if(p.kind==='spark'){
+      ctx.strokeStyle='rgba(255,220,170,.9)'; ctx.lineWidth=1; ctx.globalAlpha=p.life*.8;
+      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.vx*2.5,p.y-p.vy*2.5); ctx.stroke(); ctx.globalAlpha=1;
+      circle(ctx,p.x,p.y,p.size,'#ffd480',p.life*.8);
+    } else {
+      circle(ctx,p.x,p.y,p.size*2.4,'rgba(255,40,190,.08)',p.life*.6);
+      circle(ctx,p.x,p.y,p.size,'#ff5ccd',p.life*.65);
+    }
+  }
+  ctx.restore();
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(32, now-last); last=now;
+  drawEmber(dt);
+  drawPrism(dt);
+  drawVoid(dt);
+  drawSwarm(dt);
+  drawComet(dt);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

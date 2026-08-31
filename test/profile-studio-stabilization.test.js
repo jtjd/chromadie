@@ -56,11 +56,12 @@ test('background treatment is normalized and projected to both profile renderers
 });
 
 test('Profile Studio stabilization keeps preview and media mutations on explicit boundaries', async () => {
-  const [workspace, preview, shell, identity, cursor, atmosphere, nameCanvas, richMedia, customize, mediaWorkspace, backgroundTreatment, appearance, settings, migration, smoke] = await Promise.all([
+  const [workspace, preview, shell, identity, environment, cursor, atmosphere, nameCanvas, richMedia, customize, mediaWorkspace, backgroundTreatment, appearance, settings, migration, smoke] = await Promise.all([
     read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileReferenceCard.svelte'),
+    read('src/lib/ProfileEnvironmentLayer.svelte'),
     read('src/lib/cursor-trail/CursorTrailLayer.svelte'),
     read('src/lib/profile-atmosphere/AtmosphereLayer.svelte'),
     read('src/lib/name/NameEffectCanvas.svelte'),
@@ -90,7 +91,7 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.doesNotMatch(settings, /configurationPreview|updateConfigurationPreview/);
   assert.match(preview, /\{previewDevice\}/);
   assert.match(preview, /profile-studio-preview__canvas/);
-  assert.match(preview, /profile-studio-preview__viewport[\s\S]*width: min\(350px, 100%\)/);
+  assert.match(preview, /profile-studio-preview__viewport[\s\S]*width: min\(52rem, 100%\)/);
   assert.match(preview, /profile-studio-preview__stage/);
   assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
   assert.match(smoke, /profile-shell-page\[aria-busy="false"\]/);
@@ -101,6 +102,7 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.doesNotMatch(preview, /ProfileEnvironmentLayer/);
   assert.doesNotMatch(preview, /ProfileShell|overflow-y:\s*auto/);
   assert.match(identity, /profile-reference-card--studio/);
+  assert.match(environment, /inputMode=\{mode === 'studio' \? 'demo' : 'window'\}/);
   assert.match(cursor, /inputMode = 'window'/);
   assert.match(cursor, /inputMode === 'demo'/);
   assert.match(cursor, /function demoPoint/);

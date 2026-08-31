@@ -1,5 +1,10 @@
 # Dashboard Parity Milestone 7 — Structured Templates and Premium Expression
 
+> Historical implementation record. The former Atelier expression preset is
+> retired from the active catalog; profile structure is free and current Plus
+> value is bounded hosted media as documented in
+> [`PLUS_PAID_MEDIA_DISTILLATION.md`](PLUS_PAID_MEDIA_DISTILLATION.md).
+
 Status: deployed
 
 ## Goal

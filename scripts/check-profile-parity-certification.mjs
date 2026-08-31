@@ -30,7 +30,7 @@ for (const profile of fixture.profiles) {
       fail('the free certification profile must retain the complete free caps.');
     }
     if (profile.capabilities.richMedia !== false) fail('the free certification profile must remain image-first.');
-  } else if (profile.capabilities.links !== 25 || profile.capabilities.projects !== 10 || profile.capabilities.widgets !== 4) {
+  } else if (profile.capabilities.links !== 6 || profile.capabilities.projects !== 10 || profile.capabilities.widgets !== 4) {
     fail(`${profile.id} must exercise the premium capacity contract.`);
   }
 }

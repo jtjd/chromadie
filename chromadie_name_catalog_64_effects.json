@@ -1,0 +1,564 @@
+{
+  "fonts": [
+    {
+      "id": "editorial-serif",
+      "name": "Editorial Serif",
+      "collection": "Archive",
+      "rarity": "Rare",
+      "price": "180K EP",
+      "family": "'Cormorant Garamond', Georgia, serif",
+      "weight": 600
+    },
+    {
+      "id": "condensed-sans",
+      "name": "Condensed Sans",
+      "collection": "Nocturne",
+      "rarity": "Rare",
+      "price": "180K EP",
+      "family": "'Archivo Narrow', 'Arial Narrow', sans-serif",
+      "weight": 700
+    },
+    {
+      "id": "wide-geometric",
+      "name": "Wide Geometric",
+      "collection": "Prism",
+      "rarity": "Rare",
+      "price": "180K EP",
+      "family": "'Syne', sans-serif",
+      "weight": 700
+    },
+    {
+      "id": "mono-compact",
+      "name": "Mono Compact",
+      "collection": "Signal",
+      "rarity": "Uncommon",
+      "price": "120K EP",
+      "family": "'IBM Plex Mono', monospace",
+      "weight": 600
+    },
+    {
+      "id": "rounded-mono",
+      "name": "Rounded Mono",
+      "collection": "Static Bloom",
+      "rarity": "Rare",
+      "price": "170K EP",
+      "family": "'Sono', monospace",
+      "weight": 600
+    },
+    {
+      "id": "soft-grotesk",
+      "name": "Soft Grotesk",
+      "collection": "Nocturne",
+      "rarity": "Uncommon",
+      "price": "130K EP",
+      "family": "'Instrument Sans', sans-serif",
+      "weight": 650
+    },
+    {
+      "id": "humanist-display",
+      "name": "Humanist Display",
+      "collection": "Archive",
+      "rarity": "Rare",
+      "price": "190K EP",
+      "family": "'Libre Franklin', sans-serif",
+      "weight": 600
+    },
+    {
+      "id": "modern-fraktur",
+      "name": "Modern Fraktur",
+      "collection": "Nocturne",
+      "rarity": "Epic",
+      "price": "320K EP",
+      "family": "'Pirata One', Georgia, serif",
+      "weight": 400
+    },
+    {
+      "id": "pixel-display",
+      "name": "Pixel Display",
+      "collection": "Static Bloom",
+      "rarity": "Rare",
+      "price": "190K EP",
+      "family": "'Pixelify Sans', monospace",
+      "weight": 600
+    },
+    {
+      "id": "high-contrast-italic",
+      "name": "High-Contrast Italic",
+      "collection": "Archive",
+      "rarity": "Epic",
+      "price": "310K EP",
+      "family": "'DM Serif Display', Georgia, serif",
+      "weight": 400,
+      "style": "italic"
+    },
+    {
+      "id": "neo-slab",
+      "name": "Neo Slab",
+      "collection": "Archive",
+      "rarity": "Rare",
+      "price": "210K EP",
+      "family": "'Roboto Slab', Georgia, serif",
+      "weight": 700,
+      "new": true
+    },
+    {
+      "id": "reverse-contrast",
+      "name": "Reverse Contrast",
+      "collection": "Archive",
+      "rarity": "Epic",
+      "price": "330K EP",
+      "family": "'Abril Fatface', Georgia, serif",
+      "weight": 400,
+      "new": true
+    },
+    {
+      "id": "industrial-stencil",
+      "name": "Industrial Stencil",
+      "collection": "Signal",
+      "rarity": "Epic",
+      "price": "340K EP",
+      "family": "'Black Ops One', sans-serif",
+      "weight": 400,
+      "new": true
+    },
+    {
+      "id": "futurist-extended",
+      "name": "Futurist Extended",
+      "collection": "Prism",
+      "rarity": "Rare",
+      "price": "230K EP",
+      "family": "'Michroma', sans-serif",
+      "weight": 400,
+      "new": true
+    },
+    {
+      "id": "terminal-bitmap",
+      "name": "Terminal Bitmap",
+      "collection": "Static Bloom",
+      "rarity": "Rare",
+      "price": "190K EP",
+      "family": "'VT323', monospace",
+      "weight": 400,
+      "new": true
+    },
+    {
+      "id": "rounded-display",
+      "name": "Rounded Display",
+      "collection": "Prism",
+      "rarity": "Rare",
+      "price": "210K EP",
+      "family": "'Fredoka', sans-serif",
+      "weight": 600,
+      "new": true
+    },
+    {
+      "id": "marker-tag",
+      "name": "Marker Tag",
+      "collection": "Ember",
+      "rarity": "Epic",
+      "price": "350K EP",
+      "family": "'Permanent Marker', cursive",
+      "weight": 400,
+      "new": true
+    },
+    {
+      "id": "newspaper-black",
+      "name": "Newspaper Black",
+      "collection": "Archive",
+      "rarity": "Epic",
+      "price": "320K EP",
+      "family": "'Archivo Black', sans-serif",
+      "weight": 400,
+      "new": true
+    }
+  ],
+  "materials": [
+    {
+      "id": "plain",
+      "name": "Plain",
+      "collection": "Baseline",
+      "rarity": "Free",
+      "price": "Free"
+    },
+    {
+      "id": "polished-chrome",
+      "name": "Polished Chrome",
+      "collection": "Nocturne",
+      "rarity": "Epic",
+      "price": "340K EP"
+    },
+    {
+      "id": "copper-press",
+      "name": "Copper Press",
+      "collection": "Ember",
+      "rarity": "Rare",
+      "price": "220K EP"
+    },
+    {
+      "id": "glass-emboss",
+      "name": "Glass Emboss",
+      "collection": "Prism",
+      "rarity": "Epic",
+      "price": "350K EP"
+    },
+    {
+      "id": "fine-outline",
+      "name": "Fine Outline",
+      "collection": "Archive",
+      "rarity": "Uncommon",
+      "price": "140K EP"
+    },
+    {
+      "id": "ink-bleed",
+      "name": "Ink Bleed",
+      "collection": "Archive",
+      "rarity": "Rare",
+      "price": "210K EP"
+    },
+    {
+      "id": "pearl-foil",
+      "name": "Pearl Foil",
+      "collection": "Prism",
+      "rarity": "Epic",
+      "price": "360K EP"
+    },
+    {
+      "id": "carbon-cut",
+      "name": "Carbon Cut",
+      "collection": "Nocturne",
+      "rarity": "Rare",
+      "price": "230K EP"
+    },
+    {
+      "id": "frosted-edge",
+      "name": "Frosted Edge",
+      "collection": "Signal",
+      "rarity": "Rare",
+      "price": "210K EP"
+    },
+    {
+      "id": "holographic-film",
+      "name": "Holographic Film",
+      "collection": "Prism",
+      "rarity": "Anomaly",
+      "price": "540K EP"
+    },
+    {
+      "id": "cut-paper",
+      "name": "Cut Paper",
+      "collection": "Archive",
+      "rarity": "Rare",
+      "price": "200K EP"
+    },
+    {
+      "id": "neon-tube",
+      "name": "Neon Tube",
+      "collection": "Signal",
+      "rarity": "Epic",
+      "price": "380K EP",
+      "new": true
+    },
+    {
+      "id": "liquid-mercury",
+      "name": "Liquid Mercury",
+      "collection": "Nocturne",
+      "rarity": "Anomaly",
+      "price": "560K EP",
+      "new": true
+    },
+    {
+      "id": "oil-slick",
+      "name": "Oil Slick",
+      "collection": "Prism",
+      "rarity": "Epic",
+      "price": "390K EP",
+      "new": true
+    },
+    {
+      "id": "thermal-ink",
+      "name": "Thermal Ink",
+      "collection": "Signal",
+      "rarity": "Epic",
+      "price": "380K EP",
+      "new": true
+    },
+    {
+      "id": "velvet-ink",
+      "name": "Velvet Ink",
+      "collection": "Ember",
+      "rarity": "Rare",
+      "price": "250K EP",
+      "new": true
+    },
+    {
+      "id": "embroidered-thread",
+      "name": "Embroidered Thread",
+      "collection": "Archive",
+      "rarity": "Epic",
+      "price": "370K EP",
+      "new": true
+    },
+    {
+      "id": "engraved-stone",
+      "name": "Engraved Stone",
+      "collection": "Nocturne",
+      "rarity": "Rare",
+      "price": "260K EP",
+      "new": true
+    },
+    {
+      "id": "crt-phosphor",
+      "name": "CRT Phosphor",
+      "collection": "Static Bloom",
+      "rarity": "Epic",
+      "price": "350K EP",
+      "new": true
+    },
+    {
+      "id": "gold-leaf",
+      "name": "Gold Leaf",
+      "collection": "Archive",
+      "rarity": "Anomaly",
+      "price": "570K EP",
+      "new": true
+    },
+    {
+      "id": "chroma-glass",
+      "name": "Chroma Glass",
+      "collection": "Prism",
+      "rarity": "Epic",
+      "price": "400K EP",
+      "new": true
+    },
+    {
+      "id": "ceramic-glaze",
+      "name": "Ceramic Glaze",
+      "collection": "Ember",
+      "rarity": "Epic",
+      "price": "390K EP",
+      "new": true
+    },
+    {
+      "id": "blueprint-ink",
+      "name": "Blueprint Ink",
+      "collection": "Signal",
+      "rarity": "Rare",
+      "price": "240K EP",
+      "new": true
+    }
+  ],
+  "motions": [
+    {
+      "id": "none",
+      "name": "Still",
+      "collection": "Baseline",
+      "rarity": "Free",
+      "price": "Free",
+      "note": "No animation."
+    },
+    {
+      "id": "velvet-sweep",
+      "name": "Velvet Sweep",
+      "collection": "Ember",
+      "rarity": "Epic",
+      "price": "360K EP",
+      "note": "A soft satin highlight travels across the name."
+    },
+    {
+      "id": "refraction-sweep",
+      "name": "Refraction Sweep",
+      "collection": "Prism",
+      "rarity": "Epic",
+      "price": "350K EP",
+      "note": "Cyan and rose refraction bands cross the letters."
+    },
+    {
+      "id": "ghost-offset",
+      "name": "Ghost Offset",
+      "collection": "Static Bloom",
+      "rarity": "Epic",
+      "price": "320K EP",
+      "note": "Slow chromatic echoes drift behind the name."
+    },
+    {
+      "id": "focus-resolve",
+      "name": "Focus Resolve",
+      "collection": "Nocturne",
+      "rarity": "Rare",
+      "price": "230K EP",
+      "note": "The name resolves from controlled blur."
+    },
+    {
+      "id": "mask-reveal",
+      "name": "Mask Reveal",
+      "collection": "Archive",
+      "rarity": "Rare",
+      "price": "210K EP",
+      "note": "A clean horizontal reveal."
+    },
+    {
+      "id": "quiet-afterimage",
+      "name": "Quiet Afterimage",
+      "collection": "Static Bloom",
+      "rarity": "Rare",
+      "price": "240K EP",
+      "note": "A restrained delayed copy trails the text."
+    },
+    {
+      "id": "soft-rise",
+      "name": "Soft Rise",
+      "collection": "Ember",
+      "rarity": "Uncommon",
+      "price": "150K EP",
+      "note": "A subtle entrance from below."
+    },
+    {
+      "id": "scanline-reveal",
+      "name": "Scanline Reveal",
+      "collection": "Signal",
+      "rarity": "Epic",
+      "price": "330K EP",
+      "note": "A scanning line reveals the name."
+    },
+    {
+      "id": "particle-drift",
+      "name": "Particle Drift",
+      "collection": "Prism",
+      "rarity": "Epic",
+      "price": "370K EP",
+      "note": "Small particles lift from the letterforms."
+    },
+    {
+      "id": "letter-shuffle",
+      "name": "Letter Shuffle",
+      "collection": "Static Bloom",
+      "rarity": "Anomaly",
+      "price": "520K EP",
+      "note": "Characters rearrange before locking into place."
+    },
+    {
+      "id": "fuzzy-signal",
+      "name": "Fuzzy Signal",
+      "collection": "Signal",
+      "rarity": "Epic",
+      "price": "340K EP",
+      "note": "Controlled horizontal signal slices distort the name."
+    },
+    {
+      "id": "typewriter-name",
+      "name": "Typewriter Name",
+      "collection": "Archive",
+      "rarity": "Rare",
+      "price": "230K EP",
+      "note": "Characters appear one by one."
+    },
+    {
+      "id": "chromatic-ripple",
+      "name": "Chromatic Ripple",
+      "collection": "Prism",
+      "rarity": "Epic",
+      "price": "410K EP",
+      "note": "A colored wave bends vertical sections of the letters.",
+      "new": true
+    },
+    {
+      "id": "liquid-fill",
+      "name": "Liquid Fill",
+      "collection": "Prism",
+      "rarity": "Anomaly",
+      "price": "580K EP",
+      "note": "Today\u2019s color rises inside the name and settles.",
+      "new": true
+    },
+    {
+      "id": "pixel-dissolve",
+      "name": "Pixel Dissolve",
+      "collection": "Static Bloom",
+      "rarity": "Epic",
+      "price": "390K EP",
+      "note": "The name assembles from a field of square fragments.",
+      "new": true
+    },
+    {
+      "id": "echo-collapse",
+      "name": "Echo Collapse",
+      "collection": "Nocturne",
+      "rarity": "Epic",
+      "price": "380K EP",
+      "note": "Distant copies converge into the final name.",
+      "new": true
+    },
+    {
+      "id": "heat-shimmer",
+      "name": "Heat Shimmer",
+      "collection": "Ember",
+      "rarity": "Rare",
+      "price": "270K EP",
+      "note": "Thin horizontal bands refract like rising heat.",
+      "new": true
+    },
+    {
+      "id": "signal-lock",
+      "name": "Signal Lock",
+      "collection": "Signal",
+      "rarity": "Epic",
+      "price": "370K EP",
+      "note": "Misaligned signal slices snap cleanly into place.",
+      "new": true
+    },
+    {
+      "id": "letter-cascade",
+      "name": "Letter Cascade",
+      "collection": "Archive",
+      "rarity": "Epic",
+      "price": "380K EP",
+      "note": "Characters fall individually into their final positions.",
+      "new": true
+    },
+    {
+      "id": "orbiting-spark",
+      "name": "Orbiting Spark",
+      "collection": "Prism",
+      "rarity": "Epic",
+      "price": "400K EP",
+      "note": "A bright spark traces around the name.",
+      "new": true
+    },
+    {
+      "id": "color-memory",
+      "name": "Color Memory",
+      "collection": "Prism",
+      "rarity": "Anomaly",
+      "price": "600K EP",
+      "note": "Recent rolled colors pass through the lettering in sequence.",
+      "new": true
+    },
+    {
+      "id": "daily-pulse",
+      "name": "Daily Pulse",
+      "collection": "Ember",
+      "rarity": "Epic",
+      "price": "410K EP",
+      "note": "Today\u2019s color blooms outward from the center.",
+      "new": true
+    },
+    {
+      "id": "prism-shatter",
+      "name": "Prism Shatter",
+      "collection": "Prism",
+      "rarity": "Mythic",
+      "price": "760K EP",
+      "note": "Faceted fragments separate and reassemble.",
+      "new": true
+    },
+    {
+      "id": "ink-spread",
+      "name": "Ink Spread",
+      "collection": "Archive",
+      "rarity": "Epic",
+      "price": "390K EP",
+      "note": "Soft ink expands into crisp finished letterforms.",
+      "new": true
+    }
+  ]
+}

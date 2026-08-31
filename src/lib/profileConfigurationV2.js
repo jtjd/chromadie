@@ -5,7 +5,7 @@ import { normalizeProfileMetadata } from './profileMetadata.js';
 import { normalizeProfileWidgets } from './profileWidgets.js';
 
 export const PROFILE_CONFIGURATION_V2_VERSION = 2;
-export const PROFILE_CONFIGURATION_V2_LIMITS = Object.freeze({ maxLinks: 25, freeProjects: 4, premiumProjects: 10, freeWidgets: 2, premiumWidgets: 4 });
+export const PROFILE_CONFIGURATION_V2_LIMITS = Object.freeze({ maxLinks: 6, freeProjects: 10, premiumProjects: 10, freeWidgets: 4, premiumWidgets: 4 });
 
 function safeKey(value, fallback) {
   const key = String(value ?? '').trim().toLowerCase();
@@ -33,7 +33,7 @@ function normalizeV2Link(value, index) {
     label,
     url,
     visible: value.visible !== false,
-    order: Math.min(24, Math.max(0, Number.isInteger(Number(value.order)) ? Number(value.order) : index))
+    order: Math.min(PROFILE_CONFIGURATION_V2_LIMITS.maxLinks - 1, Math.max(0, Number.isInteger(Number(value.order)) ? Number(value.order) : index))
   };
 }
 
@@ -76,6 +76,10 @@ export function normalizeProfileConfigurationV2(value, fallbackColor = '#CDD2FF'
     'spotify_id',
     'background_video_path',
     'background_video_asset_id',
+    'animated_avatar_path',
+    'animated_avatar_asset_id',
+    'share_image_path',
+    'share_image_asset_id',
     'banner_path',
     'banner_asset_id',
     'cursor_path',
@@ -99,7 +103,7 @@ export function normalizeProfileConfigurationV2(value, fallbackColor = '#CDD2FF'
   const widgets = normalizeProfileWidgets(source.widgets ?? base.widgets, base, { maxWidgets });
   return {
     version: PROFILE_CONFIGURATION_V2_VERSION,
-    base: { ...base, links: links.slice(0, 6), content, widgets: widgets.slice(0, maxWidgets) },
+    base: { ...base, links: links.slice(0, PROFILE_CONFIGURATION_V2_LIMITS.maxLinks), content, widgets: widgets.slice(0, maxWidgets) },
     links,
     identity: normalizeProfileIdentityPresentation(source.identity),
     content,

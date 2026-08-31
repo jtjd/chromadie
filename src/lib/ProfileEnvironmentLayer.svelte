@@ -36,7 +36,7 @@
     <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={todayColor} recentColors={recentColors} active={true} animated={!reducedMotion} mode="profile" className="profile-environment__atmosphere" />
   {/if}
   {#if cursorTrailKey}
-    <CursorTrailLayer trailKey={cursorTrailKey} recentColors={recentColors} todayColor={todayColor} active={true} className="profile-environment__cursor" />
+    <CursorTrailLayer trailKey={cursorTrailKey} recentColors={recentColors} todayColor={todayColor} active={true} inputMode={mode === 'studio' ? 'demo' : 'window'} className="profile-environment__cursor" />
   {/if}
 </div>
 

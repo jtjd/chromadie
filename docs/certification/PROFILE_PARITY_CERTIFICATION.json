@@ -25,7 +25,7 @@
       "description": "A media-led Plus identity that still opens with a quiet, readable Chromadie canvas.",
       "regions": ["identity", "roll", "expression", "featured"],
       "capabilities": {
-        "links": 25,
+        "links": 6,
         "projects": 10,
         "widgets": 4,
         "richMedia": true,
@@ -42,7 +42,7 @@
       "description": "A creator identity using safe provider cards and stable click measurement without becoming a generic link page.",
       "regions": ["identity", "roll", "expression", "featured"],
       "capabilities": {
-        "links": 25,
+        "links": 6,
         "projects": 10,
         "widgets": 4,
         "providerCards": ["github", "twitch", "lastfm", "discord", "spotify", "youtube"],

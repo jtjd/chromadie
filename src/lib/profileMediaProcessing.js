@@ -51,15 +51,15 @@ function loadImage(source) {
   });
 }
 
-function blobFromCanvas(canvas, quality) {
+function blobFromCanvas(canvas, quality, mimeType = 'image/webp') {
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
-      if (!blob || blob.type !== 'image/webp') {
-        reject(new Error('This browser could not create a WebP image.'));
+      if (!blob || blob.type !== mimeType) {
+        reject(new Error(`This browser could not create a ${mimeType === 'image/jpeg' ? 'JPEG' : 'WebP'} image.`));
         return;
       }
       resolve(blob);
-    }, 'image/webp', quality);
+    }, mimeType, quality);
   });
 }
 
@@ -114,7 +114,7 @@ async function boundedRichWebpFromCanvas(canvas, kind) {
   throw new Error(`That image could not be compressed below ${rules.label}. Try a simpler image.`);
 }
 
-/** Convert a banner or cursor image to the bounded WebP representation. */
+/** Convert an uploaded cursor image to the bounded WebP representation. */
 export async function processProfileRichImage(file, kind) {
   const validationError = validateRichMediaFile(file, kind);
   if (validationError) throw new Error(validationError);
@@ -137,6 +137,80 @@ export async function processProfileRichImage(file, kind) {
     canvas.height = Math.max(1, Math.round(sourceHeight * scale));
     canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
     return await boundedRichWebpFromCanvas(canvas, kind);
+  } finally {
+    URL.revokeObjectURL(sourceUrl);
+  }
+}
+
+/** Create the static avatar fallback used for reduced motion and load errors. */
+export async function processAnimatedAvatarPoster(file) {
+  const validationError = validateRichMediaFile(file, 'animated_avatar');
+  if (validationError) throw new Error(validationError);
+  if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+    throw new Error('Image processing is only available in a browser.');
+  }
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImage(sourceUrl);
+    const sourceWidth = Math.max(1, image.naturalWidth || image.width);
+    const sourceHeight = Math.max(1, image.naturalHeight || image.height);
+    const side = Math.min(sourceWidth, sourceHeight);
+    const outputSide = Math.min(side, 800);
+    const canvas = document.createElement('canvas');
+    canvas.width = outputSide;
+    canvas.height = outputSide;
+    canvas.getContext('2d').drawImage(
+      image,
+      (sourceWidth - side) / 2,
+      (sourceHeight - side) / 2,
+      side,
+      side,
+      0,
+      0,
+      outputSide,
+      outputSide
+    );
+    return await boundedWebpFromCanvas(canvas, 'avatar');
+  } finally {
+    URL.revokeObjectURL(sourceUrl);
+  }
+}
+
+/** Center-crop a share preview to the crawler-standard 1200×630 JPEG. */
+export async function processProfileShareImage(file) {
+  const validationError = validateRichMediaFile(file, 'share_image');
+  if (validationError) throw new Error(validationError);
+  if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+    throw new Error('Image processing is only available in a browser.');
+  }
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImage(sourceUrl);
+    const sourceWidth = Math.max(1, image.naturalWidth || image.width);
+    const sourceHeight = Math.max(1, image.naturalHeight || image.height);
+    const targetRatio = 1200 / 630;
+    const sourceRatio = sourceWidth / sourceHeight;
+    const cropWidth = sourceRatio > targetRatio ? sourceHeight * targetRatio : sourceWidth;
+    const cropHeight = sourceRatio > targetRatio ? sourceHeight : sourceWidth / targetRatio;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 630;
+    canvas.getContext('2d').drawImage(
+      image,
+      (sourceWidth - cropWidth) / 2,
+      (sourceHeight - cropHeight) / 2,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      1200,
+      630
+    );
+    for (const quality of [0.9, 0.82, 0.74, 0.66, 0.58, 0.5, 0.42, 0.35]) {
+      const blob = await blobFromCanvas(canvas, quality, 'image/jpeg');
+      if (blob.size <= PROFILE_RICH_MEDIA_RULES.share_image.maxOutputBytes) return blob;
+    }
+    throw new Error('That image could not be compressed below 1 MB. Try a simpler image.');
   } finally {
     URL.revokeObjectURL(sourceUrl);
   }

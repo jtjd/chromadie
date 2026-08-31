@@ -128,12 +128,16 @@
   // live preview contract.
   $: customizePreviewAvailable = activeSection === 'customize';
   $: showDashboardPreview = customizePreviewAvailable && (!isMobileViewport || previewOpen);
-  function createStudioEditorProfileConfig(value) {
+  function createStudioEditorProfileConfig(value, stagedDraft = studioDraft) {
     const base = createEditorProfileConfig(value);
-    return base && studioDraft ? { ...base, draft: studioDraft } : base;
+    return base && stagedDraft ? { ...base, draft: stagedDraft } : base;
   }
 
-  $: editorProfileConfig = createStudioEditorProfileConfig(context?.profileConfig);
+  // Keep remounted Customize editors on the same staged draft that drives the
+  // live preview. The explicit argument is intentional: Svelte's legacy
+  // reactive dependency analysis does not inspect variables read only inside
+  // a helper function.
+  $: editorProfileConfig = createStudioEditorProfileConfig(context?.profileConfig, studioDraft);
   $: dashboardDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
   $: previewModel = createProfileStudioPreviewModel({
     targetProfile: context?.targetProfile,
@@ -661,7 +665,12 @@
   function applyStudioPatch(event) {
     const patch = event.detail || {};
     const scope = patch.scope;
-    const detail = patch.detail || {};
+    // Dynamic Customize tabs can forward one additional event envelope when
+    // an editor is remounted. Unwrap that presentation-only envelope here so
+    // the canonical staged draft remains the single source for the preview.
+    const detail = patch.detail?.detail && typeof patch.detail.detail === 'object' && !patch.detail.config
+      ? patch.detail.detail
+      : patch.detail || {};
     if (!scope) return;
     if (scope === 'media') {
       updateExpression({ detail });
