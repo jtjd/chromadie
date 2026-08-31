@@ -30,7 +30,10 @@ const generatedClientPath = path.join(repoRoot, 'src/lib/generated/scoringV6.gen
 const generatedPresentationPath = path.join(repoRoot, 'src/lib/generated/scoringV6Presentation.generated.js');
 const generatedManifestPath = path.join(repoRoot, 'src/lib/generated/scoringV6ProbabilityManifest.json');
 const generatedSqlPath = path.join(repoRoot, 'supabase/generated/scoringV6Evaluator.sql');
-const generatedMigrationPath = path.join(repoRoot, 'supabase/migrations/20260826100000_score_model_v6_probability_catalog.sql');
+// The original v6 migration is deployed history. Later catalog changes are
+// emitted as forward-only replacements so stored roll outcomes keep their
+// original interpretation.
+const generatedMigrationPath = path.join(repoRoot, 'supabase/migrations/20260831110000_score_model_v6_bee_catalog.sql');
 const V6_SCORE_ACHIEVEMENT_THRESHOLDS = v6BalanceFixture.progression.scoreAchievementThresholds;
 
 const hasCheckFlag = process.argv.includes('--check');
@@ -383,10 +386,7 @@ $patch_v6_score_achievement_thresholds$;`;
 }
 
 function buildMigration(sqlEvaluator) {
-  return buildMigrationBody(sqlEvaluator).replace(
-    '\nCOMMIT;\n',
-    `\n${buildAchievementThresholdPatch()}\n\nCOMMIT;\n`
-  );
+  return `-- Replace the live v6 condition catalog without rewriting its deployment history.\n-- GENERATED evaluator sections are produced by scripts/generate-scoring-v6.mjs.\nBEGIN;\n\n${sqlEvaluator}\n\nCOMMIT;\n`;
 }
 
 function buildManifestFile(manifest) {

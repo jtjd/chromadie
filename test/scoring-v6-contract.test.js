@@ -115,6 +115,7 @@ test('exact RGB predicate probabilities remain locked', () => {
     ['sum_420', 47_746, 'Rare'],
     ['sum_666', 5_050, 'Epic'],
     ['blaze_it', 16_383, 'Epic'],
+    ['bee', 16_383, 'Epic'],
     ['leet', 768, 'Legendary'],
     ['six_seven', 325_378, 'Uncommon'],
     ['six_seven_echo', 766, 'Legendary'],
@@ -131,6 +132,34 @@ test('exact RGB predicate probabilities remain locked', () => {
 
   const anomaly = manifestEntry('reference_123456');
   assert.ok(Math.abs(anomaly.probabilityReward - 16_777_216_000) < 0.001);
+});
+
+test('Bee replaces the obscure D23 culture code at the same probability', () => {
+  assert.equal(ACTIVE_V6_CONDITIONS.some(condition => condition.id === 'd23'), false);
+  assert.equal(GENERATED_V6_CATALOG.some(condition => condition.id === 'd23'), false);
+
+  const bee = ACTIVE_V6_CONDITIONS.find(condition => condition.id === 'bee');
+  assert.deepEqual(bee && {
+    name: bee.name,
+    pattern: bee.pattern,
+    symbol: bee.symbol,
+    semanticTags: bee.semanticTags
+  }, {
+    name: 'Bee',
+    pattern: 'BEE',
+    symbol: '🐝',
+    semanticTags: ['named']
+  });
+
+  const beeManifest = manifestEntry('bee');
+  assert.equal(beeManifest.matchCount, 16_383);
+  assert.equal(beeManifest.expectedRolls, 1_025);
+  assert.equal(beeManifest.rarity, 'Epic');
+
+  const beeIds = scoreCandidateColorV6(0xbe, 0xe0, 0).conditionIds;
+  const formerD23Ids = scoreCandidateColorV6(0xd2, 0x30, 0).conditionIds;
+  assert.ok(beeIds.includes('bee'), '#BEE000 should earn Bee');
+  assert.equal(formerD23Ids.includes('bee'), false, '#D23000 should no longer earn the replacement condition');
 });
 
 test('the declarative catalog is large, composable, and free of hand-authored rewards', () => {
@@ -219,29 +248,29 @@ test('the exhaustive fixture locks score spread, distributions, and progression 
   assert.deepEqual(v6BalanceFixture.scoreSpread, {
     min: 15_648,
     max: 48_172_821_304,
-    mean: 203_871.81413668394,
-    median: 47_520,
+    mean: 203_871.72366416454,
+    median: 47_461,
     percentiles: {
-      p01: 22_760,
-      p50: 47_520,
-      p75: 75_849,
-      p90: 146_039,
-      p97: 650_025,
-      p98: 752_311,
-      p986: 795_610,
-      p99: 838_404,
-      p996: 1_548_226,
+      p01: 22_757,
+      p50: 47_461,
+      p75: 75_787,
+      p90: 145_751,
+      p97: 653_725,
+      p98: 752_494,
+      p986: 795_828,
+      p99: 839_203,
+      p996: 1_548_948,
       p999: 30_203_245,
-      p9999: 43_245_891
+      p9999: 43_250_864
     }
   });
   assert.deepEqual(v6BalanceFixture.rarities, {
     Trash: { count: 0, frequency: 0, expectedRolls: null },
     Common: { count: 0, frequency: 0, expectedRolls: null },
-    Uncommon: { count: 8_774_439, frequency: 0.5229973196983337, expectedRolls: 1.9120556881186364 },
-    Rare: { count: 7_337_859, frequency: 0.4373704791069031, expectedRolls: 2.286391166687722 },
-    Epic: { count: 646_311, frequency: 0.03852313756942749, expectedRolls: 25.95842558768147 },
-    Legendary: { count: 18_112, frequency: 0.001079559326171875, expectedRolls: 926.303886925795 },
+    Uncommon: { count: 8_785_486, frequency: 0.5236557722091675, expectedRolls: 1.9096514410244352 },
+    Rare: { count: 7_328_483, frequency: 0.436811625957489, expectedRolls: 2.289316356468317 },
+    Epic: { count: 644_630, frequency: 0.03842294216156006, expectedRolls: 26.02611730760281 },
+    Legendary: { count: 18_122, frequency: 0.001080155372619629, expectedRolls: 925.7927381083765 },
     Anomaly: { count: 495, frequency: 0.00002950429916381836, expectedRolls: 33893.36565656566 }
   });
   assert.deepEqual(v6BalanceFixture.conditionTotals.families, {
@@ -267,8 +296,8 @@ test('the exhaustive fixture locks score spread, distributions, and progression 
     combination: 18_097_452
   });
   assert.equal(v6BalanceFixture.conditionTotals.average, 18.034408807754517);
-  assert.equal(stableDigest(v6BalanceFixture.conditions), '08d7b4bc8005f62de9735bbb17fbf3d6a445d62d4caf6211f3093f51b082f2cb');
-  assert.equal(stableDigest(v6BalanceFixture.progression.discoveryExpectedRolls), '2888f3f4a9ebd479bbe4d44a7e6237dc485118105d6ff2bf04eb2fa5c0b07fb7');
+  assert.equal(stableDigest(v6BalanceFixture.conditions), '1dd9bbd33ac304dd61a0bbb2934754260c750bcbe07090deb0306a68dbaddad2');
+  assert.equal(stableDigest(v6BalanceFixture.progression.discoveryExpectedRolls), '6c6013e0cdbd6fb1fd3adc28586fb43309a53c620cab380155d75eb7bdde2852');
   assert.deepEqual(v6BalanceFixture.progression.rankThresholds, {
     Silver: 4_790_000,
     Gold: 23_950_000,

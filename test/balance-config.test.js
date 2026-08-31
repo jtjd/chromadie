@@ -153,12 +153,12 @@ test('v6 balance distribution is locked to the measured sample', () => {
   assert.equal(report.scoreVersion, ACTIVE_SCORE_MODEL_VERSION);
   assert.equal(report.minScore, 16099);
   assert.equal(report.maxScore, 3921260535);
-  assert.equal(report.averageScore, 196862.9194);
-  assert.equal(report.averageConditions, 18.0353);
-  assert.equal(report.averageContributors, 18.0353);
+  assert.equal(report.averageScore, 196913.76147);
+  assert.equal(report.averageConditions, 18.03539);
+  assert.equal(report.averageContributors, 18.03539);
   assert.deepEqual(
     Object.fromEntries(Object.entries(report.rarities).map(([rarity, result]) => [rarity, result.count])),
-    { Trash: 0, Common: 0, Uncommon: 52471, Rare: 43575, Epic: 3840, Legendary: 110, Anomaly: 4 }
+    { Trash: 0, Common: 0, Uncommon: 52523, Rare: 43525, Epic: 3839, Legendary: 109, Anomaly: 4 }
   );
 });
 

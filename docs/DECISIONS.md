@@ -205,7 +205,7 @@ strictly ordered—1,000, 4,000, 12,000, 40,000, 150,000, and 500,000+
 points—before bounded strength and deterministic ±10% score texture.
 
 The catalog adds 28 deterministic HEX culture conditions: the Six Seven
-family (`67`, `6767`, and exact `676767`), A24, D23, Final Fantasy VII, A113,
+family (`67`, `6767`, and exact `676767`), A24, Bee, Final Fantasy VII, A113,
 808, 1989, calculator/meme codes, repeated numeric jokes, and HEX-native
 wordplay such as C0FFEE, DEC0DE, FACADE, DEFACE, BADA55, F00BA4, and B0BA.
 Only the strongest Six Seven match pays, and larger culture phrases suppress

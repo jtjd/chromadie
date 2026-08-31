@@ -295,7 +295,7 @@ const cultureConditions = [
   hexContains('six_seven_echo', 'Six Seven Echo', '6767', 'hex_culture', ['meme', 'sequence'], '🔁', { exclusiveGroup: 'six_seven', exclusiveRank: 2 }),
   hexExact('six_seven_full', 'Six Seven Full House', '676767', 'hex_culture', ['meme', 'sequence', 'exact'], '🎲'),
   hexContains('a24', 'A24', 'A24', 'hex_culture', ['named'], '🎬'),
-  hexContains('d23', 'D23', 'D23', 'hex_culture', ['named'], '🏰'),
+  hexContains('bee', 'Bee', 'BEE', 'hex_culture', ['named'], '🐝'),
   hexContains('ff7', 'Final Fantasy VII', 'FF7', 'hex_culture', ['named'], '🗡️'),
   hexContains('a113', 'A113', 'A113', 'hex_culture', ['named'], '🎞️'),
   hexContains('eight_oh_eight', '808', '808', 'hex_culture', ['named'], '🥁'),

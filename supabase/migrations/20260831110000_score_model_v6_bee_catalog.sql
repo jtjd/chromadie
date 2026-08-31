@@ -1,3 +1,7 @@
+-- Replace the live v6 condition catalog without rewriting its deployment history.
+-- GENERATED evaluator sections are produced by scripts/generate-scoring-v6.mjs.
+BEGIN;
+
 -- GENERATED v6 predicate evaluator. Do not edit by hand.
 
 CREATE OR REPLACE FUNCTION public.chromadie_v6_is_prime(p_value integer)
@@ -628,3 +632,6 @@ END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.calculate_roll_v6(integer, integer, integer) FROM PUBLIC, anon, authenticated, service_role;
+
+
+COMMIT;

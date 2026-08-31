@@ -1128,10 +1128,10 @@ export const GENERATED_V6_PRESENTATION_BY_ID = Object.freeze({
     "desc": "The hexadecimal color contains A24.",
     "rarity": "Epic"
   },
-  "d23": {
-    "name": "D23",
-    "symbol": "🏰",
-    "desc": "The hexadecimal color contains D23.",
+  "bee": {
+    "name": "Bee",
+    "symbol": "🐝",
+    "desc": "The hexadecimal color contains BEE.",
     "rarity": "Epic"
   },
   "ff7": {

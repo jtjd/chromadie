@@ -3107,20 +3107,20 @@ export const GENERATED_V6_CATALOG = Object.freeze([
     "pattern": "A24"
   },
   {
-    "id": "d23",
-    "name": "D23",
+    "id": "bee",
+    "name": "Bee",
     "category": "hex_culture",
     "predicate": {
       "type": "hexContains",
-      "value": "D23"
+      "value": "BEE"
     },
     "semanticTags": [
       "named"
     ],
-    "symbol": "🏰",
-    "description": "The hexadecimal color contains D23.",
+    "symbol": "🐝",
+    "description": "The hexadecimal color contains BEE.",
     "active": true,
-    "pattern": "D23"
+    "pattern": "BEE"
   },
   {
     "id": "ff7",
@@ -6050,7 +6050,7 @@ export const GENERATED_V6_PROBABILITY_MANIFEST = Object.freeze([
     "variationMaxBps": 700
   },
   {
-    "id": "d23",
+    "id": "bee",
     "matchCount": 16383,
     "probability": Number("0.0009765028953552246"),
     "expectedRolls": 1025,
