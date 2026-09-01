@@ -450,9 +450,16 @@ const supabaseKey = supabase.publishableKey;
 
 if (supabaseUrl && supabaseKey) {
   const remote = await readRemoteCatalog(seed.columns, supabaseUrl, supabaseKey, supabase.publishableKeyIsLegacy);
-  compareCatalogs(seed, remote, 'remote shop_items');
+  // get_shop_catalog intentionally exposes only active rows. Retired
+  // historical expressions stay in the seed/table for legacy ownership and
+  // rendering, but must not be required from the public catalog RPC.
+  const activeSeed = {
+    ...seed,
+    catalog: new Map([...seed.catalog].filter(([, item]) => (item.catalog_status || 'active') === 'active'))
+  };
+  compareCatalogs(activeSeed, remote, 'remote shop_items');
   console.log(
-    `Catalog drift check passed: seed and remote match (${seed.catalog.size} items; ` +
+    `Catalog drift check passed: active seed and remote match (${activeSeed.catalog.size} active items; ` +
       `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} structural Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres, ${composableCounts.profile_motion} Profile Motions).`
   );
 } else {
