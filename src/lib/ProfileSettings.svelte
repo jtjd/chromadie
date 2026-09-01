@@ -80,7 +80,11 @@
 
   /** @type {any} */
   let context = createInitialSettingsContext();
-  let loading = false;
+  // Do not expose the bootstrap context as an editable draft while the
+  // authenticated profile projection is still loading. The bootstrap object
+  // is intentionally shape-compatible with the real context, so checking for
+  // object presence alone would let a fast click race the first load.
+  let loading = true;
   let error = '';
   let requestId = 0;
   let activeSection = 'customize';
@@ -528,7 +532,7 @@
   async function loadSettings(expectedAccountKey = '') {
     const nextRequestId = ++requestId;
     const previousContext = context;
-    loading = !previousContext?.targetProfile || !previousContext?.profileConfig;
+    loading = true;
     error = '';
     dashboardStatus = '';
     dashboardError = '';

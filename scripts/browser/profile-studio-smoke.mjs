@@ -449,17 +449,24 @@ async function waitForStudioReferenceCard(description) {
   }
 }
 
-async function waitForStudioLayoutEditor(description) {
+async function waitForStudioLayoutEditor(description, expectedLayout = '') {
   const editor = `document.querySelector('.profile-layout-editor[data-layout-editor="reference-first"]') && document.querySelector('.profile-studio-preview')`;
+  const hydrated = `document.querySelector('.profile-settings-page[aria-busy="false"]') && ${editor}`;
   try {
-    await page.waitFor(editor, description);
+    await page.waitFor(hydrated, description);
+    if (expectedLayout) {
+      await page.waitFor(`document.querySelector('.profile-studio-preview')?.getAttribute('data-preview-layout') === ${JSON.stringify(expectedLayout)} && document.querySelector('.profile-layout-editor__card.active')?.getAttribute('data-layout') === ${JSON.stringify(expectedLayout)}`, `${description} hydrated ${expectedLayout} layout`);
+    }
   } catch {
     // A lazy Studio navigation can resolve its document before the editor
     // chunk has mounted. Refresh the same canonical route once, preserving
     // the authenticated session and hash-selected tab.
     await page.command('Page.reload', { ignoreCache: true });
     await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`, 30000);
-    await page.waitFor(editor, `${description} retry`, 30000);
+    await page.waitFor(hydrated, `${description} retry`, 30000);
+    if (expectedLayout) {
+      await page.waitFor(`document.querySelector('.profile-studio-preview')?.getAttribute('data-preview-layout') === ${JSON.stringify(expectedLayout)} && document.querySelector('.profile-layout-editor__card.active')?.getAttribute('data-layout') === ${JSON.stringify(expectedLayout)}`, `${description} retry hydrated ${expectedLayout} layout`, 30000);
+    }
   }
 }
 
@@ -633,14 +640,15 @@ async function capturePublishedLayouts() {
   // navigation at both desktop and mobile widths.
   const layoutEvidence = { compact: { desktop: publicState } };
   const layoutKeys = ['full-bleed', 'sleek', 'framed', 'portfolio'];
+  let persistedLayout = 'compact';
   for (const layoutKey of layoutKeys) {
     const layoutSelector = `[data-profile-layout-content="${layoutKey}"]`;
     await page.setViewport(1440, 900);
     await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layoutKey} Studio layout evidence`);
-    await waitForStudioLayoutEditor(`${layoutKey} Studio editor`);
+    await waitForStudioLayoutEditor(`${layoutKey} Studio editor`, persistedLayout);
     await page.click(`.profile-layout-editor__card[data-layout="${layoutKey}"]`, `stage ${layoutKey} layout`);
     try {
-      await page.waitFor(`document.querySelector('.profile-studio-preview ${layoutSelector}')`, `${layoutKey} live preview`);
+      await page.waitFor(`document.querySelector('.profile-studio-preview')?.getAttribute('data-preview-layout') === ${JSON.stringify(layoutKey)} && document.querySelector('.profile-layout-editor__card.active')?.getAttribute('data-layout') === ${JSON.stringify(layoutKey)} && document.querySelector('.profile-studio-preview ${layoutSelector}')`, `${layoutKey} live preview`);
     } catch (error) {
       const previewLayouts = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview [data-profile-layout-content]')].map(node => ({
         layout: node.getAttribute('data-profile-layout-content'),
@@ -654,6 +662,7 @@ async function capturePublishedLayouts() {
     await page.waitFor(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`, `${layoutKey} staged publish`, 30000);
     await page.click('.profile-studio-shell__publish', `publish ${layoutKey} layout`);
     await page.waitFor(`document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'`, `published ${layoutKey} layout`, 30000);
+    persistedLayout = layoutKey;
 
     await page.navigate(`${appUrl}/${canonicalUsername}`, `published ${layoutKey} layout evidence`);
     await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] ${layoutSelector}')`, `published ${layoutKey} profile`);

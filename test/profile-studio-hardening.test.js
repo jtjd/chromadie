@@ -40,6 +40,8 @@ test('Profile Studio publishes identity and the complete expression-aware config
   assert.match(settings, /profile\.update\(/);
   assert.match(settings, /bio: nextBio/);
   assert.match(settings, /dirtySourceForEvent/);
+  assert.match(settings, /let loading = true/);
+  assert.match(settings, /async function loadSettings[\s\S]*?loading\s*=\s*true/);
   assert.match(customize, /customize:identity/);
   assert.match(customize, /customize:appearance/);
   assert.match(customize, /customize:links/);
