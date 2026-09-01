@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
+import { createDefaultProfileConfig, setProfileRollVisible } from '../src/lib/profileConfig.js';
 import { applyProfileStudioDraftPatch, createProfileStudioPreviewModel } from '../src/lib/profile-studio/draftModel.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -110,4 +110,25 @@ test('staged link edits reach the compact preview and stop at six entries', () =
   });
   assert.equal(capped.links.length, 6);
   assert.deepEqual(capped.links.map(link => link.label), ['Link 1', 'Link 2', 'Link 3', 'Link 4', 'Link 5', 'Link 6']);
+});
+
+test('roll widget visibility reaches the Studio snapshot without changing gameplay data', () => {
+  const base = createDefaultProfileConfig('#112233');
+  const hidden = setProfileRollVisible(base, false);
+  const scores = [{ hex_code: '#780EA8', identity: 'Balanced Vivid Violet', rarity: 'Uncommon', score: 33787 }];
+  const preview = createProfileStudioPreviewModel({
+    targetProfile: { id: 'preview-roll', username: 'rollkeeper', bio: '' },
+    profileConfig: { draft: base, published: base },
+    studioDraft: hidden,
+    previewScores: scores
+  });
+
+  assert.equal(preview.snapshot.roll.show, false);
+  assert.deepEqual(preview.snapshot.roll.latest, scores[0]);
+});
+
+test('the Studio roll summary falls back to the best earned roll when no latest row is projected', async () => {
+  const preview = await read('src/lib/ProfileStudioPreview.svelte');
+
+  assert.match(preview, /visibleRoll = showRoll \? previewRenderSnapshot\?\.roll\?\.latest \|\| previewRenderSnapshot\?\.roll\?\.best \|\| null : null/);
 });

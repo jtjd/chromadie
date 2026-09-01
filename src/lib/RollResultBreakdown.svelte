@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher, onDestroy, tick } from 'svelte';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
-  import { getBadgeMeta } from './badgeData';
+  import { getBadgePresentationFallback } from './badgePresentationFallback.js';
 
   export let contributors = [];
   export let baseScore = 0;
@@ -36,7 +36,7 @@
     return (Array.isArray(source) ? source : [])
       .filter(contributor => contributor && typeof contributor.id === 'string')
       .map((contributor, index) => {
-        const badge = getBadgeMeta(contributor.id);
+        const badge = getBadgePresentationFallback(contributor, contributor.id);
         const conditionRarity = typeof contributor.conditionRarity === 'string' && contributor.conditionRarity
           ? contributor.conditionRarity
           : 'Common';
@@ -46,7 +46,7 @@
           symbol: badge.symbol || '✦',
           points: getPoints(contributor),
           rarity: conditionRarity,
-          description: badge.desc || 'A server-reported score condition.'
+          description: badge.description
         };
       });
   }

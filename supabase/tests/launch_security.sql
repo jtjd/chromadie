@@ -117,10 +117,31 @@ SELECT pg_temp.audit_assert(
         NULL
       )->>'layoutVariant'
     ) = 'framed'
+    AND (
+      SELECT module->>'visible' = 'false'
+      FROM jsonb_array_elements(
+        public.normalize_profile_configuration(
+          jsonb_set(
+            public.profile_default_configuration(),
+            '{modules}',
+            (
+              SELECT jsonb_agg(
+                CASE WHEN item->>'id' = 'roll' THEN item || jsonb_build_object('visible', false) ELSE item END
+                ORDER BY (item->>'order')::integer
+              )
+              FROM jsonb_array_elements(public.profile_default_configuration()->'modules') item
+            ),
+            true
+          ),
+          NULL
+        )->'modules'
+      ) module
+      WHERE module->>'id' = 'roll'
+    )
     AND NOT has_function_privilege('anon', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE')
     AND NOT has_function_privilege('authenticated', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE')
     AND NOT has_function_privilege('service_role', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE'),
-  'profile layout runtime accepted a legacy alias or exposed its normalizer'
+  'profile layout runtime accepted a legacy alias, lost roll visibility, or exposed its normalizer'
 );
 SELECT pg_temp.audit_assert(
   has_function_privilege('authenticated', 'public.save_profile_configuration_section(text,jsonb,timestamptz)', 'EXECUTE')
@@ -1918,8 +1939,71 @@ VALUES (
 SELECT pg_temp.audit_assert(
   NOT has_table_privilege('authenticated', 'public.billing_checkout_sessions', 'INSERT')
     AND NOT has_table_privilege('authenticated', 'public.billing_webhook_events', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.billing_checkout_claims', 'SELECT')
     AND NOT has_function_privilege('authenticated', 'public.process_stripe_billing_event(jsonb)', 'EXECUTE'),
   'browser roles received billing or entitlement fulfillment authority'
+);
+SELECT pg_temp.audit_assert(
+  has_function_privilege('service_role', 'public.reserve_premium_checkout_claim(uuid)', 'EXECUTE')
+    AND has_function_privilege('service_role', 'public.finalize_premium_checkout_claim(uuid,text,text,text,text,timestamptz)', 'EXECUTE')
+    AND has_function_privilege('service_role', 'public.reconcile_premium_checkout_claim(uuid,uuid,text,text,timestamptz)', 'EXECUTE'),
+  'service role cannot operate the private checkout claim state machine'
+);
+-- The second reservation represents a concurrent request: it sees the same
+-- live lease and must not receive a second Stripe idempotency key.
+INSERT INTO audit_results VALUES (
+  'billing_claim_first',
+  public.reserve_premium_checkout_claim('10000000-0000-0000-0000-000000000002')
+);
+INSERT INTO audit_results VALUES (
+  'billing_claim_concurrent',
+  public.reserve_premium_checkout_claim('10000000-0000-0000-0000-000000000002')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'action' = 'create' FROM audit_results WHERE name = 'billing_claim_first')
+    AND (SELECT payload->>'action' = 'creating'
+         AND payload->>'claim_id' = (SELECT payload->>'claim_id' FROM audit_results WHERE name = 'billing_claim_first')
+         AND payload->>'stripe_idempotency_key' = (SELECT payload->>'stripe_idempotency_key' FROM audit_results WHERE name = 'billing_claim_first')
+       FROM audit_results WHERE name = 'billing_claim_concurrent'),
+  'concurrent checkout claims did not share a single leased Stripe idempotency key'
+);
+INSERT INTO audit_results
+SELECT 'billing_claim_finalized', public.finalize_premium_checkout_claim(
+  (payload->>'claim_id')::uuid,
+  'cs_test_claim1', 'cus_claim1', 'open', 'unpaid', now() + interval '1 hour'
+)
+FROM audit_results WHERE name = 'billing_claim_first';
+INSERT INTO audit_results
+SELECT 'billing_claim_reconciled', public.reconcile_premium_checkout_claim(
+  (payload->>'claim_id')::uuid,
+  '10000000-0000-0000-0000-000000000002', 'open', 'unpaid', now() + interval '1 hour'
+)
+FROM audit_results WHERE name = 'billing_claim_first';
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'state' = 'open' FROM audit_results WHERE name = 'billing_claim_finalized')
+    AND (SELECT payload->>'state' = 'open' FROM audit_results WHERE name = 'billing_claim_reconciled'),
+  'an open checkout was not reconciled before reuse'
+);
+INSERT INTO audit_results VALUES (
+  'billing_claim_expired',
+  public.process_stripe_billing_event(
+    '{"id":"evt_claimexpired1","type":"checkout.session.expired","created":1800000000,"data":{"object":{"id":"cs_test_claim1"}}}'::jsonb
+  )
+);
+INSERT INTO audit_results VALUES (
+  'billing_claim_after_expiry',
+  public.reserve_premium_checkout_claim('10000000-0000-0000-0000-000000000002')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'outcome' = 'expired' FROM audit_results WHERE name = 'billing_claim_expired')
+    AND (SELECT payload->>'action' = 'create'
+         AND payload->>'stripe_idempotency_key' <> (SELECT payload->>'stripe_idempotency_key' FROM audit_results WHERE name = 'billing_claim_first')
+       FROM audit_results WHERE name = 'billing_claim_after_expiry')
+    AND EXISTS (
+      SELECT 1 FROM public.billing_checkout_claims
+      WHERE stripe_checkout_session_id = 'cs_test_claim1' AND state = 'expired'
+    ),
+  'expired checkout webhook did not release a new safe checkout claim'
 );
 INSERT INTO public.billing_checkout_sessions (
   stripe_checkout_session_id, user_id, status, payment_status

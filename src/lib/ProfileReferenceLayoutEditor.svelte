@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { normalizeProfileConfig } from './profileConfig.js';
+  import { getProfileRollVisible, normalizeProfileConfig, setProfileRollVisible } from './profileConfig.js';
   import { createProfileLayoutPatch } from './profile-layout/profileLayoutPatch.js';
   import { PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
 
@@ -17,6 +17,7 @@
 
   $: syncIncomingConfig(draftConfig, publishedConfig);
   $: activeLayout = staged.layoutVariant || 'compact';
+  $: rollVisible = getProfileRollVisible(staged);
 
   function syncIncomingConfig(nextDraft, nextPublished) {
     const nextKey = JSON.stringify(nextDraft || nextPublished || '');
@@ -34,9 +35,15 @@
 
   function chooseLayout(layoutVariant) {
     if (!PROFILE_LAYOUT_KEYS.includes(layoutVariant) || layoutVariant === staged.layoutVariant) return;
-    const layoutPatch = createProfileLayoutPatch(layoutVariant);
+    const layoutPatch = createProfileLayoutPatch(layoutVariant, staged);
     staged = normalizeProfileConfig({ ...staged, ...layoutPatch });
     emitPatch(layoutPatch);
+  }
+
+  function toggleRollWidget(event) {
+    const nextVisible = event.currentTarget.checked;
+    staged = setProfileRollVisible(staged, nextVisible);
+    emitPatch({ modules: staged.modules });
   }
 
   export function validateDraft() { return true; }
@@ -76,6 +83,23 @@
     {/each}
   </div>
 
+  <section class="profile-layout-editor__widget" aria-labelledby="profile-roll-widget-title">
+    <div>
+      <h3 id="profile-roll-widget-title">Daily roll widget</h3>
+      <p id="profile-roll-widget-description">Show your latest color as a small profile summary. Hiding it does not affect rolling, rewards, history, or progression.</p>
+    </div>
+    <label class="profile-layout-editor__toggle" data-roll-widget-toggle>
+      <input
+        type="checkbox"
+        checked={rollVisible}
+        aria-describedby="profile-roll-widget-description"
+        on:change={toggleRollWidget}
+      />
+      <span aria-hidden="true"><i></i></span>
+      <strong>{rollVisible ? 'Shown' : 'Hidden'}</strong>
+    </label>
+  </section>
+
 </section>
 
 <style>
@@ -106,6 +130,19 @@
   .profile-layout-editor__card[data-layout='portfolio'] .profile-layout-editor__mini { border-color: transparent; background: transparent; }
   .profile-layout-editor__card[data-layout='portfolio'] .profile-layout-editor__mini::before { top: 10px; left: 50%; width: 27px; height: 27px; transform: translateX(-50%); }
   .profile-layout-editor__card[data-layout='portfolio'] .profile-layout-editor__mini::after { top: 46px; right: 28%; left: 28%; height: 4px; box-shadow: 0 10px 0 rgba(255,255,255,.1), 0 20px 0 color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 24%, transparent); }
+  .profile-layout-editor__widget { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; padding: 13px 14px; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; background: rgba(255,255,255,.03); }
+  .profile-layout-editor__widget > div { min-width: 0; }
+  .profile-layout-editor__widget h3 { margin: 0; color: #f8f8f8; font: 600 .72rem/1.2 'Inter', sans-serif; }
+  .profile-layout-editor__widget p { max-width: 390px; margin-top: 4px; }
+  .profile-layout-editor__toggle { position: relative; display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; gap: 8px; cursor: pointer; }
+  .profile-layout-editor__toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .profile-layout-editor__toggle > span { position: relative; display: block; width: 34px; height: 19px; box-sizing: border-box; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; background: rgba(255,255,255,.07); transition: border-color 150ms ease, background-color 150ms ease; }
+  .profile-layout-editor__toggle > span i { position: absolute; top: 3px; left: 3px; width: 11px; height: 11px; border-radius: 50%; background: #777881; transition: transform 150ms ease, background-color 150ms ease; }
+  .profile-layout-editor__toggle input:checked + span { border-color: color-mix(in srgb, var(--studio-accent, #ffffff) 65%, transparent); background: color-mix(in srgb, var(--studio-accent, #ffffff) 20%, transparent); }
+  .profile-layout-editor__toggle input:checked + span i { background: var(--studio-accent, #ffffff); transform: translateX(15px); }
+  .profile-layout-editor__toggle input:focus-visible + span { outline: 2px solid var(--studio-accent, #ffffff); outline-offset: 3px; }
+  .profile-layout-editor__toggle strong { min-width: 39px; color: #8f9099; font: 600 .58rem/1 'Inter', sans-serif; text-align: right; }
   @media (max-width: 52rem) { .profile-layout-editor__layouts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 38rem) { .profile-layout-editor__layouts { grid-template-columns: minmax(0, 1fr); } .profile-layout-editor__head { flex-direction: column; } }
+  @media (max-width: 38rem) { .profile-layout-editor__layouts { grid-template-columns: minmax(0, 1fr); } .profile-layout-editor__head, .profile-layout-editor__widget { align-items: flex-start; flex-direction: column; } .profile-layout-editor__toggle { align-self: stretch; justify-content: flex-end; } }
+  @media (prefers-reduced-motion: reduce) { .profile-layout-editor__toggle > span, .profile-layout-editor__toggle > span i { transition: none; } }
 </style>

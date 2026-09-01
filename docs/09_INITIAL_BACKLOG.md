@@ -1,5 +1,8 @@
 # Initial Backlog
 
+> Historical backlog. Integrated profile-roll items are superseded by the
+> launch contract in `docs/02_TARGET_EXPERIENCE.md`.
+
 This backlog is ordered. Do not begin later epics before their dependencies.
 
 ## Epic A — Baseline

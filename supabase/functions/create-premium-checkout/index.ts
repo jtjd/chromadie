@@ -6,6 +6,7 @@ import {
   CHROMADIE_PLUS_ENTITLEMENT,
   CHROMADIE_PLUS_TAX_CODE,
   CHROMADIE_STRIPE_API_VERSION,
+  stripeUnixTimestampToIso,
   stripeRequest
 } from '../_shared/billing-core.js';
 import { corsHeaders, getBearerToken, getSiteUrl, jsonResponse } from '../_shared/http.ts';
@@ -33,12 +34,68 @@ Deno.serve(async request => {
 
     const service = createClient(supabaseUrl, serviceRoleKey, supabaseServerClientOptions(serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }));
     const userId = userData.user.id;
-    const [{ data: access }, { data: customer }, { data: ownerProfile }] = await Promise.all([
-      service.from('billing_premium_access').select('active').eq('user_id', userId).maybeSingle(),
+    const [{ data: customer }, { data: ownerProfile }] = await Promise.all([
       service.from('billing_customers').select('stripe_customer_id').eq('user_id', userId).maybeSingle(),
       service.from('profiles').select('is_staff').eq('id', userId).maybeSingle()
     ]);
-    if (access?.active || ownerProfile?.is_staff) return jsonResponse({ error: 'Chromadie Plus is already active.', code: 'already_active' }, 409);
+    if (ownerProfile?.is_staff) return jsonResponse({ error: 'Chromadie Plus is already active.', code: 'already_active' }, 409);
+
+    const reserveClaim = async () => {
+      const { data, error } = await service.rpc('reserve_premium_checkout_claim', { p_user_id: userId });
+      if (error) {
+        if (error.code === 'P0001' || /already active/i.test(error.message || '')) {
+          return { error: jsonResponse({ error: 'Chromadie Plus is already active.', code: 'already_active' }, 409) };
+        }
+        throw error;
+      }
+      return { claim: data as Record<string, unknown> };
+    };
+
+    let reservation = await reserveClaim();
+    if (reservation.error) return reservation.error;
+    let claim = reservation.claim!;
+
+    if (claim.action === 'creating') {
+      const retryAfter = typeof claim.retry_after_seconds === 'number' ? Math.max(1, Math.ceil(claim.retry_after_seconds)) : 1;
+      return jsonResponse(
+        { error: 'A checkout is already being prepared. Please retry shortly.', code: 'checkout_in_progress', retry_after_seconds: retryAfter },
+        409,
+        { 'Retry-After': String(retryAfter) }
+      );
+    }
+
+    if (claim.action === 'reconcile') {
+      const sessionId = typeof claim.stripe_checkout_session_id === 'string' ? claim.stripe_checkout_session_id : '';
+      if (!/^cs_(test_|live_)?[A-Za-z0-9]+$/.test(sessionId)) throw new Error('Stored checkout claim is invalid.');
+      const stripeSession = await stripeRequest(stripeSecret, `checkout/sessions/${encodeURIComponent(sessionId)}`, {
+        stripeVersion: CHROMADIE_STRIPE_API_VERSION
+      });
+      const { data: reconciliation, error: reconciliationError } = await service.rpc('reconcile_premium_checkout_claim', {
+        p_claim_id: claim.claim_id,
+        p_user_id: userId,
+        p_stripe_status: stripeSession.status,
+        p_payment_status: stripeSession.payment_status,
+        p_stripe_expires_at: stripeUnixTimestampToIso(stripeSession.expires_at)
+      });
+      if (reconciliationError) throw reconciliationError;
+      if (reconciliation?.state === 'open' && typeof stripeSession.url === 'string') {
+        return jsonResponse({ checkout_url: stripeSession.url, session_id: sessionId, reused: true });
+      }
+      if (reconciliation?.state === 'complete') {
+        return jsonResponse({ error: 'Payment is being confirmed.', code: 'checkout_processing' }, 409);
+      }
+
+      reservation = await reserveClaim();
+      if (reservation.error) return reservation.error;
+      claim = reservation.claim!;
+      if (claim.action === 'creating') {
+        return jsonResponse({ error: 'A checkout is already being prepared. Please retry shortly.', code: 'checkout_in_progress' }, 409, { 'Retry-After': '1' });
+      }
+      if (claim.action !== 'create') throw new Error('Checkout claim could not be renewed.');
+    }
+    if (claim.action !== 'create' || typeof claim.claim_id !== 'string' || typeof claim.stripe_idempotency_key !== 'string') {
+      throw new Error('Checkout claim could not be created.');
+    }
 
     const siteUrl = getSiteUrl();
     const body: Record<string, string> = {
@@ -64,22 +121,21 @@ Deno.serve(async request => {
     const checkout = await stripeRequest(stripeSecret, 'checkout/sessions', {
       method: 'POST',
       body,
-      stripeVersion: CHROMADIE_STRIPE_API_VERSION
+      stripeVersion: CHROMADIE_STRIPE_API_VERSION,
+      idempotencyKey: claim.stripe_idempotency_key
     });
     if (!checkout?.id || !checkout?.url) throw new Error('Stripe did not return a checkout session.');
-    const { error: insertError } = await service.from('billing_checkout_sessions').insert({
-      stripe_checkout_session_id: checkout.id,
-      user_id: userId,
-      stripe_customer_id: typeof checkout.customer === 'string' ? checkout.customer : null,
-      status: checkout.status || 'open',
-      payment_status: checkout.payment_status || 'unpaid',
-      amount_total: CHROMADIE_PLUS_AMOUNT,
-      currency: CHROMADIE_PLUS_CURRENCY
+    const { data: finalized, error: finalizeError } = await service.rpc('finalize_premium_checkout_claim', {
+      p_claim_id: claim.claim_id,
+      p_stripe_checkout_session_id: checkout.id,
+      p_stripe_customer_id: typeof checkout.customer === 'string' ? checkout.customer : null,
+      p_stripe_status: checkout.status || 'open',
+      p_payment_status: checkout.payment_status || 'unpaid',
+      p_stripe_expires_at: stripeUnixTimestampToIso(checkout.expires_at)
     });
-    if (insertError) {
-      await stripeRequest(stripeSecret, `checkout/sessions/${encodeURIComponent(checkout.id)}/expire`, { method: 'POST', body: {} }).catch(() => null);
-      throw new Error('Checkout could not be registered. Please try again.');
-    }
+    if (finalizeError) throw finalizeError;
+    if (finalized?.state === 'complete') return jsonResponse({ error: 'Payment is being confirmed.', code: 'checkout_processing' }, 409);
+    if (finalized?.state !== 'open') return jsonResponse({ error: 'Checkout expired before it could be opened. Please try again.', code: 'checkout_expired' }, 409);
     return jsonResponse({ checkout_url: checkout.url, session_id: checkout.id });
   } catch (error) {
     console.error('create-premium-checkout', error);

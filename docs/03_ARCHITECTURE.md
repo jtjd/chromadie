@@ -80,7 +80,7 @@ Conceptual shape:
   layout: {
     layoutVariant: "full-bleed",
     modules: [
-      { id: "roll", variant: "hero-integrated", order: 0, size: "wide" },
+      { id: "roll", variant: "result-summary", order: 0, size: "wide" },
       { id: "links", variant: "icons", order: 1, size: "compact" },
       { id: "achievements", variant: "showcase", order: 2, size: "wide" }
     ]
@@ -118,19 +118,23 @@ Separate:
 
 Do not allow profile editing state to mutate canonical data until an explicit save succeeds.
 
-## Roll Integration
+## Roll Ownership
 
 Keep roll execution server-authoritative.
 
-The profile module controls presentation only:
+`Game.svelte` on `/roll` controls the interactive presentation only:
 
 1. Request eligibility/status.
 2. Begin visual sequence.
 3. Execute existing secure roll RPC.
 4. Receive canonical result.
 5. Update local stores from canonical response.
-6. Animate profile consequences.
-7. Revalidate affected profile data.
+6. Animate the confirmed result.
+7. Revalidate affected account/profile data.
+
+Public and owner profiles render a bounded static summary of the canonical
+result. They never mount eligibility, request, reveal, reroll, or reward-grant
+controls.
 
 Never determine a winning result, score, reward, rarity, or eligibility in animation code.
 
@@ -142,7 +146,8 @@ Possible route map:
 
 - `/` → public landing/onboarding; signed-in visitors receive an owner-profile
   CTA without changing the root route.
-- `/?view=game` → compatibility Roll route for guest play and old links.
+- `/roll` → canonical interactive Roll route.
+- `/?view=game` → compatibility alias for old links.
 - `/u/:username` → public profile.
 - `/leaderboard` → public roll leaderboard with Today and This month views,
   a featured top-three podium, and framed lower-ranked rows.

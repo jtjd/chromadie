@@ -18,17 +18,15 @@ export async function onRequestGet({ request, env }) {
 
   try {
     while (true) {
-      const query = new URL('/rest/v1/profiles', supabaseUrl);
-      query.searchParams.set('select', 'username');
-      query.searchParams.set('lifetime_ep', 'gt.0');
-      query.searchParams.set('order', 'username.asc');
-      query.searchParams.set('limit', String(PAGE_SIZE));
-      if (lastUsername) query.searchParams.set('username', `gt.${lastUsername}`);
+      const query = new URL('/rest/v1/rpc/get_public_profile_sitemap_page', supabaseUrl);
 
       const response = await fetch(query, {
+        method: 'POST',
         headers: {
-          ...getSupabasePublicHeaders(env)
-        }
+          ...getSupabasePublicHeaders(env),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_after: lastUsername, p_limit: PAGE_SIZE })
       });
 
       if (!response.ok) {

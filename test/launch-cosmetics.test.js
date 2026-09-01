@@ -140,11 +140,10 @@ test('public layout resolution is configuration-only', () => {
 });
 
 test('profile layouts compose the shared card and alternate presentation regions', async () => {
-  const [shell, card, fullBleed, dailyRoll] = await Promise.all([
+  const [shell, card, fullBleed] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileReferenceCard.svelte'),
-    read('src/lib/profile-layout/ProfileFullBleedLayout.svelte'),
-    read('src/lib/ProfileDailyRoll.svelte')
+    read('src/lib/profile-layout/ProfileFullBleedLayout.svelte')
   ]);
   assert.match(shell, /ProfileReferenceCard/);
   assert.match(shell, /<ProfileFullBleedLayout/);
@@ -152,8 +151,7 @@ test('profile layouts compose the shared card and alternate presentation regions
   assert.doesNotMatch(card, /ProfileDailyRoll|liveRoll=/);
   assert.match(fullBleed, /data-profile-layout-content=\{layoutVariant\}/);
   assert.doesNotMatch(shell, /ProfileLayoutFrame|IdentityCard|profile-layout-frame/);
-  assert.doesNotMatch(dailyRoll, /profile-daily-roll--(?:sleek|minimal|modern|portfolio)/);
-  assert.match(dailyRoll, /profile-daily-roll--' \+ variant/);
+  assert.doesNotMatch(shell, /profileRollComponent|todayColorComponent/);
   assert.match(shell, /\['full-bleed', 'sleek'\]\.includes\(profilePresentationLayoutVariant\)/);
 });
 

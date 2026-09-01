@@ -171,20 +171,17 @@ test('existing flows use the product-event contract without exposing private pay
     readFile(new URL('../src/App.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/Game.svelte', import.meta.url), 'utf8'),
-    readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileCosmeticsEditor.svelte', import.meta.url), 'utf8')
   ]);
-  const [app, shell, game, profileRoll, cosmeticsEditor] = sources;
+  const [app, shell, game, cosmeticsEditor] = sources;
 
   assert.match(app, /trackProductEvent\('route_view'/);
   assert.match(shell, /trackProductEvent\('public_profile_view'/);
   assert.match(game, /trackProductEvent\('roll_ready'/);
   assert.match(game, /trackProductEvent\('roll_completed'/);
-  assert.match(profileRoll, /trackProductEvent\('roll_ready'/);
-  assert.match(profileRoll, /trackProductEvent\('roll_completed'/);
   assert.match(cosmeticsEditor, /trackProductEvent\('cosmetic_preview'/);
   assert.match(cosmeticsEditor, /trackProductEvent\('cosmetic_equip'/);
-  assert.doesNotMatch(app + shell + game + profileRoll + cosmeticsEditor, /trackProductEvent\([^\n]*(username|profileId|score|hex|email|details)/i);
+  assert.doesNotMatch(app + shell + game + cosmeticsEditor, /trackProductEvent\([^\n]*(username|profileId|score|hex|email|details)/i);
 });
 
 test('homepage conversion events are allowlisted without identity payloads', () => {

@@ -11,7 +11,7 @@ test('Studio navigation has one canonical ordered IA and safe compact menu behav
     read('src/lib/ProfileStudioShell.svelte')
   ]);
   const studio = [contract, settings].join('\n');
-  const app = await read('src/App.svelte');
+  const [app, routeMetadata] = await Promise.all([read('src/App.svelte'), read('src/lib/routeMetadata.js')]);
   const ids = ['overview', 'customize', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'account'];
   let previous = -1;
   for (const id of ids) {
@@ -28,7 +28,7 @@ test('Studio navigation has one canonical ordered IA and safe compact menu behav
   assert.match(settings, /beforeunload/);
   assert.match(settings, /chromadie:navigation-request/);
   assert.match(app, /chromadie:navigation-request/);
-  assert.match(app, /view === 'progression'/);
+  assert.match(routeMetadata, /view === 'progression'/);
   assert.match(contract, /PROFILE_STUDIO_PRIMARY_SECTION_IDS/);
   assert.match(shell, /getProfileStudioNavigation/);
   assert.match(shell, /profile-studio-shell__more-menu/);

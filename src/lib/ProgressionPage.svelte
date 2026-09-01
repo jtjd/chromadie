@@ -1,6 +1,5 @@
 <script>
   import { ACCOUNT_STATES } from './authState.js';
-  import { getBadgeMeta } from './badgeData.js';
   import { loadDailyRollColor, loadProgressionData } from './progressionData.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { getVividHexColor } from './profileAppearanceColors.js';
@@ -21,6 +20,8 @@
   let dailyRollError = '';
   let dailyRollLoaded = false;
   let requestId = 0;
+  let legacyBadgeMeta = {};
+  let legacyBadgeLoadRequested = false;
 
   $: accountId = $session?.user?.id || $profile?.id || '';
   $: accountProfile = $profile?.id && accountId && $profile.id === accountId ? $profile : {};
@@ -128,15 +129,42 @@
     return source.slice(0, 3).map((item, index) => {
       const rawId = typeof item === 'string' ? item : item?.id || item?.key || '';
       const id = typeof rawId === 'string' ? rawId : '';
-      const meta = id ? getBadgeMeta(id) : {};
+      const meta = id ? legacyBadgeMeta[id] || {} : {};
       const points = Number(item?.awardedPoints ?? item?.points) || 0;
+      if (id && !item?.name && !item?.label && !legacyBadgeMeta[id]) {
+        void loadLegacyBadgePresentation(conditionIds);
+      }
       return {
         id: id || `signal-${index}`,
-        label: item?.name || item?.label || meta.name || id || 'Recorded signal',
+        label: item?.name || item?.label || meta.name || humanizeSignalId(id) || 'Recorded signal',
         points,
         symbol: item?.symbol || meta.symbol || ''
       };
     });
+  }
+
+  function humanizeSignalId(value) {
+    return String(value || '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, character => character.toUpperCase())
+      .trim();
+  }
+
+  async function loadLegacyBadgePresentation(conditionIds) {
+    if (legacyBadgeLoadRequested || !Array.isArray(conditionIds) || conditionIds.length === 0) return;
+    legacyBadgeLoadRequested = true;
+    try {
+      const { getBadgeMeta } = await import('./badgeData.js');
+      legacyBadgeMeta = Object.fromEntries(
+        conditionIds
+          .filter(id => typeof id === 'string' && id)
+          .slice(0, 3)
+          .map(id => [id, getBadgeMeta(id)])
+      );
+    } catch {
+      // The bounded humanized identifier remains usable when compatibility
+      // presentation cannot be loaded.
+    }
   }
 
   function resolveFocusGoal(currentProgression = progression) {

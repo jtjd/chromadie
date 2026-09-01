@@ -1,7 +1,7 @@
 <script>
   import RollPreview from './RollPreview.svelte';
   import RollResultBreakdown from './RollResultBreakdown.svelte';
-  import { getBadgeMeta } from './badgeData.js';
+  import { getBadgePresentationFallback } from './badgePresentationFallback.js';
   import { getRarityPresentation } from './rarityPresentation.js';
   import { normalizeHexColor } from './utils.js';
 
@@ -19,12 +19,15 @@
   $: score = Number(result?.score) || 0;
   $: rarityColor = getRarityPresentation(rarity === 'Unranked' ? 'Common' : rarity).color;
   $: conditionSource = Array.isArray(result?.contributors) && result.contributors.length
-    ? result.contributors.map((contributor, index) => ({
-        id: contributor?.id || `contributor-${index}`,
-        label: contributor?.name || getBadgeMeta(contributor?.id).name || contributor?.id || 'Score condition',
-        symbol: getBadgeMeta(contributor?.id).symbol || '✦',
-        points: Number(contributor?.awardedPoints || contributor?.points) || 0
-      }))
+    ? result.contributors.map((contributor, index) => {
+        const presentation = getBadgePresentationFallback(contributor, contributor?.id || `contributor-${index}`);
+        return {
+          id: presentation.id,
+          label: presentation.name,
+          symbol: presentation.symbol,
+          points: Number(contributor?.awardedPoints || contributor?.points) || 0
+        };
+      })
     : Array.isArray(result?.traits)
       ? result.traits.slice(0, 8).map((trait, index) => ({
           id: trait?.id || trait?.label || `trait-${index}`,

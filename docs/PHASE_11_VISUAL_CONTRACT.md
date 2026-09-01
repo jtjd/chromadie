@@ -1,5 +1,8 @@
 # Phase 11 Visual Contract — Continuous Profile Composition
 
+> Historical visual contract. Its integrated owner-roll requirement is
+> superseded by the dedicated `/roll` launch contract.
+
 Status: implementation contract for the Phase 11 slice.
 
 ## Composition

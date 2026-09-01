@@ -1,5 +1,5 @@
 <script>
-  import { afterUpdate, onDestroy, onMount } from 'svelte';
+  import { afterUpdate, createEventDispatcher, onMount } from 'svelte';
   import { authUser, followedUsers, isAuthenticated, profile, session, toggleFollow } from './stores';
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData';
@@ -48,6 +48,8 @@
   export let renderEnvironment = true;
   $: renderContext;
 
+  const dispatch = createEventDispatcher();
+
   const profileShellStyle = '--profile-accent: var(--color-accent-roll); --profile-surface-accent: var(--color-accent-cyan); --profile-control-accent: var(--color-accent);';
   let targetProfile = null;
   let targetScores = [];
@@ -64,8 +66,6 @@
   let activeProfileKey = null;
   let trackedProfileViewKey = null;
   let followLoading = false;
-  let profileRollState = 'idle';
-  let profileRollEffectTimer = null;
   let refreshing = false;
   let profileMoreActive = false;
   let profilePageElement;
@@ -73,12 +73,9 @@
   let profileReferenceCardComponent = null;
   let profileReferenceCardRequest = null;
   let profileWideFontRequestKey = '';
-  let todayColorComponent = null;
-  let todayColorRequest = null;
-  let profileRollComponent = null;
-  let profileRollRequest = null;
   let profileSocialComponent = null;
   let profileSocialRequest = null;
+  let indexingMetadataKey = '';
   function ensureProfileReferenceCard() {
     if (profileReferenceCardComponent || profileReferenceCardRequest) return profileReferenceCardRequest;
     profileReferenceCardRequest = import('./ProfileReferenceCard.svelte')
@@ -95,24 +92,6 @@
     void requestNameFontLoad(fontKey, 28, text).then(loaded => {
       if (!loaded && profileWideFontRequestKey === key) profileWideFontRequestKey = '';
     });
-  }
-
-  function ensureTodayColor() {
-    if (todayColorComponent || todayColorRequest) return todayColorRequest;
-    todayColorRequest = import('./TodayColor.svelte')
-      .then(module => { todayColorComponent = module.default; })
-      .catch(() => { todayColorComponent = null; })
-      .finally(() => { todayColorRequest = null; });
-    return todayColorRequest;
-  }
-
-  function ensureProfileRoll() {
-    if (profileRollComponent || profileRollRequest) return profileRollRequest;
-    profileRollRequest = import('./ProfileRoll.svelte')
-      .then(module => { profileRollComponent = module.default; })
-      .catch(() => { profileRollComponent = null; })
-      .finally(() => { profileRollRequest = null; });
-    return profileRollRequest;
   }
 
   function ensureProfileSocial() {
@@ -134,13 +113,9 @@
     social = createEmptyProfileSocial();
     socialSettings = createDefaultProfileSocialSettings();
     allAchievements = [];
-    profileRollState = 'idle';
-    if (profileRollEffectTimer) {
-      clearTimeout(profileRollEffectTimer);
-      profileRollEffectTimer = null;
-    }
     loading = nextLoading;
     loadError = '';
+    indexingMetadataKey = '';
   }
 
   function syncProfileData() {
@@ -232,14 +207,6 @@
 
   onMount(() => {
     void ensureProfileReferenceCard();
-    // Public profiles render the static roll widget directly. Keep the
-    // authenticated/legacy roll components available behind their existing
-    // compatibility boundary, but do not download the interactive game for
-    // every profile view.
-    if (profileHasBelowFoldRoll) {
-      void ensureTodayColor();
-      void ensureProfileRoll();
-    }
     const motionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(prefers-reduced-motion: reduce)')
       : null;
@@ -304,6 +271,12 @@
     loadError = context.loadError;
     loading = false;
 
+    const indexingKey = `${activeProfileKey}:${targetProfile?.id || ''}:${targetProfile?.discoverable === true}`;
+    if (indexingMetadataKey !== indexingKey) {
+      indexingMetadataKey = indexingKey;
+      dispatch('metadata', { robots: targetProfile?.discoverable === true ? 'index,follow' : 'noindex,follow' });
+    }
+
     if (targetProfile && activeProfileKey && trackedProfileViewKey !== activeProfileKey) {
       trackedProfileViewKey = activeProfileKey;
       const viewingOwnProfile = isOwnProfileTarget({
@@ -323,25 +296,6 @@
         void recordPublicProfileView(supabase, targetProfile.username, { edge: expandedAnalyticsEnabled });
       }
     }
-  }
-
-  function handleRollStart() {
-    profileRollState = 'rolling';
-    if (profileRollEffectTimer) {
-      clearTimeout(profileRollEffectTimer);
-      profileRollEffectTimer = null;
-    }
-  }
-
-  function settleProfileRoll() {
-    profileRollState = 'settled';
-    if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
-    const reducedMotion = typeof window !== 'undefined'
-      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    profileRollEffectTimer = setTimeout(() => {
-      profileRollState = 'idle';
-      profileRollEffectTimer = null;
-    }, reducedMotion ? 420 : 1400);
   }
 
   function recordProfileClick(entryKey) {
@@ -368,21 +322,6 @@
   function scrollToProfileHero() {
     profileMoreActive = false;
     profilePageElement?.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function handleRollCancel() {
-    profileRollState = 'idle';
-    if (profileRollEffectTimer) {
-      clearTimeout(profileRollEffectTimer);
-      profileRollEffectTimer = null;
-    }
-  }
-
-  async function handleRollComplete() {
-    if (profileRollState === 'rolling') {
-      settleProfileRoll();
-    }
-    await loadProfileData();
   }
 
   async function handleFollow() {
@@ -435,7 +374,6 @@
     previewDevice,
     mode: previewMode ? 'studio' : 'public',
     isOwner: profileOwnerContext,
-    rollState: profileRollState,
     visualFixture,
     dev: import.meta.env.DEV
   });
@@ -491,7 +429,6 @@
   $: composition = profileRenderSnapshot?.modules?.composition || { secondaryModules: [] };
   $: secondaryModules = composition.secondaryModules || [];
   $: storyModules = profileRenderSnapshot?.modules?.storyModules || secondaryModules.filter(module => module.id !== 'links');
-  const rollModule = Object.freeze({ size: 'wide' });
   $: layoutVariant = profileRenderSnapshot?.layout?.variant || 'compact';
   $: openingLinks = profileRenderSnapshot?.links?.opening || [];
   $: showRoll = profileRenderSnapshot?.roll?.show === true;
@@ -510,18 +447,14 @@
   // stays on the authenticated game surface; public profiles only expose the
   // compact, shareable result summary.
   const profileCardKeepsRollInline = true;
-  const profileHasBelowFoldRoll = false;
   $: profileMotionKey = profileRenderSnapshot?.cosmetics?.profileMotionKey || '';
   $: profileMotionTarget = getProfileLayoutMotionTarget(profilePresentationLayoutVariant);
   $: profileCardStyle = profileRenderSnapshot?.surface?.style || '';
   $: profilePageStyle = `${profileShellStyle};${profileRenderSnapshot?.styles?.page || ''}`;
 
-  onDestroy(() => {
-    if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
-  });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (profileWideNameFontEnabled ? ' profile-shell-page--profile-wide-name-font' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} data-profile-render-model="v1" data-profile-layout={profilePresentationLayoutVariant} data-profile-render-mode={profileRenderSnapshot?.mode || (previewMode ? 'studio' : 'public')} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (profileWideNameFontEnabled ? ' profile-shell-page--profile-wide-name-font' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} data-profile-render-model="v1" data-profile-layout={profilePresentationLayoutVariant} data-profile-render-mode={profileRenderSnapshot?.mode || (previewMode ? 'studio' : 'public')} aria-busy={loading}>
   {#if renderEnvironment}
     <ProfileEnvironmentLayer snapshot={profileRenderSnapshot} mode={previewMode ? 'preview' : 'public'} reducedMotion={prefersReducedMotion} />
   {/if}
@@ -636,8 +569,8 @@
         </div>
 
       {#if !previewMode && hasProfileMore && !profileMoreActive}
-        <button type="button" class={'profile-shell__more-cue' + (profileHasBelowFoldRoll ? '' : ' profile-shell__more-cue--continuation')} aria-controls="profile-more" on:click={scrollToProfileMore}>
-          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'portfolio' ? 'Scroll for more' : profileHasBelowFoldRoll ? 'Explore profile' : 'More'}</span>
+        <button type="button" class="profile-shell__more-cue profile-shell__more-cue--continuation" aria-controls="profile-more" on:click={scrollToProfileMore}>
+          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'portfolio' ? 'Scroll for more' : 'More'}</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
         </button>
       {/if}
@@ -653,36 +586,6 @@
           </button>
         {/if}
         <div class="profile-shell__continuation-column">
-        {#if showRoll && !refreshing && profileHasBelowFoldRoll}
-          <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
-            {#if isOwnProfile}
-              {#if profileRollComponent}
-                <svelte:component
-                  this={profileRollComponent}
-                  moduleSize={rollModule.size}
-                  compact={true}
-                  integrated={true}
-                  quiet={true}
-                  presentation={profilePresentationLayoutVariant}
-                  visualFixture={visualFixture}
-                  fixtureResult={latestRoll}
-                  on:rollstart={handleRollStart}
-                  on:rollcancel={handleRollCancel}
-                  on:rollcomplete={handleRollComplete}
-                />
-              {/if}
-            {:else if todayColorComponent}
-              <svelte:component
-                this={todayColorComponent}
-                result={latestRoll}
-                quiet={true}
-                accentColor={signatureColor}
-                presentation={profilePresentationLayoutVariant}
-              />
-            {/if}
-          </div>
-        {/if}
-
         {#if hasProfileStory}
           <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>
             <FeaturedCollection
@@ -898,25 +801,6 @@
 
 <style>
   .profile-shell__identity-loading { min-height: 20rem; border-radius: var(--radius-md, 1rem); background: color-mix(in srgb, var(--profile-surface, #11141b) 70%, transparent); }
-
-  .profile-shell-page--roll-rolling .profile-shell__opening.profile-shell__approved-opening {
-    border-color: var(--color-line-strong);
-    box-shadow: 0 0 0 1px rgba(241, 243, 237, 0.08), 0 1.5rem 4rem rgba(0, 0, 0, 0.2);
-  }
-
-  .profile-shell-page--roll-settled .profile-shell__opening.profile-shell__approved-opening {
-    animation: none;
-  }
-
-  .profile-shell-page--roll-settled .profile-shell__card-scale {
-    animation: profile-shell-roll-settle 1.05s var(--motion-ease-emphasis);
-  }
-
-  @keyframes profile-shell-roll-settle {
-    0% { transform: scale(0.997); box-shadow: 0 0 0 1px rgba(241, 243, 237, 0.08), 0 1.5rem 4rem rgba(0, 0, 0, 0.2); }
-    42% { transform: scale(1.002); box-shadow: 0 0 0 1px rgba(241, 243, 237, 0.14), 0 0 3rem rgba(0, 0, 0, 0.26); }
-    100% { transform: scale(1); box-shadow: none; }
-  }
 
   .profile-shell__rich-banner { display: block; width: 100%; max-height: 13rem; object-fit: cover; border-radius: var(--radius-lg) var(--radius-lg) 0 0; opacity: .94; }
   .profile-shell-page--rich-pointer :global(a),
@@ -1175,39 +1059,6 @@
   .profile-shell__card-scale { width: 100%; min-width: 0; }
   .profile-shell__card-scale { transform-origin: center; }
 
-  .profile-shell__approved-game,
-  .profile-shell__approved-featured { min-width: 0; }
-
-  .profile-shell__approved-game {
-    width: 100%;
-    margin-top: clamp(1.5rem, 4vw, 2.5rem);
-    padding: 1.25rem 0.5rem 0;
-    border-top: 1px solid color-mix(in srgb, var(--profile-control-accent) 24%, var(--color-line-subtle));
-  }
-
-  .profile-shell__more .profile-shell__approved-game {
-    margin-top: 0;
-  }
-
-  .profile-shell__more .profile-shell__approved-game :global(.today-color) {
-    width: 100%;
-    margin: 0 auto;
-    padding: 1.25rem 1.5rem;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .profile-shell__approved-game :global(.profile-roll--integrated) {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .profile-shell__approved-game :global(.profile-roll--integrated .foundation-module__body) { padding: 0; }
-
   .profile-shell__approved-featured {
     width: 100%;
     margin-top: 0;
@@ -1228,8 +1079,7 @@
     border: 0;
   }
 
-  /* Layout frames own the relationship between identity, roll and expression.
-     The data and roll logic remain shared; only their presentation changes. */
+  /* Layout frames own the relationship between identity and expression. */
   .profile-shell__composition { display:contents; min-width:0; }
   .profile-shell__approved-canvas,
   .profile-shell__opening.profile-shell__approved-opening { z-index: auto; }
@@ -1238,7 +1088,6 @@
   .profile-shell__approved-main,
   .profile-shell__more,
   .profile-shell__approved-opening,
-  .profile-shell__approved-game,
   .profile-shell__approved-featured,
   .profile-shell__approved-supporting { min-width:0; max-width:100%; }
 
@@ -1250,7 +1099,6 @@
     .profile-shell__approved-main { height: 100dvh; min-height: 100dvh; }
     .profile-shell__more-cue { bottom: 1rem; }
     .profile-shell__more { min-height: 100dvh; padding-block: 4rem; }
-    .profile-shell__approved-game { margin-top: 1.75rem; padding-inline: 0.25rem; }
     .profile-shell__approved-featured { margin-top: 1.25rem; padding-inline: 0.25rem; }
     .profile-shell__approved-supporting { margin-top: clamp(3rem, 8vh, 4.5rem); }
     .profile-shell-page .profile-shell__story-section { margin-top: 0.75rem; }
@@ -1263,12 +1111,6 @@
     .profile-shell__approved-supporting { margin-top: 1.5rem; }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .profile-shell-page--roll-settled .profile-shell__opening.profile-shell__approved-opening {
-      animation: none;
-    }
-    .profile-shell-page--roll-settled .profile-shell__card-scale { animation: none; }
-  }
 
   /* Default is the banner-led reference card. Simplistic, Sleek, Modern, and
      Portfolio are distinct compositions that still share the same environment

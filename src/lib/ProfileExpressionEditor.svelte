@@ -3,8 +3,8 @@
   import { supabase } from './supabase.js';
   import { normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { deleteLegacyProfileAudio, deleteProfileMediaAsset, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
-  import { prepareProfileAudioFile, processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
+  import { deleteLegacyProfileAudio, deleteProfileMediaAsset, isR2MediaAsset, promoteProfileMediaR2 } from './profileMediaR2.js';
+  import { uploadProfileAudioAsset, uploadProfileImageAsset } from './profile-studio/expressionMediaActions.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
   import ProfileMediaIcon from './ProfileMediaIcon.svelte';
   import ProfileRichMediaEditor from './ProfileRichMediaEditor.svelte';
@@ -288,25 +288,23 @@
 
     busy = true;
     setFeedback('', 'Preparing the avatar…');
-    let r2AssetId = '';
-    let persisted = false;
+    let uploadedAssetId = '';
     try {
-      const blob = await processProfileImage(file, 'avatar');
-      setPersistedAvatarPreview(URL.createObjectURL(blob));
-      const uploaded = await uploadProfileMediaToR2({ kind: 'avatar', blob, extension: 'webp', mimeType: 'image/webp', label: file.name });
-      const assetId = uploaded.asset_id || uploaded.asset?.id;
-      if (!assetId) throw new Error('The R2 upload did not return a media asset.');
-      r2AssetId = assetId;
-      const promoted = await promoteProfileMediaR2(assetId);
-      await selectR2ExpressionAsset('avatar', assetId, {
-        mediaReference: { storage_provider: 'r2', r2_public_key: promoted.r2_public_key }
+      const uploaded = await uploadProfileImageAsset({
+        file,
+        kind: 'avatar',
+        onPrepared: blob => setPersistedAvatarPreview(URL.createObjectURL(blob))
       });
-      persisted = true;
-      setPersistedAvatarPreview(getProfileMediaUrl({ r2_public_key: promoted.r2_public_key }));
+      uploadedAssetId = uploaded.assetId;
+      await selectR2ExpressionAsset('avatar', uploaded.assetId, {
+        mediaReference: { storage_provider: 'r2', r2_public_key: uploaded.publicKey }
+      });
+      uploadedAssetId = '';
+      setPersistedAvatarPreview(uploaded.publicUrl);
       await loadAssetLibrary();
-      setFeedback('', `Avatar saved to your R2 library and profile (${formatStoredSize(blob.size)} stored).`);
+      setFeedback('', `Avatar saved to your R2 library and profile (${formatStoredSize(uploaded.blob.size)} stored).`);
     } catch (uploadError) {
-      if (!persisted && r2AssetId) await deleteProfileMediaAsset(r2AssetId).catch(() => {});
+      if (uploadedAssetId) await deleteProfileMediaAsset(uploadedAssetId).catch(() => {});
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The avatar could not be saved.');
       revokeAvatarPreview();
     } finally {
@@ -343,25 +341,23 @@
 
     busy = true;
     setFeedback('', 'Preparing the background…');
-    let r2AssetId = '';
-    let persisted = false;
+    let uploadedAssetId = '';
     try {
-      const blob = await processProfileImage(file, 'background');
-      setPersistedBackgroundPreview(URL.createObjectURL(blob));
-      const uploaded = await uploadProfileMediaToR2({ kind: 'background', blob, extension: 'webp', mimeType: 'image/webp', label: file.name });
-      const assetId = uploaded.asset_id || uploaded.asset?.id;
-      if (!assetId) throw new Error('The R2 upload did not return a media asset.');
-      r2AssetId = assetId;
-      const promoted = await promoteProfileMediaR2(assetId);
-      await selectR2ExpressionAsset('background', assetId, {
-        mediaReference: { storage_provider: 'r2', r2_public_key: promoted.r2_public_key }
+      const uploaded = await uploadProfileImageAsset({
+        file,
+        kind: 'background',
+        onPrepared: blob => setPersistedBackgroundPreview(URL.createObjectURL(blob))
       });
-      persisted = true;
-      setPersistedBackgroundPreview(getProfileMediaUrl({ r2_public_key: promoted.r2_public_key }));
+      uploadedAssetId = uploaded.assetId;
+      await selectR2ExpressionAsset('background', uploaded.assetId, {
+        mediaReference: { storage_provider: 'r2', r2_public_key: uploaded.publicKey }
+      });
+      uploadedAssetId = '';
+      setPersistedBackgroundPreview(uploaded.publicUrl);
       await loadAssetLibrary();
-      setFeedback('', `Background saved to your R2 library and public atmosphere (${formatStoredSize(blob.size)} stored).`);
+      setFeedback('', `Background saved to your R2 library and public atmosphere (${formatStoredSize(uploaded.blob.size)} stored).`);
     } catch (uploadError) {
-      if (!persisted && r2AssetId) await deleteProfileMediaAsset(r2AssetId).catch(() => {});
+      if (uploadedAssetId) await deleteProfileMediaAsset(uploadedAssetId).catch(() => {});
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The background could not be saved.');
       revokeBackgroundPreview();
     } finally {
@@ -423,26 +419,21 @@
 
     busy = true;
     setFeedback('', 'Checking the audio…');
-    let r2AssetId = '';
-    let persisted = false;
+    let uploadedAssetId = '';
     try {
-      const validationError = validateProfileAudioFile(file);
-      if (validationError) throw new Error(validationError);
-      const blob = await prepareProfileAudioFile(file);
-      setAudioPreview(URL.createObjectURL(blob));
-      const uploaded = await uploadProfileMediaToR2({ kind: 'audio', blob, extension: 'mp3', mimeType: 'audio/mpeg', label: file.name });
-      const assetId = uploaded.asset_id || uploaded.asset?.id;
-      if (!assetId) throw new Error('The R2 audio upload did not return a media asset.');
-      r2AssetId = assetId;
-      const promoted = await promoteProfileMediaR2(assetId);
-      await selectR2ExpressionAsset('audio', assetId);
-      expressionMediaReferences = { ...expressionMediaReferences, audio: { r2_public_key: promoted.r2_public_key } };
-      persisted = true;
-      setAudioPreview(getProfileMediaUrl({ r2_public_key: promoted.r2_public_key }));
-      setFeedback('', `Profile audio saved to R2 (${Math.round(blob.size / 1024)} KB).`);
+      const uploaded = await uploadProfileAudioAsset({
+        file,
+        onPrepared: blob => setAudioPreview(URL.createObjectURL(blob))
+      });
+      uploadedAssetId = uploaded.assetId;
+      await selectR2ExpressionAsset('audio', uploaded.assetId);
+      uploadedAssetId = '';
+      expressionMediaReferences = { ...expressionMediaReferences, audio: { r2_public_key: uploaded.publicKey } };
+      setAudioPreview(uploaded.publicUrl);
+      setFeedback('', `Profile audio saved to R2 (${Math.round(uploaded.blob.size / 1024)} KB).`);
     } catch (audioError) {
+      if (uploadedAssetId) await deleteProfileMediaAsset(uploadedAssetId).catch(() => {});
       setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be saved.');
-      if (r2AssetId && !persisted) await deleteProfileMediaAsset(r2AssetId).catch(() => {});
       setAudioPreview('');
     } finally {
       busy = false;

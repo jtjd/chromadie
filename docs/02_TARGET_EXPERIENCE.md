@@ -9,7 +9,7 @@ minimal introduction and points signed-in players back to their profile.
 The profile contains:
 
 1. Identity hero.
-2. Integrated daily roll experience.
+2. Today's static roll result and progression state, with a clear path to `/roll`.
 3. Today's result and visible profile consequences.
 4. Pinned accomplishments or collections.
 5. Personal links or creator content.
@@ -32,19 +32,22 @@ Visitors should quickly understand:
 
 The visitor experience must not display owner-only controls or require authentication to appreciate the page.
 
-## Integrated Roll Sequence
+## Dedicated Roll Sequence
 
-The roll is not a separate application screen.
+The dedicated `/roll` surface owns the complete interactive daily-roll
+experience. The profile remains the player's identity destination and shows
+the resulting color, score, progression, history, and profile consequences
+without embedding a second game application.
 
 Recommended sequence:
 
-1. The profile subtly signals that today's roll is available.
-2. The player activates the roll from the hero or roll focal element.
-3. Surrounding profile content dims or recedes without navigating away.
-4. The roll animation emerges from the existing visual composition.
+1. The profile or navigation signals that today's roll is available.
+2. The player enters `/roll` for the interactive action.
+3. The dedicated Roll composition owns request, reveal, result, and reroll UI.
+4. The canonical server result updates account and profile state.
 5. The result becomes the dominant color moment.
 6. Rewards, rarity, conditions, and collection consequences appear progressively.
-7. The profile settles into its updated state.
+7. The profile presents the updated result as part of the player's story.
 8. The player receives clear next actions: equip, pin, customize, compare, or explore.
 
 The animation should feel substantial but remain fast, skippable after initiation where safe, and reduced under reduced-motion preferences.

@@ -1,12 +1,21 @@
 <script>
   import { onDestroy, onMount } from 'svelte';
   import { getCursorTrailKey } from './cursorTrails.js';
+  import {
+    GUNS_TRAILING_CURSOR_PARTICLES,
+    GUNS_TRAILING_CURSOR_RATE,
+    advanceGunsFairyDustParticle,
+    advanceGunsTrailingCursorNodes,
+    createGunsFairyDustParticle,
+    createGunsTrailingCursorNodes
+  } from '../competitor-effects/gunsCursorAlgorithms.js';
 
   export let trailKey = '';
   export let recentColors = [];
   export let todayColor = '#8B7CF6';
   export let active = true;
   export let className = '';
+  export let cursorSrc = '';
   // Live profiles listen to the window pointer. Compact fitting-room cards
   // use the same renderer with a deterministic demo path so a card never
   // invents a second, CSS-only version of an effect.
@@ -31,6 +40,10 @@
   let particles = [];
   let plasmaNodes = [];
   let plasmaParticles = [];
+  let trailingNodes = [];
+  let trailingImage = null;
+  let requestedCursorSrc = null;
+  let trailingKey = '';
   let mounted = false;
   let demoCycle = 0;
 
@@ -142,6 +155,14 @@
 
   function addParticle(point, kind = 'dot') {
     if (particles.length > 70) particles.splice(0, particles.length - 70);
+    if (kind === 'solar-sparks') {
+      const fairyDustParticle = createGunsFairyDustParticle(point.x, point.y);
+      fairyDustParticle.kind = kind;
+      const colors = getColors();
+      fairyDustParticle.color = colors[Math.floor(Math.random() * colors.length)] || '#D61C59';
+      particles.push(fairyDustParticle);
+      return;
+    }
     const angle = Math.random() * Math.PI * 2;
     const speed = 0.2 + Math.random() * 0.8;
     particles.push({
@@ -161,12 +182,14 @@
     if (!isRunning) return;
     const point = pointForEvent(event);
     if (!point) return;
+    const previous = history[history.length - 1];
     pointer = point;
     history.push(point);
     if (history.length > 28) history.shift();
-    if (resolvedKey === 'pixel-wake' || resolvedKey === 'glass-shards' || resolvedKey === 'ember-ash' || resolvedKey === 'gold-fleck' || resolvedKey === 'solar-sparks') {
+    const movedEnough = !previous || Math.hypot(point.x - previous.x, point.y - previous.y) > 1.5;
+    if (resolvedKey === 'pixel-wake' || resolvedKey === 'glass-shards' || resolvedKey === 'ember-ash' || resolvedKey === 'gold-fleck' || (resolvedKey === 'solar-sparks' && movedEnough)) {
       addParticle(point, resolvedKey);
-      if (point.speed > 1.5) addParticle(point, resolvedKey);
+      if (point.speed > 1.5 && resolvedKey !== 'solar-sparks') addParticle(point, resolvedKey);
     }
     if (reducedMotion) drawFrame(0, true);
     else startLoop();
@@ -193,10 +216,12 @@
 
   function updateDemoPoint(timestamp) {
     const point = demoPoint(timestamp);
+    const previous = history[history.length - 1];
     pointer = point;
     history.push(point);
     if (history.length > 28) history.shift();
-    if (resolvedKey === 'pixel-wake' || resolvedKey === 'glass-shards' || resolvedKey === 'ember-ash' || resolvedKey === 'gold-fleck' || resolvedKey === 'solar-sparks') {
+    const movedEnough = !previous || Math.hypot(point.x - previous.x, point.y - previous.y) > 1.5;
+    if (resolvedKey === 'pixel-wake' || resolvedKey === 'glass-shards' || resolvedKey === 'ember-ash' || resolvedKey === 'gold-fleck' || (resolvedKey === 'solar-sparks' && movedEnough)) {
       if (Math.floor(timestamp / 90) !== demoCycle) {
         demoCycle = Math.floor(timestamp / 90);
         addParticle(point, resolvedKey);
@@ -247,6 +272,22 @@
     if (!context) return;
     const colors = getColors();
     particles = particles.filter(particle => {
+      if (particle.kind === 'solar-sparks') {
+        advanceGunsFairyDustParticle(particle, multiplier);
+        if (particle.lifeSpan <= 0) return false;
+        context.save();
+        context.globalAlpha = particle.scale;
+        context.fillStyle = particle.color || colors[0];
+        context.font = '21px serif';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.translate(particle.x, particle.y);
+        context.scale(particle.scale, particle.scale);
+        if (context.fillText) context.fillText('*', 0, 0);
+        else context.fillRect(-1, -1, 2, 2);
+        context.restore();
+        return true;
+      }
       particle.x += particle.vx * multiplier;
       particle.y += particle.vy * multiplier;
       particle.vy += 0.008 * multiplier;
@@ -271,6 +312,52 @@
       }
       context.restore();
       return true;
+    });
+  }
+
+  function ensureTrailingImage() {
+    if (requestedCursorSrc === cursorSrc) return;
+    requestedCursorSrc = cursorSrc || '';
+    trailingImage = null;
+    if (!requestedCursorSrc || typeof Image === 'undefined') return;
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = requestedCursorSrc;
+    trailingImage = image;
+  }
+
+  function drawGunsTrailingCursor() {
+    if (!context || !pointer) return;
+    ensureTrailingImage();
+    if (trailingKey !== resolvedKey) {
+      trailingNodes = [];
+      trailingKey = resolvedKey;
+    }
+    if (!trailingNodes.length) {
+      trailingNodes = createGunsTrailingCursorNodes(pointer, GUNS_TRAILING_CURSOR_PARTICLES);
+    }
+    advanceGunsTrailingCursorNodes(trailingNodes, pointer, GUNS_TRAILING_CURSOR_RATE);
+    const image = trailingImage?.complete && (trailingImage.naturalWidth || trailingImage.width)
+      ? trailingImage
+      : null;
+    const colors = getColors();
+    trailingNodes.forEach((node, index) => {
+      context.save();
+      if (image && context.drawImage) {
+        // The upstream trailingCursor draws each custom cursor image at the
+        // node's top-left without an opacity falloff.
+        context.drawImage(image, node.x, node.y);
+      } else {
+        // A .cur may not expose a drawable Image in every browser. Keep the
+        // algorithm and provide a small code-owned fallback instead of
+        // copying the upstream package's embedded bitmap.
+        context.globalAlpha = 0.12 + (1 - index / trailingNodes.length) * 0.24;
+        context.fillStyle = colors[index % colors.length] || '#B6A1D8';
+        context.beginPath();
+        context.arc(node.x, node.y, Math.max(1.5, 4 - index * 0.16), 0, Math.PI * 2);
+        context.fill();
+      }
+      context.restore();
     });
   }
 
@@ -400,10 +487,10 @@
     else if (resolvedKey === 'static-echo') { drawPath(tail.slice(-10), colors[0], 1, 0.28, -3, 0); drawPath(tail.slice(-8), '#FF8FCA', 1, 0.28, 3, 1); }
     else if (resolvedKey === 'rain-trace') { drawPath(tail.slice(-7), colors[0], 0.8, 0.35); context.strokeStyle = colors[1] || colors[0]; context.globalAlpha = 0.6; context.lineWidth = 1; tail.slice(-5).forEach(point => { context.beginPath(); context.moveTo(point.x, point.y); context.lineTo(point.x, point.y + 7); context.stroke(); }); }
     else if (resolvedKey === 'gold-fleck') { drawParticles(multiplier); drawPath(tail.slice(-5), '#E4BC68', 0.8, 0.38); }
-    else if (resolvedKey === 'ghost-tail') drawPath(tail, '#B6A1D8', 3.5, 0.18);
+    else if (resolvedKey === 'ghost-tail') drawGunsTrailingCursor();
     else if (resolvedKey === 'color-memory') { tail.forEach((point, index) => drawPath(tail.slice(Math.max(0, index - 1), index + 1), colors[index % colors.length], 2, 0.7)); }
     else if (resolvedKey === 'marker-stroke') drawPath(tail, '#E7D4C4', 4.5, 0.42);
-    else if (resolvedKey === 'solar-sparks') { drawParticles(multiplier); drawPath(tail.slice(-6), '#FFD77A', 1, 0.5); }
+    else if (resolvedKey === 'solar-sparks') drawParticles(multiplier);
     else if (resolvedKey === 'void-lensing') {
       drawPath(tail, '#9C7BFF', 1.5, 0.3, -1, 0);
       context.save(); context.globalAlpha = 0.7; context.strokeStyle = '#66E8FF'; context.lineWidth = 1; context.beginPath(); context.arc(head.x, head.y, 7, 0, Math.PI * 2); context.stroke(); context.restore();

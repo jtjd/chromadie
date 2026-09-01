@@ -65,6 +65,16 @@ export const LEGACY_NAME_FONTS = Object.freeze({
     widthFactor: 0.56,
     label: 'Instrument Sans', collection: 'Nocturne', rarity: 'Uncommon'
   }),
+  // Vaults' shipped profile bundle loads Fontshare's Chillax face for
+  // profiles that choose it. Keep it readable for imported/historical
+  // configurations even though it is not a new catalog row yet.
+  'chillax': font('chillax', 'Chillax', SYSTEM_DISPLAY, 600, {
+    source: 'fontshare',
+    targetFamily: 'Chillax',
+    substitution: 'Instrument Sans',
+    widthFactor: 0.58,
+    label: 'Chillax', collection: 'Prism', rarity: 'Rare'
+  }),
   'humanist-display': font('humanist-display', 'Libre Franklin', SYSTEM_SANS, 600, {
     source: 'bundled-fontsource',
     targetFamily: 'Libre Franklin',
@@ -267,7 +277,8 @@ const NAME_FONT_ASSET_LOADERS = Object.freeze({
   'array': () => Promise.resolve(),
   'silkscreen': () => import('@fontsource/silkscreen/latin-400.css'),
   'velocity': () => Promise.resolve(),
-  'outfit': () => import('@fontsource/outfit/latin-600.css')
+  'outfit': () => import('@fontsource/outfit/latin-600.css'),
+  'chillax': () => Promise.resolve()
 });
 
 export const NAME_FONT_ASSET_KEYS = Object.freeze(Object.keys(NAME_FONT_ASSET_LOADERS));

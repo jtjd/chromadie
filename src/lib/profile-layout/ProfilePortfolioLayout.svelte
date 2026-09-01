@@ -5,6 +5,7 @@
   import ProfileRollSummary from '../ProfileRollSummary.svelte';
   import { getProfileLinkDefinition } from '../profileLinkTypes.js';
   import { PROFILE_LINK_LIMITS } from '../profileConfig.js';
+  import { normalizeHexColor } from '../utils.js';
 
   export let displayName = 'Unknown Player';
   export let bio = '';
@@ -41,7 +42,7 @@
   $: activeBannerSource = bannerSrc && failedBannerSource !== bannerSrc ? bannerSrc : '';
   $: safeDescriptionMode = descriptionMode === 'typewriter' ? 'typewriter' : 'plain';
   $: safeEntryAnimation = ['none', 'fade', 'focus'].includes(entryAnimation) ? entryAnimation : 'none';
-  $: safeAccent = /^#[0-9a-f]{6}$/i.test(String(accentColor || '')) ? accentColor : '#00FFB3';
+  $: safeAccent = normalizeHexColor(accentColor, '#00FFB3');
   $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .16;
   $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0);
   $: visibleLinks = (Array.isArray(links) ? links : [])
@@ -53,7 +54,7 @@
     timezone,
     showJoinDate && joinedLabel ? `Joined ${joinedLabel}` : ''
   ].filter(Boolean);
-  $: hasRoll = Boolean((/** @type {any} */ (roll || {})).hex_code || (/** @type {any} */ (roll || {})).hex);
+  $: rollHex = normalizeHexColor((/** @type {any} */ (roll || {})).hex_code || (/** @type {any} */ (roll || {})).hex, '');
 
   function linkIconSource(link) {
     return `/link-icons/${link.definition.icon}.svg`;
@@ -66,7 +67,7 @@
   animated={true}
 >
   <section
-    class={`profile-portfolio profile-portfolio--entry-${safeEntryAnimation}`}
+    class={`profile-portfolio profile-portfolio--entry-${safeEntryAnimation} ${showAvatar ? 'profile-portfolio--has-avatar' : 'profile-portfolio--no-avatar'} ${rollHex ? 'profile-portfolio--has-roll' : 'profile-portfolio--no-roll'}`}
     style={`${surfaceStyle || ''};--profile-portfolio-accent:${safeAccent};--profile-portfolio-link-scale:${safeLinkScale};--profile-portfolio-link-glow:${safeLinkGlow};`}
     aria-label={`${safeDisplayName} portfolio profile`}
     data-profile-layout-content="portfolio"
@@ -133,8 +134,8 @@
       </div>
     </div>
 
-    {#if hasRoll}
-      <div class="profile-portfolio__roll" data-profile-widget="roll" data-profile-widget-mode="summary">
+    {#if rollHex}
+      <div class="profile-portfolio__roll" data-profile-roll-slot="summary">
         <ProfileRollSummary result={roll} accentColor={safeAccent} label="Daily color" />
       </div>
     {/if}
@@ -192,6 +193,8 @@
     gap: clamp(1rem, 3vw, 2rem);
     text-align: left;
   }
+
+  .profile-portfolio--no-avatar .profile-portfolio__identity { grid-template-columns: minmax(0, 1fr); }
 
   .profile-portfolio__avatar-shell {
     display: grid;

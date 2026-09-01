@@ -175,10 +175,16 @@ test('challenge route rejects invalid identifiers and still serves a protected s
   assert.doesNotMatch(html, /og-default\.png/);
 });
 
-test('profile canvas prototype is direct-refreshable and non-indexable', async () => {
-  const response = await renderPrototypeRoute({
+test('profile canvas prototype is gated and remains certifiable when explicitly enabled', async () => {
+  const unavailable = await renderPrototypeRoute({
     request: new Request('https://chromadie.com/prototype/profile'),
     env
+  });
+  assert.equal(unavailable.status, 404);
+
+  const response = await renderPrototypeRoute({
+    request: new Request('https://chromadie.com/prototype/profile'),
+    env: { ...env, PROFILE_PROTOTYPES_ENABLED: 'true' }
   });
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('x-frame-options'), 'DENY');

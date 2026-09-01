@@ -4,12 +4,14 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [page, game, preRoll, reveal, app, routes, header, homepageHeader, footer, breakdown] = await Promise.all([
+const [page, pageContext, game, preRoll, reveal, app, routeMetadata, routes, header, homepageHeader, footer, breakdown] = await Promise.all([
   read('src/lib/RollPage.svelte'),
+  read('src/lib/rollPageContext.js'),
   read('src/lib/Game.svelte'),
   read('src/lib/RollPreRoll.svelte'),
   read('src/lib/rollReveal.js'),
   read('src/App.svelte'),
+  read('src/lib/routeMetadata.js'),
   read('src/lib/routes.js'),
   read('src/lib/SiteModeHeader.svelte'),
   read('src/lib/homepage/HomepageHeader.svelte'),
@@ -20,7 +22,7 @@ const [page, game, preRoll, reveal, app, routes, header, homepageHeader, footer,
 test('the Roll experience has a canonical page and shared navigation entry', () => {
   assert.match(routes, /pathname === '\/roll'\) return 'game'/);
   assert.match(app, /viewToCanonicalPath\(nextView/);
-  assert.match(app, /view === 'game' && !challengeData[\s\S]*'\/'/);
+  assert.match(routeMetadata, /view === 'game' && !challengeData[\s\S]*'\/'/);
   assert.match(header, /activeView === 'game'/);
   assert.match(header, /navigate\('game'\)/);
   assert.doesNotMatch(header, />Discover</);
@@ -139,9 +141,9 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(page, /aria-live="polite"/);
   assert.match(page, /You rolled <span>\{rollContext\.identity\}\.<\/span>/);
   assert.match(page, /contextDay/);
-  assert.match(page, /totalRolls/);
-  assert.match(page, /currentStreak/);
-  assert.match(page, /lifetimeEp/);
+  assert.match(pageContext, /totalRolls/);
+  assert.match(pageContext, /currentStreak/);
+  assert.match(pageContext, /lifetimeEp/);
   assert.match(page, /roll-page__streak/);
   assert.match(page, /roll-page__progression/);
   assert.doesNotMatch(page, /Open progression/);
@@ -184,7 +186,7 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(game, /getRevealHex/);
   assert.doesNotMatch(game, /Math\.random\(\)/);
   assert.doesNotMatch(game, /scoreCountUpInterval/);
-  assert.match(page, /getRarityPresentation/);
+  assert.match(pageContext, /getRarityPresentation/);
   assert.match(game, /requestRoll\(supabase, isReroll\)/);
   assert.doesNotMatch(page + game, /innerHTML|new Function|eval\s*\(/);
 });

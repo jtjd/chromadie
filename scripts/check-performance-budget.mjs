@@ -23,7 +23,15 @@ const budgets = {
     // The reference homepage owns a direct marketing specimen for its hero and
     // photographic showcase, so this route is budgeted as its own shell.
     homepage: { entries: ['src/lib/HomePage.svelte'], javascript: 500 * 1024, css: 220 * 1024 },
-    publicProfile: { entries: ['src/lib/ProfileShell.svelte'], javascript: 475 * 1024, css: 200 * 1024 },
+    publicProfile: {
+      entries: ['src/lib/ProfileShell.svelte'],
+      javascript: 475 * 1024,
+      css: 200 * 1024,
+      forbiddenStaticEntries: [
+        'src/lib/progressionState.js',
+        'src/lib/ProfileExpressionEditor.svelte'
+      ]
+    },
     dashboard: {
       entries: ['src/lib/ProfileSettings.svelte', 'src/lib/ProfileShell.svelte', 'src/lib/ProfileStudioOverview.svelte'],
       // The reference workspace keeps preview/device controls and four editor
@@ -167,6 +175,14 @@ async function summarizeManifestEntries(manifest, entries) {
   };
 }
 
+async function describeAssetContributors(files) {
+  const contributors = await Promise.all([...files].map(async file => ({
+    file,
+    bytes: (await stat(join(distRoot, file))).size
+  })));
+  return contributors.sort((left, right) => right.bytes - left.bytes);
+}
+
 function createManifestResolver(manifest) {
   return function resolveManifestKey(key) {
     if (manifest[key]) return key;
@@ -242,6 +258,17 @@ try {
   const atmosphereMedia = await summarizeAtmosphereMedia();
   const routeSummaries = await Promise.all(Object.entries(budgets.routes).map(async ([name, routeBudget]) => {
     const summary = await summarizeManifestEntries(manifest, routeBudget.entries);
+    for (const forbiddenEntry of routeBudget.forbiddenStaticEntries || []) {
+      let forbiddenKey = null;
+      try {
+        forbiddenKey = createManifestResolver(manifest)(forbiddenEntry);
+      } catch {
+        // A source omitted from the production manifest cannot be reachable.
+      }
+      if (forbiddenKey && summary.manifestKeys.has(forbiddenKey)) {
+        throw new Error(`${name} route statically reaches forbidden entry ${forbiddenEntry}`);
+      }
+    }
     const dynamicImportKeys = collectRouteDynamicImports(manifest, summary);
     let dynamic = null;
     if (routeBudget.dynamicEntries?.length) {
@@ -304,6 +331,13 @@ try {
 
   if (failures.length) {
     console.error(`Exceeded budgets: ${failures.map(([label]) => label).join(', ')}.`);
+    for (const route of routeSummaries) {
+      if (route.javascript <= route.budget.javascript && route.css <= route.budget.css) continue;
+      const javascriptContributors = await describeAssetContributors(route.javascriptFiles);
+      const cssContributors = await describeAssetContributors(route.cssFiles);
+      console.error(`${route.name} JavaScript contributors: ${javascriptContributors.map(item => `${item.file} ${formatBytes(item.bytes)}`).join(', ')}`);
+      console.error(`${route.name} CSS contributors: ${cssContributors.map(item => `${item.file} ${formatBytes(item.bytes)}`).join(', ')}`);
+    }
     process.exitCode = 1;
   }
 } catch (error) {

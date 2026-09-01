@@ -143,10 +143,13 @@
   font-weight: 800;
 }
 
+/* Chillax is a real Fontshare face used by the observed Vaults profile
+   implementation. It remains a code-owned compatibility face until it has a
+   catalog row and entitlement decision of its own. */
 @font-face {
-  font-family: 'Geist Mono';
-  src: url('https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5.2.5/files/geist-mono-latin-wght-normal.woff2') format('woff2');
+  font-family: 'Chillax';
+  src: url('https://cdn.fontshare.com/wf/2T24MWUOKZU65SZJ33GPRGNOKE4KPOBX/T6LIXZJIPB23UDPMTIKURYWSZLXZBJ3A/THF5L6EHVL4N4NNE3GYDZNZSHABL5CH5.woff2') format('woff2');
   font-display: swap;
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 600;
 }

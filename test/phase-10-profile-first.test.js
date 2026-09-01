@@ -39,19 +39,17 @@ test('profile settings keeps secondary features available away from the public c
   const renderModel = await readFile(new URL('../src/lib/profileRenderModel.js', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
   const registry = await readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8');
-  const roll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
   const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 
   assert.match(shell, /data-profile-region="identity"/);
   assert.match(shell, /ProfileReferenceCard/);
-  assert.match(shell, /data-profile-region="roll"/);
   assert.match(shell, /data-profile-continuation="content"/);
   assert.match(shell, /data-profile-region="featured"/);
   assert.match(renderModel, /getProfileStoryVisible/);
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
   assert.match(registry, /ProfileLinksEditor\.svelte/);
   assert.match(registry, /ProfileSocial\.svelte/);
-  assert.match(shell, /todayColorComponent[\s\S]*result=\{latestRoll\}[\s\S]*accentColor=\{signatureColor\}/);
+  assert.match(shell, /roll=\{showRoll && !refreshing/);
   assert.match(shell, /this=\{profileSocialComponent\}[\s\S]*social=\{social\}/);
   assert.match(shell, /profile-shell__social-section/);
   assert.match(shell, /Add to rivals/);
@@ -61,8 +59,7 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(settings, /Profile settings/);
   assert.match(renderModel, /A founding color identity/);
   assert.doesNotMatch(shell, /Public boundary|What visitors can see/);
-  assert.match(roll, /<details class="profile-roll__details"/);
-  assert.doesNotMatch(roll, /Style in shop|View leaderboard/);
+  assert.doesNotMatch(shell, /profileRollComponent|todayColorComponent|roll_die\s*\(/);
   assert.match(app, /view === 'home'/);
   assert.match(app, /loaderKey: 'home'/);
   assert.doesNotMatch(app, /shouldUseAuthenticatedProfileHome/);

@@ -4,8 +4,7 @@
   import Game from './Game.svelte';
   import HomepageBestRoll from './homepage/HomepageBestRoll.svelte';
   import ProgressionUnlockQueue from './ProgressionUnlockQueue.svelte';
-  import { getRankState } from './ranks.js';
-  import { getRarityPresentation } from './rarityPresentation.js';
+  import { createRollPageContext, deriveRollPagePresentation } from './rollPageContext.js';
   import { trackProductEvent } from './productAnalytics.js';
 
   const dispatch = createEventDispatcher();
@@ -17,32 +16,17 @@
   export let bestRollLoading = true;
   export let bestRollError = '';
   let gameRef = null;
-  let rollContext = {
-    phase: 'preroll',
-    identity: '',
-    hex: '',
-    revealHex: '',
-    rarity: '',
-    score: 0,
-    currentStreak: 0,
-    longestStreak: 0,
-    totalRolls: 0,
-    lifetimeEp: 0,
-    isAuthenticated: false,
-    username: 'You',
-    avatarSrc: '',
-    newProgressionUnlocks: [],
-    weeklyFocusComplete: false
-  };
+  let rollContext = createRollPageContext();
   const progressionViewsTracked = new SvelteSet();
 
-  $: contextHasResult = rollContext.phase === 'results' && Boolean(rollContext.identity);
-  $: homepagePreroll = homepage && !contextHasResult;
-  $: homepageRolling = homepage && !contextHasResult && rollContext.phase !== 'preroll';
-  $: contextDay = Math.max(0, Number(rollContext.totalRolls) || Number(rollContext.currentStreak) || 0);
-  $: contextRank = getRankState(rollContext.lifetimeEp);
-  $: contextProgress = Math.round(contextRank.progress * 100);
-  $: contextRarity = getRarityPresentation(rollContext.rarity || 'Common');
+  $: contextPresentation = deriveRollPagePresentation(rollContext, { homepage });
+  $: contextHasResult = contextPresentation.hasResult;
+  $: homepagePreroll = contextPresentation.homepagePreroll;
+  $: homepageRolling = contextPresentation.homepageRolling;
+  $: contextDay = contextPresentation.day;
+  $: contextRank = contextPresentation.rank;
+  $: contextProgress = contextPresentation.rankProgress;
+  $: contextRarity = contextPresentation.rarity;
   $: if (rollContext.isAuthenticated && !progressionViewsTracked.has('authenticated')) {
     progressionViewsTracked.add('authenticated');
     trackProductEvent('progression_viewed', { surface, accountMode: 'authenticated' });

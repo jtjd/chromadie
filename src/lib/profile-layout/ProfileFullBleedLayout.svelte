@@ -69,7 +69,7 @@
   animated={true}
 >
   <section
-    class={`profile-full-bleed profile-full-bleed--${layoutVariant} profile-full-bleed--entry-${safeEntryAnimation}`}
+    class={`profile-full-bleed profile-full-bleed--${layoutVariant} profile-full-bleed--entry-${safeEntryAnimation} ${rollHex ? 'profile-full-bleed--has-roll' : 'profile-full-bleed--no-roll'} ${showAvatar ? 'profile-full-bleed--has-avatar' : 'profile-full-bleed--no-avatar'} ${activeBannerSource && layoutVariant === 'sleek' ? 'profile-full-bleed--has-banner' : 'profile-full-bleed--no-banner'}`}
     style={`${surfaceStyle || ''};--profile-full-bleed-accent:${safeAccent};--profile-full-bleed-link-scale:${safeLinkScale};--profile-full-bleed-link-glow:${safeLinkGlow};`}
     aria-label={`${safeDisplayName} profile`}
     data-profile-layout-content={layoutVariant}
@@ -139,7 +139,7 @@
     {/if}
 
     {#if rollHex}
-      <div class="profile-full-bleed__roll" data-profile-widget="roll" data-profile-widget-mode="summary">
+      <div class="profile-full-bleed__roll" data-profile-roll-slot="summary">
         <ProfileRollSummary result={roll} accentColor={safeAccent} label="Daily color" compact={layoutVariant === 'sleek'} />
       </div>
     {/if}
@@ -238,6 +238,10 @@
 
   .profile-full-bleed--sleek .profile-full-bleed__name { max-width: min(100%, 24rem); text-align: left; }
   .profile-full-bleed--sleek .profile-full-bleed__bio { max-width: 29rem; margin-left: 0; text-align: left; }
+  .profile-full-bleed--sleek.profile-full-bleed--no-roll .profile-full-bleed__name,
+  .profile-full-bleed--sleek.profile-full-bleed--no-roll .profile-full-bleed__bio { max-width: 34rem; }
+  .profile-full-bleed--sleek.profile-full-bleed--no-avatar.profile-full-bleed--no-banner { padding-top: 2rem; }
+  .profile-full-bleed--sleek.profile-full-bleed--no-avatar.profile-full-bleed--has-banner { padding-top: 8.2rem; }
   .profile-full-bleed--sleek .profile-full-bleed__metadata { justify-content: flex-start; margin-top: .75rem; text-align: left; }
   .profile-full-bleed--sleek .profile-full-bleed__roll { position: absolute; top: 1.2rem; right: 1.4rem; width: min(42%, 14rem); }
   .profile-full-bleed--sleek .profile-full-bleed__links { justify-content: flex-start; margin-top: 1rem; }
@@ -414,6 +418,9 @@
 
     .profile-full-bleed--sleek .profile-full-bleed__avatar-shell { left: 1.8rem; width: 7.5rem; height: 7.5rem; }
     .profile-full-bleed--sleek .profile-full-bleed__roll { position: static; width: min(100%, 20rem); margin: .85rem 0 0; }
+    .profile-full-bleed--sleek.profile-full-bleed--no-roll { min-height: 15.5rem; }
+    .profile-full-bleed--sleek.profile-full-bleed--no-avatar.profile-full-bleed--no-banner { min-height: 0; padding-top: 1.8rem; }
+    .profile-full-bleed--sleek.profile-full-bleed--no-avatar.profile-full-bleed--has-banner { padding-top: 7.8rem; }
     .profile-full-bleed--sleek .profile-full-bleed__links { margin-top: .8rem; }
     .profile-full-bleed--sleek .profile-full-bleed__metadata { margin-top: 1rem; }
   }

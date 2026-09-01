@@ -1,7 +1,7 @@
 <script>
-  import { createEventDispatcher, onDestroy } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import ProfileReferenceCard from './ProfileReferenceCard.svelte';
-  import ProfileRoll from './ProfileRoll.svelte';
+  import GuestRollPreview from './GuestRollPreview.svelte';
   import { guestRollFixture } from './guestRollFixture.js';
 
   export let guestActive = false;
@@ -9,8 +9,6 @@
   let stage = 0;
   let rollComplete = false;
   let rollSection;
-  let rollColor = '#8B7CF6';
-  let rollAnimationTimer;
 
   function advanceToRoll() {
     stage = 1;
@@ -18,26 +16,17 @@
   }
 
   function handleRollStart() {
-    rollColor = '#8B7CF6';
-    if (rollAnimationTimer) clearTimeout(rollAnimationTimer);
+    rollComplete = false;
   }
 
-  function handleRollPreview(event) {
-    if (event.detail?.hex) rollColor = event.detail.hex;
+  function handleRollPreview() {
+    // The preview owns its color swatch; this event remains part of the
+    // onboarding lifecycle for callers that observe preview progress.
   }
 
-  function handleRollComplete(event) {
-    rollColor = event.detail?.canonical?.hex || event.detail?.data?.hex || rollColor;
+  function handleRollComplete() {
     rollComplete = true;
-    if (rollAnimationTimer) clearTimeout(rollAnimationTimer);
-    rollAnimationTimer = setTimeout(() => {
-      rollAnimationTimer = null;
-    }, 1400);
   }
-
-  onDestroy(() => {
-    if (rollAnimationTimer) clearTimeout(rollAnimationTimer);
-  });
 </script>
 
 <div class="guest-profile-onboarding" data-stage={stage}>
@@ -73,7 +62,7 @@
       <div class="guest-profile-onboarding__progress" aria-label="Onboarding step 2 of 2"><span class="complete"></span><span class="active"></span></div>
 
       <div class="guest-profile-onboarding__roll">
-        <ProfileRoll moduleSize="wide" compact={true} integrated={true} quiet={true} visualFixture="guest-onboarding" fixtureResult={guestRollFixture} on:rollstart={handleRollStart} on:colorpreview={handleRollPreview} on:rollcomplete={handleRollComplete} />
+        <GuestRollPreview result={guestRollFixture} on:rollstart={handleRollStart} on:colorpreview={handleRollPreview} on:rollcomplete={handleRollComplete} />
       </div>
 
       {#if rollComplete}
@@ -107,7 +96,6 @@
   .guest-profile-onboarding__roll-stage { scroll-margin-top: 5rem; }
   .guest-profile-onboarding__roll-stage > .guest-profile-onboarding__progress { margin-top: 1.5rem; }
   .guest-profile-onboarding__roll { margin: 2.5rem auto 0; text-align: left; }
-  .guest-profile-onboarding__roll :global(.profile-roll--integrated) { color: var(--color-ink-strong); }
   .guest-profile-onboarding__cta { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; margin-top: 1.5rem; padding: 1.15rem 1.25rem; border: 1px solid rgba(214,255,99,0.46); border-radius: var(--radius-md); background: linear-gradient(100deg, rgba(214,255,99,0.12), rgba(139,124,246,0.13)); box-shadow: 0 0 2.5rem rgba(214,255,99,0.1); text-align: left; }
   .guest-profile-onboarding__cta p { margin: 0; color: #d6ff63; font: 700 0.66rem / 1.2 var(--font-mono-stack); letter-spacing: 0.12em; text-transform: uppercase; }
   .guest-profile-onboarding__cta strong { display: block; max-width: 30rem; margin-top: 0.35rem; color: var(--color-ink-strong); font: 500 0.92rem / 1.35 var(--font-body-stack); }

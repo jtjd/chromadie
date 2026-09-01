@@ -541,6 +541,7 @@ async function capturePublishedLayouts() {
       name: Boolean(card?.querySelector('.profile-reference-card__name')),
       links: card?.querySelectorAll('.profile-reference-card__links a').length || 0,
       roll: Boolean(card?.querySelector('.profile-reference-card__roll')),
+      rollWidgetCount: card?.querySelectorAll('[data-profile-widget="roll"]').length || 0,
       rollWidget: Boolean(card?.querySelector('[data-profile-widget="roll"]')),
       rollSummary: Boolean(card?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
       interactiveRoll: Boolean(card?.querySelector('.profile-daily-roll, .profile-roll, .today-color, .profile-roll__reveal-button, .profile-roll__result-actions')),
@@ -550,7 +551,7 @@ async function capturePublishedLayouts() {
       scrollable: Boolean(stage && stage.scrollHeight > stage.clientHeight + 4)
     };
   })()`);
-  assert(studioState.cardCount === 1 && studioState.avatar && studioState.name && studioState.links === RICH_PROFILE_FIXTURE.links.length && studioState.roll && studioState.rollWidget && studioState.rollSummary && !studioState.interactiveRoll, `Studio reference card anatomy is incomplete: ${JSON.stringify(studioState)}.`);
+  assert(studioState.cardCount === 1 && studioState.avatar && studioState.name && studioState.links === RICH_PROFILE_FIXTURE.links.length && studioState.roll && studioState.rollWidgetCount === 1 && studioState.rollWidget && studioState.rollSummary && !studioState.interactiveRoll, `Studio reference card anatomy is incomplete: ${JSON.stringify(studioState)}.`);
   assert(studioState.linkTargets.every(link => link.target === '_blank' && link.href.startsWith('https://')), `Studio reference card links do not preserve safe external targets: ${JSON.stringify(studioState)}.`);
   assert(studioState.card && studioState.card.width >= 300 && studioState.card.left >= (studioState.viewport?.left || 0) - 1 && studioState.card.right <= (studioState.viewport?.right || 0) + 1, `Studio reference card is not bounded by its preview rail: ${JSON.stringify(studioState)}.`);
   assert(studioState.motion && !studioState.oldRenderer && !studioState.scrollable, `Studio still mounts an obsolete or scrollable profile renderer: ${JSON.stringify(studioState)}.`);
@@ -578,6 +579,7 @@ async function capturePublishedLayouts() {
       preview: Boolean(preview),
       card: box ? { left: box.left, right: box.right, width: box.width } : null,
       links: card?.querySelectorAll('.profile-reference-card__links a').length || 0,
+      rollWidgetCount: card?.querySelectorAll('[data-profile-widget="roll"]').length || 0,
       rollWidget: Boolean(card?.querySelector('[data-profile-widget="roll"]')),
       rollSummary: Boolean(card?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
       interactiveRoll: Boolean(card?.querySelector('.profile-daily-roll, .profile-roll, .today-color, .profile-roll__reveal-button, .profile-roll__result-actions')),
@@ -586,7 +588,7 @@ async function capturePublishedLayouts() {
       oldRenderer: Boolean(preview?.querySelector('.profile-shell-page, .profile-template-picker'))
     };
   })()`);
-  assert(mobileState.card && mobileState.card.left >= -1 && mobileState.card.right <= mobileState.viewport + 1 && mobileState.links === RICH_PROFILE_FIXTURE.links.length && mobileState.rollWidget && mobileState.rollSummary && !mobileState.interactiveRoll && !mobileState.overflow && !mobileState.oldRenderer, `Mobile reference card is not contained: ${JSON.stringify(mobileState)}.`);
+  assert(mobileState.card && mobileState.card.left >= -1 && mobileState.card.right <= mobileState.viewport + 1 && mobileState.links === RICH_PROFILE_FIXTURE.links.length && mobileState.rollWidgetCount === 1 && mobileState.rollWidget && mobileState.rollSummary && !mobileState.interactiveRoll && !mobileState.overflow && !mobileState.oldRenderer, `Mobile reference card is not contained: ${JSON.stringify(mobileState)}.`);
   await captureRegion('studio-reference-card-mobile', '.profile-studio-preview__viewport');
   await page.setViewport(1440, 900);
   await page.navigate(`${appUrl}/${canonicalUsername}`, 'published reference profile evidence');
@@ -614,13 +616,14 @@ async function capturePublishedLayouts() {
       background: Boolean(image?.complete && image.naturalWidth > 0),
       card: Boolean(shell?.querySelector('[data-profile-reference-card], [data-profile-layout-content="full-bleed"]')),
       links: shell?.querySelectorAll('.profile-reference-card__links a, .profile-full-bleed__links a').length || 0,
+      rollWidgetCount: shell?.querySelectorAll('[data-profile-widget="roll"]').length || 0,
       rollWidget: Boolean(shell?.querySelector('[data-profile-widget="roll"]')),
       rollSummary: Boolean(shell?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
       interactiveRoll: Boolean(shell?.querySelector('[data-profile-reference-card] .profile-daily-roll, [data-profile-reference-card] .profile-roll, [data-profile-reference-card] .today-color, [data-profile-reference-card] .profile-roll__reveal-button, [data-profile-reference-card] .profile-roll__result-actions')),
       motion: Boolean(shell?.querySelector('.profile-motion-effect'))
     };
   })()`);
-  assert(publicState.card && publicState.shell && publicState.shell.width >= 1439 && publicState.shell.height >= 899 && publicState.links === RICH_PROFILE_FIXTURE.links.length && publicState.rollWidget && publicState.rollSummary && !publicState.interactiveRoll, `Published profile evidence did not render the complete compact profile surface: ${JSON.stringify(publicState)}.`);
+  assert(publicState.card && publicState.shell && publicState.shell.width >= 1439 && publicState.shell.height >= 899 && publicState.links === RICH_PROFILE_FIXTURE.links.length && publicState.rollWidgetCount === 1 && publicState.rollWidget && publicState.rollSummary && !publicState.interactiveRoll, `Published profile evidence did not render the complete compact profile surface: ${JSON.stringify(publicState)}.`);
   await capture('public-reference-profile-desktop');
 
   // Rotate the published fixture through every real renderer. This is kept in
@@ -635,7 +638,15 @@ async function capturePublishedLayouts() {
     await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layoutKey} Studio layout evidence`);
     await waitForStudioLayoutEditor(`${layoutKey} Studio editor`);
     await page.click(`.profile-layout-editor__card[data-layout="${layoutKey}"]`, `stage ${layoutKey} layout`);
-    await page.waitFor(`document.querySelector('.profile-studio-preview ${layoutSelector}')`, `${layoutKey} live preview`);
+    try {
+      await page.waitFor(`document.querySelector('.profile-studio-preview ${layoutSelector}')`, `${layoutKey} live preview`);
+    } catch (error) {
+      const previewLayouts = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview [data-profile-layout-content]')].map(node => ({
+        layout: node.getAttribute('data-profile-layout-content'),
+        className: node.className
+      })))()`).catch(() => []);
+      throw new Error(`${error.message} Preview layouts: ${JSON.stringify(previewLayouts)}`, { cause: error });
+    }
     const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`);
     if (publishPending) {
       await page.click('.profile-studio-shell__publish', `publish ${layoutKey} layout`);
@@ -660,6 +671,7 @@ async function capturePublishedLayouts() {
         name: Boolean(content?.querySelector('[class*="__name"]')),
         links: links.length,
         linkTargets: links.map(link => ({ href: link.href, target: link.target })),
+        rollWidgetCount: content?.querySelectorAll('[data-profile-widget="roll"]').length || 0,
         rollWidget: Boolean(content?.querySelector('[data-profile-widget="roll"]')),
         rollSummary: Boolean(content?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
         interactiveRoll: Boolean(content?.querySelector('.profile-daily-roll, .profile-roll, .today-color, .profile-roll__reveal-button, .profile-roll__result-actions')),
@@ -667,7 +679,7 @@ async function capturePublishedLayouts() {
         overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
       };
     })()`);
-    assert(desktop.layout === layoutKey && desktop.content?.width > 0 && desktop.content?.height > 0 && desktop.avatar && desktop.name && desktop.links === RICH_PROFILE_FIXTURE.links.length && desktop.rollWidget && desktop.rollSummary && !desktop.interactiveRoll && desktop.contained && !desktop.overflow, `Published ${layoutKey} desktop layout is incomplete or escaping its viewport: ${JSON.stringify(desktop)}.`);
+    assert(desktop.layout === layoutKey && desktop.content?.width > 0 && desktop.content?.height > 0 && desktop.avatar && desktop.name && desktop.links === RICH_PROFILE_FIXTURE.links.length && desktop.rollWidgetCount === 1 && desktop.rollWidget && desktop.rollSummary && !desktop.interactiveRoll && desktop.contained && !desktop.overflow, `Published ${layoutKey} desktop layout is incomplete or escaping its viewport: ${JSON.stringify(desktop)}.`);
     assert(desktop.linkTargets.every(link => link.target === '_blank' && link.href.startsWith('https://')), `Published ${layoutKey} links do not preserve safe external targets: ${JSON.stringify(desktop)}.`);
     await capture(`public-${layoutKey}-desktop`);
 
@@ -683,24 +695,54 @@ async function capturePublishedLayouts() {
         layout: content?.getAttribute('data-profile-layout-content') || '',
         content: box ? { left: box.left, right: box.right, width: box.width, height: box.height } : null,
         links,
+        rollWidgetCount: content?.querySelectorAll('[data-profile-widget="roll"]').length || 0,
         rollSummary: Boolean(content?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
         interactiveRoll: Boolean(content?.querySelector('.profile-daily-roll, .profile-roll, .today-color, .profile-roll__reveal-button, .profile-roll__result-actions')),
         contained: Boolean(box && box.left >= -1 && box.right <= innerWidth + 1),
         overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
       };
     })()`);
-    assert(mobile.layout === layoutKey && mobile.content?.width > 0 && mobile.content?.height > 0 && mobile.links === RICH_PROFILE_FIXTURE.links.length && mobile.rollSummary && !mobile.interactiveRoll && mobile.contained && !mobile.overflow, `Published ${layoutKey} mobile layout is incomplete or escaping its viewport: ${JSON.stringify(mobile)}.`);
+    assert(mobile.layout === layoutKey && mobile.content?.width > 0 && mobile.content?.height > 0 && mobile.links === RICH_PROFILE_FIXTURE.links.length && mobile.rollWidgetCount === 1 && mobile.rollSummary && !mobile.interactiveRoll && mobile.contained && !mobile.overflow, `Published ${layoutKey} mobile layout is incomplete or escaping its viewport: ${JSON.stringify(mobile)}.`);
     await capture(`public-${layoutKey}-mobile`);
     layoutEvidence[layoutKey] = { desktop, mobile };
   }
 
+  // Verify that the existing module visibility contract is now an actual
+  // Studio control, survives a layout change, and reaches the public profile.
+  await page.setViewport(1440, 900);
+  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'audit hidden daily-roll widget');
+  await waitForStudioLayoutEditor('daily-roll widget visibility editor');
+  await page.waitFor(`document.querySelector('[data-roll-widget-toggle] input')?.checked === true`, 'visible daily-roll widget control');
+  await page.click('[data-roll-widget-toggle]', 'hide daily-roll widget');
+  await page.waitFor(`document.querySelector('[data-roll-widget-toggle] input')?.checked === false && document.querySelector('.profile-studio-preview')?.dataset.previewRollWidget === 'hidden' && !document.querySelector('.profile-studio-preview [data-profile-widget="roll"]')`, 'hidden daily-roll widget preview');
+  await page.click('.profile-layout-editor__card[data-layout="sleek"]', 'change layout with hidden daily-roll widget');
+  await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-layout-content="sleek"]') && document.querySelector('[data-roll-widget-toggle] input')?.checked === false && !document.querySelector('.profile-studio-preview [data-profile-widget="roll"]')`, 'hidden daily-roll widget after layout change');
+  await page.click('.profile-studio-shell__publish', 'publish hidden daily-roll widget');
+  await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === true`, 'publish hidden daily-roll widget');
+  await page.navigate(`${appUrl}/${canonicalUsername}`, 'public profile with hidden daily-roll widget');
+  await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-layout-content="sleek"]')`, 'public Sleek profile with hidden daily-roll widget');
+  const hiddenRoll = await page.evaluate(`(() => {
+    const content = document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-layout-content="sleek"]');
+    const box = content?.getBoundingClientRect();
+    return {
+      layout: content?.getAttribute('data-profile-layout-content') || '',
+      rollWidgetCount: content?.querySelectorAll('[data-profile-widget="roll"]').length || 0,
+      links: content?.querySelectorAll('.profile-full-bleed__links a').length || 0,
+      contained: Boolean(box && box.left >= -1 && box.right <= innerWidth + 1),
+      overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
+    };
+  })()`);
+  assert(hiddenRoll.layout === 'sleek' && hiddenRoll.rollWidgetCount === 0 && hiddenRoll.links === RICH_PROFILE_FIXTURE.links.length && hiddenRoll.contained && !hiddenRoll.overflow, `Hidden daily-roll widget did not survive publish cleanly: ${JSON.stringify(hiddenRoll)}.`);
+  await capture('public-sleek-hidden-roll-desktop');
+
   // Leave the disposable smoke account in the ordinary default state for the
   // following navigation and for any local inspection of the captured proof.
-  await page.setViewport(1440, 900);
-  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after layout evidence');
+  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after roll visibility evidence');
   await waitForStudioLayoutEditor('restore Compact layout editor');
+  await page.waitFor(`document.querySelector('[data-roll-widget-toggle] input')?.checked === false`, 'hidden daily-roll widget control after refresh');
+  await page.click('[data-roll-widget-toggle]', 'restore daily-roll widget');
   await page.click('.profile-layout-editor__card[data-layout="compact"]', 'restore Compact layout after layout evidence');
-  await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-layout-content="compact"]')`, 'restore Compact live preview after layout evidence');
+  await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-layout-content="compact"]') && document.querySelector('[data-roll-widget-toggle] input')?.checked === true && document.querySelectorAll('.profile-studio-preview [data-profile-widget="roll"]').length === 1`, 'restore Compact live preview after layout evidence');
   const compactPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`);
   if (compactPublishPending) {
     await page.click('.profile-studio-shell__publish', 'publish restored Compact layout');
@@ -708,7 +750,7 @@ async function capturePublishedLayouts() {
   }
   await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore reference-card Studio');
   await waitForStudioReferenceCard('restore reference-card Studio');
-  return { studio: studioState, mobile: mobileState, public: publicState, layouts: layoutEvidence };
+  return { studio: studioState, mobile: mobileState, public: publicState, layouts: layoutEvidence, hiddenRoll };
 }
 
 try {
@@ -2412,6 +2454,9 @@ try {
     }
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
     await capture('07-public-profile');
+    if (skipMediaMutation) {
+      return { ...state, mobile: { skippedMediaMutation: true } };
+    }
     await page.setViewport(390, 844);
     await page.command('Page.reload', { ignoreCache: true });
     await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-reference-card], .profile-shell-page[aria-busy="false"] [data-profile-layout-content="full-bleed"]')`, 'public profile mobile after direct refresh');

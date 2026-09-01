@@ -125,7 +125,7 @@ test('profile shell route parser preserves the public path and legacy controls e
   assert.equal(ownerRoute.legacyProfile, true);
 });
 
-test('profile shell is live-data based and keeps roll authority in the owner-only module', async () => {
+test('profile shell is live-data based and keeps gameplay out of the profile renderer', async () => {
   const source = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
   const registry = await readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8');
   assert.match(source, /loadProfileContext/);
@@ -133,6 +133,6 @@ test('profile shell is live-data based and keeps roll authority in the owner-onl
   assert.match(source, /profile-shell__identity/);
   assert.match(source, /data-profile-region="identity"/);
   assert.doesNotMatch(source, /Public boundary/);
-  assert.match(source, /ProfileRoll/);
+  assert.doesNotMatch(source, /profileRollComponent|todayColorComponent|roll_die\s*\(/);
   assert.doesNotMatch(source, /calculate_roll_v2|roll_die\s*\(/);
 });

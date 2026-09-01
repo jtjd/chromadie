@@ -12,13 +12,18 @@ export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'monthly'])
 
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
 const VALID_LEADERBOARD_TAB_SET = new Set(VALID_LEADERBOARD_TABS)
-const CLEAN_APP_PATHS = new Set(['/', '/roll', '/shop', '/leaderboard', '/profile', '/profile/settings', '/progression', '/prototype/profile', '/pricing', '/pricing/success'])
+const CLEAN_APP_PATHS = new Set(['/', '/roll', '/shop', '/leaderboard', '/profile', '/profile/settings', '/progression', '/pricing', '/pricing/success'])
+
+export function isPrototypeRouteEnabled() {
+  return import.meta.env?.DEV === true;
+}
 
 export function viewToCanonicalPath(view, {
   tab = 'today',
   username = null,
   userId = null,
-  legacyProfile = false
+  legacyProfile = false,
+  prototypeEnabled = isPrototypeRouteEnabled()
 } = {}) {
   switch (view) {
     case 'home':
@@ -36,7 +41,7 @@ export function viewToCanonicalPath(view, {
     case 'progression':
       return '/progression';
     case 'prototype':
-      return '/prototype/profile';
+      return prototypeEnabled ? '/prototype/profile' : null;
     case 'pricing':
       return '/pricing';
     case 'profile': {
@@ -56,7 +61,7 @@ export function viewToCanonicalPath(view, {
   }
 }
 
-function getCleanPathView(pathname) {
+function getCleanPathView(pathname, prototypeEnabled) {
   if (pathname === '/') return 'home'
   if (pathname === '/roll') return 'game'
   // The former Shop URL is a one-way route alias into the profile studio.
@@ -66,7 +71,7 @@ function getCleanPathView(pathname) {
   if (pathname === '/profile') return 'profile'
   if (pathname === '/profile/settings') return 'profile-settings'
   if (pathname === '/progression') return 'progression'
-  if (pathname === '/prototype/profile') return 'prototype'
+  if (prototypeEnabled && pathname === '/prototype/profile') return 'prototype'
   if (pathname === '/pricing' || pathname === '/pricing/success') return 'pricing'
   return null
 }
@@ -75,7 +80,9 @@ function getCleanPathView(pathname) {
  * Parse the browser location without causing navigation or data loading.
  * Side effects for challenge loading remain in App.svelte.
  */
-export function parseRouteLocation(pathname = '/', search = '') {
+export function parseRouteLocation(pathname = '/', search = '', {
+  prototypeEnabled = isPrototypeRouteEnabled()
+} = {}) {
   const params = new URLSearchParams(search)
   const rawPath = String(pathname || '/').replace(/\/+$/, '') || '/'
   const authTab = rawPath === '/signup' ? 'signup' : rawPath === '/login' ? 'login' : null
@@ -112,7 +119,7 @@ export function parseRouteLocation(pathname = '/', search = '') {
     routeMode = 'terms'
   } else if (rawPath === '/how-to-play') {
     routeMode = 'how-to-play'
-  } else if (CLEAN_APP_PATHS.has(rawPath)) {
+  } else if (CLEAN_APP_PATHS.has(rawPath) || (prototypeEnabled && rawPath === '/prototype/profile')) {
     routeMode = 'app'
   }
 
@@ -129,7 +136,7 @@ export function parseRouteLocation(pathname = '/', search = '') {
         ? 'game'
         : rawPath === '/' && VALID_VIEW_SET.has(routeView)
           ? routeView
-          : getCleanPathView(rawPath) || 'home',
+        : getCleanPathView(rawPath, prototypeEnabled) || 'home',
     leaderboardTab: VALID_LEADERBOARD_TAB_SET.has(routeTab) ? routeTab : 'today',
     profileUsername,
     profileRouteKind,

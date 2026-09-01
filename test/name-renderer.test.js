@@ -267,17 +267,16 @@ test('Type In reveals from the left edge and keeps its cursor after the visible 
   assert.equal(textCall.args[1], drawnModel.metrics.x);
 });
 
-test('Fuzzy keeps its signal line inside the text mask instead of drawing a frame', () => {
+test('Fuzzy falls back to semantic text when an offscreen canvas is unavailable', () => {
   const frame = getNameFrameModel({
     text: 'Chromadie',
     loadout: { motionKey: 'haunt-fuzzy' },
     time: 1375
   });
-  const { calls, context } = createMotionRecordingContext();
-  drawComposableMotion(context, frame, () => {});
-  const scanline = calls.find(call => call.type === 'fillRect' && call.args[3] === 1);
-  assert.ok(scanline);
-  assert.equal(scanline.composite, 'source-atop');
+  const { context } = createMotionRecordingContext();
+  let fallbackCalls = 0;
+  drawComposableMotion(context, frame, () => { fallbackCalls += 1; });
+  assert.equal(fallbackCalls, 1);
 });
 
 test('the curated motion set retains distinct authored gestures', () => {

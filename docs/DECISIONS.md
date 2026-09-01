@@ -1,5 +1,23 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-31 — Stabilize launch without changing Chromadie
+
+- Keep `/roll` as the sole full interactive daily-roll surface. Profiles render
+  the canonical result as identity/story content; the obsolete `ProfileRoll`
+  application and public prototype bundle are retired.
+- Keep existing route budgets fixed. Owner progression and the full scoring
+  presentation catalog are lazy or server-presentation-first so public Profile,
+  Dashboard, and Progression pass their original limits.
+- Serialize Plus checkout through one service-owned account/product claim and
+  stable Stripe idempotency key. Only the existing webhook processor can grant
+  or revoke the entitlement.
+- Define `discoverable=false` as direct-link accessible but excluded from
+  Chromadie discovery, profile sitemaps, and search indexing.
+- Retain the five parallel authenticated bootstrap reads. They are guarded by
+  `authEventId`, do not repeat on same-account token refresh, and no measured
+  regression justifies adding a broad bootstrap RPC in this stabilization pass.
+
+
 ## 2026-08-30 — Keep Compact's daily roll to a small profile summary
 
 Compact's roll role is a static widget summary, not a second copy of the game.
@@ -6617,3 +6635,44 @@ checks its public desktop/mobile render, six links, static roll widget, safe
 targets, and absence of the interactive game. Studio uses the staged draft as
 the preview source after tab remounts; the fitting-room cursor uses deterministic
 demo input while public profiles retain window input.
+
+## 2026-08-30 — Treat the daily roll as an optional profile widget
+
+The daily color is a compact profile-summary widget, not the playable game.
+Its existing module visibility value is now exposed in the Layout editor and
+is preserved when a player changes layouts. The setting applies consistently
+to the Studio preview and public profile, while rolls, rewards, history, and
+progression remain available through their server-authoritative game paths.
+
+The configuration normalizer retains the visibility preference through the
+legacy module validator by normalizing a compatible visible copy and restoring
+the explicit hidden state in the normalized result. This keeps the existing
+configuration/RLS boundary instead of creating a second client-only setting.
+
+## 2026-08-31 — Replace the obscure D23 score condition with Bee
+
+The `D23` hexadecimal-culture condition was not legible without Disney
+insider context despite awarding an Epic-tier score. Replace it with the
+self-explanatory `Bee` condition (`BEE`, 🐝). It keeps the same three-digit
+hex match count (16,383 colors, approximately one in 1,025) and named-tag
+reward semantics. A forward-only generated migration updates the live v6
+evaluator; the original v6 migration and historical roll records remain
+unchanged.
+
+## 2026-09-01 — Port source-inspected competitor effects into bounded renderers
+
+The profile-expression audit now records direct inspection of populated
+Guns.lol and Vaults.lol profiles plus their shipped HTML/CSS/JavaScript. The
+observed Guns Fuzzy offscreen-row displacement, measured-glyph Shuffle timing,
+15-node trailing cursor, fairy-dust particle physics, and ten-degree parallax
+envelope are implemented as small code-owned helpers and wired into the
+existing name, cursor, and avatar renderers. Chillax is retained as a readable
+compatibility face for imported profile configurations.
+
+The implementation deliberately ports behavior rather than embedding a vendor
+bundle, hosted runtime, or upstream cursor bitmap. It preserves the existing
+validated profile URL boundary, visibility throttling, mobile behavior, and
+`prefers-reduced-motion` fallbacks. The background-rain source was inspected
+but remains on Chromadie's existing bounded atmosphere layer; no database or
+catalog entitlement change is part of this slice. Full evidence and links are
+in [COMPETITOR_EFFECT_RESEARCH.md](COMPETITOR_EFFECT_RESEARCH.md).

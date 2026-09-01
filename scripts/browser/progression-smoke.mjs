@@ -17,6 +17,7 @@ import {
   terminateProcess
 } from './cdp-harness.mjs';
 import { createSupabaseHeaders, getSupabaseCredentials } from '../../functions/_supabaseApi.js';
+import { RANKS } from '../../src/lib/rankConfig.js';
 
 const environment = await loadLocalEnvironment();
 if (!environment.url || !environment.key) {
@@ -33,6 +34,8 @@ const accountSuffix = Date.now().toString(36).slice(-8);
 const canonicalUsername = `prog${accountSuffix}`;
 const accountEmail = `progression-${accountSuffix}@example.test`;
 const accountPassword = `Progression-${accountSuffix}-Pass!`;
+const establishedSilverEp = RANKS.find(rank => rank.name === 'Silver')?.min;
+if (!Number.isFinite(establishedSilverEp)) throw new Error('Progression smoke requires the canonical Silver rank threshold.');
 const results = { status: 'running', evidenceDir, steps: [], screenshots: [] };
 let server;
 let chromium;
@@ -219,7 +222,7 @@ async function seedEstablishedAccountFixture(userId) {
     method: 'PATCH',
     headers: { Prefer: 'return=minimal' },
     body: {
-      lifetime_ep: 2250000,
+      lifetime_ep: establishedSilverEp,
       total_rolls: 42,
       current_streak: 5,
       longest_streak: 9
@@ -280,7 +283,7 @@ async function seedEstablishedAccountFixture(userId) {
   assert(rareLedger?.acknowledged_at && ['historical_backfill', 'live'].includes(rareLedger.unlock_source), `Rare discovery fixture did not preserve a server-owned acknowledged ledger row: ${JSON.stringify(rareLedger)}`);
 
   return {
-    lifetimeEp: 2250000,
+    lifetimeEp: establishedSilverEp,
     totalRolls: 42,
     currentStreak: 5,
     longestStreak: 9,
@@ -491,6 +494,7 @@ try {
     await chromium.page.click('.roll-stage--preroll .roll-action__button', 'first-roll action');
     await chromium.page.waitFor("document.querySelector('.roll-stage--results') && document.querySelector('.roll-stage--results #roll-result-title')", 'server-confirmed first-roll result', 30000);
     await chromium.page.waitFor('document.querySelector(".progression-unlock-queue")', 'first-roll progression unlock queue', 30000);
+    await chromium.page.waitFor('document.querySelector(".roll-stage--results .roll-result-summary__score strong")?.textContent?.trim()', 'first-roll confirmed score', 30000);
 
     const resultState = await chromium.page.evaluate(`(() => {
       const card = document.querySelector('.roll-stage--results');
@@ -508,7 +512,7 @@ try {
       return {
         path: location.pathname,
         result: card?.querySelector('#roll-result-title')?.textContent?.trim() || '',
-        score: card?.querySelector('.roll-score-total')?.textContent?.trim() || '',
+        score: card?.querySelector('.roll-result-summary__score strong')?.textContent?.trim() || '',
         queue: Boolean(queue),
         compactQueue: queue?.classList.contains('progression-unlock-queue--compact') || false,
         queueTitle: queue?.querySelector('h3')?.textContent?.trim() || '',
@@ -621,7 +625,7 @@ try {
     const publicState = await chromium.page.evaluate("(() => {\n      const root = document.documentElement;\n      const proofItems = document.querySelectorAll('.profile-shell__progression-proof-item').length;\n      const text = document.querySelector('.profile-shell-page')?.textContent?.trim().replace(/\\s+/g, ' ') || '';\n      return {\n        path: location.pathname,\n        proof: Boolean(document.querySelector('.profile-shell__progression-proof')),\n        proofItems,\n        proofStats: document.querySelector('.profile-shell__progression-proof-stats')?.textContent?.trim().replace(/\\s+/g, ' ') || '',\n        rollResult: Boolean(document.querySelector('.profile-daily-roll .profile-roll__result')),\n        rollIdentity: document.querySelector('.profile-daily-roll .profile-roll__identity-row')?.textContent?.trim() || '',\n        historicalStory: text.includes('42') && text.includes('Total rolls'),\n        horizontalOverflow: root.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1\n      };\n    })()");
     const publicRoll = await chromium.page.evaluate("(() => { const result = document.querySelector('.profile-daily-roll .profile-roll__result'); return { hex: result?.querySelector('.profile-roll__hex')?.textContent?.trim() || '', rarity: result?.querySelector('.profile-roll__rarity')?.textContent?.trim() || '', score: result?.querySelector('.profile-roll__score-row')?.textContent?.trim().replace(/\\s+/g, ' ') || '' }; })()");
     Object.assign(publicState, { rollHex: publicRoll.hex, rollRarity: publicRoll.rarity, rollScore: publicRoll.score });
-    Object.assign(publicState, await chromium.page.evaluate("(() => { const widget = [...document.querySelectorAll('[data-profile-widget]')].find(node => node.dataset.profileWidget === 'roll' && node.dataset.profileWidgetMode === 'summary'); const result = widget?.querySelector('.profile-roll-summary'); return { rollResult: Boolean(result), rollIdentity: result?.querySelector('.profile-roll-summary__identity')?.textContent?.trim() || '', rollHex: result?.querySelector('.profile-roll-summary__meta')?.textContent?.trim() || '', rollRarity: result?.querySelector('.profile-roll-summary__rarity')?.textContent?.trim() || '', rollScore: result?.querySelector('.profile-roll-summary__score')?.textContent?.trim().replace(/\\s+/g, ' ') || '' }; })()"));
+    Object.assign(publicState, await chromium.page.evaluate("(() => { const result = [...document.querySelectorAll('[data-profile-widget]')].find(node => node.dataset.profileWidget === 'roll' && node.dataset.profileWidgetMode === 'summary'); return { rollResult: Boolean(result), rollIdentity: result?.querySelector('.profile-roll-summary__identity')?.textContent?.trim() || '', rollHex: result?.querySelector('.profile-roll-summary__meta')?.textContent?.trim() || '', rollRarity: result?.querySelector('.profile-roll-summary__rarity')?.textContent?.trim() || '', rollScore: result?.querySelector('.profile-roll-summary__score')?.textContent?.trim().replace(/\\s+/g, ' ') || '' }; })()"));
     assert(publicState.proof && publicState.proofItems >= 1 && publicState.proofItems <= 2, 'Public profile progression proof is not bounded to recent unlocks: ' + JSON.stringify(publicState) + '.');
     assert(publicState.rollResult && publicState.rollHex && publicState.rollRarity && /\d[\d,]*\s*EP\b/i.test(publicState.rollScore), 'Public profile did not render the canonical daily-roll summary widget: ' + JSON.stringify(publicState) + '.');
     assert(publicState.historicalStory, 'Public profile did not render established historical totals: ' + JSON.stringify(publicState) + '.');

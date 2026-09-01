@@ -1,4 +1,4 @@
-import { getBadgeMeta } from './badgeData.js';
+import { getBadgePresentationFallback } from './badgePresentationFallback.js';
 
 export const PROFILE_STORY_COLLECTION_ROLLS = 10;
 export const PROFILE_STORY_TIMELINE_ROLLS = 3;
@@ -89,12 +89,12 @@ export function normalizeProfileCollection(items) {
       if (!item || typeof item !== 'object') return null;
       const id = safeText(item.id, '', 80);
       if (!ID_PATTERN.test(id)) return null;
-      const fallback = getBadgeMeta(id);
+      const fallback = getBadgePresentationFallback(item, id);
       const count = Number(item.count);
       return {
         id,
         name: safeText(item.name, fallback.name || id, 80),
-        icon: safeText(item.icon, fallback.symbol || '✦', 8),
+        icon: safeText(item.icon || item.symbol, fallback.symbol || '✦', 8),
         rarity: RARITIES.has(item.rarity) ? item.rarity : (fallback.rarity || 'Common'),
         count: Number.isFinite(count) ? Math.max(1, Math.min(Math.floor(count), 999999)) : 1,
         firstSeen: safeDate(item.firstSeen || item.first_seen),

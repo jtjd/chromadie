@@ -4,9 +4,10 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [home, rollPage, game, preRoll, bestRoll, loop, scoring, community, board, header, sharedHeader, footer, app, rootFunction, rollFunction, index] = await Promise.all([
+const [home, rollPage, rollPageContext, game, preRoll, bestRoll, loop, scoring, community, board, header, sharedHeader, footer, app, routeMetadata, rootFunction, rollFunction, index] = await Promise.all([
   read('src/lib/HomePage.svelte'),
   read('src/lib/RollPage.svelte'),
+  read('src/lib/rollPageContext.js'),
   read('src/lib/Game.svelte'),
   read('src/lib/RollPreRoll.svelte'),
   read('src/lib/homepage/HomepageBestRoll.svelte'),
@@ -18,6 +19,7 @@ const [home, rollPage, game, preRoll, bestRoll, loop, scoring, community, board,
   read('src/lib/SiteModeHeader.svelte'),
   read('src/lib/SiteFooter.svelte'),
   read('src/App.svelte'),
+  read('src/lib/routeMetadata.js'),
   read('functions/index.js'),
   read('functions/roll.js'),
   read('index.html')
@@ -46,7 +48,7 @@ test('the first viewport states the game plainly and has one authoritative roll 
   assert.match(rollPage, /grid-template-columns: minmax\(280px, 360px\) minmax\(360px, 420px\)/);
   assert.match(rollPage, /homepage-preroll \.roll-page__context \{[\s\S]*grid-column: 1/);
   assert.match(rollPage, /homepage-preroll :global\(\.homepage-best-roll\) \{[\s\S]*grid-column: 2/);
-  assert.match(rollPage, /homepageRolling = homepage && !contextHasResult && rollContext\.phase !== 'preroll'/);
+  assert.match(rollPageContext, /homepageRolling: homepage && !hasResult && source\.phase !== 'preroll'/);
   assert.match(rollPage, /homepage-rolling :global\(\.game-container--dedicated\) \{[\s\S]*grid-column: 2/);
   assert.match(rollPage, /homepage-rolling \.roll-page__context \{[\s\S]*align-self: center;/);
   assert.match(rollPage, /homepagePreroll && !homepageRolling/);
@@ -120,8 +122,8 @@ test('the lower homepage explains play and scoring before authentic profile disc
 test('root and compatibility metadata identify one canonical playable entry', () => {
   const title = 'ChromaDie — Daily Random Color Game';
   const description = 'Roll one of 16,777,216 colors once a day.';
-  assert.match(app, new RegExp(title.replace(/[—]/g, '—')));
-  assert.match(app, new RegExp(description.replace(/[,.]/g, value => `\\${value}`)));
+  assert.match(routeMetadata, new RegExp(title.replace(/[—]/g, '—')));
+  assert.match(routeMetadata, new RegExp(description.replace(/[,.]/g, value => `\\${value}`)));
   assert.match(rootFunction, /canonicalPath: '\/'/);
   assert.match(rootFunction, /Daily Random Color Game/);
   assert.match(rollFunction, /canonicalPath: '\/'/);
@@ -134,6 +136,6 @@ test('root and compatibility metadata identify one canonical playable entry', ()
 
 test('the root route remains stable while the compatibility Roll route stays available', () => {
   assert.match(app, /loaderKey: 'home'/);
-  assert.match(app, /routeMode === 'app' && view === 'game' && !challengeData[\s\S]*\? '\/'/);
-  assert.match(app, /view === 'game'[\s\S]*noindex,follow/);
+  assert.match(routeMetadata, /routeMode === 'app' && view === 'game' && !challengeData[\s\S]*\? '\/'/);
+  assert.match(routeMetadata, /view === 'game'[\s\S]*noindex,follow/);
 });

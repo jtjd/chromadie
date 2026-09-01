@@ -1,5 +1,8 @@
 # Phase 10 Report — Vision Reconciliation and Profile Simplification
 
+> Historical report. References to an integrated owner Roll are superseded by
+> the dedicated `/roll` launch contract.
+
 Date: 2026-07-25  
 Branch: `redesign/profile-first-reconciliation`  
 Scope: Phase 10 only

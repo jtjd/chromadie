@@ -1,6 +1,7 @@
 <script>
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { getAvatarEffectDefinition } from './avatarEffects.js';
+  import { getGunsParallaxRotation } from '../competitor-effects/gunsParallax.js';
 
   export let effectKey = '';
   export let accentColor = '#8B7CF6';
@@ -22,10 +23,13 @@
   let orbitRendererPromise;
   let orbitLoadVersion = 0;
   let mounted = false;
+  let host;
+  let lastParallaxRotation = null;
   $: definition = getAvatarEffectDefinition(effectKey);
   $: activeDefinitionKey = definition?.key || 'none';
   $: compact = mode === 'compact' || mode === 'card';
   $: motionActive = Boolean(animated && (active || !compact));
+  $: isParallax = activeDefinitionKey === '3d-parallax';
   $: isOrbit = activeDefinitionKey === 'butterfly-orbit' || activeDefinitionKey === 'bat-orbit';
   $: colors = [accentColor, ...(Array.isArray(recentColors) ? recentColors : [])]
     .filter(color => /^#[0-9a-f]{6}$/i.test(String(color || '')))
@@ -42,10 +46,32 @@
     `--avatar-accent:${colors[0] || '#8B7CF6'}`,
     `--avatar-color-2:${colors[1] || '#8DDCFF'}`,
     `--avatar-color-3:${colors[2] || '#B7FD4D'}`,
-    `--avatar-color-4:${colors[3] || '#F7B7E2'}`
+    `--avatar-color-4:${colors[3] || '#F7B7E2'}`,
+    '--avatar-tilt-x:0deg',
+    '--avatar-tilt-y:0deg'
   ].join(';');
   $: showGlitchLayers = activeDefinitionKey === 'glitch-slicer' && Boolean(avatarSrc || fallbackText);
   $: showHudLayers = activeDefinitionKey === 'cyber-hud';
+
+  function setParallaxRotation(rotation) {
+    if (!host) return;
+    const next = rotation || { rotateX: 0, rotateY: 0 };
+    if (lastParallaxRotation
+      && lastParallaxRotation.rotateX === next.rotateX
+      && lastParallaxRotation.rotateY === next.rotateY) return;
+    lastParallaxRotation = next;
+    host.style.setProperty('--avatar-tilt-x', `${next.rotateX}deg`);
+    host.style.setProperty('--avatar-tilt-y', `${next.rotateY}deg`);
+  }
+
+  function handleParallaxPointerMove(event) {
+    if (!isParallax || !motionActive || event.pointerType === 'touch') return;
+    setParallaxRotation(getGunsParallaxRotation(host?.getBoundingClientRect?.(), event));
+  }
+
+  function handleParallaxPointerLeave() {
+    if (isParallax) setParallaxRotation(null);
+  }
 
   function syncOrbitController() {
     if (!mounted) return;
@@ -87,6 +113,8 @@
 
   onMount(() => {
     mounted = true;
+    host?.addEventListener('pointermove', handleParallaxPointerMove, { passive: true });
+    host?.addEventListener('pointerleave', handleParallaxPointerLeave, { passive: true });
     syncOrbitController();
   });
 
@@ -94,12 +122,14 @@
 
   onDestroy(() => {
     mounted = false;
+    host?.removeEventListener('pointermove', handleParallaxPointerMove);
+    host?.removeEventListener('pointerleave', handleParallaxPointerLeave);
     orbitController?.destroy();
     orbitController = null;
   });
 </script>
 
-<div class={effectClass} style={effectStyle} data-avatar-effect={activeDefinitionKey}>
+<div bind:this={host} class={effectClass} style={effectStyle} data-avatar-effect={activeDefinitionKey}>
   {#if isOrbit}
     <canvas bind:this={orbitBackCanvas} class="avatar-effect__orbit-canvas avatar-effect__orbit-canvas--back" aria-hidden="true"></canvas>
   {/if}
@@ -276,8 +306,11 @@
   }
 
   .avatar-effect.avatar-effect--3d-parallax {
-    perspective: 800px;
+    perspective: 1000px;
     transform-style: preserve-3d;
+    transform: perspective(1000px) rotateX(var(--avatar-tilt-x, 0deg)) rotateY(var(--avatar-tilt-y, 0deg));
+    transition: transform 700ms cubic-bezier(.23, 1, .32, 1);
+    transform-origin: center;
   }
 
   .avatar-effect.avatar-effect--3d-parallax::before {
@@ -357,10 +390,6 @@
     box-shadow: 0 0 15px rgba(255, 255, 255, .4);
   }
 
-  .avatar-effect--animated.avatar-effect--3d-parallax {
-    animation: avatar-effect-tilt 6s infinite ease-in-out;
-  }
-
   .avatar-effect--animated.avatar-effect--glitch-slicer .avatar-effect__slot {
     animation: avatar-effect-glitch 2.5s infinite steps(10);
   }
@@ -421,6 +450,7 @@
   @keyframes avatar-effect-spin-reverse { to { transform: translate(-50%, -50%) rotate(-360deg); } }
 
   @media (prefers-reduced-motion: reduce) {
+    .avatar-effect.avatar-effect--3d-parallax { transition: none; transform: none; }
     .avatar-effect--animated.avatar-effect--3d-parallax,
     .avatar-effect--animated.avatar-effect--glitch-slicer .avatar-effect__slot,
     .avatar-effect--animated.avatar-effect--glitch-slicer .avatar-effect__glitch-layer,

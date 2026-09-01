@@ -1,5 +1,8 @@
 # Phase 3 — Integrated Roll Vertical Slice Report
 
+> Historical implementation record. The integrated owner-roll surface was
+> retired on 2026-08-31; `/roll` is now the sole interactive Roll surface.
+
 **Milestone:** Phase 3 — Integrated Roll Vertical Slice  
 **Audit date:** 2026-07-25  
 **Status:** Complete

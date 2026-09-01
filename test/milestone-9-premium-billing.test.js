@@ -8,6 +8,7 @@ import {
   CHROMADIE_PLUS_TAX_CODE,
   CHROMADIE_STRIPE_API_VERSION,
   stripeRequest,
+  stripeUnixTimestampToIso,
   verifyStripeSignature
 } from '../supabase/functions/_shared/billing-core.js';
 import {
@@ -68,6 +69,47 @@ test('Managed Payments Stripe requests pin the supported API version', async () 
   assert.equal(request.options.headers['Stripe-Version'], '2025-03-31.basil');
 });
 
+test('Stripe requests preserve a stable checkout idempotency key and only accept valid expiry timestamps', async () => {
+  let request;
+  await stripeRequest('sk_test_example', 'checkout/sessions', {
+    method: 'POST',
+    body: { mode: 'payment' },
+    idempotencyKey: 'chromadie_plus_checkout:00000000-0000-0000-0000-000000000001',
+    fetchImpl: async (_url, options) => {
+      request = options;
+      return new Response(JSON.stringify({ id: 'cs_test_example' }), { status: 200 });
+    }
+  });
+
+  assert.equal(request.headers['Idempotency-Key'], 'chromadie_plus_checkout:00000000-0000-0000-0000-000000000001');
+  assert.equal(stripeUnixTimestampToIso(1_800_000_000), '2027-01-15T08:00:00.000Z');
+  assert.equal(stripeUnixTimestampToIso('not-a-time'), null);
+  assert.equal(stripeUnixTimestampToIso(0), null);
+});
+
+test('billing claims serialize checkout creation, reuse only reconciled Stripe-open sessions, and expire safely', async () => {
+  const migration = await read('supabase/migrations/20260831120000_billing_checkout_claim_hardening.sql');
+
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.billing_checkout_claims/);
+  assert.match(migration, /product_key = 'chromadie_plus_lifetime'/);
+  assert.match(migration, /state IN \('creating', 'open', 'complete', 'expired', 'failed'\)/);
+  assert.match(migration, /CREATE UNIQUE INDEX IF NOT EXISTS billing_checkout_claims_one_active_idx[\s\S]*WHERE state IN \('creating', 'open'\)/);
+  assert.match(migration, /pg_advisory_xact_lock\(hashtext\(p_user_id::text\), 9471\)/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.reserve_premium_checkout_claim\(p_user_id uuid\)/);
+  assert.match(migration, /'action', 'creating'/);
+  assert.match(migration, /'action', 'create'/);
+  assert.match(migration, /stripe_idempotency_key/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.finalize_premium_checkout_claim/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.reconcile_premium_checkout_claim/);
+  assert.match(migration, /p_stripe_status = 'open' AND p_payment_status = 'unpaid' AND p_stripe_expires_at > now\(\)/);
+  assert.match(migration, /v_event_type = 'checkout\.session\.expired'/);
+  assert.match(migration, /outcome IN \('granted', 'revoked', 'pending', 'ignored', 'expired'\)/);
+  assert.match(migration, /REVOKE ALL ON TABLE public\.billing_checkout_claims FROM PUBLIC, anon, authenticated/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.reserve_premium_checkout_claim\(uuid\) TO service_role/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.finalize_premium_checkout_claim\(uuid, text, text, text, text, timestamptz\) TO service_role/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.reconcile_premium_checkout_claim\(uuid, uuid, text, text, timestamptz\) TO service_role/);
+});
+
 test('billing migration makes webhook processing atomic, replay-safe, and service-owned', async () => {
   const migration = await read('supabase/migrations/20260808200000_lifetime_premium_fulfillment.sql');
 
@@ -109,9 +151,16 @@ test('checkout, restore, and webhook endpoints preserve the authority boundary',
   assert.match(checkout, /CHROMADIE_PLUS_TAX_CODE/);
   assert.match(checkout, /success_url/);
   assert.match(checkout, /PROFILE_MEDIA_R2_READY/);
+  assert.match(checkout, /reserve_premium_checkout_claim/);
+  assert.match(checkout, /finalize_premium_checkout_claim/);
+  assert.match(checkout, /idempotencyKey: claim\.stripe_idempotency_key/);
+  assert.match(checkout, /checkout_in_progress/);
+  assert.match(checkout, /reconcile_premium_checkout_claim/);
   assert.doesNotMatch(checkout, /grant_profile_entitlement|process_stripe_billing_event/);
   assert.match(restore, /billing_checkout_sessions/);
   assert.match(restore, /session_id/);
+  assert.match(restore, /billing_checkout_claims/);
+  assert.match(restore, /reconcile_premium_checkout_claim/);
   assert.doesNotMatch(restore, /grant_profile_entitlement|process_stripe_billing_event/);
   assert.match(webhook, /verifyStripeSignature/);
   assert.match(webhook, /process_stripe_billing_event/);

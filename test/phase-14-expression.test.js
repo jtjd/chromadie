@@ -101,6 +101,7 @@ test('media storage, server validation, and public rendering boundaries are expl
   const audioMigration = await read('supabase/migrations/20260730150000_staff_profile_audio.sql');
   const audioLimitMigration = await read('supabase/migrations/20260730160000_increase_staff_profile_audio_limit.sql');
   const settings = await read('src/lib/ProfileExpressionEditor.svelte');
+  const mediaActions = await read('src/lib/profile-studio/expressionMediaActions.js');
   const identity = await read('src/lib/ProfileReferenceCard.svelte');
   const music = await read('src/lib/ProfileMusic.svelte');
   const instagramIcon = await read('public/link-icons/instagram.svg');
@@ -148,9 +149,11 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(settings, /stored as WebP up to/);
   assert.match(settings, /avatarRules\.maxInputBytes/);
   assert.match(settings, /backgroundRules\.maxInputBytes/);
-  assert.match(settings, /formatStoredSize\(blob\.size\)/);
-  assert.match(settings, /processProfileImage\(file, 'avatar'\)/);
-  assert.match(settings, /processProfileImage\(file, 'background'\)/);
+  assert.match(settings, /formatStoredSize\(uploaded\.blob\.size\)/);
+  assert.match(mediaActions, /processProfileImage/);
+  assert.match(mediaActions, /uploadProfileImageAsset/);
+  assert.match(settings, /uploadProfileImageAsset/);
+  assert.match(settings, /uploadProfileAudioAsset/);
   assert.match(settings, /update_my_profile_expression/);
   assert.match(settings, /profile-expression-editor__audio-player/);
   assert.match(settings, /toggleAudio/);

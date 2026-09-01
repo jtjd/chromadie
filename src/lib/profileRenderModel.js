@@ -1,5 +1,5 @@
 import { getRank, getRankState } from './ranks.js';
-import { getBadgeMeta } from './badgeData.js';
+import { getBadgePresentationFallback } from './badgePresentationFallback.js';
 import { getProfileMediaUrl } from './profileMedia.js';
 import { getProfileStoryUnlocks } from './profileStory.js';
 import { getProfileComposition } from './profileComposition.js';
@@ -157,12 +157,12 @@ function resolveBadges(profile, allAchievements) {
         };
       }
       const record = records.find(achievement => achievement.id === safeId);
-      const fallback = getBadgeMeta(safeId);
+      const fallback = getBadgePresentationFallback(record, safeId);
       return {
         id: safeId,
         name: record?.name || fallback.name || safeId,
         icon: record?.icon || fallback.symbol || '✦',
-        description: record?.description || fallback.desc || 'A pinned color achievement.'
+        description: record?.description || fallback.description || 'A pinned color achievement.'
       };
     });
 }

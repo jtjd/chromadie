@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { getSupabaseKeys, supabaseServerClientOptions } from '../_shared/supabase-keys.ts';
-import { CHROMADIE_STRIPE_API_VERSION, stripeRequest } from '../_shared/billing-core.js';
+import { CHROMADIE_STRIPE_API_VERSION, stripeRequest, stripeUnixTimestampToIso } from '../_shared/billing-core.js';
 import { corsHeaders, getBearerToken, jsonResponse } from '../_shared/http.ts';
 
 Deno.serve(async request => {
@@ -35,15 +35,30 @@ Deno.serve(async request => {
     if (storedError) throw storedError;
     if (!storedSession) return jsonResponse({ error: 'Checkout session not found.', code: 'missing_session' }, 404);
 
-    const [stripeSession, accessResult] = await Promise.all([
+    const [{ data: claim, error: claimError }, stripeSession, accessResult] = await Promise.all([
+      service.from('billing_checkout_claims')
+        .select('claim_id')
+        .eq('stripe_checkout_session_id', sessionId)
+        .eq('user_id', userData.user.id)
+        .maybeSingle(),
       stripeRequest(stripeSecret, `checkout/sessions/${encodeURIComponent(sessionId)}`, { stripeVersion: CHROMADIE_STRIPE_API_VERSION }),
       service.from('billing_premium_access').select('active, recovery_until').eq('user_id', userData.user.id).maybeSingle()
     ]);
+    if (claimError) throw claimError;
+    if (!claim) throw new Error('Checkout claim not found.');
+    const { data: reconciliation, error: reconciliationError } = await service.rpc('reconcile_premium_checkout_claim', {
+      p_claim_id: claim.claim_id,
+      p_user_id: userData.user.id,
+      p_stripe_status: stripeSession.status,
+      p_payment_status: stripeSession.payment_status,
+      p_stripe_expires_at: stripeUnixTimestampToIso(stripeSession.expires_at)
+    });
+    if (reconciliationError) throw reconciliationError;
     const active = accessResult.data?.active === true;
-    const paid = ['paid', 'no_payment_required'].includes(stripeSession.payment_status);
+    const paid = reconciliation?.state === 'complete';
     return jsonResponse({
       session_id: sessionId,
-      checkout_status: stripeSession.status || storedSession.status,
+      checkout_status: reconciliation?.state || stripeSession.status || storedSession.status,
       payment_status: stripeSession.payment_status || storedSession.payment_status,
       entitlement_status: active ? 'active' : paid ? 'processing' : 'inactive',
       active

@@ -36,8 +36,8 @@ test('Modern keeps the avatar, identity, roll widget, and links in one wide surf
   assert.match(card, /profile-reference-card--framed :global\(\.name-effect-canvas__semantic\.profile-reference-card__name\) \{[\s\S]*?width: auto;[\s\S]*?text-align: left;/);
   assert.match(shell, /layoutVariant=\{profilePresentationLayoutVariant\}/);
   assert.match(shell, /profileCardKeepsRollInline = true/);
-  assert.match(shell, /profileHasBelowFoldRoll = false/);
-  assert.match(preview, /roll=\{latestRoll\}/);
+  assert.doesNotMatch(shell, /ProfileRoll|ProfileDailyRoll/);
+  assert.match(preview, /roll=\{visibleRoll\}/);
   assert.match(editor, /data-layout='framed'/);
   assert.match(migration, /profile_layout_framed/);
   assert.match(migration, /css_value IN \('compact', 'full-bleed', 'framed'\)/);

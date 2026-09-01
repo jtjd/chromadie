@@ -50,7 +50,8 @@ test('view navigation resolves to one canonical application path', () => {
   assert.equal(viewToCanonicalPath('leaderboard'), '/leaderboard');
   assert.equal(viewToCanonicalPath('leaderboard', { tab: 'monthly' }), '/leaderboard?tab=monthly');
   assert.equal(viewToCanonicalPath('progression'), '/progression');
-  assert.equal(viewToCanonicalPath('prototype'), '/prototype/profile');
+  assert.equal(viewToCanonicalPath('prototype'), null);
+  assert.equal(viewToCanonicalPath('prototype', { prototypeEnabled: true }), '/prototype/profile');
   assert.equal(viewToCanonicalPath('profile-settings'), '/profile/settings');
   assert.equal(viewToCanonicalPath('profile', { username: 'NeonUser' }), '/neonuser');
   assert.equal(viewToCanonicalPath('profile', { username: 'NeonUser', legacyProfile: true }), '/u/NeonUser?legacy=1');

@@ -142,7 +142,7 @@ incident ownership.
 - Adapter setup: `src/main.js`; progression aggregate RPCs:
   `record_progression_event` and `get_progression_analytics`
 - Event call sites: `App.svelte`, `ProfileShell.svelte`, `Game.svelte`,
-  `ProfileRoll.svelte`, and `ProfileCosmeticsEditor.svelte`
+  `Game.svelte`, and `ProfileCosmeticsEditor.svelte`
 - Regression coverage: `test/phase-9-analytics.test.js`
 
 Any future provider adapter must preserve the same event names and field

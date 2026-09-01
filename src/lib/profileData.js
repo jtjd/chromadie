@@ -1,7 +1,6 @@
 import { isOwnProfileLookup, mapProfileRecord, mapProfileScores } from './profileContract.js';
 import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
 import { normalizeProfileStory } from './profileStory.js';
-import { createEmptyProgression, loadMyProgression } from './progressionState.js';
 import { normalizeUsernameSegment } from './routeContract.js';
 import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
 import {
@@ -124,7 +123,7 @@ function emptyProfileContext(overrides = {}) {
     socialSettings: createDefaultProfileSocialSettings(),
     allAchievements: [],
     unlockedAchievements: {},
-    progression: createEmptyProgression(),
+    progression: null,
     totalRolls: 0,
     loadError: '',
     dataWarning: '',
@@ -299,8 +298,9 @@ export async function loadProfileContext({
     });
     const achievementsRequestForProfile = loadAchievements(supabaseClient);
     const progressionRequest = viewingOwnProfile
-      ? loadMyProgression(supabaseClient, context.profileId)
-      : Promise.resolve({ data: createEmptyProgression(), error: null });
+      ? import('./profileOwnerProgression.js')
+        .then(module => module.loadOwnerProfileProgression(supabaseClient, context.profileId))
+      : Promise.resolve({ data: null, error: null });
     const unlockedRequest = viewingOwnProfile
       ? supabaseClient
         .from('user_achievements')
@@ -330,7 +330,7 @@ export async function loadProfileContext({
     profileUnlockedResponse = unlockedResponse;
     profileAchievementsResponse = achievementsResponse;
     if (viewingOwnProfile) {
-      context.progression = progressionResponse.data || createEmptyProgression();
+      context.progression = progressionResponse.data;
       if (progressionResponse.error) context.dataWarning = context.dataWarning || 'Progression rewards are temporarily unavailable.';
     }
 

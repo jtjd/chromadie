@@ -4,11 +4,13 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [app, outlet, loaders, header] = await Promise.all([
+const [app, outlet, loaders, header, profileData, progressionPage] = await Promise.all([
   read('src/App.svelte'),
   read('src/lib/RouteOutlet.svelte'),
   read('src/lib/routeLoaders.js'),
-  read('src/lib/SiteModeHeader.svelte')
+  read('src/lib/SiteModeHeader.svelte'),
+  read('src/lib/profileData.js'),
+  read('src/lib/ProgressionPage.svelte')
 ]);
 
 test('route loading keeps the shell and previous page mounted until a destination resolves', () => {
@@ -30,6 +32,13 @@ test('route loading keeps the shell and previous page mounted until a destinatio
   assert.doesNotMatch(outlet, /activecolor/);
 });
 
+test('public profile and progression routes keep owner and catalog compatibility code lazy', () => {
+  assert.doesNotMatch(profileData, /^import .*progressionState/m);
+  assert.match(profileData, /import\('\.\/profileOwnerProgression\.js'\)/);
+  assert.doesNotMatch(progressionPage, /^\s*import .*badgeData/m);
+  assert.match(progressionPage, /await import\('\.\/badgeData\.js'\)/);
+});
+
 test('route loaders use explicit split points and cache prefetched modules', () => {
   for (const key of ['game', 'leaderboard', 'progression', 'profileShell', 'profileSettings', 'guestProfile', 'privacy', 'terms', 'howToPlay']) {
     assert.match(loaders, new RegExp(`${key}: \\(\\) => import\\(`));
@@ -37,6 +46,7 @@ test('route loaders use explicit split points and cache prefetched modules', () 
   assert.match(loaders, /const promiseCache = new Map/);
   assert.match(loaders, /export function prefetchRouteComponent/);
   assert.match(loaders, /game: \(\) => import\('\.\/RollPage\.svelte'\)/);
+  assert.match(loaders, /const prototypeLoaders = import\.meta\.env\.DEV/);
 });
 
 test('primary navigation prefetches destinations for mouse and keyboard users', () => {

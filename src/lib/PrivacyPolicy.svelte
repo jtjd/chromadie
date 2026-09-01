@@ -10,9 +10,9 @@
   <section class="card legal-hero">
     <p class="legal-kicker">Privacy policy</p>
     <h1 id="privacy-title">ChromaDie Privacy Policy</h1>
-    <p class="legal-updated">Last updated: July 2026</p>
+    <p class="legal-updated">Last updated: August 2026</p>
     <p class="info-text">
-      This policy explains what information ChromaDie collects, how we use it, and the choices available to you. We limit collection to the information needed to provide, maintain, and protect the game.
+      This policy explains what information ChromaDie collects, how we use it, and the choices available to you. We limit collection to what is needed to provide, maintain, and protect the service.
     </p>
   </section>
 
@@ -20,11 +20,11 @@
     <h2>Information we collect</h2>
     <ul>
       <li><strong>Account information:</strong> your email address, which is used for sign-in, email confirmation, and account recovery.</li>
-      <li><strong>Profile information:</strong> your username and cosmetic selections. This information may be visible on your profile and the leaderboard.</li>
-      <li><strong>Uploaded profile content:</strong> if you use profile uploads, we process the avatar, background, and other supported media you choose to publish. Public uploads are associated with your profile and may be cached or transformed to serve them efficiently.</li>
+      <li><strong>Profile information:</strong> your username, public profile details, links, and cosmetic selections. This information may be visible on your profile, in discovery, and on leaderboards when you permit discovery.</li>
+      <li><strong>Uploaded profile content:</strong> the avatars, backgrounds, and supported media you choose to upload or publish. Public uploads are associated with your profile and may be resized, converted, cached, or transformed to serve them efficiently.</li>
       <li><strong>Gameplay information:</strong> rolls, scores, EP, inventory, achievements, pinned achievements, rivals, and other information associated with your progress.</li>
       <li><strong>Guest data:</strong> game progress and shop data stored locally in your browser when you play without an account.</li>
-      <li><strong>Security and technical information:</strong> information used to maintain reliable sign-in, protect the service, and prevent abuse.</li>
+      <li><strong>Billing and security information:</strong> limited checkout, payment-status, fraud, and operational records used to provide Plus, protect the service, meet legal obligations, and handle disputes. ChromaDie does not receive or store your full payment-card number.</li>
     </ul>
   </section>
 
@@ -33,9 +33,9 @@
     <ul>
       <li>Provide, maintain, and secure your account.</li>
       <li>Save your game progress, cosmetics, and achievements.</li>
-      <li>Display profile and leaderboard information to other players.</li>
+      <li>Display the public profile, media, and gameplay information you choose to make available to other players and search engines.</li>
       <li>Support guest mode and save guest progress on your device.</li>
-      <li>Monitor site performance and understand basic usage.</li>
+      <li>Monitor site performance, basic usage, and consented product measurement.</li>
       <li>Detect and prevent spam, fraud, and other abusive activity.</li>
       <li>Review, restrict, or remove uploaded content that violates the Terms of Service or creates a safety, legal, or operational risk.</li>
     </ul>
@@ -44,7 +44,7 @@
   <section class="card legal-section">
     <h2>Public profiles and uploaded content</h2>
     <p>
-      Profile pages, links, avatars, backgrounds, and other published customization are public by design. Do not upload content you need to keep private. We may scan, moderate, unpublish, or remove content and accounts when required to enforce our rules, respond to reports, protect people, or comply with law.
+      Profile pages, links, avatars, backgrounds, and other published customization are public by design. If you enable discovery, your profile may appear in ChromaDie discovery and generated search sitemaps. Turning discovery off keeps your direct profile link available but asks search engines not to index it. Do not upload content you need to keep private. We may scan, moderate, unpublish, or remove content and accounts when required to enforce our rules, respond to reports, protect people, or comply with law.
     </p>
   </section>
 
@@ -53,10 +53,12 @@
     <ul>
       <li>We do not sell your personal information.</li>
       <li>We do not display advertising or use advertising cookies.</li>
-      <li>Supabase processes account and gameplay information on our behalf.</li>
-      <li>Cloudflare provides site delivery, abuse protection, Turnstile verification, and privacy-focused web analytics. Analytics are used to understand site performance and basic usage, not to build advertising or marketing profiles.</li>
-      <li>Optional product-event measurement is separate from Cloudflare Web Analytics and is off until you choose to allow it. Legacy events stay in the page; consented progression events send only anonymous, allowlisted dimensions to daily aggregate buckets, never raw events, account ids, scores, or colors.</li>
-      <li>Your username, cosmetic selections, and certain gameplay information may be visible to other players through profiles and leaderboards.</li>
+      <li>Supabase processes account, profile, gameplay, and database information on our behalf.</li>
+      <li>Cloudflare Pages delivers the site; Cloudflare R2 stores supported profile media; Cloudflare Turnstile helps prevent abuse; and Cloudflare Web Analytics measures site performance and basic usage.</li>
+      <li>Fontshare serves the remote fonts used by the site. Your browser may make a request to Fontshare when those fonts load.</li>
+      <li>Stripe processes Plus checkout and payment details. We receive limited payment metadata, such as checkout and payment-status identifiers, rather than raw card details.</li>
+      <li>Optional product-event measurement is separate from Cloudflare Web Analytics and is off until you choose to allow it. Consented progression events use anonymous, allowlisted dimensions in daily aggregate buckets, never raw events, account ids, scores, or colors.</li>
+      <li>Your username, published profile details, cosmetic selections, uploaded media, and certain gameplay information may be visible to other players through profiles and leaderboards.</li>
     </ul>
   </section>
 
@@ -67,14 +69,14 @@
       <li>Consented progression measurement is retained only as anonymous daily totals for up to 90 days and cannot be tied back to an account.</li>
       <li>Challenge links expire after 30 days and are subsequently deleted.</li>
       <li>Guest data remains in your browser until you clear the site's data or ChromaDie removes it.</li>
-      <li>Security and operational records may be retained for a limited period when needed to protect the service or investigate misuse.</li>
+      <li>Limited billing, security, and operational records may be retained as needed for fraud prevention, security, tax and accounting obligations, legal compliance, chargebacks, disputes, and enforcement.</li>
     </ul>
   </section>
 
   <section class="card legal-section">
     <h2>Account deletion</h2>
     <p>
-      You can permanently delete your account from your profile settings while signed in. Deletion removes your authentication account and associated profile, score, inventory, achievement, rival, and challenge records. When deletion is complete, you will be signed out on that browser. Account deletion cannot be undone.
+      You can permanently delete your account from profile settings while signed in. Deletion removes your authentication account and associated profile, score, inventory, achievement, rival, and challenge records, subject to the billing, security, and legal retention described above. When deletion is complete, you will be signed out on that browser. Account deletion cannot be undone.
     </p>
   </section>
 

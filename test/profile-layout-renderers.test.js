@@ -13,8 +13,10 @@ import {
   getProfileContinuationLinks,
   getProfileLayoutLinkPartitions,
   getProfileOpeningLinks,
+  getProfileRollVisible,
   hasProfileMoreContent,
-  normalizeProfileConfig
+  normalizeProfileConfig,
+  setProfileRollVisible
 } from '../src/lib/profileConfig.js';
 import {
   buildConfigurationV2,
@@ -212,6 +214,22 @@ test('template selection applies the authored module order while remaining bound
   ]);
 });
 
+test('changing layout preserves the staged visibility of profile modules', () => {
+  const hiddenRoll = setProfileRollVisible(createDefaultProfileConfig(), false);
+  const hiddenStats = {
+    ...hiddenRoll,
+    modules: hiddenRoll.modules.map(module => module.id === 'stats'
+      ? { ...module, visible: false }
+      : module)
+  };
+  const patch = createProfileLayoutPatch('sleek', hiddenStats);
+
+  assert.equal(patch.layoutVariant, 'sleek');
+  assert.equal(patch.modules.find(module => module.id === 'roll').visible, false);
+  assert.equal(patch.modules.find(module => module.id === 'stats').visible, false);
+  assert.equal(getProfileRollVisible(normalizeProfileConfig({ ...hiddenStats, ...patch })), false);
+});
+
 test('editor, renderer, and public icon files consume one link service registry', async () => {
   const [editor, identity] = await Promise.all([
     read('src/lib/ProfileLinksEditor.svelte'),
@@ -262,19 +280,19 @@ test('link size and glow settings reach every active profile link renderer', asy
 });
 
 test('layout renderer composes every published layout through bounded presentation regions', async () => {
-  const [card, fullBleed, portfolio, dailyRoll, shell, preview, customize, settings, roll, content, widgets, renderModel] = await Promise.all([
+  const [card, fullBleed, portfolio, rollSummary, shell, preview, customize, settings, content, widgets, renderModel, layoutEditor] = await Promise.all([
     read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/profile-layout/ProfileFullBleedLayout.svelte'),
     read('src/lib/profile-layout/ProfilePortfolioLayout.svelte'),
-    read('src/lib/ProfileDailyRoll.svelte'),
+    read('src/lib/ProfileRollSummary.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileSettings.svelte'),
-    read('src/lib/ProfileRoll.svelte'),
     read('src/lib/ProfileContent.svelte'),
     read('src/lib/ProfileWidgets.svelte'),
-    read('src/lib/profileRenderModel.js')
+    read('src/lib/profileRenderModel.js'),
+    read('src/lib/ProfileReferenceLayoutEditor.svelte')
   ]);
   assert.match(shell, /ProfileReferenceCard/);
   assert.match(shell, /<ProfileFullBleedLayout/);
@@ -283,12 +301,12 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(fullBleed, /data-profile-layout-content=\{layoutVariant\}/);
   assert.match(portfolio, /data-profile-layout-content=\"portfolio\"|data-profile-layout-content=\{layoutVariant\}/);
   assert.match(portfolio, /ProfileRollSummary/);
+  assert.match(fullBleed, /profile-full-bleed--no-avatar/);
+  assert.match(portfolio, /profile-portfolio--no-avatar/);
   assert.doesNotMatch(shell, /ProfileLayoutFrame|IdentityCard|profile-layout-frame/);
-  assert.doesNotMatch(dailyRoll, /profile-daily-roll--(?:sleek|minimal|modern|portfolio)/);
+  assert.doesNotMatch(shell, /profileRollComponent|todayColorComponent/);
   assert.doesNotMatch(shell, /profileLayoutFrameComponent|Profile layout pending/);
   assert.doesNotMatch(card, /isOwner|liveRoll/);
-  assert.match(shell, /profile-shell__approved-game/);
-  assert.match(shell, /compact=\{true\}/);
   assert.match(shell, /links=\{openingLinks\}/);
   assert.match(shell, /onEntryClick=\{recordProfileClick\}/);
   assert.doesNotMatch(shell, /profile-shell__continuation-links/);
@@ -307,7 +325,6 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(shell, /profile-shell__more-cue--continuation/);
   assert.doesNotMatch(shell, /links=\{visibleLinks\}/);
   assert.match(card, /profile-border-effect--content/);
-  assert.match(dailyRoll, /profile-daily-roll--' \+ variant/);
   assert.match(preview, /profile-studio-preview__stage/);
   assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
   assert.doesNotMatch(fullBleed, /role="tab"|presenceLabel|daily color profile/);
@@ -315,9 +332,6 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(preview, /profile-studio-preview__viewport[\s\S]*width: min\(52rem, 100%\)/);
   assert.match(preview, /profile-studio-preview__footer/);
   assert.doesNotMatch(preview, /device-sample/);
-  assert.match(dailyRoll, /presentation=\{variant\}/);
-  assert.match(roll, /profile-roll--presentation[\s\S]*final-color-display/);
-  assert.match(dailyRoll, /final-color-display/);
   assert.match(shell, /profile-shell__continuation-column/);
   assert.match(shell, /data-profile-continuation="content"[\s\S]*data-profile-continuation="media"/);
   assert.doesNotMatch(shell, /data-profile-continuation="links"/);
@@ -329,7 +343,16 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(preview, /ProfileReferenceCard/);
   assert.doesNotMatch(preview, /liveRoll=/);
   assert.match(card, /profile-reference-card__opening/);
-  assert.match(card, /data-profile-widget="roll"/);
+  assert.equal((rollSummary.match(/data-profile-widget="roll"/g) || []).length, 1);
+  assert.equal((card.match(/data-profile-widget="roll"/g) || []).length, 0);
+  assert.equal((fullBleed.match(/data-profile-widget="roll"/g) || []).length, 0);
+  assert.equal((portfolio.match(/data-profile-widget="roll"/g) || []).length, 0);
+  assert.match(preview, /showRoll = previewRenderSnapshot\?\.roll\?\.show === true/);
+  assert.match(preview, /visibleRoll = showRoll \? previewRenderSnapshot\?\.roll\?\.latest \|\| previewRenderSnapshot\?\.roll\?\.best \|\| null : null/);
+  assert.doesNotMatch(preview, /roll=\{latestRoll\}/);
+  assert.match(layoutEditor, /data-roll-widget-toggle/);
+  assert.match(layoutEditor, /setProfileRollVisible/);
+  assert.match(layoutEditor, /createProfileLayoutPatch\(layoutVariant, staged\)/);
   assert.match(card, /on:click=\{\(\) => onEntryClick/);
   assert.doesNotMatch(preview, /profile-studio-preview__scroll-cue|previewContentOverflow|previewOpeningOverflow|overflow-y:\s*auto/);
   assert.doesNotMatch(shell, /data-preview-opening-overflow/);
@@ -383,16 +406,15 @@ test('Studio media mutations return the profile concurrency token', async () => 
 });
 
 test('public viewport and Compact roll contracts do not inherit legacy offsets', async () => {
-  const [shell, roll, card, music] = await Promise.all([
+  const [shell, card, music] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/ProfileRoll.svelte'),
     read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/ProfileMusic.svelte')
   ]);
   assert.doesNotMatch(shell, /4\.75rem/);
   assert.match(shell, /--profile-viewport-offset: 0px/);
   assert.match(shell, /calc\(100dvh - var\(--profile-viewport-offset/);
-  assert.match(roll, /profile-roll--quiet\.profile-roll--compact:not\(\.profile-roll--presentation\)/);
+  assert.doesNotMatch(shell, /profileRollComponent|todayColorComponent/);
   assert.match(card, /profile-reference-card__links/);
   assert.match(card, /profile-reference-card__avatar/);
   assert.doesNotMatch(card, /identity-card--layout-(?:sleek|minimal|modern|portfolio)/);

@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-31 — Final launch stabilization
+
+- Kept the full daily Roll on `/roll`; profiles now contain only the current
+  static result and progression story, avoiding a second embedded game.
+- Made the discovery setting also remove profiles from generated sitemaps and
+  request `noindex,follow` while keeping direct profile links functional.
+- Hardened Plus checkout against duplicate concurrent sessions and stale
+  expired checkout state.
+- Updated Privacy and Terms to match current hosting, media, analytics, and
+  payment behavior.
+- Reduced route payload and removed normal-production prototype code without
+  changing visuals, scoring, progression, cosmetics, or historical data.
+
 ## 2026-08-30 — Reduce Compact to a daily-roll summary
 
 - Compact now shows a small daily-roll widget with the color swatch, color
@@ -4217,3 +4230,31 @@ direct route behavior.
 - Audited populated competitor profiles directly and checked each Chromadie
   renderer through Studio publication at desktop and mobile widths, including
   safe external link targets and the absence of the interactive game.
+
+## Profile layout audit and daily-roll widget — 2026-08-30
+
+- Added a visible/hidden daily-roll widget control to the Layout editor and
+  connected it to both the live Studio preview and published public profiles.
+- Preserved hidden roll-widget state across layout changes and through the
+  server configuration normalizer.
+- Corrected Studio roll fallback behavior, duplicate widget instrumentation,
+  and no-avatar layout reflow in Sleek and Portfolio.
+- Extended renderer and browser coverage for all five layouts, six links, and
+  the optional public roll summary.
+
+## Bee score condition — 2026-08-31
+
+- Replaced the D23 hex-culture condition with the self-explanatory Bee (`BEE`, 🐝).
+- Preserved its 1-in-1,025 probability, Epic reward band, and named-condition bonus.
+- Added a forward-only generated database evaluator migration; historical roll data is unchanged.
+
+## Source-backed competitor effect fidelity — 2026-09-01
+
+- Audited populated Guns.lol and Vaults.lol profiles in a real browser and
+  inspected their shipped effect code instead of inferring the visuals.
+- Matched Guns Fuzzy row displacement, measured-glyph Shuffle timing, custom
+  cursor trailing/fairy-dust behavior, and ten-degree avatar parallax in the
+  existing bounded renderers.
+- Added Chillax as a compatibility font for imported profile configurations.
+- Preserved safe profile configuration, mobile behavior, visibility throttling,
+  reduced-motion support, and unchanged catalog/database boundaries.

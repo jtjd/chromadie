@@ -1,3 +1,7 @@
+const prototypeLoaders = import.meta.env.DEV
+  ? { prototype: () => import('./ProfileCanvasPrototype.svelte') }
+  : {};
+
 const loaders = Object.freeze({
   home: () => import('./HomePage.svelte'),
   auth: () => import('./Auth.svelte'),
@@ -11,11 +15,11 @@ const loaders = Object.freeze({
   profileShell: () => import('./ProfileShell.svelte'),
   profileSettings: () => import('./ProfileSettings.svelte'),
   guestProfile: () => import('./GuestProfileOnboarding.svelte'),
-  prototype: () => import('./ProfileCanvasPrototype.svelte'),
   privacy: () => import('./PrivacyPolicy.svelte'),
   terms: () => import('./TermsOfService.svelte'),
   howToPlay: () => import('./FAQ.svelte'),
-  pricing: () => import('./Pricing.svelte')
+  pricing: () => import('./Pricing.svelte'),
+  ...prototypeLoaders
 });
 
 const promiseCache = new Map();

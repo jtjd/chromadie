@@ -36,10 +36,11 @@ test('foundation layers define shared tokens, primitives, and reduced-motion equ
   assert.doesNotMatch(prototypeSource, /supabase|\.rpc\(/);
 });
 
-test('prototype route remains additive, direct-refreshable, and noindex', () => {
-  const route = parseRouteLocation('/prototype/profile');
+test('prototype route remains available only to explicit development certification', () => {
+  const route = parseRouteLocation('/prototype/profile', '', { prototypeEnabled: true });
   assert.equal(route.routeMode, 'app');
   assert.equal(route.view, 'prototype');
   assert.equal(route.profileUsername, null);
+  assert.equal(parseRouteLocation('/prototype/profile').routeMode, 'not-found');
   assert.equal(parseRouteLocation('/').view, 'home');
 });

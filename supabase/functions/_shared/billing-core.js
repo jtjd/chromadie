@@ -65,6 +65,7 @@ export async function stripeRequest(secret, path, options = {}) {
     headers: {
       Authorization: `Bearer ${secret}`,
       ...(options.stripeVersion ? { 'Stripe-Version': options.stripeVersion } : {}),
+      ...(options.idempotencyKey ? { 'Idempotency-Key': options.idempotencyKey } : {}),
       ...(options.body ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {})
     },
     ...(options.body ? { body: new URLSearchParams(options.body).toString() } : {})
@@ -72,4 +73,11 @@ export async function stripeRequest(secret, path, options = {}) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload?.error?.message || 'Stripe request failed.');
   return payload;
+}
+
+export function stripeUnixTimestampToIso(value) {
+  const seconds = Number(value);
+  if (!Number.isSafeInteger(seconds) || seconds <= 0) return null;
+  const date = new Date(seconds * 1000);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }

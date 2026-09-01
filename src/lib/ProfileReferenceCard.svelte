@@ -145,7 +145,7 @@
       </div>
 
       {#if rollHex}
-        <div class="profile-reference-card__roll profile-reference-card__roll--summary" data-profile-widget="roll" data-profile-widget-mode="summary">
+        <div class="profile-reference-card__roll profile-reference-card__roll--summary" data-profile-roll-slot="summary">
           <ProfileRollSummary result={roll} accentColor={safeAccent} label={rollLabel} compact={framedLayout} />
         </div>
       {/if}

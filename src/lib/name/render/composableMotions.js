@@ -3,7 +3,6 @@ import {
   createRadialGradient,
   drawText,
   drawTextSlices,
-  easeInOut,
   easeOut,
   fract,
   lerp,
@@ -14,6 +13,12 @@ import {
   strokeText,
   withTextMask
 } from './primitives.js';
+import {
+  GUNS_FUZZY_BASE_INTENSITY,
+  getGunsFuzzyRowOffset,
+  getGunsShuffleCycleDuration,
+  getGunsShuffleTrackOffset
+} from '../../competitor-effects/gunsEffectAlgorithms.js';
 
 const MOTION_TEXT_LIGHT = '#F7FBFF';
 
@@ -47,16 +52,6 @@ function drawBaseVariant(ctx, model, drawBase, {
   if (offsetX || offsetY) ctx.translate?.(offsetX, offsetY);
   drawBase(ctx, model);
   ctx.restore?.();
-}
-
-function drawSliceMotion(ctx, model, drawBase, count, offsetFor, alpha = 1) {
-  drawTextSlices(ctx, model, index => {
-    ctx.save?.();
-    ctx.globalAlpha = alpha;
-    ctx.translate?.(offsetFor(index), 0);
-    drawBase(ctx, model);
-    ctx.restore?.();
-  }, count);
 }
 
 function drawClippedBase(ctx, model, drawBase, {
@@ -185,6 +180,7 @@ function drawParticleTrail(ctx, model, count = 32) {
 
 const REFERENCE_TEXT_MASKS = new WeakMap();
 const RASTER_SIGNAL_BUFFERS = new WeakMap();
+const GUNS_FUZZY_BUFFERS = new WeakMap();
 
 function createReferenceCanvas(ctx, width, height) {
   const ownerDocument = ctx?.canvas?.ownerDocument
@@ -203,6 +199,149 @@ function createReferenceCanvas(ctx, width, height) {
     }
   }
   return null;
+}
+
+function getGunsFuzzyBuffer(ctx, model) {
+  if (!ctx || (typeof ctx !== 'object' && typeof ctx !== 'function')) return null;
+  const key = [
+    model.displayText,
+    model.font.key,
+    model.metrics.fontSize,
+    model.baseColor
+  ].join('|');
+  const cached = GUNS_FUZZY_BUFFERS.get(ctx);
+  if (cached?.key === key) return cached;
+
+  // The live component first waits for document.fonts.ready, measures the
+  // actual glyph bounds, and paints one compact source canvas. Recreate that
+  // buffer here so the row displacement below operates on glyph pixels rather
+  // than redrawing a centered text string for every scanline.
+  const sourceCanvas = createReferenceCanvas(ctx, 1, 1);
+  const sourceContext = sourceCanvas?.getContext?.('2d');
+  if (!sourceCanvas || !sourceContext?.measureText || !sourceContext.fillText) return null;
+
+  setTextContext(sourceContext, model);
+  sourceContext.textAlign = 'left';
+  sourceContext.textBaseline = 'alphabetic';
+  let measured;
+  try {
+    measured = sourceContext.measureText(model.displayText);
+  } catch {
+    return null;
+  }
+  const actualLeft = Number.isFinite(measured?.actualBoundingBoxLeft) ? measured.actualBoundingBoxLeft : 0;
+  const actualRight = Number.isFinite(measured?.actualBoundingBoxRight) ? measured.actualBoundingBoxRight : model.metrics.width;
+  const actualAscent = Number.isFinite(measured?.actualBoundingBoxAscent)
+    ? measured.actualBoundingBoxAscent
+    : model.metrics.fontSize * 0.78;
+  const actualDescent = Number.isFinite(measured?.actualBoundingBoxDescent)
+    ? measured.actualBoundingBoxDescent
+    : model.metrics.fontSize * 0.22;
+  const textWidth = Math.max(1, Math.ceil(actualLeft + actualRight));
+  const textHeight = Math.max(1, Math.ceil(actualAscent + actualDescent));
+  const width = textWidth + 10;
+  sourceCanvas.width = width;
+  sourceCanvas.height = textHeight;
+  sourceContext.font = `${model.font.style} ${model.font.weight} ${model.metrics.fontSize}px "${model.font.family}", ${model.font.fallback}`;
+  sourceContext.textAlign = 'left';
+  sourceContext.textBaseline = 'alphabetic';
+  sourceContext.fillStyle = model.baseColor || '#FFFFFF';
+  sourceContext.fillText(model.displayText, 5 - actualLeft, actualAscent);
+
+  const state = Object.freeze({ key, canvas: sourceCanvas, width, height: textHeight });
+  GUNS_FUZZY_BUFFERS.set(ctx, state);
+  return state;
+}
+
+function drawGunsFuzzyMotion(ctx, model, drawBase) {
+  const buffer = getGunsFuzzyBuffer(ctx, model);
+  if (!buffer?.canvas || typeof ctx?.drawImage !== 'function') {
+    drawBase(ctx, model);
+    return;
+  }
+
+  const left = model.metrics.x - buffer.width / 2;
+  const top = model.metrics.y - buffer.height / 2;
+  const staticFrame = model.staticFrame || model.reducedMotion;
+  ctx.save?.();
+  ctx.globalAlpha = 1;
+  for (let row = 0; row < buffer.height; row += 1) {
+    const randomValue = staticFrame ? 0.5 : Math.random();
+    const offset = getGunsFuzzyRowOffset(randomValue, GUNS_FUZZY_BASE_INTENSITY);
+    ctx.drawImage(buffer.canvas, 0, row, buffer.width, 1, left + offset, top + row, buffer.width, 1);
+  }
+  ctx.restore?.();
+}
+
+function getGunsShuffleGlyphLayout(ctx, model) {
+  const characters = Array.from(model.displayText || '');
+  if (!characters.length) return null;
+  const fallbackWidth = model.metrics.width / characters.length;
+  ctx.save?.();
+  setTextContext(ctx, model);
+  const widths = characters.map(character => {
+    const measuredWidth = (() => {
+      try {
+        return Number(ctx.measureText?.(character)?.width) || fallbackWidth;
+      } catch {
+        return fallbackWidth;
+      }
+    })();
+    // The source wrapper widens each measured SplitText character by
+    // floor((fontSize - 20) / 2), leaving the same little breathing room in
+    // the sliding clip window.
+    return Math.max(1, measuredWidth + Math.floor((model.metrics.fontSize - 20) / 2));
+  });
+  ctx.restore?.();
+  const totalWidth = widths.reduce((total, width) => total + width, 0);
+  let left = model.metrics.x - totalWidth / 2;
+  const centers = widths.map(width => {
+    const center = left + width / 2;
+    left += width;
+    return center;
+  });
+  return { characters, widths, centers };
+}
+
+function drawGunsShuffleMotion(ctx, model, drawBase) {
+  if (!ctx?.fillText || model.staticFrame || model.reducedMotion) {
+    drawBase(ctx, model);
+    return;
+  }
+  const layout = getGunsShuffleGlyphLayout(ctx, model);
+  if (!layout) {
+    drawBase(ctx, model);
+    return;
+  }
+  const cycleDuration = getGunsShuffleCycleDuration(layout.characters.length);
+  const elapsed = ((Number(model.time) || 0) % cycleDuration + cycleDuration) % cycleDuration;
+  ctx.save?.();
+  setTextContext(ctx, model);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = model.baseColor || '#FFFFFF';
+  layout.characters.forEach((character, index) => {
+    const offset = getGunsShuffleTrackOffset(
+      index,
+      elapsed,
+      layout.widths[index],
+      layout.characters.length
+    );
+    ctx.save?.();
+    if (ctx.beginPath && ctx.rect && ctx.clip) {
+      ctx.beginPath();
+      ctx.rect(
+        layout.centers[index] - layout.widths[index] / 2,
+        0,
+        layout.widths[index],
+        model.height
+      );
+      ctx.clip();
+    }
+    ctx.fillText(character, layout.centers[index] + offset, model.metrics.y);
+    ctx.restore?.();
+  });
+  ctx.restore?.();
 }
 
 function getReferenceTextMask(ctx, model) {
@@ -374,29 +513,6 @@ function drawNeonParticleFallback(ctx, model, drawBase) {
       drawReferenceCircle(target, x, y, 0.45 + seed * 1.25, index % 9 === 0 ? '#FFFFFF' : '#00EFFF', 0.35 + seed * 0.45);
     }
   });
-}
-
-function drawFuzzyMotion(ctx, model, drawBase) {
-  const { progress, metrics } = model;
-  drawBase(ctx, model);
-  drawSliceMotion(ctx, model, (target, nextModel) => drawText(target, nextModel, '#45E8FF'), 9,
-    index => (seededNoise(model.seed, index + Math.floor(progress * 24) * 7) - 0.5) * 11, 0.45);
-  drawSliceMotion(ctx, model, (target, nextModel) => drawText(target, nextModel, '#FF4FA3'), 9,
-    index => (seededNoise(model.seed, index + 61 + Math.floor(progress * 19) * 5) - 0.5) * 8, 0.3);
-  drawMaskedRect(ctx, model,
-    lerp(metrics.x - metrics.width * 0.72, metrics.x + metrics.width * 0.72, easeInOut(progress)),
-    0,
-    Math.max(3, metrics.width * 0.07),
-    model.height,
-    '#FFFFFF',
-    0.48);
-  drawMaskedRect(ctx, model,
-    0,
-    (Math.floor(progress * 16) % 6) / 6 * model.height,
-    model.width,
-    1,
-    '#090B0F',
-    0.28);
 }
 
 function drawKineticEcho(ctx, model, drawBase) {
@@ -780,22 +896,7 @@ export function drawComposableMotion(ctx, model, drawBase) {
       return true;
     }
     case 'letter-shuffle': {
-      const text = Array.from(model.displayText || '');
-      const locked = Math.floor((Math.min(progress, 0.42) / 0.42) * text.length);
-      const tail = text.slice(locked);
-      const shift = tail.length > 1 ? Math.floor(progress * 40) % tail.length : 0;
-      const scrambledGlyphs = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789*+×<>/';
-      const scrambledTail = tail.map((character, index) => {
-        if (progress >= 0.42 || !character.trim()) return character;
-        const glyphIndex = Math.floor(seededNoise(model.seed, index + shift * 17 + Math.floor(progress * 31) * 3) * scrambledGlyphs.length);
-        return scrambledGlyphs[glyphIndex];
-      });
-      const shuffled = progress < 0.42
-        ? text.slice(0, locked).concat(scrambledTail).join('')
-        : model.displayText;
-      const nextModel = cloneTextModel(model, shuffled, { ...metrics, width: metrics.width });
-      drawBaseVariant(ctx, nextModel, drawBase, { alpha: progress < 0.42 ? 0.56 : 1, offsetX: Math.sin(phase) * 1.5 });
-      drawBase(ctx, nextModel);
+      drawGunsShuffleMotion(ctx, model, drawBase);
       return true;
     }
     case 'typewriter-name': {
@@ -844,7 +945,7 @@ export function drawComposableMotion(ctx, model, drawBase) {
       drawLiquidHighlight(ctx, model, progress, phase);
       return true;
     case 'haunt-fuzzy':
-      drawFuzzyMotion(ctx, model, drawBase);
+      drawGunsFuzzyMotion(ctx, model, drawBase);
       return true;
     case 'haunt-reveal': {
       const reveal = easeOut(Math.min(1, progress / 0.72));

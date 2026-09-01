@@ -1,5 +1,8 @@
 # Phase 11 Report — Continuous Profile Composition and Minimalism
 
+> Historical report. References to an integrated owner Roll are superseded by
+> the dedicated `/roll` launch contract.
+
 Date: 2026-07-26  
 Branch: `redesign/profile-first-reconciliation`  
 Scope: Phase 11 only

@@ -1,5 +1,8 @@
 # Phase 10.2 — Pre-Implementation Plan
 
+> Historical plan. References to an integrated owner Roll are superseded by
+> the dedicated `/roll` launch contract.
+
 Date: 2026-07-26  
 Branch: `redesign/profile-first-reconciliation`  
 Reference: historical Phase 10.2 mockup source (retired 2026-08-14)

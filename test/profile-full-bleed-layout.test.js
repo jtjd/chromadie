@@ -64,13 +64,15 @@ test('Simplistic uses one purpose-built identity composition in public and Studi
   assert.match(shell, /import ProfileFullBleedLayout/);
   assert.match(shell, /\['full-bleed', 'sleek'\]\.includes\(profilePresentationLayoutVariant\)/);
   assert.match(shell, /inputSurface=\{previewMode \? 'container' : 'viewport'\}/);
-  assert.match(shell, /profileHasBelowFoldRoll = false/);
+  assert.doesNotMatch(shell, /ProfileRoll|ProfileDailyRoll/);
   assert.match(shell, /roll=\{showRoll && !refreshing \? latestRoll : null\}/);
   assert.match(renderModel, /const hasBelowFoldRoll = false/);
 
   assert.match(studio, /import ProfileFullBleedLayout/);
   assert.match(studio, /\['full-bleed', 'sleek'\]\.includes\(layoutVariant\)/);
   assert.match(studio, /inputSurface="container"/);
+  assert.match(studio, /roll=\{visibleRoll\}/);
+  assert.doesNotMatch(studio, /roll=\{latestRoll\}/);
   assert.match(editor, /data-layout='full-bleed'/);
   assert.match(migration, /profile_layout_full_bleed/);
   assert.match(migration, /css_value IN \('compact', 'full-bleed'\)/);

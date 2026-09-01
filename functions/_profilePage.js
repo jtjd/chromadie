@@ -61,7 +61,7 @@ function getPublicMediaUrl(mediaReference, env) {
 
 export function getProfileCacheControl(profile, legacyProfile = false) {
   return profile && !legacyProfile
-    ? 'public, max-age=60, s-maxage=300, stale-while-revalidate=60'
+    ? 'public, max-age=0, must-revalidate'
     : 'no-cache, must-revalidate';
 }
 
@@ -82,7 +82,7 @@ export async function renderPublicProfilePage({ request, env, username, legacyPr
   const description = profile
     ? (metadata.description || profile.bio || `View ${displayName}'s public ChromaDie profile, progress, achievements, and recent rolls.`)
     : 'This ChromaDie profile could not be found.';
-  const robots = legacyProfile || !profile ? 'noindex,follow' : 'index,follow';
+  const robots = legacyProfile || !profile || profile.discoverable !== true ? 'noindex,follow' : 'index,follow';
   const faviconUrl = getPublicMediaUrl(metadata.faviconPath, env);
   const shareReference = profile?.configuration?.media_references?.share_image;
   const legacyBannerReference = profile?.configuration?.media_references?.banner || metadata.bannerPath;

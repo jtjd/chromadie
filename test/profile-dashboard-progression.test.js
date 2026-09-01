@@ -63,9 +63,10 @@ test('progression manifest is a small, stable expression track', () => {
 });
 
 test('progression rewards remain server-authoritative and roll responses are additive', async () => {
-  const [migration, profileData, progressionState, game] = await Promise.all([
+  const [migration, profileData, ownerProgression, progressionState, game] = await Promise.all([
     read('supabase/migrations/20260805150000_profile_progression_rewards.sql'),
     read('src/lib/profileData.js'),
+    read('src/lib/profileOwnerProgression.js'),
     read('src/lib/progressionState.js'),
     read('src/lib/Game.svelte')
   ]);
@@ -76,7 +77,8 @@ test('progression rewards remain server-authoritative and roll responses are add
   assert.match(migration, /SECURITY DEFINER/);
   assert.match(migration, /ON CONFLICT \(user_id, milestone_id\) DO NOTHING/);
   assert.match(migration, /jsonb_set\(v_result, '\{new_milestones\}'/);
-  assert.match(profileData, /loadMyProgression/);
+  assert.match(profileData, /import\('\.\/profileOwnerProgression\.js'\)/);
+  assert.match(ownerProgression, /loadMyProgression/);
   assert.match(progressionState, /rpc\('get_my_progression'\)/);
   assert.match(game, /normalizeNewMilestones\(data\.new_milestones\)/);
   assert.doesNotMatch(game, /insert\(.*progression|insert\(.*inventory/s);

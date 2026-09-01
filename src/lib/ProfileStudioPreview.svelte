@@ -21,7 +21,8 @@
   $: appearance = previewRenderSnapshot?.appearance || {};
   $: accentColor = previewRenderSnapshot?.colors?.signature || appearance.colors?.accent || '#FFFFFF';
   $: links = previewRenderSnapshot?.links?.opening || [];
-  $: latestRoll = previewRenderSnapshot?.roll?.latest || previewRenderSnapshot?.roll?.best || null;
+  $: showRoll = previewRenderSnapshot?.roll?.show === true;
+  $: visibleRoll = showRoll ? previewRenderSnapshot?.roll?.latest || previewRenderSnapshot?.roll?.best || null : null;
   $: media = previewRenderSnapshot?.media || {};
   $: playlist = media.playlist || {};
   $: audioAvailable = Boolean(media.audioUrl || media.audioPath || playlist.tracks?.length);
@@ -79,7 +80,7 @@
   }
 </script>
 
-<div class="profile-studio-preview" data-preview-tab={activeCustomizeTab} data-preview-section={activeSection} data-preview-layout={layoutVariant}>
+<div class="profile-studio-preview" data-preview-tab={activeCustomizeTab} data-preview-section={activeSection} data-preview-layout={layoutVariant} data-preview-roll-widget={showRoll ? 'visible' : 'hidden'}>
   <header class="profile-studio-preview__header">
     <div class="profile-studio-preview__label"><i></i><span>Live public-profile preview</span></div>
     {#if isMobileViewport}
@@ -126,7 +127,7 @@
                 entryAnimation={identity.entryAnimation}
                 {links}
                 {linkStyle}
-                roll={latestRoll}
+                roll={visibleRoll}
                 {accentColor}
               />
             {:else if ['full-bleed', 'sleek'].includes(layoutVariant)}
@@ -151,7 +152,7 @@
                 {links}
                 {linkStyle}
                 {accentColor}
-                roll={latestRoll}
+                roll={visibleRoll}
                 surfaceStyle={appearanceStyle}
                 layoutVariant={layoutVariant}
               />
@@ -174,7 +175,7 @@
                 entryAnimation={identity.entryAnimation}
                 {links}
                 {linkStyle}
-                roll={latestRoll}
+                roll={visibleRoll}
                 {accentColor}
                 {audioAvailable}
                 audioStatus={audioStatus}

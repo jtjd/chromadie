@@ -105,21 +105,14 @@ test('percentile presentation retains the existing rank tiers', () => {
   assert.equal(getPercentileTier(0, 100).text, '💀 Bottom 5% today');
 });
 
-test('owner profile roll integration stays server-authoritative and visitor-safe', async () => {
-  const profileRoll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
+test('the dedicated Roll page is the only interactive roll surface', async () => {
   const profileShell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
+  const rollPage = await readFile(new URL('../src/lib/RollPage.svelte', import.meta.url), 'utf8');
   const game = await readFile(new URL('../src/lib/Game.svelte', import.meta.url), 'utf8');
 
   assert.match(game, /requestRoll/);
   assert.match(game, /normalizeCanonicalRoll/);
-  assert.doesNotMatch(profileRoll, /calculate_roll_v2|Math\.random\(\)|purchase\s*\(/);
-  assert.match(profileRoll, /get_my_daily_roll/);
-  assert.match(profileRoll, /get_score_percentile/);
-  assert.match(profileRoll, /refreshProfileState/);
-  assert.match(profileRoll, /fetchInventoryState/);
-  assert.match(profileRoll, /fetchWalletBalance/);
-  assert.match(profileRoll, /rollcomplete/);
-  assert.match(profileRoll, /prefers-reduced-motion/);
-  assert.match(profileShell, /ProfileRoll/);
-  assert.doesNotMatch(profileRoll, /localStorage/);
+  assert.match(rollPage, /<Game/);
+  assert.doesNotMatch(profileShell, /profileRollComponent|todayColorComponent|roll_die\s*\(/);
+  assert.doesNotMatch(game, /calculate_roll_v2|Math\.random\(\)|purchase\s*\(/);
 });

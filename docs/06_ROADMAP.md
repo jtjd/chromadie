@@ -59,7 +59,11 @@ Exit criteria:
 - Share links and direct refresh work.
 - No loss of privacy behavior or cosmetic ownership.
 
-## Phase 3 — Integrated Roll Vertical Slice
+## Phase 3 — Historical Integrated Roll Vertical Slice (Superseded)
+
+> Historical milestone record. The launch architecture supersedes this phase:
+> `/roll` owns the full interactive experience and profiles render only the
+> resulting static roll/progression state.
 
 Goal: make today's roll feel like a living event inside the profile.
 
@@ -74,7 +78,7 @@ Deliverables:
 
 Exit criteria:
 
-- No separate roll page is needed for the primary flow.
+- Historical acceptance criterion only; it is not the current product contract.
 - Anti-reroll and scoring parity tests pass.
 - Animation works under reduced motion and on mobile.
 

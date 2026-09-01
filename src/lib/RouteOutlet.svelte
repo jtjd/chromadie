@@ -106,6 +106,7 @@
         on:claim={event => forward('claim', event)}
         on:profile={event => forward('profile', event)}
         on:roll={event => forward('roll', event)}
+        on:metadata={event => forward('metadata', event)}
       />
     {/key}
   {:else if errorMessage}

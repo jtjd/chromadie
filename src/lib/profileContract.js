@@ -16,7 +16,8 @@ const PROFILE_FIELDS = Object.freeze([
   'mood_color',
   'best_roll_score',
   'best_roll_hex',
-  'best_roll_rarity'
+  'best_roll_rarity',
+  'discoverable'
 ])
 
 const SCORE_FIELDS = Object.freeze([

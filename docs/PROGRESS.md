@@ -1,5 +1,22 @@
 # Chromadie 2.0 Progress
 
+## Final stabilization and launch hardening — 2026-08-31
+
+- Restored all route payload gates without raising budgets: Public Profile is
+  437.27 kB/475 kB, Dashboard 500.33 kB/540 kB, and Progression
+  344.99 kB/400 kB in the audited production build.
+- Added serialized, recoverable Stripe checkout claims, stable idempotency,
+  open-session reuse, explicit expiry reconciliation, and expiry webhooks while
+  preserving fulfillment/refund/dispute authority.
+- Made discoverability control internal discovery, sitemap membership, and
+  SSR/client robots metadata while preserving direct public profile URLs.
+- Retired the duplicate profile Roll application, gated the prototype outside
+  normal production, and extracted Roll sharing/reveal, route metadata, and
+  Studio media actions into tested boundaries.
+- Updated Privacy and Terms for the actual Supabase, Cloudflare/R2, Fontshare,
+  Stripe, upload, deletion, tax, refund, and chargeback behavior.
+
+
 ## Compact daily-roll summary — 2026-08-30
 
 - Replaced the interactive roll mounted inside Compact with a small static
@@ -5284,3 +5301,42 @@ responsive desktop two-column/mobile stacked composition.
   rendering, live populated-profile screenshots, and the complete automated
   test suite. The browser audit confirms six links and no public game surface
   across all five layouts.
+
+## Profile layout audit and roll-widget visibility — 2026-08-30
+
+- Added a Layout-tab daily-roll widget control. It updates the live Studio
+  preview immediately, survives layout changes and publishing, and hides only
+  the public summary—not gameplay or earned roll data.
+- Repaired the database normalizer that had overwritten the older roll-hidden
+  compatibility path, so `modules.roll.visible = false` now persists through
+  save and publish.
+- Removed duplicate roll-widget DOM markers, restored the Studio best-roll
+  fallback when a latest row is unavailable, and fixed hidden-avatar reflow in
+  Sleek and Portfolio.
+- Browser smoke now verifies all five layouts at desktop and mobile widths,
+  six safe links, a single static roll widget, and the hidden-roll public
+  state. The no-media browser path passes in full; uploaded-media mutation
+  remains dependent on local R2 availability.
+
+## Score catalog: Bee — 2026-08-31
+
+- Replaced the opaque `D23` Epic culture condition with `Bee` (`BEE`, 🐝).
+- Regenerated the shared JavaScript, SQL, presentation, probability, and
+  exhaustive balance artifacts from the declarative catalog.
+- Added a forward-only v6 evaluator migration and regression coverage that
+  locks the replacement, its probability, and the removed D23 match.
+
+## 2026-09-01 — Source-backed competitor effect fidelity
+
+- Visited populated Guns.lol profiles and a Vaults.lol profile in Chromium;
+  captured their post-entry states and inspected the shipped profile bundles,
+  cursor library, snow/rain loader, CSS, and inline effect configuration.
+- Replaced the inferred Fuzzy and Letter Shuffle gestures with the observed
+  offscreen scanline displacement and measured-glyph timing contracts.
+- Ported the observed Guns trailing cursor, fairy-dust particle physics, and
+  pointer parallax math into shared testable helpers, then wired them into the
+  existing Ghost Tail, Solar Sparks, and 3D Parallax effects.
+- Added the observed Vaults Chillax face as a compatibility font without
+  changing catalog rows, entitlements, or database state.
+- Added source evidence, profile links, fidelity tests, and explicit reduced-
+  motion/static fallbacks in [COMPETITOR_EFFECT_RESEARCH.md](COMPETITOR_EFFECT_RESEARCH.md).

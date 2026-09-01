@@ -13,6 +13,7 @@
   $: backgroundVideoActive = Boolean(backgroundVideoSrc && !reducedMotion);
   $: atmosphereKey = environment.atmosphereKey || '';
   $: cursorTrailKey = environment.cursorTrailKey || '';
+  $: cursorSrc = environment.cursorUrl || '';
   $: todayColor = snapshot?.colors?.nameToday || '#8B7CF6';
   $: recentColors = snapshot?.colors?.nameRecent || [];
   $: pageStyle = snapshot?.styles?.page || '';
@@ -36,7 +37,7 @@
     <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={todayColor} recentColors={recentColors} active={true} animated={!reducedMotion} mode="profile" className="profile-environment__atmosphere" />
   {/if}
   {#if cursorTrailKey}
-    <CursorTrailLayer trailKey={cursorTrailKey} recentColors={recentColors} todayColor={todayColor} active={true} inputMode={mode === 'studio' ? 'demo' : 'window'} className="profile-environment__cursor" />
+    <CursorTrailLayer trailKey={cursorTrailKey} cursorSrc={cursorSrc} recentColors={recentColors} todayColor={todayColor} active={true} inputMode={mode === 'studio' ? 'demo' : 'window'} className="profile-environment__cursor" />
   {/if}
 </div>
 

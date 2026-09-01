@@ -5,14 +5,13 @@ import { readFile } from 'node:fs/promises';
 import { parseRouteLocation } from '../src/lib/routes.js';
 import { canInitiateRoll, normalizeCanonicalRoll } from '../src/lib/rollState.js';
 
-const [redirects, app, header, privacy, game, profileShell, profileRoll, profileFunction, migrations, rollback] = await Promise.all([
+const [redirects, app, header, privacy, game, profileShell, profileFunction, migrations, rollback] = await Promise.all([
   readFile(new URL('../public/_redirects', import.meta.url), 'utf8'),
   readFile(new URL('../src/App.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/SiteModeHeader.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/PrivacyPolicy.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/Game.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8'),
-  readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../functions/u/[[username]].js', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/MIGRATIONS.md', import.meta.url), 'utf8'),
   readFile(new URL('../docs/ROLLBACK_AND_RECOVERY.md', import.meta.url), 'utf8')
@@ -50,11 +49,9 @@ test('browser audit preserves guest/authenticated roll and owner/visitor profile
   assert.match(game, /getRollAccountMode/);
   assert.match(game, /localStorage\.setItem\('chromadie-roll'/);
   assert.match(game, /requestRoll/);
-  assert.match(profileRoll, /requestRoll/);
-  assert.match(profileRoll, /normalizeCanonicalRoll/);
   assert.match(profileShell, /isOwnProfileTarget/);
   assert.match(profileShell, /isOwnProfile/);
-  assert.match(profileShell, /profileRollComponent[\s\S]*fixtureResult=\{latestRoll\}/);
+  assert.doesNotMatch(profileShell, /profileRollComponent|todayColorComponent|roll_die\s*\(/);
 
   assert.equal(canInitiateRoll({ authInitialized: false }), false);
   assert.equal(canInitiateRoll({ authInitialized: true }), true);
