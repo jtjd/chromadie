@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-01 — Align expression effects with every profile layout
+
+- Profile borders now fit the rendered Default, Sleek, Full-bleed, Framed, and
+  Portfolio surfaces instead of inheriting a wider layout opening.
+- Halo Offset and Wavefront decorative layers track the same surface bounds on
+  responsive profiles and Studio previews.
+- Kept the effect catalog, profile data authority, scoring, and reduced-motion
+  behavior unchanged.
+
 ## 2026-09-01 — Add source-backed profile expression layers
 
 - Added Shimmer Track for a moving rounded-profile edge, with a static fallback

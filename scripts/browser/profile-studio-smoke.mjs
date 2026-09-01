@@ -535,15 +535,27 @@ async function capturePublishedLayouts() {
     const viewport = document.querySelector('.profile-studio-preview__viewport');
     const stage = document.querySelector('.profile-studio-preview__stage');
     const card = document.querySelector('.profile-studio-preview .profile-reference-card');
+    const boundary = card?.closest('.profile-border-effect');
     const rect = element => {
       const box = element?.getBoundingClientRect();
       return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
     };
+    const cardBox = card?.getBoundingClientRect();
+    const boundaryBox = boundary?.getBoundingClientRect();
+    const boundaryCenter = boundaryBox ? (boundaryBox.left + boundaryBox.right) / 2 : 0;
+    const cardCenter = cardBox ? (cardBox.left + cardBox.right) / 2 : 0;
+    const frameDelta = boundaryBox && cardBox ? boundaryBox.width - cardBox.width : null;
     return {
       canvas: rect(canvas),
       viewport: rect(viewport),
       stage: rect(stage),
       card: rect(card),
+      boundary: rect(boundary),
+      frame: {
+        fit: Boolean(boundaryBox && cardBox && frameDelta >= -1 && frameDelta <= 12 && Math.abs(boundaryCenter - cardCenter) <= 2),
+        delta: frameDelta,
+        centerOffset: boundaryBox && cardBox ? boundaryCenter - cardCenter : null
+      },
       cardCount: document.querySelectorAll('.profile-studio-preview .profile-reference-card').length,
       avatar: Boolean(card?.querySelector('.profile-reference-card__avatar, .profile-reference-card__avatar-fallback')),
       name: Boolean(card?.querySelector('.profile-reference-card__name')),
@@ -561,7 +573,7 @@ async function capturePublishedLayouts() {
   })()`);
   assert(studioState.cardCount === 1 && studioState.avatar && studioState.name && studioState.links === RICH_PROFILE_FIXTURE.links.length && studioState.roll && studioState.rollWidgetCount === 1 && studioState.rollWidget && studioState.rollSummary && !studioState.interactiveRoll, `Studio reference card anatomy is incomplete: ${JSON.stringify(studioState)}.`);
   assert(studioState.linkTargets.every(link => link.target === '_blank' && link.href.startsWith('https://')), `Studio reference card links do not preserve safe external targets: ${JSON.stringify(studioState)}.`);
-  assert(studioState.card && studioState.card.width >= 300 && studioState.card.left >= (studioState.viewport?.left || 0) - 1 && studioState.card.right <= (studioState.viewport?.right || 0) + 1, `Studio reference card is not bounded by its preview rail: ${JSON.stringify(studioState)}.`);
+  assert(studioState.card && studioState.frame?.fit && studioState.card.width >= 300 && studioState.card.left >= (studioState.viewport?.left || 0) - 1 && studioState.card.right <= (studioState.viewport?.right || 0) + 1, `Studio reference card or border is not bounded by its preview rail: ${JSON.stringify(studioState)}.`);
   assert(studioState.motion && !studioState.oldRenderer && !studioState.scrollable, `Studio still mounts an obsolete or scrollable profile renderer: ${JSON.stringify(studioState)}.`);
   await captureRegion('studio-reference-card-desktop', '.profile-studio-preview__viewport');
   const mediaSourcesBeforeDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')].map(element => element.currentSrc || element.src || '').filter(Boolean))()`);
@@ -618,11 +630,33 @@ async function capturePublishedLayouts() {
   const publicState = await page.evaluate(`(() => {
     const shell = document.querySelector('.profile-shell-page');
     const image = shell?.querySelector('.profile-environment__image');
+    const content = shell?.querySelector('[data-profile-reference-card], [data-profile-layout-content="full-bleed"]');
+    const boundary = content?.closest('.profile-border-effect');
+    const halo = shell?.querySelector('.profile-motion-effect__halo-shell--one');
     const box = shell?.getBoundingClientRect();
+    const contentBox = content?.getBoundingClientRect();
+    const boundaryBox = boundary?.getBoundingClientRect();
+    const haloBox = halo?.getBoundingClientRect();
+    const boundaryCenter = boundaryBox ? (boundaryBox.left + boundaryBox.right) / 2 : 0;
+    const contentCenter = contentBox ? (contentBox.left + contentBox.right) / 2 : 0;
+    const frameDelta = boundaryBox && contentBox ? boundaryBox.width - contentBox.width : null;
+    const haloCenter = haloBox ? (haloBox.left + haloBox.right) / 2 : 0;
+    const haloContentCenter = boundaryBox ? (boundaryBox.left + boundaryBox.right) / 2 : 0;
     return {
       shell: box ? { width: box.width, height: box.height } : null,
       background: Boolean(image?.complete && image.naturalWidth > 0),
       card: Boolean(shell?.querySelector('[data-profile-reference-card], [data-profile-layout-content="full-bleed"]')),
+      boundary: boundaryBox ? { left: boundaryBox.left, right: boundaryBox.right, width: boundaryBox.width, height: boundaryBox.height } : null,
+      frame: {
+        fit: Boolean(boundaryBox && contentBox && frameDelta >= -1 && frameDelta <= 12 && Math.abs(boundaryCenter - contentCenter) <= 2),
+        delta: frameDelta,
+        centerOffset: boundaryBox && contentBox ? boundaryCenter - contentCenter : null
+      },
+      motionFrame: {
+        fit: !halo || Boolean(boundaryBox && haloBox && Math.abs(haloBox.width - boundaryBox.width) <= 2 && Math.abs(haloBox.height - boundaryBox.height) <= 2 && Math.abs(haloCenter - haloContentCenter) <= 2),
+        delta: haloBox && boundaryBox ? haloBox.width - boundaryBox.width : null,
+        centerOffset: haloBox && boundaryBox ? haloCenter - haloContentCenter : null
+      },
       links: shell?.querySelectorAll('.profile-reference-card__links a, .profile-full-bleed__links a').length || 0,
       rollWidgetCount: shell?.querySelectorAll('[data-profile-widget="roll"]').length || 0,
       rollWidget: Boolean(shell?.querySelector('[data-profile-widget="roll"]')),
@@ -631,7 +665,7 @@ async function capturePublishedLayouts() {
       motion: Boolean(shell?.querySelector('.profile-motion-effect'))
     };
   })()`);
-  assert(publicState.card && publicState.shell && publicState.shell.width >= 1439 && publicState.shell.height >= 899 && publicState.links === RICH_PROFILE_FIXTURE.links.length && publicState.rollWidgetCount === 1 && publicState.rollWidget && publicState.rollSummary && !publicState.interactiveRoll, `Published profile evidence did not render the complete compact profile surface: ${JSON.stringify(publicState)}.`);
+  assert(publicState.card && publicState.frame?.fit && publicState.motionFrame?.fit && publicState.shell && publicState.shell.width >= 1439 && publicState.shell.height >= 899 && publicState.links === RICH_PROFILE_FIXTURE.links.length && publicState.rollWidgetCount === 1 && publicState.rollWidget && publicState.rollSummary && !publicState.interactiveRoll, `Published profile evidence did not render the complete compact profile surface or fitting expression layers: ${JSON.stringify(publicState)}.`);
   await capture('public-reference-profile-desktop');
 
   // Rotate the published fixture through every real renderer. This is kept in
@@ -669,14 +703,35 @@ async function capturePublishedLayouts() {
     const desktop = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
       const content = shell?.querySelector(${JSON.stringify(layoutSelector)});
+      const boundary = content?.closest('.profile-border-effect');
+      const halo = shell?.querySelector('.profile-motion-effect__halo-shell--one');
       const rect = element => {
         const box = element?.getBoundingClientRect();
         return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
       };
+      const contentBox = content?.getBoundingClientRect();
+      const boundaryBox = boundary?.getBoundingClientRect();
+      const haloBox = halo?.getBoundingClientRect();
+      const boundaryCenter = boundaryBox ? (boundaryBox.left + boundaryBox.right) / 2 : 0;
+      const contentCenter = contentBox ? (contentBox.left + contentBox.right) / 2 : 0;
+      const frameDelta = boundaryBox && contentBox ? boundaryBox.width - contentBox.width : null;
+      const haloCenter = haloBox ? (haloBox.left + haloBox.right) / 2 : 0;
+      const haloBoundaryCenter = boundaryBox ? (boundaryBox.left + boundaryBox.right) / 2 : 0;
       const links = [...(content?.querySelectorAll('.profile-reference-card__links a, .profile-full-bleed__links a, .profile-portfolio__links a') || [])];
       return {
         layout: content?.getAttribute('data-profile-layout-content') || '',
         content: rect(content),
+        boundary: rect(boundary),
+        frame: {
+          fit: Boolean(boundaryBox && contentBox && frameDelta >= -1 && frameDelta <= 12 && Math.abs(boundaryCenter - contentCenter) <= 2),
+          delta: frameDelta,
+          centerOffset: boundaryBox && contentBox ? boundaryCenter - contentCenter : null
+        },
+        motionFrame: {
+          fit: !halo || Boolean(boundaryBox && haloBox && Math.abs(haloBox.width - boundaryBox.width) <= 2 && Math.abs(haloBox.height - boundaryBox.height) <= 2 && Math.abs(haloCenter - haloBoundaryCenter) <= 2),
+          delta: haloBox && boundaryBox ? haloBox.width - boundaryBox.width : null,
+          centerOffset: haloBox && boundaryBox ? haloCenter - haloBoundaryCenter : null
+        },
         shell: rect(shell),
         avatar: Boolean(content?.querySelector('[class*="__avatar"]')),
         name: Boolean(content?.querySelector('[class*="__name"]')),
@@ -690,7 +745,7 @@ async function capturePublishedLayouts() {
         overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
       };
     })()`);
-    assert(desktop.layout === layoutKey && desktop.content?.width > 0 && desktop.content?.height > 0 && desktop.avatar && desktop.name && desktop.links === RICH_PROFILE_FIXTURE.links.length && desktop.rollWidgetCount === 1 && desktop.rollWidget && desktop.rollSummary && !desktop.interactiveRoll && desktop.contained && !desktop.overflow, `Published ${layoutKey} desktop layout is incomplete or escaping its viewport: ${JSON.stringify(desktop)}.`);
+    assert(desktop.layout === layoutKey && desktop.content?.width > 0 && desktop.content?.height > 0 && desktop.frame?.fit && desktop.motionFrame?.fit && desktop.avatar && desktop.name && desktop.links === RICH_PROFILE_FIXTURE.links.length && desktop.rollWidgetCount === 1 && desktop.rollWidget && desktop.rollSummary && !desktop.interactiveRoll && desktop.contained && !desktop.overflow, `Published ${layoutKey} desktop layout is incomplete, expression-misaligned, or escaping its viewport: ${JSON.stringify(desktop)}.`);
     assert(desktop.linkTargets.every(link => link.target === '_blank' && link.href.startsWith('https://')), `Published ${layoutKey} links do not preserve safe external targets: ${JSON.stringify(desktop)}.`);
     await capture(`public-${layoutKey}-desktop`);
 
@@ -700,11 +755,31 @@ async function capturePublishedLayouts() {
     const mobile = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
       const content = shell?.querySelector(${JSON.stringify(layoutSelector)});
+      const boundary = content?.closest('.profile-border-effect');
+      const halo = shell?.querySelector('.profile-motion-effect__halo-shell--one');
       const box = content?.getBoundingClientRect();
+      const boundaryBox = boundary?.getBoundingClientRect();
+      const haloBox = halo?.getBoundingClientRect();
+      const boundaryCenter = boundaryBox ? (boundaryBox.left + boundaryBox.right) / 2 : 0;
+      const contentCenter = box ? (box.left + box.right) / 2 : 0;
+      const frameDelta = boundaryBox && box ? boundaryBox.width - box.width : null;
+      const haloCenter = haloBox ? (haloBox.left + haloBox.right) / 2 : 0;
+      const haloBoundaryCenter = boundaryBox ? (boundaryBox.left + boundaryBox.right) / 2 : 0;
       const links = content?.querySelectorAll('.profile-reference-card__links a, .profile-full-bleed__links a, .profile-portfolio__links a').length || 0;
       return {
         layout: content?.getAttribute('data-profile-layout-content') || '',
         content: box ? { left: box.left, right: box.right, width: box.width, height: box.height } : null,
+        boundary: boundaryBox ? { left: boundaryBox.left, right: boundaryBox.right, width: boundaryBox.width, height: boundaryBox.height } : null,
+        frame: {
+          fit: Boolean(boundaryBox && box && frameDelta >= -1 && frameDelta <= 12 && Math.abs(boundaryCenter - contentCenter) <= 2),
+          delta: frameDelta,
+          centerOffset: boundaryBox && box ? boundaryCenter - contentCenter : null
+        },
+        motionFrame: {
+          fit: !halo || Boolean(boundaryBox && haloBox && Math.abs(haloBox.width - boundaryBox.width) <= 2 && Math.abs(haloBox.height - boundaryBox.height) <= 2 && Math.abs(haloCenter - haloBoundaryCenter) <= 2),
+          delta: haloBox && boundaryBox ? haloBox.width - boundaryBox.width : null,
+          centerOffset: haloBox && boundaryBox ? haloCenter - haloBoundaryCenter : null
+        },
         links,
         rollWidgetCount: content?.querySelectorAll('[data-profile-widget="roll"]').length || 0,
         rollSummary: Boolean(content?.querySelector('[data-profile-widget="roll"][data-profile-widget-mode="summary"]')),
@@ -713,7 +788,7 @@ async function capturePublishedLayouts() {
         overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
       };
     })()`);
-    assert(mobile.layout === layoutKey && mobile.content?.width > 0 && mobile.content?.height > 0 && mobile.links === RICH_PROFILE_FIXTURE.links.length && mobile.rollWidgetCount === 1 && mobile.rollSummary && !mobile.interactiveRoll && mobile.contained && !mobile.overflow, `Published ${layoutKey} mobile layout is incomplete or escaping its viewport: ${JSON.stringify(mobile)}.`);
+    assert(mobile.layout === layoutKey && mobile.content?.width > 0 && mobile.content?.height > 0 && mobile.frame?.fit && mobile.motionFrame?.fit && mobile.links === RICH_PROFILE_FIXTURE.links.length && mobile.rollWidgetCount === 1 && mobile.rollSummary && !mobile.interactiveRoll && mobile.contained && !mobile.overflow, `Published ${layoutKey} mobile layout is incomplete, expression-misaligned, or escaping its viewport: ${JSON.stringify(mobile)}.`);
     await capture(`public-${layoutKey}-mobile`);
     layoutEvidence[layoutKey] = { desktop, mobile };
   }

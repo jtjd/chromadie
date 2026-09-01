@@ -19,14 +19,46 @@ function localPointer(host, event) {
   };
 }
 
+function localPointerForTarget(host, target, event) {
+  const hostRect = host?.getBoundingClientRect?.();
+  const targetRect = target?.getBoundingClientRect?.() || hostRect;
+  if (!hostRect || !targetRect || !targetRect.width || !targetRect.height || !Number.isFinite(event?.clientX) || !Number.isFinite(event?.clientY)) return null;
+  return {
+    x: Math.max(0, Math.min(targetRect.width, event.clientX - targetRect.left)),
+    y: Math.max(0, Math.min(targetRect.height, event.clientY - targetRect.top)),
+    width: targetRect.width,
+    height: targetRect.height
+  };
+}
+
+function targetBoundsInHost(host, target) {
+  const hostRect = host?.getBoundingClientRect?.();
+  const targetRect = target?.getBoundingClientRect?.() || hostRect;
+  if (!hostRect || !targetRect) return null;
+  return {
+    left: finite(targetRect.left) - finite(hostRect.left),
+    top: finite(targetRect.top) - finite(hostRect.top),
+    width: Math.max(0, finite(targetRect.width)),
+    height: Math.max(0, finite(targetRect.height))
+  };
+}
+
+function targetBorderRadius(target) {
+  if (!target || typeof window === 'undefined' || typeof window.getComputedStyle !== 'function') return '';
+  return window.getComputedStyle(target).borderRadius || '';
+}
+
 /** @param {any} options */
-function createLifecycle({ host, enabled, onFrame, onVisibilityChange, onReducedMotion } = {}) {
+function createLifecycle({ host, resizeElements = [], enabled, onFrame, onResize, onVisibilityChange, onReducedMotion } = {}) {
   let active = enabled === true;
   let visible = true;
   let reduced = false;
   let frame = 0;
   let destroyed = false;
   let resizeObserver;
+  let resizeTargets = [];
+  /** @type {(elements?: any[]) => void} */
+  let resizeTargetSetter = () => {};
   let intersectionObserver;
   let mediaQuery;
 
@@ -61,8 +93,16 @@ function createLifecycle({ host, enabled, onFrame, onVisibilityChange, onReduced
   reduced = Boolean(mediaQuery?.matches);
   mediaQuery?.addEventListener?.('change', reducedChange);
   if (typeof ResizeObserver === 'function' && host) {
-    resizeObserver = new ResizeObserver(() => schedule());
-    resizeObserver.observe(host);
+    resizeObserver = new ResizeObserver(() => {
+      onResize?.();
+      schedule();
+    });
+    resizeTargetSetter = elements => {
+      resizeTargets.forEach(element => resizeObserver.unobserve?.(element));
+      resizeTargets = [...new Set([host, ...(Array.isArray(elements) ? elements : [])].filter(Boolean))];
+      resizeTargets.forEach(element => resizeObserver.observe(element));
+    };
+    resizeTargetSetter(resizeElements);
   }
   if (typeof IntersectionObserver === 'function' && host) {
     intersectionObserver = new IntersectionObserver(entries => {
@@ -80,6 +120,9 @@ function createLifecycle({ host, enabled, onFrame, onVisibilityChange, onReduced
       }
       if (active) schedule();
     },
+    setResizeElements(elements = []) {
+      resizeTargetSetter(elements);
+    },
     schedule,
     isReduced: () => reduced,
     isVisible: () => visible,
@@ -96,11 +139,28 @@ function createLifecycle({ host, enabled, onFrame, onVisibilityChange, onReduced
 }
 
 /** @param {any} options */
-export function createHaloOffsetController({ host, shells = [], enabled = true } = {}) {
+export function createHaloOffsetController({ host, targetElement = null, shells = [], enabled = true } = {}) {
   const states = HALO_SHELLS.map(() => ({ x: 0, y: 0, vx: 0, vy: 0 }));
   let pointer = null;
   let destroyed = false;
   let lifecycle;
+  let currentTarget = targetElement || host;
+
+  const syncShellBounds = () => {
+    const bounds = targetBoundsInHost(host, currentTarget);
+    if (!bounds) return;
+    const radius = targetBorderRadius(currentTarget);
+    shells.forEach(shell => {
+      if (!shell?.style) return;
+      shell.style.left = `${bounds.left}px`;
+      shell.style.top = `${bounds.top}px`;
+      shell.style.right = 'auto';
+      shell.style.bottom = 'auto';
+      shell.style.width = `${bounds.width}px`;
+      shell.style.height = `${bounds.height}px`;
+      if (radius) shell.style.borderRadius = radius;
+    });
+  };
 
   const draw = () => {
     const nextPointer = pointer;
@@ -124,7 +184,7 @@ export function createHaloOffsetController({ host, shells = [], enabled = true }
 
   const pointerMove = event => {
     if (event.pointerType === 'touch') return;
-    pointer = localPointer(host, event);
+    pointer = localPointerForTarget(host, currentTarget, event) || localPointer(host, event);
     lifecycle?.schedule();
   };
   const pointerLeave = () => {
@@ -136,13 +196,21 @@ export function createHaloOffsetController({ host, shells = [], enabled = true }
   host?.addEventListener?.('pointerleave', pointerLeave, { passive: true });
   lifecycle = createLifecycle({
     host,
+    resizeElements: [currentTarget],
     enabled,
+    onResize: syncShellBounds,
     onFrame: draw
   });
+  syncShellBounds();
   draw();
 
   return Object.freeze({
     update(next = {}) {
+      if (Object.prototype.hasOwnProperty.call(next, 'targetElement')) {
+        currentTarget = next.targetElement || host;
+        lifecycle?.setResizeElements([currentTarget]);
+        syncShellBounds();
+      }
       if (Object.prototype.hasOwnProperty.call(next, 'enabled')) lifecycle?.setEnabled(next.enabled);
       if (next.enabled === false) pointer = null;
       if (next.enabled === false) draw();
@@ -154,24 +222,34 @@ export function createHaloOffsetController({ host, shells = [], enabled = true }
       host?.removeEventListener?.('pointerleave', pointerLeave);
       lifecycle?.destroy();
       shells.forEach(shell => {
-        if (shell) shell.style.transform = '';
+        if (!shell) return;
+        shell.style.transform = '';
+        shell.style.left = '';
+        shell.style.top = '';
+        shell.style.right = '';
+        shell.style.bottom = '';
+        shell.style.width = '';
+        shell.style.height = '';
+        shell.style.borderRadius = '';
       });
     }
   });
 }
 
 /** @param {any} options */
-export function createWavefrontController({ host, motionElement, ring, enabled = true } = {}) {
+export function createWavefrontController({ host, motionElement, targetElement = null, ring, enabled = true } = {}) {
   let lifecycle;
   let destroyed = false;
   let active = enabled === true;
   let wave = null;
   let pieces = [];
   let pieceAnchors = [];
+  let currentTarget = targetElement || host;
 
   const collectPieces = () => {
-    if (!motionElement?.querySelectorAll) return [];
-    const found = motionElement.querySelectorAll('.profile-reference-card > *, .profile-full-bleed > *');
+    const surface = currentTarget?.querySelectorAll ? currentTarget : motionElement;
+    if (!surface?.querySelectorAll) return [];
+    const found = surface.querySelectorAll('.profile-reference-card > *, .profile-full-bleed > *, .profile-portfolio > *');
     pieces = [...found].slice(0, 32);
     const hostRect = host?.getBoundingClientRect?.();
     pieceAnchors = pieces.map(piece => {
@@ -236,10 +314,16 @@ export function createWavefrontController({ host, motionElement, ring, enabled =
     if (event?.pointerType === 'mouse' && event.button !== 0) return;
     const point = event?.clientX === undefined
       ? (() => {
-          const rect = host?.getBoundingClientRect?.() || {};
-          return { x: finite(rect.width, 0) / 2, y: finite(rect.height, 0) / 2, width: finite(rect.width, 0), height: finite(rect.height, 0) };
+          const bounds = targetBoundsInHost(host, currentTarget) || { left: 0, top: 0, width: 0, height: 0 };
+          return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2, width: bounds.width, height: bounds.height };
         })()
-      : localPointer(host, event);
+      : (() => {
+          const targetPoint = localPointerForTarget(host, currentTarget, event);
+          const bounds = targetBoundsInHost(host, currentTarget);
+          return targetPoint && bounds
+            ? { ...targetPoint, x: bounds.left + targetPoint.x, y: bounds.top + targetPoint.y }
+            : localPointer(host, event);
+        })();
     if (!point) return;
     collectPieces();
     resetPieces();
@@ -255,7 +339,9 @@ export function createWavefrontController({ host, motionElement, ring, enabled =
   host?.addEventListener?.('keydown', keyLaunch);
   lifecycle = createLifecycle({
     host,
+    resizeElements: [currentTarget],
     enabled,
+    onResize: collectPieces,
     onFrame: draw,
     onReducedMotion: reduced => {
       if (!reduced) return;
@@ -267,6 +353,12 @@ export function createWavefrontController({ host, motionElement, ring, enabled =
 
   return Object.freeze({
     update(next = {}) {
+      if (Object.prototype.hasOwnProperty.call(next, 'targetElement')) {
+        currentTarget = next.targetElement || host;
+        lifecycle?.setResizeElements([currentTarget]);
+        pieces = [];
+        pieceAnchors = [];
+      }
       if (Object.prototype.hasOwnProperty.call(next, 'enabled')) {
         active = next.enabled === true;
         lifecycle?.setEnabled(active);

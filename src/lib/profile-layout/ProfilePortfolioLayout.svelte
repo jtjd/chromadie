@@ -63,6 +63,7 @@
 
 <ProfileBorderEffect
   borderKey={profileBorderKey}
+  surfaceStyle={surfaceStyle}
   className="profile-portfolio__boundary profile-border-effect--content"
   animated={true}
 >
@@ -161,7 +162,20 @@
 </ProfileBorderEffect>
 
 <style>
-  :global(.profile-portfolio__boundary) { display: block; width: 100%; min-width: 0; }
+  :global(.profile-portfolio__boundary) {
+    display: block;
+    width: calc(72rem + var(--profile-border-frame-inset, 0px));
+    max-width: calc(100% + var(--profile-border-frame-inset, 0px));
+    min-width: 0;
+    margin-inline: auto;
+  }
+
+  @media (max-width: 36rem) {
+    :global(.profile-portfolio__boundary) {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
 
   .profile-portfolio {
     display: grid;

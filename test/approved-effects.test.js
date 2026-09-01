@@ -291,11 +291,22 @@ test('new interaction controllers clean up local listeners, RAF work, and transf
     assert.equal(elasticHost.listenerCount('pointerleave'), 0);
 
     const haloHost = new FakeEventTarget({ left: 0, top: 0, width: 320, height: 180 });
+    const haloTarget = new FakeEventTarget({ left: 80, top: 40, width: 200, height: 100 });
     const shells = [new FakeEventTarget(), new FakeEventTarget(), new FakeEventTarget()];
-    const halo = createHaloOffsetController({ host: haloHost, shells, enabled: true });
+    const halo = createHaloOffsetController({ host: haloHost, targetElement: haloTarget, shells, enabled: true });
+    assert.equal(shells[0].style.left, '80px');
+    assert.equal(shells[0].style.top, '40px');
+    assert.equal(shells[0].style.width, '200px');
+    assert.equal(shells[0].style.height, '100px');
     haloHost.emit('pointermove', { pointerType: 'mouse', clientX: 304, clientY: 32 });
     browser.tick(32);
     assert.match(shells[0].style.transform, /translate3d\(/);
+    const resizedHaloTarget = new FakeEventTarget({ left: 60, top: 24, width: 240, height: 120 });
+    halo.update({ targetElement: resizedHaloTarget });
+    assert.equal(shells[0].style.left, '60px');
+    assert.equal(shells[0].style.top, '24px');
+    assert.equal(shells[0].style.width, '240px');
+    assert.equal(shells[0].style.height, '120px');
     halo.destroy();
     assert.equal(shells[0].style.transform, '');
     assert.equal(haloHost.listenerCount('pointermove'), 0);

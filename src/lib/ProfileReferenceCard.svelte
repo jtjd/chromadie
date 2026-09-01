@@ -56,6 +56,11 @@
   $: safeEntryAnimation = PROFILE_IDENTITY_ENTRY_ANIMATIONS.includes(entryAnimation) ? entryAnimation : 'none';
   $: avatarEffectCanonicalKey = getAvatarEffectDefinition(avatarEffectKey)?.key || '';
   $: framedLayout = layoutVariant === 'framed' || presentation === 'framed';
+  $: profileBorderFrameClass = framedLayout
+    ? 'profile-reference-card__border--framed'
+    : presentation === 'profile' || presentation === 'studio'
+      ? 'profile-reference-card__border--compact'
+      : 'profile-reference-card__border--homepage';
   $: iconLinks = framedLayout || presentation === 'profile' || presentation === 'studio';
   $: visibleLinks = (Array.isArray(links) ? links : [])
     .filter(link => link && typeof link.url === 'string' && link.url)
@@ -85,7 +90,7 @@
 <ProfileBorderEffect
   borderKey={profileBorderKey}
   surfaceStyle={surfaceStyle}
-  className="profile-reference-card__border profile-border-effect--content"
+  className={`profile-reference-card__border profile-border-effect--content ${profileBorderFrameClass}`}
 >
   <article class={cardClass} style={cardStyle} aria-label={ariaLabel} data-profile-reference-card data-profile-layout-content={layoutVariant || (framedLayout ? 'framed' : 'compact')}>
     {#if activeBannerSource && !framedLayout}
@@ -553,6 +558,25 @@
 
   :global(.profile-reference-card__border) { width: 100%; min-width: 0; }
   :global(.profile-reference-card__border .profile-border-effect__content) { width: 100%; min-width: 0; }
+
+  /* The public/studio default card is capped at 40rem, while its layout
+     opening is intentionally wider. Size the effect host to the card's
+     actual content box plus the frame inset so every border renderer follows
+     the same edge. */
+  :global(.profile-reference-card__border--compact) {
+    width: calc(40rem + var(--profile-border-frame-inset, 0px));
+    max-width: calc(100% + var(--profile-border-frame-inset, 0px));
+    margin-inline: auto;
+  }
+
+  :global(.profile-reference-card__border--framed),
+  :global(.profile-reference-card__border--homepage) {
+    width: 100%;
+  }
+
+  :global(.profile-reference-card__border:not(.profile-border-effect--none) .profile-reference-card) {
+    border-radius: var(--profile-border-content-radius, var(--profile-border-radius, 20px));
+  }
 
   .profile-reference-card__name {
     margin: 0;

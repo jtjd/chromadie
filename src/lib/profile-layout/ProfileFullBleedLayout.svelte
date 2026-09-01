@@ -65,7 +65,7 @@
 <ProfileBorderEffect
   borderKey={profileBorderKey}
   surfaceStyle={surfaceStyle}
-  className="profile-full-bleed__boundary profile-border-effect--content"
+  className={`profile-full-bleed__boundary profile-full-bleed__boundary--${layoutVariant} profile-border-effect--content`}
   animated={true}
 >
   <section
@@ -171,6 +171,25 @@
     min-width: 0;
   }
 
+  /* The layout opening is broader than the authored full-bleed surface. The
+     border host tracks the surface's max width and adds only its own frame
+     inset, instead of stretching across the opening. */
+  :global(.profile-full-bleed__boundary--full-bleed) {
+    width: calc(56rem + var(--profile-border-frame-inset, 0px));
+    max-width: calc(100% + var(--profile-border-frame-inset, 0px));
+    margin-inline: auto;
+  }
+
+  :global(.profile-full-bleed__boundary--sleek) {
+    width: calc(40rem + var(--profile-border-frame-inset, 0px));
+    max-width: calc(100% + var(--profile-border-frame-inset, 0px));
+    margin-inline: auto;
+  }
+
+  :global(.profile-full-bleed__boundary--sleek:not(.profile-border-effect--none) .profile-full-bleed--sleek) {
+    border-radius: var(--profile-border-content-radius, var(--profile-border-radius, 3.125rem));
+  }
+
   .profile-full-bleed {
     display: grid;
     width: min(100%, 56rem);
@@ -221,7 +240,7 @@
     width: 100%;
     height: 7rem;
     margin: 0;
-    border-radius: var(--profile-border-radius, 2rem) var(--profile-border-radius, 2rem) 0 0;
+    border-radius: var(--profile-border-content-radius, var(--profile-border-radius, 2rem)) var(--profile-border-content-radius, var(--profile-border-radius, 2rem)) 0 0;
     opacity: .55;
   }
 
@@ -410,6 +429,12 @@
   }
 
   @media (max-width: 36rem) {
+    :global(.profile-full-bleed__boundary--full-bleed),
+    :global(.profile-full-bleed__boundary--sleek) {
+      width: 100%;
+      max-width: 100%;
+    }
+
     .profile-full-bleed { padding-inline: .75rem; }
     .profile-full-bleed__avatar-shell { margin-bottom: .55rem; }
     .profile-full-bleed__name { font-size: clamp(1.45rem, 7vw, 1.9rem); }

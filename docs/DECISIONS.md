@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-01 — Size expression layers to the authored profile surface
+
+Profile borders and decorative profile-motion shells must follow the rendered
+identity surface, not the wider layout opening. Keep the shared border host's
+frame inset explicit, give each layout its finite content-width contract, and
+let Halo Offset/Wavefront resolve their decorative bounds from that host. This
+keeps Default, Sleek, Full-bleed, Framed, Portfolio, and Studio preview
+combinations visually aligned at desktop and mobile widths while preserving
+the existing effect implementations and reduced-motion behavior.
+
+Pass the same appearance tokens to every border wrapper, including Portfolio.
+Do not solve a cosmetic mismatch by changing profile data, layout authority,
+scoring, entitlements, or the server-owned configuration boundary.
+
 ## 2026-09-01 — Port inspected non-cursor behaviors into original Chromadie choices
 
 The populated public profile audit exposed reusable, code-level behavior beyond

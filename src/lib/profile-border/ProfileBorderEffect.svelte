@@ -107,6 +107,10 @@
   .profile-border-effect {
     --border-accent: #cdd2ff;
     --border-shadow: rgba(205, 210, 255, 0.22);
+    /* Layout wrappers use this to give the slotted surface its full authored
+       width while leaving room for the renderer's own frame. */
+    --profile-border-frame-inset: calc(var(--profile-border-width, 1px) + var(--profile-border-width, 1px) + 2px);
+    --profile-border-content-radius: max(0px, calc(var(--profile-border-radius, var(--radius-lg)) - var(--profile-border-frame-inset)));
     position: relative;
     min-width: 0;
     max-width: 100%;
@@ -124,6 +128,8 @@
   .profile-border-effect--none {
     --border-accent: transparent;
     --border-shadow: transparent;
+    --profile-border-frame-inset: 0px;
+    --profile-border-content-radius: var(--profile-border-radius, var(--radius-lg));
   }
 
   .profile-border-effect,
@@ -207,6 +213,7 @@
   }
 
   .profile-border-effect--content:not(.profile-border-effect--none) {
+    --profile-border-frame-inset: calc(var(--profile-border-width, 1px) + var(--profile-border-width, 1px) + 4px);
     padding: 2px;
   }
 
@@ -301,6 +308,7 @@
   }
 
   .profile-border-effect--compact {
+    --profile-border-frame-inset: calc(var(--profile-border-width, 1px) + var(--profile-border-width, 1px) + 2px);
     padding: 1px;
   }
 

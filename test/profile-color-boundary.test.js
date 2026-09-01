@@ -43,6 +43,39 @@ test('profile color presentation remains bounded and the retained border is shar
   assert.doesNotMatch(shell + profile + border, /ProfileAtmosphere|profile_bg/);
 });
 
+test('profile border frames follow the authored surface width in every layout', async () => {
+  const [border, reference, fullBleed, portfolio] = await Promise.all([
+    read('src/lib/profile-border/ProfileBorderEffect.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
+    read('src/lib/profile-layout/ProfileFullBleedLayout.svelte'),
+    read('src/lib/profile-layout/ProfilePortfolioLayout.svelte')
+  ]);
+
+  assert.match(border, /--profile-border-frame-inset/);
+  assert.match(border, /profile-border-effect--content:not\(\.profile-border-effect--none\)[\s\S]*--profile-border-frame-inset:[^;]+4px/);
+  assert.match(border, /profile-border-effect--compact[\s\S]*--profile-border-frame-inset:[^;]+2px/);
+  assert.match(border, /profile-border-effect--none[\s\S]*--profile-border-frame-inset: 0px/);
+
+  // Compact/default and Studio cards are capped at 40rem even though their
+  // public opening is wider. The frame gets the card width plus its inset.
+  assert.match(reference, /profile-reference-card__border--compact/);
+  assert.match(reference, /width: calc\(40rem \+ var\(--profile-border-frame-inset/);
+  assert.match(reference, /max-width: calc\(100% \+ var\(--profile-border-frame-inset/);
+
+  // Full-bleed and Sleek share a renderer but have different authored bounds.
+  assert.match(fullBleed, /profile-full-bleed__boundary--\$\{layoutVariant\}/);
+  assert.match(fullBleed, /boundary--full-bleed[\s\S]*width: calc\(56rem \+ var\(--profile-border-frame-inset/);
+  assert.match(fullBleed, /boundary--sleek[\s\S]*width: calc\(40rem \+ var\(--profile-border-frame-inset/);
+  assert.match(fullBleed, /boundary--full-bleed[\s\S]*max-width: calc\(100% \+ var\(--profile-border-frame-inset/);
+  assert.match(fullBleed, /boundary--sleek[\s\S]*max-width: calc\(100% \+ var\(--profile-border-frame-inset/);
+
+  // Portfolio must receive the same appearance tokens as its frame and use
+  // its own 72rem content contract.
+  assert.match(portfolio, /<ProfileBorderEffect[\s\S]*surfaceStyle=\{surfaceStyle\}/);
+  assert.match(portfolio, /profile-portfolio__boundary[\s\S]*width: calc\(72rem \+ var\(--profile-border-frame-inset/);
+  assert.match(portfolio, /profile-portfolio__boundary[\s\S]*max-width: calc\(100% \+ var\(--profile-border-frame-inset/);
+});
+
 test('profile appearance tokens stay on the identity card and out of the roll UI', async () => {
   const [shell, card, appearanceStyle, renderModel, border] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),

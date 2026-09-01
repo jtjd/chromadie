@@ -14,6 +14,7 @@
   let controller = null;
   let controllerSignature = '';
   let controllerSurfaceElement = null;
+  let controllerTargetElement = null;
   let motionEffectsModule;
   let motionEffectsPromise;
   let motionEffectsLoadVersion = 0;
@@ -27,21 +28,28 @@
   $: motionEnabled = rendererKey === 'perspective-tilt' && !disabled;
   $: effectEnabled = ['perspective-tilt', 'halo-offset', 'wavefront'].includes(rendererKey) && !disabled;
   $: nextSignature = `${rendererKey}:${effectEnabled}:${inputSurface}:${surfaceElement ? 'surface' : 'local'}`;
+  $: motionTargetElement = motionElement?.querySelector?.('.profile-border-effect') || motionElement || null;
 
   function syncController() {
     if (!mounted) return;
+    const targetElement = motionTargetElement || motionElement;
     if (!effectEnabled) {
       controller?.destroy();
       controller = null;
       controllerSignature = nextSignature;
       controllerSurfaceElement = surfaceElement;
+      controllerTargetElement = targetElement;
       return;
     }
-    if (nextSignature === controllerSignature && controllerSurfaceElement === surfaceElement && controller) return;
+    if (nextSignature === controllerSignature && controllerSurfaceElement === surfaceElement && controllerTargetElement === targetElement && controller) {
+      controller.update?.({ targetElement });
+      return;
+    }
     controller?.destroy();
     controller = null;
     controllerSignature = nextSignature;
     controllerSurfaceElement = surfaceElement;
+    controllerTargetElement = targetElement;
     if (rendererKey === 'perspective-tilt' && motionElement) {
       controller = createProfileMotionController({
         motionElement,
@@ -56,6 +64,7 @@
         if (rendererKey === 'halo-offset') {
           controller = renderer.createHaloOffsetController({
             host: effectHost,
+            targetElement,
             shells: [haloShellOne, haloShellTwo, haloShellThree],
             enabled: true
           });
@@ -63,6 +72,7 @@
           controller = renderer.createWavefrontController({
             host: effectHost,
             motionElement,
+            targetElement,
             ring: waveRing,
             enabled: true
           });
@@ -172,6 +182,7 @@
     pointer-events: none;
     border: 1px solid rgba(205, 210, 255, .28);
     border-radius: var(--profile-border-radius, 1.25rem);
+    box-sizing: border-box;
     box-shadow: 0 0 18px rgba(141, 220, 255, .09), inset 0 0 14px rgba(183, 253, 77, .035);
     opacity: .72;
     transform: translate3d(0, 0, 0);

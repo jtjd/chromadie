@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Profile expression layout compatibility — 2026-09-01
+
+- Sized the shared Profile Border host to each layout surface's authored
+  bounds: the Default/Studio card, Sleek, Full-bleed, Framed, and Portfolio
+  now reserve only the renderer's own frame inset.
+- Matched inner surface corner radii to the outer frame and passed appearance
+  tokens into the Portfolio border wrapper.
+- Made Halo Offset and Wavefront measure the actual border host, including
+  responsive resize updates, so decorative motion cannot stretch across a
+  wider layout opening.
+- Added source contracts, controller geometry coverage, and Chromium layout
+  assertions for every layout at desktop and mobile widths.
+
 ## Source-backed non-cursor expression expansion — 2026-09-01
 
 - Added `Shimmer Track`, a measured rounded-edge light trail with ten source
