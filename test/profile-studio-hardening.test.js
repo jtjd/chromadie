@@ -63,6 +63,7 @@ test('Profile Studio publishes identity and the complete expression-aware config
   assert.match(security, /publish_profile_studio_v2\(jsonb,text,text,timestamptz\)/);
   assert.match(ci, /npm run check:performance/);
   assert.match(databaseCi, /npm run test:browser:production/);
+  assert.match(databaseCi, /PROFILE_STUDIO_SMOKE_SKIP_MEDIA: '1'/);
 });
 
 test('media mutation RPCs preserve the optimistic publish token contract', async () => {

@@ -154,7 +154,10 @@ test('production builds retain responsive CSS and do not run the incompatible CS
 test('browser smoke can run against the production preview and checks the phone homepage', () => {
   assert.equal(packageManifest.scripts['test:browser:production'], 'node scripts/browser/production-profile-studio-smoke.mjs');
   assert.match(browserHarness, /startVitePreview/);
+  assert.match(browserHarness, /envFileExists/);
+  assert.match(browserHarness, /pagesDevArgs/);
   assert.match(browserSmoke, /smokeMode/);
+  assert.match(browserSmoke, /!localIntegrationTest/);
   assert.match(browserSmoke, /compiled homepage keeps its phone layout/);
   assert.match(browserSmoke, /homepage-reference \.roll-page/);
   assert.match(browserSmoke, /roll-page__game/);

@@ -32,6 +32,10 @@ const smokeEnvironment = {
   VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2: 'true',
   VITE_CHROMADIE_FLAG_RICH_MEDIA: 'true',
   VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2: 'true',
+  // This is a production build served through local Pages Functions, not a
+  // public deployment. Keep the auth flow deterministic without depending on
+  // an external Turnstile challenge in headless CI.
+  VITE_LOCAL_INTEGRATION_TEST: 'true',
   VITE_PROFILE_MEDIA_ORIGIN: process.env.VITE_PROFILE_MEDIA_ORIGIN || 'https://media-test.chm.lol',
   VITE_CLOUDFLARE_SITE_KEY: '1x00000000000000000000AA',
   NODE_EXTRA_CA_CERTS: proxy.caPath

@@ -67,6 +67,11 @@ jobs:
             echo "VITE_SUPABASE_PUBLISHABLE_KEY=$anon_key"
           } >> "$GITHUB_ENV"
       - name: Run production browser smoke
+        env:
+          # The database/browser job provisions local Supabase only. The
+          # disposable R2 upload contract has its own opt-in smoke because it
+          # requires test-bucket credentials and a matching CORS policy.
+          PROFILE_STUDIO_SMOKE_SKIP_MEDIA: '1'
         run: npm run test:browser:production
       - name: Run progression browser smoke
         run: npm run test:browser:progression

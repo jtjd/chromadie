@@ -464,10 +464,14 @@ export async function startPagesDev({ appPort, evidenceDir, envFile = '.env.r2-t
     'PREVIEW_PROTECTION',
     'PREVIEW_PASSWORD'
   ];
-  const fileValues = parseEnvText(await readFile(join(projectRoot, envFile), 'utf8').catch(error => {
-    if (error.code === 'ENOENT') return '';
-    throw error;
-  }));
+  let envFileExists = true;
+  let fileValues = {};
+  try {
+    fileValues = parseEnvText(await readFile(join(projectRoot, envFile), 'utf8'));
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    envFileExists = false;
+  }
   let originalDevVars = null;
   try {
     originalDevVars = { exists: true, content: await readFile(devVarsPath, 'utf8') };
@@ -487,7 +491,7 @@ export async function startPagesDev({ appPort, evidenceDir, envFile = '.env.r2-t
     if (originalDevVars.exists) await writeFile(devVarsPath, originalDevVars.content, 'utf8');
     else await unlink(devVarsPath).catch(error => { if (error.code !== 'ENOENT') throw error; });
   };
-  const child = spawn('npx', [
+  const pagesDevArgs = [
     '--yes',
     'wrangler',
     'pages',
@@ -497,13 +501,16 @@ export async function startPagesDev({ appPort, evidenceDir, envFile = '.env.r2-t
     '127.0.0.1',
     '--port',
     String(appPort),
-    '--env-file',
-    envFile,
     '--persist-to',
     persistPath,
     '--log-level',
     'error'
-  ], {
+  ];
+  if (envFileExists) {
+    const persistFlagIndex = pagesDevArgs.indexOf('--persist-to');
+    pagesDevArgs.splice(persistFlagIndex, 0, '--env-file', envFile);
+  }
+  const child = spawn('npx', pagesDevArgs, {
     cwd: projectRoot,
     detached: true,
     stdio: ['ignore', 'pipe', 'pipe']

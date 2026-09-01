@@ -37,6 +37,7 @@ const evidenceDir = await mkdtemp(join(tmpdir(), 'chromadie-profile-studio-smoke
 const smokeMode = process.env.PROFILE_STUDIO_SMOKE_MODE === 'preview' ? 'preview' : 'dev';
 const smokeServer = process.env.PROFILE_STUDIO_SMOKE_SERVER || 'vite';
 const skipMediaMutation = process.env.PROFILE_STUDIO_SMOKE_SKIP_MEDIA === '1';
+const localIntegrationTest = process.env.VITE_LOCAL_INTEGRATION_TEST === 'true';
 const approvedEffectSmoke = process.env.PROFILE_STUDIO_SMOKE_EFFECTS === 'approved';
 const activeEffectFixture = approvedEffectSmoke
   ? {
@@ -760,7 +761,7 @@ try {
   assert(authResponse.ok, `Local Supabase auth endpoint returned HTTP ${authResponse.status}.`);
 
   const appPort = smokeServer === 'pages'
-    ? await findAvailablePort(5173, 1)
+    ? await findAvailablePort(Number(process.env.PROFILE_STUDIO_SMOKE_PORT || 5173))
     : await findAvailablePort(defaultAppPort);
   const debugPort = await findAvailablePort(defaultDebugPort);
   results.ports = { appPort, debugPort };
@@ -781,6 +782,10 @@ try {
   page = chromium.page;
   if (smokeServer === 'pages') {
     await page.command('Page.setBypassCSP', { enabled: true });
+    // Pages Functions attach the production CSP before the browser connects.
+    // Reload after enabling the loopback-only test bypass so the proxy-backed
+    // local Supabase origin is available to the first auth request as well.
+    await page.command('Page.navigate', { url: appUrl });
   }
 
   await step('open local homepage', async () => {
@@ -828,7 +833,7 @@ try {
     await capture('03-auth-login');
     await page.click('.auth-container .tabs a[href^="/signup"]', 'auth route switch to create account');
     await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('#username-input')`, 'signup route after auth switch');
-    if (smokeMode === 'preview') {
+    if (smokeMode === 'preview' && !localIntegrationTest) {
       await page.waitFor(`(() => {
         const response = document.querySelector('[name="cf-turnstile-response"]');
         return Boolean(response?.value);
