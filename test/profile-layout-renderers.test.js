@@ -299,7 +299,7 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(card, /ProfileRollSummary/);
   assert.doesNotMatch(card, /ProfileDailyRoll|liveRoll/);
   assert.match(fullBleed, /data-profile-layout-content=\{layoutVariant\}/);
-  assert.match(portfolio, /data-profile-layout-content=\"portfolio\"|data-profile-layout-content=\{layoutVariant\}/);
+  assert.match(portfolio, /data-profile-layout-content="portfolio"|data-profile-layout-content=\{layoutVariant\}/);
   assert.match(portfolio, /ProfileRollSummary/);
   assert.match(fullBleed, /profile-full-bleed--no-avatar/);
   assert.match(portfolio, /profile-portfolio--no-avatar/);

@@ -286,7 +286,7 @@ test('progression visual treatment keeps state neutral and previews canonical co
   assert.match(page, /--progression-accent-light/);
   assert.match(page, /progression-page__color-chip/);
   assert.match(page, /progression-page__streak-strip/);
-  assert.match(page, /class=\"progression-page__streak-day\" class:progression-page__streak-day--active/);
+  assert.match(page, /class="progression-page__streak-day" class:progression-page__streak-day--active/);
   assert.match(page, /progression-page__streak-day \{[^}]*flex:0 0 7px;[^}]*width:7px;[^}]*height:7px;[^}]*aspect-ratio:1/);
   assert.match(page, /dailyRollData = dailyRoll\.data \|\| null/);
   assert.match(page, /hasRolledToday/);
