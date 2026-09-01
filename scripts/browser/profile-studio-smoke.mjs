@@ -648,11 +648,12 @@ async function capturePublishedLayouts() {
       })))()`).catch(() => []);
       throw new Error(`${error.message} Preview layouts: ${JSON.stringify(previewLayouts)}`, { cause: error });
     }
-    const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`);
-    if (publishPending) {
-      await page.click('.profile-studio-shell__publish', `publish ${layoutKey} layout`);
-      await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === true`, `publish ${layoutKey} layout`);
-    }
+    // The preview component can mount one tick before the parent Studio shell
+    // receives its dirty-state event. Wait for the real publish transition so
+    // a fast browser cannot navigate to the public route with the old layout.
+    await page.waitFor(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`, `${layoutKey} staged publish`, 30000);
+    await page.click('.profile-studio-shell__publish', `publish ${layoutKey} layout`);
+    await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === true`, `publish ${layoutKey} layout`);
 
     await page.navigate(`${appUrl}/${canonicalUsername}`, `published ${layoutKey} layout evidence`);
     await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] ${layoutSelector}')`, `published ${layoutKey} profile`);
