@@ -224,6 +224,13 @@ const ACTIVE_NAME_FONT_DEFINITIONS = Object.freeze({
     substitution: 'Instrument Sans',
     widthFactor: 0.57,
     label: 'Outfit', collection: 'Nocturne', rarity: 'Uncommon'
+  }),
+  'kode-mono': font('kode-mono', 'Kode Mono', SYSTEM_MONO, 400, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Kode Mono',
+    substitution: 'IBM Plex Mono',
+    widthFactor: 0.62,
+    label: 'Code Current', collection: 'Signal', rarity: 'Rare'
   })
 });
 
@@ -278,7 +285,8 @@ const NAME_FONT_ASSET_LOADERS = Object.freeze({
   'silkscreen': () => import('@fontsource/silkscreen/latin-400.css'),
   'velocity': () => Promise.resolve(),
   'outfit': () => import('@fontsource/outfit/latin-600.css'),
-  'chillax': () => Promise.resolve()
+  'chillax': () => Promise.resolve(),
+  'kode-mono': () => import('@fontsource/kode-mono/latin-400.css')
 });
 
 export const NAME_FONT_ASSET_KEYS = Object.freeze(Object.keys(NAME_FONT_ASSET_LOADERS));

@@ -19,7 +19,13 @@ const definitions = {
   'marker-stroke': { key: 'marker-stroke', label: 'Marker Stroke', collection: 'Archive', rarity: 'Epic' },
   'solar-sparks': { key: 'solar-sparks', label: 'Solar Sparks', collection: 'Ember', rarity: 'Anomaly' },
   'void-lensing': { key: 'void-lensing', label: 'Void Lensing', collection: 'Nocturne', rarity: 'Mythic' },
-  'plasma-swarm': { key: 'plasma-swarm', label: 'Plasma Swarm', collection: 'Signal', rarity: 'Anomaly' }
+  'plasma-swarm': { key: 'plasma-swarm', label: 'Plasma Swarm', collection: 'Signal', rarity: 'Anomaly' },
+  'bubble-wake': { key: 'bubble-wake', label: 'Bubble Lift', collection: 'Prism', rarity: 'Rare' },
+  'character-bloom': { key: 'character-bloom', label: 'Glyph Bloom', collection: 'Archive', rarity: 'Epic' },
+  'emoji-bloom': { key: 'emoji-bloom', label: 'Joy Burst', collection: 'Ember', rarity: 'Epic' },
+  'following-dot': { key: 'following-dot', label: 'Orbit Dot', collection: 'Signal', rarity: 'Rare' },
+  'text-flag': { key: 'text-flag', label: 'Signal Ribbon', collection: 'Static Bloom', rarity: 'Epic' },
+  'springy-emoji': { key: 'springy-emoji', label: 'Elastic Emoji', collection: 'Prism', rarity: 'Anomaly' }
 };
 
 const normalizedDefinitions = Object.fromEntries(

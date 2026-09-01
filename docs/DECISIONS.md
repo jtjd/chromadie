@@ -1,5 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-01 — Expand expression choices with source-backed behavior and original labels
+
+The inspected cursor source exposed six concrete behaviors that add meaningful
+profile expression without requiring a vendor runtime: bubble particles,
+colored character particles, emoji particles, a lagging dot, a waving text
+flag, and a constrained spring chain. Port each behavior into the existing
+finite canvas renderer with bounded particle counts, visibility cleanup, and
+reduced-motion/static paths. Add the inspected Kode Mono face through the
+bundled font pipeline.
+
+The product catalog uses original Chromadie labels—Bubble Lift, Glyph Bloom,
+Joy Burst, Orbit Dot, Signal Ribbon, Elastic Emoji, and Code Current. Vendor
+or source names may appear in research provenance, but never as a product
+name, label, or customer-facing catalog identifier. The rows are additive and
+free so the new expression surface does not alter progression, entitlements,
+or server-authoritative profile state.
+
 ## 2026-08-31 — Stabilize launch without changing Chromadie
 
 - Keep `/roll` as the sole full interactive daily-roll surface. Profiles render

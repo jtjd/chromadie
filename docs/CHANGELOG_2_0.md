@@ -4258,3 +4258,15 @@ direct route behavior.
 - Added Chillax as a compatibility font for imported profile configurations.
 - Preserved safe profile configuration, mobile behavior, visibility throttling,
   reduced-motion support, and unchanged catalog/database boundaries.
+
+## Source-backed expression expansion — 2026-09-01
+
+- Added six selectable cursor effects from source-inspected particle/follower
+  behavior: Bubble Lift, Glyph Bloom, Joy Burst, Orbit Dot, Signal Ribbon, and
+  Elastic Emoji.
+- Added the bundled Kode Mono face as the Code Current Name Font choice.
+- Kept the implementation finite, local, reduced-motion-aware, and free; no
+  hosted vendor runtime, arbitrary catalog drawing code, or upstream cursor
+  bitmap was added.
+- Product-facing names are original Chromadie labels. Source/vendor names are
+  retained only in the research record for traceability.

@@ -13,14 +13,41 @@ import {
   getGunsShuffleTrackOffset
 } from '../src/lib/competitor-effects/gunsEffectAlgorithms.js';
 import {
+  GUNS_BUBBLE_BASE_DIMENSION,
+  GUNS_BUBBLE_LIFE_MIN,
+  GUNS_BUBBLE_LIFE_SPAN,
+  GUNS_CHARACTER_LIFE_MIN,
+  GUNS_CHARACTER_LIFE_SPAN,
+  GUNS_EMOJI_GRAVITY,
+  GUNS_EMOJI_LIFE_MIN,
+  GUNS_EMOJI_LIFE_SPAN,
+  GUNS_FOLLOWING_DOT_LAG,
+  GUNS_FOLLOWING_DOT_RADIUS,
+  GUNS_SPRINGY_EMOJI_NODES,
+  GUNS_SPRINGY_EMOJI_SEPARATION,
+  GUNS_TEXT_FLAG_GAP,
+  GUNS_TEXT_FLAG_LAG,
   GUNS_FAIRY_DUST_GRAVITY,
   GUNS_FAIRY_DUST_LIFE_MAX,
   GUNS_FAIRY_DUST_LIFE_MIN,
   GUNS_TRAILING_CURSOR_PARTICLES,
   GUNS_TRAILING_CURSOR_RATE,
+  advanceGunsBubbleParticle,
+  advanceGunsCharacterParticle,
+  advanceGunsEmojiParticle,
   advanceGunsFairyDustParticle,
+  advanceGunsFollowingDot,
+  advanceGunsSpringyEmojiNodes,
+  advanceGunsTextFlag,
   advanceGunsTrailingCursorNodes,
+  applyGunsSpringyEmojiConstraint,
+  createGunsBubbleParticle,
+  createGunsCharacterParticle,
+  createGunsEmojiParticle,
   createGunsFairyDustParticle,
+  createGunsFollowingDot,
+  createGunsSpringyEmojiNodes,
+  createGunsTextFlagNodes,
   createGunsTrailingCursorNodes
 } from '../src/lib/competitor-effects/gunsCursorAlgorithms.js';
 import { getGunsParallaxRotation } from '../src/lib/competitor-effects/gunsParallax.js';
@@ -85,6 +112,81 @@ test('Guns cursor algorithms keep the shipped trailing and fairy-dust constants'
   assert.ok(particle.scale < 1);
 });
 
+test('the additional cursor ports preserve the shipped particle and follower math', () => {
+  assert.equal(GUNS_BUBBLE_LIFE_MIN, 60);
+  assert.equal(GUNS_BUBBLE_LIFE_SPAN, 60);
+  assert.equal(GUNS_BUBBLE_BASE_DIMENSION, 4);
+  const bubbleRandom = [0.25, 0.2, 0.8, 0.4];
+  const bubble = createGunsBubbleParticle(4, 5, () => bubbleRandom.shift());
+  assert.equal(bubble.initialLifeSpan, 75);
+  assert.ok(Math.abs(bubble.velocity.x - (-0.08)) < 1e-12);
+  assert.ok(Math.abs(bubble.velocity.y - (-0.8)) < 1e-12);
+  const bubbleUpdateRandom = [0.25, 0.5];
+  advanceGunsBubbleParticle(bubble, 1, () => bubbleUpdateRandom.shift());
+  assert.ok(Math.abs(bubble.x - 3.92) < 1e-12);
+  assert.ok(Math.abs(bubble.y - 4.2) < 1e-12);
+  assert.ok(Math.abs(bubble.velocity.x - (-0.10666666666666667)) < 1e-12);
+  assert.ok(Math.abs(bubble.velocity.y - (-0.8008333333333333)) < 1e-12);
+  assert.ok(Math.abs(bubble.scale - 0.21333333333333337) < 1e-12);
+
+  assert.equal(GUNS_CHARACTER_LIFE_MIN, 80);
+  assert.equal(GUNS_CHARACTER_LIFE_SPAN, 60);
+  const characterRandom = [0.25, 0.2, 0.8, 0.4, 0.2, 0.6];
+  const character = createGunsCharacterParticle(10, 20, () => characterRandom.shift(), 'h');
+  assert.equal(character.initialLifeSpan, 95);
+  assert.equal(character.rotationSign, -1);
+  assert.ok(Math.abs(character.velocity.x - 2) < 1e-12);
+  assert.ok(Math.abs(character.velocity.y - (-3)) < 1e-12);
+  const characterUpdateRandom = [0.8, 0.2];
+  advanceGunsCharacterParticle(character, 1, () => characterUpdateRandom.shift());
+  assert.ok(Math.abs(character.x - 12) < 1e-12);
+  assert.ok(Math.abs(character.y - 17) < 1e-12);
+  assert.ok(Math.abs(character.velocity.x - 2.033333333333333) < 1e-12);
+  assert.ok(Math.abs(character.velocity.y - (-3.066666666666667)) < 1e-12);
+  assert.ok(Math.abs(character.scale - 1.9789473684210526) < 1e-12);
+
+  assert.equal(GUNS_EMOJI_LIFE_MIN, 80);
+  assert.equal(GUNS_EMOJI_LIFE_SPAN, 60);
+  assert.equal(GUNS_EMOJI_GRAVITY, 0.05);
+  const emojiRandom = [0.25, 0.2, 0.8, 0.5];
+  const emoji = createGunsEmojiParticle(2, 3, () => emojiRandom.shift(), '😀');
+  assert.equal(emoji.initialLifeSpan, 95);
+  assert.ok(Math.abs(emoji.velocity.x - (-0.4)) < 1e-12);
+  assert.ok(Math.abs(emoji.velocity.y - 1) < 1e-12);
+  advanceGunsEmojiParticle(emoji);
+  assert.ok(Math.abs(emoji.x - 1.6) < 1e-12);
+  assert.ok(Math.abs(emoji.y - 4) < 1e-12);
+  assert.ok(Math.abs(emoji.velocity.y - 1.05) < 1e-12);
+
+  assert.equal(GUNS_FOLLOWING_DOT_RADIUS, 10);
+  assert.equal(GUNS_FOLLOWING_DOT_LAG, 10);
+  const dot = createGunsFollowingDot({ x: 0, y: 0 });
+  advanceGunsFollowingDot(dot, { x: 100, y: 50 });
+  assert.deepEqual(dot, { x: 10, y: 5 });
+
+  assert.equal(GUNS_TEXT_FLAG_GAP, 14);
+  assert.equal(GUNS_TEXT_FLAG_LAG, 5);
+  const flag = createGunsTextFlagNodes(' ABC', { x: 0, y: 0 });
+  const phase = advanceGunsTextFlag(flag, { x: 100, y: 50 });
+  assert.equal(phase, 0.15);
+  assert.ok(Math.abs(flag[0].x - 23.977542155872083) < 1e-12);
+  assert.ok(Math.abs(flag[0].y - 10.747190662367997) < 1e-12);
+  assert.equal(flag[1].x, 14);
+  assert.equal(flag[3].x, 14);
+
+  assert.equal(GUNS_SPRINGY_EMOJI_NODES, 7);
+  assert.equal(GUNS_SPRINGY_EMOJI_SEPARATION, 10);
+  const force = { x: 0, y: 0 };
+  applyGunsSpringyEmojiConstraint({ x: 20, y: 0 }, { x: 0, y: 0 }, force);
+  assert.deepEqual(force, { x: 100, y: 0 });
+  const spring = createGunsSpringyEmojiNodes({ x: 0, y: 0 });
+  advanceGunsSpringyEmojiNodes(spring, { x: 20, y: 0 }, 100, 100);
+  assert.equal(spring.length, 7);
+  assert.deepEqual(spring[0], { x: 20, y: 0, velocityX: 0, velocityY: 0 });
+  assert.equal(spring[1].velocityX, 1);
+  assert.equal(spring[1].x, 1);
+});
+
 test('Guns parallax uses the observed ten-degree pointer envelope', () => {
   const rect = { left: 100, top: 50, width: 200, height: 100 };
   assert.deepEqual(getGunsParallaxRotation(rect, { clientX: 100, clientY: 50 }), {
@@ -117,7 +219,15 @@ test('the live-source ports remain explicit in the renderers and font registry',
   assert.match(cursor, /advanceGunsTrailingCursorNodes/);
   assert.match(cursor, /advanceGunsFairyDustParticle/);
   assert.match(cursor, /GUNS_TRAILING_CURSOR_PARTICLES/);
+  assert.match(cursor, /advanceGunsBubbleParticle/);
+  assert.match(cursor, /advanceGunsCharacterParticle/);
+  assert.match(cursor, /advanceGunsEmojiParticle/);
+  assert.match(cursor, /advanceGunsFollowingDot/);
+  assert.match(cursor, /advanceGunsSpringyEmojiNodes/);
+  assert.match(cursor, /advanceGunsTextFlag/);
   assert.match(avatar, /getGunsParallaxRotation/);
   assert.match(avatar, /transition: transform 700ms/);
   assert.match(fonts, /'chillax'/);
+  assert.match(fonts, /'kode-mono'/);
+  assert.match(fonts, /@fontsource\/kode-mono\/latin-400\.css/);
 });

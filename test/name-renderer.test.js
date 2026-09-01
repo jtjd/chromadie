@@ -44,19 +44,25 @@ test('the curated renderer registries contain the approved active layers and fre
   assert.deepEqual(NAME_PAID_MATERIAL_KEYS, seedKeys('name_material'));
   assert.deepEqual(NAME_PAID_MOTION_KEYS, seedKeys('name_motion'));
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
-    fonts: 11,
+    fonts: 12,
     materials: 8,
     motions: 15,
-    paidFonts: 10,
+    paidFonts: 11,
     paidMaterials: 7,
     paidMotions: 14,
-    paidTotal: 31
+    paidTotal: 32
   });
   assert.equal(NAME_MATERIALS.plain.composable, true);
   assert.equal(NAME_MOTIONS.none.composable, true);
-  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 10);
+  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 11);
   assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 8);
   assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 15);
+});
+
+test('new expression labels are original Chromadie names, not competitor names', () => {
+  const labels = Object.values(NAME_FONTS).map(definition => definition.label).join(' ');
+  assert.doesNotMatch(labels, /\b(?:guns|vaults|haunt|carrd|linktree)\b/i);
+  assert.equal(NAME_FONTS['kode-mono'].label, 'Code Current');
 });
 
 test('all supported combinations resolve through finite code-owned registries', () => {

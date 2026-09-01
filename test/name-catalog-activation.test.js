@@ -12,23 +12,23 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('the curated catalog keeps the approved active Name rows and ten Profile Border rows', async () => {
   const seed = await read('supabase/seed.sql');
-  assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 10);
+  assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 11);
   assert.equal((seed.match(/^\s*\('name_material_[a-z0-9_]+'/gm) || []).length, 7);
   assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 14);
   assert.equal((seed.match(/^\s*\('border_(?:celestial|chroma|crystal|glitch|gold|neon|prism|void|signal|elastic)'/gm) || []).length, 10);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
-    fonts: 11,
+    fonts: 12,
     materials: 8,
     motions: 15,
-    paidFonts: 10,
+    paidFonts: 11,
     paidMaterials: 7,
     paidMotions: 14,
-    paidTotal: 31
+    paidTotal: 32
   });
   assert.deepEqual(Object.keys(NAME_FONTS), [
     'industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins',
-    'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit'
+    'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit', 'kode-mono'
   ]);
   assert.equal(NAME_FONTS['soft-grotesk'], undefined);
   assert.equal(NAME_FONTS['editorial-serif'], undefined);
@@ -41,21 +41,22 @@ test('the curated catalog keeps the approved active Name rows and ten Profile Bo
 });
 
 test('the active Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
-  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration] = await Promise.all([
+  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
     read('supabase/migrations/20260803130000_use_reference_font_family_names.sql'),
     read('supabase/migrations/20260805140000_replace_name_motions_with_haunt_reference_set.sql'),
     read('supabase/migrations/20260816110000_name_font_catalog_refresh.sql'),
     read('supabase/migrations/20260816120000_add_silkscreen_name_font.sql'),
-    read('supabase/migrations/20260821090000_approved_cosmetic_effects.sql')
+    read('supabase/migrations/20260821090000_approved_cosmetic_effects.sql'),
+    read('supabase/migrations/20260901120000_source_backed_expression_expansion.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
   )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }))
     .filter(row => row.itemKey !== 'name_prism_atelier');
 
-  assert.equal(rows.length, 31);
+  assert.equal(rows.length, 32);
   assert.equal(new Set(rows.map(row => row.name)).size, rows.length);
 
   const registries = {
@@ -68,7 +69,7 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
     assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
     assert.equal(
-      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
+      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
       true,
       `${row.itemKey} label is missing from the production migrations`
     );
@@ -99,7 +100,8 @@ test('active Font families are real assets and legacy families remain readable',
   ]);
   assert.deepEqual([...NAME_FONT_ASSET_KEYS].sort(), Object.keys(NAME_FONT_REGISTRY).sort());
   for (const definition of Object.values(NAME_FONTS)) {
-    assert.equal(definition.label, definition.targetFamily);
+    assert.ok(definition.label);
+    assert.ok(definition.targetFamily);
     assert.ok(['bundled-fontsource', 'fontshare', 'bundled-local'].includes(definition.source));
   }
   assert.equal(getNameFont('name_font_editorial_serif').family, 'Cormorant Garamond');
@@ -129,7 +131,8 @@ test('active Font families are real assets and legacy families remain readable',
     '@fontsource/poppins/latin-600.css',
     '@fontsource/jetbrains-mono/latin-600.css',
     '@fontsource/silkscreen/latin-400.css',
-    '@fontsource/outfit/latin-600.css'
+    '@fontsource/outfit/latin-600.css',
+    '@fontsource/kode-mono/latin-400.css'
   ]) {
     assert.match(fontsSource, new RegExp(familyImport.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }

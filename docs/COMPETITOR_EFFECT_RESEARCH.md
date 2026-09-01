@@ -69,11 +69,21 @@ was used to confirm the supported customization surface.
 - `src/lib/competitor-effects/gunsCursorAlgorithms.js` contains the trailing
   node and fairy-dust state transitions. `ghost-tail` and `solar-sparks` use
   them through the existing bounded cursor canvas.
+- The same bounded canvas now carries six additional source-inspected cursor
+  controllers: `bubble-wake`, `character-bloom`, `emoji-bloom`,
+  `following-dot`, `text-flag`, and `springy-emoji`. Their lifespans, glyph
+  sprites, follower lag, flag gap/wave, and spring constraints are ported from
+  the inspected cursor source and kept behind fixed renderer keys.
 - `src/lib/competitor-effects/gunsParallax.js` contains the pointer envelope;
   `AvatarEffect.svelte` applies it only to the existing `3d-parallax` effect.
 - `Chillax` is registered as a compatibility font for imported/historical
   configurations. It is not a new catalog entitlement or database row in this
   slice, so catalog counts and purchase boundaries remain unchanged.
+- The inspected `Kode Mono` face is bundled as a new finite Name Font choice.
+  Its product label is the original Chromadie name `Code Current`; the six
+  cursor choices are labeled `Bubble Lift`, `Glyph Bloom`, `Joy Burst`,
+  `Orbit Dot`, `Signal Ribbon`, and `Elastic Emoji`. Source/vendor names are
+  provenance only and are not used as product labels.
 - The existing validated custom cursor URL is passed through to the trailing
   renderer. If a browser cannot decode a `.cur`, Chromadie uses a small
   code-owned fallback while retaining the inspected node motion.

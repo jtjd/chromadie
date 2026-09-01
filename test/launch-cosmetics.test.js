@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { CURSOR_TRAIL_KEYS, getCursorTrailKey } from '../src/lib/cursor-trail/cursorTrails.js';
+import { CURSOR_TRAIL_DEFINITIONS, CURSOR_TRAIL_KEYS, getCursorTrailKey } from '../src/lib/cursor-trail/cursorTrails.js';
 import { AVATAR_EFFECT_KEYS, AVATAR_EFFECT_DEFINITIONS, isAvatarEffectKey } from '../src/lib/avatar-effect/avatarEffects.js';
 import {
   PROFILE_LAYOUT_DEFINITIONS,
@@ -15,10 +15,16 @@ import { PROFILE_ATMOSPHERE_KEYS, getAtmosphereDefinition } from '../src/lib/pro
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('launch renderer registries contain exactly the requested finite keys', () => {
-  assert.equal(CURSOR_TRAIL_KEYS.length, 17);
+  assert.equal(CURSOR_TRAIL_KEYS.length, 23);
   assert.deepEqual(AVATAR_EFFECT_KEYS, ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'bat-orbit']);
   assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 13);
-  assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 17);
+  assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 23);
+  assert.doesNotMatch(Object.values(CURSOR_TRAIL_DEFINITIONS).map(definition => definition.label).join(' '), /\b(?:guns|vaults|haunt|carrd|linktree)\b/i);
+  assert.deepEqual(
+    ['bubble-wake', 'character-bloom', 'emoji-bloom', 'following-dot', 'text-flag', 'springy-emoji']
+      .map(key => CURSOR_TRAIL_DEFINITIONS[key].label),
+    ['Bubble Lift', 'Glyph Bloom', 'Joy Burst', 'Orbit Dot', 'Signal Ribbon', 'Elastic Emoji']
+  );
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 6);
   assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']);
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
@@ -178,7 +184,7 @@ test('seed and migrations contain the launch products and version bumps', async 
     read('supabase/migrations/20260804120000_launch_cosmetic_expansion.sql'),
     read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql')
   ]);
-  assert.equal((seed.match(/^\s+\('cursor_trail_[a-z0-9_]+'/gm) || []).length, 17);
+  assert.equal((seed.match(/^\s+\('cursor_trail_[a-z0-9_]+'/gm) || []).length, 23);
   assert.equal((seed.match(/^\s+\('avatar_effect_[a-z0-9_]+'/gm) || []).length, 6);
   assert.equal((seed.match(/^\s+\('profile_layout_[a-z0-9_]+'/gm) || []).length, 5);
   assert.equal((seed.match(/^\s+\('profile_atmosphere_[a-z0-9_]+'/gm) || []).length, 13);

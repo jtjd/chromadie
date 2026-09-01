@@ -353,6 +353,9 @@ const launchExpectedCosts = Object.freeze({
   cursor_trail_rain_trace: 230000, cursor_trail_gold_fleck: 370000, cursor_trail_ghost_tail: 320000,
   cursor_trail_color_memory: 540000, cursor_trail_marker_stroke: 360000, cursor_trail_solar_sparks: 520000,
   cursor_trail_void_lensing: 700000, cursor_trail_plasma_swarm: 0,
+  cursor_trail_bubble_wake: 0, cursor_trail_character_bloom: 0,
+  cursor_trail_emoji_bloom: 0, cursor_trail_following_dot: 0,
+  cursor_trail_text_flag: 0, cursor_trail_springy_emoji: 0,
   avatar_effect_3d_parallax: 350000, avatar_effect_glitch_slicer: 340000,
   avatar_effect_liquid_blob: 380000, avatar_effect_cyber_hud: 520000,
   avatar_effect_butterfly_orbit: 0, avatar_effect_bat_orbit: 0,
@@ -369,6 +372,12 @@ const launchExpectedCosts = Object.freeze({
 });
 const launchFreeKeys = new Set([
   'cursor_trail_plasma_swarm',
+  'cursor_trail_bubble_wake',
+  'cursor_trail_character_bloom',
+  'cursor_trail_emoji_bloom',
+  'cursor_trail_following_dot',
+  'cursor_trail_text_flag',
+  'cursor_trail_springy_emoji',
   'avatar_effect_butterfly_orbit',
   'avatar_effect_bat_orbit',
   'profile_atmosphere_prism_dust',
@@ -402,10 +411,10 @@ const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profi
   launchRows.filter(row => row.slot === slot).length
 ]));
 if (
-    launchRows.length !== 44
-    || new Set(launchRows.map(row => row.itemKey)).size !== 44
+    launchRows.length !== 50
+    || new Set(launchRows.map(row => row.itemKey)).size !== 50
     || launchInvalidRows.length > 0
-    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 17, avatar_effect: 6, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 })
+    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 23, avatar_effect: 6, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 })
 ) {
   console.error('Launch cosmetic catalog balance/drift check failed.');
   console.error(JSON.stringify({

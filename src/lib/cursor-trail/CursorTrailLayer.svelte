@@ -2,11 +2,27 @@
   import { onDestroy, onMount } from 'svelte';
   import { getCursorTrailKey } from './cursorTrails.js';
   import {
+    GUNS_BUBBLE_BASE_DIMENSION,
+    GUNS_FOLLOWING_DOT_RADIUS,
+    GUNS_SPRINGY_EMOJI_NODES,
+    GUNS_TEXT_FLAG_GAP,
     GUNS_TRAILING_CURSOR_PARTICLES,
     GUNS_TRAILING_CURSOR_RATE,
+    advanceGunsBubbleParticle,
+    advanceGunsCharacterParticle,
+    advanceGunsEmojiParticle,
     advanceGunsFairyDustParticle,
+    advanceGunsFollowingDot,
+    advanceGunsSpringyEmojiNodes,
+    advanceGunsTextFlag,
     advanceGunsTrailingCursorNodes,
+    createGunsBubbleParticle,
+    createGunsCharacterParticle,
+    createGunsEmojiParticle,
     createGunsFairyDustParticle,
+    createGunsFollowingDot,
+    createGunsSpringyEmojiNodes,
+    createGunsTextFlagNodes,
     createGunsTrailingCursorNodes
   } from '../competitor-effects/gunsCursorAlgorithms.js';
 
@@ -44,6 +60,14 @@
   let trailingImage = null;
   let requestedCursorSrc = null;
   let trailingKey = '';
+  let effectStateKey = '';
+  let characterSprites = [];
+  let emojiSprites = [];
+  let springyEmojiSprite = null;
+  let followingDot = createGunsFollowingDot();
+  let textFlagNodes = [];
+  let textFlagPhase = 0;
+  let springyEmojiNodes = createGunsSpringyEmojiNodes();
   let mounted = false;
   let demoCycle = 0;
 
@@ -51,6 +75,7 @@
   $: resolvedInputMode = inputMode === 'demo' ? 'demo' : 'window';
   $: isRunning = Boolean(resolvedKey && active && visible && (resolvedInputMode === 'demo' || !touchOnly));
   $: classList = ['cursor-trail-layer', className, `cursor-trail-layer--${resolvedInputMode}`, isRunning ? 'cursor-trail-layer--active' : '', reducedMotion ? 'cursor-trail-layer--reduced' : ''].filter(Boolean).join(' ');
+  $: if (mounted && resolvedKey !== effectStateKey) resetEffectState();
   // A fitting-room card remains mounted while its parent tab is hidden. The
   // browser can pause its observers during that display:none interval, so a
   // demo trail must be able to restart from the reactive visible/running
@@ -73,6 +98,62 @@
       .map(color => safeColor(color, ''))
       .filter(Boolean);
     return [...new Set(colors)].slice(0, 6);
+  }
+
+  const GUNS_CHARACTER_GLYPHS = ['h', 'e', 'l', 'l', 'o'];
+  const GUNS_CHARACTER_COLORS = ['#6622CC', '#A755C2', '#B07C9E', '#B59194', '#D2A1B8'];
+  const GUNS_EMOJI_GLYPHS = ['😀', '😂', '😆', '😊'];
+  const GUNS_TEXT_FLAG_TEXT = ' Chromadie';
+  const PARTICLE_TRAIL_KEYS = new Set(['pixel-wake', 'glass-shards', 'ember-ash', 'gold-fleck', 'solar-sparks', 'bubble-wake', 'character-bloom', 'emoji-bloom']);
+  const CONTINUOUS_TRAIL_KEYS = new Set(['following-dot', 'text-flag', 'springy-emoji']);
+
+  function createGlyphSprite(value, font, heightMultiplier = 2, color = '') {
+    if (typeof document === 'undefined') return null;
+    const measureCanvas = document.createElement('canvas');
+    const measureContext = measureCanvas.getContext('2d');
+    if (!measureContext) return null;
+    measureContext.font = font;
+    const metrics = measureContext.measureText(value);
+    const ascent = Math.max(1, metrics.actualBoundingBoxAscent || Number.parseInt(font, 10) || 16);
+    const glyphCanvas = document.createElement('canvas');
+    glyphCanvas.width = Math.max(1, Math.ceil(metrics.width));
+    glyphCanvas.height = Math.max(1, Math.ceil(ascent * heightMultiplier));
+    const glyphContext = glyphCanvas.getContext('2d');
+    if (!glyphContext) return null;
+    glyphContext.textAlign = 'center';
+    glyphContext.font = font;
+    glyphContext.textBaseline = 'middle';
+    if (color) glyphContext.fillStyle = color;
+    glyphContext.fillText(value, glyphCanvas.width / 2, ascent);
+    return { canvas: glyphCanvas, width: glyphCanvas.width, height: glyphCanvas.height, value };
+  }
+
+  function createGunsEffectSprites() {
+    if (typeof document === 'undefined') return;
+    characterSprites = GUNS_CHARACTER_GLYPHS.map((glyph, index) => createGlyphSprite(
+      glyph,
+      '15px serif',
+      2.5,
+      GUNS_CHARACTER_COLORS[index]
+    )).filter(Boolean);
+    emojiSprites = GUNS_EMOJI_GLYPHS.map(glyph => createGlyphSprite(glyph, '21px serif', 2)).filter(Boolean);
+    springyEmojiSprite = createGlyphSprite('🤪', '16px serif', 2);
+  }
+
+  function resetEffectState() {
+    effectStateKey = resolvedKey;
+    history = [];
+    particles = [];
+    pointer = null;
+    trailingNodes = [];
+    trailingKey = '';
+    requestedCursorSrc = null;
+    trailingImage = null;
+    demoCycle = -1;
+    followingDot = createGunsFollowingDot({ x: width / 2, y: height / 2 });
+    textFlagPhase = 0;
+    textFlagNodes = createGunsTextFlagNodes(GUNS_TEXT_FLAG_TEXT, { x: width / 2, y: height / 2 });
+    springyEmojiNodes = createGunsSpringyEmojiNodes({ x: width / 2, y: height / 2 }, GUNS_SPRINGY_EMOJI_NODES);
   }
 
   function plasmaNoise(index, channel = 0, tick = 0) {
@@ -138,6 +219,11 @@
     context.setTransform(dpr, 0, 0, dpr, 0, 0);
     context.clearRect(0, 0, width, height);
     resetPlasmaState();
+    if (!pointer) {
+      followingDot = createGunsFollowingDot({ x: width / 2, y: height / 2 });
+      textFlagNodes = createGunsTextFlagNodes(GUNS_TEXT_FLAG_TEXT, { x: width / 2, y: height / 2 });
+      springyEmojiNodes = createGunsSpringyEmojiNodes({ x: width / 2, y: height / 2 }, GUNS_SPRINGY_EMOJI_NODES);
+    }
   }
 
   function pointForEvent(event) {
@@ -161,6 +247,26 @@
       const colors = getColors();
       fairyDustParticle.color = colors[Math.floor(Math.random() * colors.length)] || '#D61C59';
       particles.push(fairyDustParticle);
+      return;
+    }
+    if (kind === 'bubble-wake') {
+      const bubbleParticle = createGunsBubbleParticle(point.x, point.y);
+      bubbleParticle.kind = kind;
+      particles.push(bubbleParticle);
+      return;
+    }
+    if (kind === 'character-bloom' && characterSprites.length) {
+      const sprite = characterSprites[Math.floor(Math.random() * characterSprites.length)];
+      const characterParticle = createGunsCharacterParticle(point.x, point.y, Math.random, sprite.value, sprite);
+      characterParticle.kind = kind;
+      particles.push(characterParticle);
+      return;
+    }
+    if (kind === 'emoji-bloom' && emojiSprites.length) {
+      const sprite = emojiSprites[Math.floor(Math.random() * emojiSprites.length)];
+      const emojiParticle = createGunsEmojiParticle(point.x, point.y, Math.random, sprite.value, sprite);
+      emojiParticle.kind = kind;
+      particles.push(emojiParticle);
       return;
     }
     const angle = Math.random() * Math.PI * 2;
@@ -187,7 +293,7 @@
     history.push(point);
     if (history.length > 28) history.shift();
     const movedEnough = !previous || Math.hypot(point.x - previous.x, point.y - previous.y) > 1.5;
-    if (resolvedKey === 'pixel-wake' || resolvedKey === 'glass-shards' || resolvedKey === 'ember-ash' || resolvedKey === 'gold-fleck' || (resolvedKey === 'solar-sparks' && movedEnough)) {
+    if (PARTICLE_TRAIL_KEYS.has(resolvedKey) && (movedEnough || ['pixel-wake', 'glass-shards', 'ember-ash', 'gold-fleck'].includes(resolvedKey))) {
       addParticle(point, resolvedKey);
       if (point.speed > 1.5 && resolvedKey !== 'solar-sparks') addParticle(point, resolvedKey);
     }
@@ -221,7 +327,7 @@
     history.push(point);
     if (history.length > 28) history.shift();
     const movedEnough = !previous || Math.hypot(point.x - previous.x, point.y - previous.y) > 1.5;
-    if (resolvedKey === 'pixel-wake' || resolvedKey === 'glass-shards' || resolvedKey === 'ember-ash' || resolvedKey === 'gold-fleck' || (resolvedKey === 'solar-sparks' && movedEnough)) {
+    if (PARTICLE_TRAIL_KEYS.has(resolvedKey) && (movedEnough || ['pixel-wake', 'glass-shards', 'ember-ash', 'gold-fleck'].includes(resolvedKey))) {
       if (Math.floor(timestamp / 90) !== demoCycle) {
         demoCycle = Math.floor(timestamp / 90);
         addParticle(point, resolvedKey);
@@ -242,7 +348,7 @@
     lastTime = timestamp;
     if (resolvedInputMode === 'demo') updateDemoPoint(timestamp);
     drawFrame(delta / 16.67, false);
-    if (resolvedInputMode === 'demo' || history.length || particles.length || pointer) frame = requestAnimationFrame(animate);
+    if (resolvedInputMode === 'demo' || CONTINUOUS_TRAIL_KEYS.has(resolvedKey) || history.length || particles.length || pointer) frame = requestAnimationFrame(animate);
   }
 
   function clear() {
@@ -288,6 +394,40 @@
         context.restore();
         return true;
       }
+      if (particle.kind === 'bubble-wake') {
+        advanceGunsBubbleParticle(particle, multiplier);
+        if (particle.lifeSpan < 0) return false;
+        const dimension = particle.baseDimension || GUNS_BUBBLE_BASE_DIMENSION;
+        const scale = particle.scale;
+        context.save();
+        context.fillStyle = '#E6F1F7';
+        context.strokeStyle = '#3A92C5';
+        context.beginPath();
+        context.arc(particle.x - dimension / 2 * scale, particle.y - dimension / 2, dimension * scale, 0, Math.PI * 2);
+        context.stroke();
+        context.fill();
+        context.closePath();
+        context.restore();
+        return true;
+      }
+      if (particle.kind === 'character-bloom' || particle.kind === 'emoji-bloom') {
+        if (particle.kind === 'character-bloom') advanceGunsCharacterParticle(particle, multiplier);
+        else advanceGunsEmojiParticle(particle, multiplier);
+        if (particle.lifeSpan < 0 || !particle.sprite?.canvas) return false;
+        const sprite = particle.sprite;
+        context.save();
+        context.translate(particle.x, particle.y);
+        if (particle.rotation) context.rotate(particle.rotation);
+        context.drawImage(
+          sprite.canvas,
+          -sprite.width / 2 * particle.scale,
+          -sprite.height / 2,
+          sprite.width * particle.scale,
+          sprite.height * particle.scale
+        );
+        context.restore();
+        return true;
+      }
       particle.x += particle.vx * multiplier;
       particle.y += particle.vy * multiplier;
       particle.vy += 0.008 * multiplier;
@@ -312,6 +452,48 @@
       }
       context.restore();
       return true;
+    });
+  }
+
+  function drawFollowingDot(staticFrame = false) {
+    if (!context || !pointer) return;
+    if (staticFrame) followingDot = createGunsFollowingDot(pointer);
+    else advanceGunsFollowingDot(followingDot, pointer);
+    context.save();
+    context.fillStyle = '#323232A6';
+    context.beginPath();
+    context.arc(followingDot.x, followingDot.y, GUNS_FOLLOWING_DOT_RADIUS, 0, Math.PI * 2);
+    context.fill();
+    context.closePath();
+    context.restore();
+  }
+
+  function drawTextFlag(staticFrame = false) {
+    if (!context || !pointer || !textFlagNodes.length) return;
+    if (staticFrame) {
+      textFlagNodes = createGunsTextFlagNodes(GUNS_TEXT_FLAG_TEXT, pointer);
+      textFlagPhase = 0;
+    } else {
+      textFlagPhase = advanceGunsTextFlag(textFlagNodes, pointer, textFlagPhase, { gap: GUNS_TEXT_FLAG_GAP });
+    }
+    context.save();
+    context.fillStyle = getColors()[0] || '#FFFFFF';
+    context.font = '12px monospace';
+    context.textBaseline = 'alphabetic';
+    textFlagNodes.slice().reverse().forEach(node => context.fillText(node.letter, node.x, node.y));
+    context.restore();
+  }
+
+  function drawSpringyEmoji(staticFrame = false, multiplier = 1) {
+    if (!context || !pointer || !springyEmojiSprite?.canvas) return;
+    if (staticFrame) {
+      springyEmojiNodes = createGunsSpringyEmojiNodes(pointer, GUNS_SPRINGY_EMOJI_NODES);
+    } else {
+      advanceGunsSpringyEmojiNodes(springyEmojiNodes, pointer, width, height, multiplier);
+    }
+    const sprite = springyEmojiSprite;
+    springyEmojiNodes.forEach(node => {
+      context.drawImage(sprite.canvas, node.x - sprite.width / 2, node.y - sprite.height / 2, sprite.width, sprite.height);
     });
   }
 
@@ -491,6 +673,10 @@
     else if (resolvedKey === 'color-memory') { tail.forEach((point, index) => drawPath(tail.slice(Math.max(0, index - 1), index + 1), colors[index % colors.length], 2, 0.7)); }
     else if (resolvedKey === 'marker-stroke') drawPath(tail, '#E7D4C4', 4.5, 0.42);
     else if (resolvedKey === 'solar-sparks') drawParticles(multiplier);
+    else if (resolvedKey === 'bubble-wake' || resolvedKey === 'character-bloom' || resolvedKey === 'emoji-bloom') drawParticles(multiplier);
+    else if (resolvedKey === 'following-dot') drawFollowingDot(staticFrame);
+    else if (resolvedKey === 'text-flag') drawTextFlag(staticFrame);
+    else if (resolvedKey === 'springy-emoji') drawSpringyEmoji(staticFrame, multiplier);
     else if (resolvedKey === 'void-lensing') {
       drawPath(tail, '#9C7BFF', 1.5, 0.3, -1, 0);
       context.save(); context.globalAlpha = 0.7; context.strokeStyle = '#66E8FF'; context.lineWidth = 1; context.beginPath(); context.arc(head.x, head.y, 7, 0, Math.PI * 2); context.stroke(); context.restore();
@@ -498,7 +684,7 @@
 
     if (staticFrame) return;
     history = history.filter(point => (head.time - point.time) < 520);
-    if (history.length === 0 && particles.length === 0) pointer = null;
+    if (history.length === 0 && particles.length === 0 && !CONTINUOUS_TRAIL_KEYS.has(resolvedKey)) pointer = null;
   }
 
   function resetOnVisibility() {
@@ -530,6 +716,8 @@
   onMount(() => {
     mounted = true;
     context = canvas?.getContext('2d', { alpha: true });
+    createGunsEffectSprites();
+    resetEffectState();
     updateInputMode();
     mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     updateReducedMotion();

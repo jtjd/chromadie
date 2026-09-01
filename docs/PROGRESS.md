@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Source-backed expression expansion — 2026-09-01
+
+- Added six new selectable cursor effects backed by the inspected particle and
+  follower controllers: Bubble Lift, Glyph Bloom, Joy Burst, Orbit Dot,
+  Signal Ribbon, and Elastic Emoji.
+- Added Code Current, a bundled Kode Mono-based Name Font choice, with a lazy
+  local asset loader and the same finite, code-owned font boundary as the
+  existing catalog.
+- Kept all new choices free and additive: no scoring, entitlement, purchase,
+  profile-authority, or arbitrary-renderer boundary changed. Product labels
+  are original Chromadie names; source/vendor names remain research
+  provenance only.
+- Added deterministic controller tests, label-provenance assertions, seed and
+  migration rows, and launch balance/catalog coverage. The active catalog is
+  now 94 rows with 11 Name Fonts and 23 Cursor Trails.
+
 ## Final stabilization and launch hardening — 2026-08-31
 
 - Restored all route payload gates without raising budgets: Public Profile is
