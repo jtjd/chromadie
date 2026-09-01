@@ -1,5 +1,22 @@
 # Chromadie 2.0 Progress
 
+## Source-backed non-cursor expression expansion — 2026-09-01
+
+- Added `Shimmer Track`, a measured rounded-edge light trail with ten source
+  offsets, a `210px/s` perimeter clock, a `4.8s` pulse, resize/visibility
+  pausing, and reduced-motion/static behavior.
+- Added `Spectrum Flow`, a seven-stop full-spectrum Name Motion matching the
+  inspected `1400%` linear-gradient sweep over four seconds.
+- Added `Soft Halo`, a fixed `16.5px` Name Material glow, and `Soft Orbit`, an
+  original product label for the inspected shipped display face.
+- Added `Bounce In` and `Fold In` identity entry choices with the inspected
+  scale/offset/timing values across the shared card and alternate layouts.
+- Product-facing names remain original Chromadie labels. No remote avatar
+  decoration asset was imported because the inspected profile exposed a
+  user-specific asset rather than a reusable generic renderer.
+- The active catalog is now 98 rows: 12 Name Fonts, 8 Name Materials, 15 Name
+  Motions, 11 Profile Borders, and the unchanged 23 Cursor Trails.
+
 ## Source-backed expression expansion — 2026-09-01
 
 - Added six new selectable cursor effects backed by the inspected particle and

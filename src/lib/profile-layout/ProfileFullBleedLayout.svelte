@@ -43,7 +43,7 @@
   $: activeBannerSource = bannerSrc && failedBannerSource !== bannerSrc ? bannerSrc : '';
   $: rollHex = normalizeHexColor((/** @type {any} */ (roll || {})).hex_code || (/** @type {any} */ (roll || {})).hex, '');
   $: safeDescriptionMode = descriptionMode === 'typewriter' ? 'typewriter' : 'plain';
-  $: safeEntryAnimation = ['none', 'fade', 'focus'].includes(entryAnimation) ? entryAnimation : 'none';
+  $: safeEntryAnimation = ['none', 'fade', 'focus', 'pop', 'unfold'].includes(entryAnimation) ? entryAnimation : 'none';
   $: safeAccent = normalizeHexColor(accentColor, '#00FFB3');
   $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .16;
   $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0);
@@ -394,9 +394,20 @@
 
   .profile-full-bleed--entry-fade { animation: profile-full-bleed-fade 620ms ease both; }
   .profile-full-bleed--entry-focus { animation: profile-full-bleed-focus 760ms cubic-bezier(.22, 1, .36, 1) both; }
+  .profile-full-bleed--entry-pop { animation: profile-full-bleed-pop 520ms cubic-bezier(.18, 1.15, .34, 1) both; }
+  .profile-full-bleed--entry-unfold { animation: profile-full-bleed-unfold 700ms cubic-bezier(.2, .72, .12, 1) both; }
 
   @keyframes profile-full-bleed-fade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes profile-full-bleed-focus { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+  @keyframes profile-full-bleed-pop {
+    0% { transform: scale(.985); }
+    62% { transform: scale(1.012); }
+    to { transform: scale(1); }
+  }
+  @keyframes profile-full-bleed-unfold {
+    from { opacity: .82; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   @media (max-width: 36rem) {
     .profile-full-bleed { padding-inline: .75rem; }
@@ -427,7 +438,9 @@
 
   @media (prefers-reduced-motion: reduce) {
     .profile-full-bleed--entry-fade,
-    .profile-full-bleed--entry-focus { animation: none; }
+    .profile-full-bleed--entry-focus,
+    .profile-full-bleed--entry-pop,
+    .profile-full-bleed--entry-unfold { animation: none; }
     .profile-full-bleed__links a { transition: none; }
     .profile-full-bleed__links a:hover,
     .profile-full-bleed__links a:focus-visible { transform: none; }

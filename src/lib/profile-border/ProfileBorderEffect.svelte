@@ -16,11 +16,14 @@
   let mounted = false;
   let ElasticFrameEffect;
   let elasticComponentPromise;
+  let ShimmerFrameEffect;
+  let shimmerComponentPromise;
 
   $: definition = getProfileBorderDefinition(borderKey);
   $: resolvedKey = getProfileBorderKey(borderKey);
   $: shouldAnimate = Boolean(definition && animated && visible && !reducedMotion);
   $: elasticActive = resolvedKey === 'elastic' && shouldAnimate;
+  $: shimmerActive = resolvedKey === 'shimmer-track' && shouldAnimate;
   $: hostClass = [
     'profile-border-effect',
     `profile-border-effect--${resolvedKey || 'none'}`,
@@ -40,9 +43,17 @@
       .catch(() => {});
   }
 
+  function loadShimmerComponent() {
+    if (!mounted || resolvedKey !== 'shimmer-track' || ShimmerFrameEffect || shimmerComponentPromise) return;
+    shimmerComponentPromise = import('./ProfileShimmerFrameEffect.svelte')
+      .then(module => { ShimmerFrameEffect = module.default; })
+      .catch(() => {});
+  }
+
   onMount(() => {
     mounted = true;
     loadElasticComponent();
+    loadShimmerComponent();
     mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     updateReducedMotion();
     mediaQuery?.addEventListener?.('change', updateReducedMotion);
@@ -59,21 +70,32 @@
       mediaQuery?.removeEventListener?.('change', updateReducedMotion);
       observer?.disconnect();
       observer = null;
+      elasticComponentPromise = null;
+      shimmerComponentPromise = null;
     };
   });
 
-  afterUpdate(loadElasticComponent);
+  afterUpdate(() => {
+    loadElasticComponent();
+    loadShimmerComponent();
+  });
 
   onDestroy(() => {
     mounted = false;
     mediaQuery?.removeEventListener?.('change', updateReducedMotion);
     observer?.disconnect();
+    elasticComponentPromise = null;
+    shimmerComponentPromise = null;
   });
 </script>
 
 <div bind:this={host} class={hostClass} style={surfaceStyle} data-profile-border={resolvedKey || 'none'} data-profile-surface="true">
   {#if resolvedKey === 'elastic' && ElasticFrameEffect}
     <svelte:component this={ElasticFrameEffect} {host} enabled={elasticActive}>
+      <slot />
+    </svelte:component>
+  {:else if resolvedKey === 'shimmer-track' && ShimmerFrameEffect}
+    <svelte:component this={ShimmerFrameEffect} {host} enabled={shimmerActive}>
       <slot />
     </svelte:component>
   {:else}
@@ -150,6 +172,15 @@
 
   .profile-border-effect--elastic {
     border-color: transparent;
+  }
+
+  .profile-border-effect--shimmer-track {
+    --border-accent: transparent;
+    border-color: transparent;
+  }
+
+  .profile-border-effect--shimmer-track::before {
+    display: none;
   }
 
   .profile-border-effect--elastic::before {

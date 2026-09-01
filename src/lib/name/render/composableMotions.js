@@ -89,6 +89,26 @@ function drawColorFill(ctx, model, colors, angle, alpha = 0.96) {
   });
 }
 
+function drawSpectrumFlow(ctx, model) {
+  // The inspected reference uses a 1400%-wide linear gradient and moves its
+  // background position from 0% to 100% over four seconds. On canvas that is
+  // a fourteen-frame-width gradient translated by thirteen frame widths.
+  const backgroundWidth = model.width * 14;
+  const reducedOrStatic = model.reducedMotion || model.staticFrame;
+  const progress = reducedOrStatic ? 0 : model.progress;
+  const left = -model.width * 13 * progress;
+  const gradient = createLinearGradient(
+    ctx,
+    ['violet', 'indigo', 'blue', 'green', 'yellow', 'orange', 'red'],
+    left,
+    0,
+    left + backgroundWidth,
+    0,
+    '#F7FBFF'
+  );
+  drawText(ctx, model, gradient);
+}
+
 function drawMaskedRect(ctx, model, left, top, width, height, fillStyle, alpha = 1) {
   if (!ctx?.fillRect) return;
   withTextMask(ctx, model, target => {
@@ -1037,6 +1057,9 @@ export function drawComposableMotion(ctx, model, drawBase) {
       return true;
     case 'raster-signal':
       drawRasterSignal(ctx, model, drawBase);
+      return true;
+    case 'spectrum-flow':
+      drawSpectrumFlow(ctx, model);
       return true;
     default:
       drawBase(ctx, model);

@@ -660,12 +660,23 @@
   .profile-reference-card--entry-fade { animation: profile-reference-entry-fade .65s var(--motion-ease-standard, ease) both; }
   .profile-reference-card--entry-rise { animation: profile-reference-entry-rise .7s var(--motion-ease-emphasis, cubic-bezier(.23, 1, .32, 1)) both; }
   .profile-reference-card--entry-focus { animation: profile-reference-entry-focus .75s var(--motion-ease-emphasis, cubic-bezier(.23, 1, .32, 1)) both; }
+  .profile-reference-card--entry-pop { animation: profile-reference-entry-pop .52s cubic-bezier(.18, 1.15, .34, 1) both; }
+  .profile-reference-card--entry-unfold { animation: profile-reference-entry-unfold .7s cubic-bezier(.2, .72, .12, 1) both; }
 
   @keyframes profile-reference-typewriter { from { max-width: 0; } to { max-width: 260px; } }
   @keyframes profile-reference-caret { 50% { border-right-color: transparent; } }
   @keyframes profile-reference-entry-fade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes profile-reference-entry-rise { from { opacity: 0; transform: translateY(.75rem); } to { opacity: 1; transform: translateY(0); } }
   @keyframes profile-reference-entry-focus { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: blur(0); } }
+  @keyframes profile-reference-entry-pop {
+    0% { transform: scale(.985); }
+    62% { transform: scale(1.012); }
+    to { transform: scale(1); }
+  }
+  @keyframes profile-reference-entry-unfold {
+    from { opacity: .82; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   @container profile-reference-card (max-width: 36rem) {
     .profile-reference-card--profile:not(.profile-reference-card--framed) .profile-reference-card__opening,
@@ -707,6 +718,8 @@
     .profile-reference-card--entry-fade,
     .profile-reference-card--entry-rise,
     .profile-reference-card--entry-focus,
+    .profile-reference-card--entry-pop,
+    .profile-reference-card--entry-unfold,
     .profile-reference-card__bio--typewriter {
       animation: none;
       max-width: 260px;

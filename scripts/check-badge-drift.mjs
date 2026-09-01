@@ -313,7 +313,8 @@ const expectedBorderPrices = Object.freeze({
   border_prism: 300000,
   border_void: 550000,
   border_signal: 160000,
-  border_elastic: 0
+  border_elastic: 0,
+  border_shimmer_track: 0
 });
 const expectedBorderKeys = new Set(Object.values(profileBorders.PROFILE_BORDER_DEFINITIONS).map(definition => definition.itemKey));
 const borderKeySet = new Set(borderRows.map(row => row.itemKey));
@@ -325,7 +326,7 @@ const borderInvalidRows = borderRows.filter(row => (
     || !row.description.trim()
     || !row.collection.trim()
 ));
-if (borderRows.length !== 10 || borderKeySet.size !== 10 || borderInvalidRows.length > 0) {
+if (borderRows.length !== 11 || borderKeySet.size !== 11 || borderInvalidRows.length > 0) {
   console.error('Profile Border balance/drift check failed.');
   console.error(JSON.stringify({
     rowCount: borderRows.length,

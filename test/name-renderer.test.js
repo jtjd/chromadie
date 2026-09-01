@@ -27,6 +27,7 @@ import {
 } from '../src/lib/name/nameRenderer.js';
 import { createNameAnimationClock } from '../src/lib/name/nameAnimationClock.js';
 import { drawComposableMotion, getReadableMotionColor } from '../src/lib/name/render/composableMotions.js';
+import { drawComposableMaterial } from '../src/lib/name/render/composableMaterials.js';
 import { requestNameFontLoad } from '../src/lib/name/nameFonts.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -44,25 +45,32 @@ test('the curated renderer registries contain the approved active layers and fre
   assert.deepEqual(NAME_PAID_MATERIAL_KEYS, seedKeys('name_material'));
   assert.deepEqual(NAME_PAID_MOTION_KEYS, seedKeys('name_motion'));
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
-    fonts: 12,
-    materials: 8,
-    motions: 15,
-    paidFonts: 11,
-    paidMaterials: 7,
-    paidMotions: 14,
-    paidTotal: 32
+    fonts: 13,
+    materials: 9,
+    motions: 16,
+    paidFonts: 12,
+    paidMaterials: 8,
+    paidMotions: 15,
+    paidTotal: 35
   });
   assert.equal(NAME_MATERIALS.plain.composable, true);
   assert.equal(NAME_MOTIONS.none.composable, true);
-  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 11);
-  assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 8);
-  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 15);
+  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 12);
+  assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 9);
+  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 16);
 });
 
 test('new expression labels are original Chromadie names, not competitor names', () => {
-  const labels = Object.values(NAME_FONTS).map(definition => definition.label).join(' ');
+  const labels = [
+    ...Object.values(NAME_FONTS),
+    ...Object.values(NAME_MATERIALS),
+    ...Object.values(NAME_MOTIONS)
+  ].map(definition => definition.label).join(' ');
   assert.doesNotMatch(labels, /\b(?:guns|vaults|haunt|carrd|linktree)\b/i);
   assert.equal(NAME_FONTS['kode-mono'].label, 'Code Current');
+  assert.equal(NAME_FONTS['soft-orbit'].label, 'Soft Orbit');
+  assert.equal(NAME_MATERIALS['halo-edge'].label, 'Soft Halo');
+  assert.equal(NAME_MOTIONS['spectrum-flow'].label, 'Spectrum Flow');
 });
 
 test('all supported combinations resolve through finite code-owned registries', () => {
@@ -215,6 +223,25 @@ test('every curated motion renderer draws safely through the bounded Canvas API'
     });
     assert.doesNotThrow(() => drawComposableMotion(context, frame, () => {}), motionKey);
   }
+});
+
+test('the source-backed spectrum motion and halo material use their bounded primitives', () => {
+  const spectrum = getNameFrameModel({
+    text: 'Chromadie',
+    loadout: { motionKey: 'spectrum-flow' },
+    time: 1000
+  });
+  const halo = getNameFrameModel({
+    text: 'Chromadie',
+    loadout: { materialKey: 'halo-edge' },
+    time: 1000
+  });
+  const spectrumRecording = createMotionRecordingContext();
+  const haloRecording = createMotionRecordingContext();
+  assert.doesNotThrow(() => drawComposableMotion(spectrumRecording.context, spectrum, () => {}));
+  assert.doesNotThrow(() => drawComposableMaterial(haloRecording.context, halo));
+  assert.ok(spectrumRecording.calls.some(call => call.type === 'fillText'));
+  assert.ok(haloRecording.calls.some(call => call.type === 'fillText'));
 });
 
 function createMotionRecordingContext() {

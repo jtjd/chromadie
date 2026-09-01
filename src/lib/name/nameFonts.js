@@ -65,9 +65,9 @@ export const LEGACY_NAME_FONTS = Object.freeze({
     widthFactor: 0.56,
     label: 'Instrument Sans', collection: 'Nocturne', rarity: 'Uncommon'
   }),
-  // Vaults' shipped profile bundle loads Fontshare's Chillax face for
-  // profiles that choose it. Keep it readable for imported/historical
-  // configurations even though it is not a new catalog row yet.
+  // Keep the source face readable for imported configurations. The active
+  // product-facing choice uses the original Chromadie key `soft-orbit` while
+  // this family alias preserves historical `chillax` values.
   'chillax': font('chillax', 'Chillax', SYSTEM_DISPLAY, 600, {
     source: 'fontshare',
     targetFamily: 'Chillax',
@@ -167,6 +167,13 @@ export const DEFAULT_NAME_FONT_KEY = 'soft-grotesk';
 const ACTIVE_NAME_FONT_DEFINITIONS = Object.freeze({
   'industrial-stencil': LEGACY_NAME_FONTS['industrial-stencil'],
   'marker-tag': LEGACY_NAME_FONTS['marker-tag'],
+  'soft-orbit': font('soft-orbit', 'Chillax', SYSTEM_DISPLAY, 600, {
+    source: 'fontshare',
+    targetFamily: 'Chillax',
+    substitution: 'Instrument Sans',
+    widthFactor: 0.58,
+    label: 'Soft Orbit', collection: 'Prism', rarity: 'Rare'
+  }),
   'satoshi': font('satoshi', 'Satoshi', SYSTEM_SANS, 700, {
     source: 'fontshare',
     targetFamily: 'Satoshi',
@@ -286,6 +293,7 @@ const NAME_FONT_ASSET_LOADERS = Object.freeze({
   'velocity': () => Promise.resolve(),
   'outfit': () => import('@fontsource/outfit/latin-600.css'),
   'chillax': () => Promise.resolve(),
+  'soft-orbit': () => Promise.resolve(),
   'kode-mono': () => import('@fontsource/kode-mono/latin-400.css')
 });
 

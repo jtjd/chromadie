@@ -58,6 +58,7 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('border_void', 'Void Border', 'profile_border', 550000, 'renderer', 'void', NULL, NULL, 'Mythic', 'A dark violet edge that absorbs light around the card.', 'Nocturne', false),
 ('border_signal', 'Signal Border', 'profile_border', 0, 'renderer', 'signal', NULL, NULL, 'Rare', 'A quiet lime edge with a bounded signal pulse.', 'Signal', false),
 ('border_elastic', 'Elastic Frame', 'profile_border', 0, 'renderer', 'elastic', NULL, NULL, 'Epic', 'A tensioned perimeter bends toward the pointer while keeping the profile boundary in place.', 'Signal', false),
+('border_shimmer_track', 'Shimmer Track', 'profile_border', 0, 'renderer', 'shimmer-track', NULL, NULL, 'Epic', 'Ten soft highlights travel the rounded profile edge in a continuous light track.', 'Prism', false),
 ('streak_freeze', 'Streak Freeze', 'consumable', 50000, 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL, true),
 ('title_founder', 'Founder Title', 'title', 0, 'text', '✦ FOUNDER ✦', NULL, '2026-07-10', 'Mythic', 'Reserved for people whose early contributions helped shape ChromaDie.', 'Project Legacy', false)
 ON CONFLICT (item_key) DO NOTHING;
@@ -68,6 +69,7 @@ INSERT INTO public.shop_items (
 ) VALUES
   ('name_font_industrial_stencil', 'Black Ops One', 'name_font', 0, 'renderer', 'industrial-stencil', NULL, NULL, 'Epic', 'A cut stencil face with utilitarian, engineered lettering.', 'Signal', false, 'free', NULL, 'active'),
   ('name_font_marker_tag', 'Permanent Marker', 'name_font', 0, 'renderer', 'marker-tag', NULL, NULL, 'Epic', 'A hand-marked face that gives the name a quick, personal gesture.', 'Ember', false, 'free', NULL, 'active'),
+  ('name_font_soft_orbit', 'Soft Orbit', 'name_font', 0, 'renderer', 'soft-orbit', NULL, NULL, 'Rare', 'A rounded display voice with an easy rhythm and a soft, orbiting silhouette.', 'Prism', false, 'free', NULL, 'active'),
   ('name_font_satoshi', 'Satoshi', 'name_font', 0, 'renderer', 'satoshi', NULL, NULL, 'Uncommon', 'A clean contemporary sans with a calm, balanced identity voice.', 'Nocturne', false, 'free', NULL, 'active'),
   ('name_font_fira_code', 'Fira Code', 'name_font', 0, 'renderer', 'fira-code', NULL, NULL, 'Rare', 'A coding-oriented monospace with a crisp, deliberate rhythm.', 'Signal', false, 'free', NULL, 'active'),
   ('name_font_poppins', 'Poppins', 'name_font', 0, 'renderer', 'poppins', NULL, NULL, 'Uncommon', 'A geometric sans with open counters and a polished everyday profile.', 'Prism', false, 'free', NULL, 'active'),
@@ -84,6 +86,7 @@ INSERT INTO public.shop_items (
   ('name_material_engraved_stone', 'Quarry Mark', 'name_material', 260000, 'renderer', 'engraved-stone', NULL, NULL, 'Rare', 'A carved stone face with durable shadowed grooves and pale edges.', 'Nocturne', false, 'earned', NULL, 'active'),
   ('name_material_crt_phosphor', 'Cathode Bloom', 'name_material', 350000, 'renderer', 'crt-phosphor', NULL, NULL, 'Epic', 'A green phosphor face with a controlled screen glow and scan texture.', 'Static Bloom', false, 'earned', NULL, 'active'),
   ('name_material_blueprint_ink', 'Draftline', 'name_material', 0, 'renderer', 'blueprint-ink', NULL, NULL, 'Rare', 'A technical blue ink face with pale drafting-line highlights.', 'Signal', false, 'earned', NULL, 'active'),
+  ('name_material_halo_edge', 'Soft Halo', 'name_material', 0, 'renderer', 'halo-edge', NULL, NULL, 'Rare', 'A fixed luminous edge lifts the name from the page without changing its fill.', 'Prism', false, 'free', NULL, 'active'),
   ('name_motion_haunt_glow', 'Glow', 'name_motion', 0, 'renderer', 'haunt-glow', NULL, NULL, 'Rare', 'A concentrated halo breathes around the name without washing out its edge.', 'Signal', false, 'earned', NULL, 'active'),
   ('name_motion_letter_shuffle', 'Scramble', 'name_motion', 0, 'renderer', 'letter-shuffle', NULL, NULL, 'Anomaly', 'Characters rearrange before locking into place.', 'Static Bloom', false, 'earned', NULL, 'active'),
   ('name_motion_typewriter_name', 'Type In', 'name_motion', 0, 'renderer', 'typewriter-name', NULL, NULL, 'Rare', 'Characters arrive one by one with a precise editorial cursor.', 'Archive', false, 'earned', NULL, 'active'),
@@ -96,8 +99,9 @@ INSERT INTO public.shop_items (
   ('name_motion_haunt_flash', 'Flash', 'name_motion', 0, 'renderer', 'haunt-flash', NULL, NULL, 'Rare', 'A sharp white exposure rolls over the name before the color settles.', 'Signal', false, 'earned', NULL, 'active'),
   ('name_motion_kinetic_echo', 'Kinetic Echo', 'name_motion', 0, 'renderer', 'kinetic-echo', NULL, NULL, 'Epic', 'Controlled afterimages follow the name in two offset, color-separated echoes.', 'Signal', false, 'free', NULL, 'active'),
   ('name_motion_magnetic_type', 'Magnetic Type', 'name_motion', 0, 'renderer', 'magnetic-type', NULL, NULL, 'Epic', 'Each glyph responds to the pointer as if the name were suspended in a magnetic field.', 'Prism', false, 'free', NULL, 'active'),
-  ('name_motion_neon_particle', 'Neon Particle', 'name_motion', 0, 'renderer', 'neon-particle', NULL, NULL, 'Anomaly', 'A masked internal energy field, edge emission, and micro-particles keep the name electrically alive.', 'Signal', false, 'free', NULL, 'active'),
-  ('name_motion_raster_signal', 'Raster Signal', 'name_motion', 0, 'renderer', 'raster-signal', NULL, NULL, 'Epic', 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.', 'Static Bloom', false, 'free', NULL, 'active')
+('name_motion_neon_particle', 'Neon Particle', 'name_motion', 0, 'renderer', 'neon-particle', NULL, NULL, 'Anomaly', 'A masked internal energy field, edge emission, and micro-particles keep the name electrically alive.', 'Signal', false, 'free', NULL, 'active'),
+  ('name_motion_raster_signal', 'Raster Signal', 'name_motion', 0, 'renderer', 'raster-signal', NULL, NULL, 'Epic', 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.', 'Static Bloom', false, 'free', NULL, 'active'),
+  ('name_motion_spectrum_flow', 'Spectrum Flow', 'name_motion', 0, 'renderer', 'spectrum-flow', NULL, NULL, 'Epic', 'A full-spectrum color field travels continuously across the name with a clean, light-filled finish.', 'Prism', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,

@@ -1,5 +1,24 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-01 — Port inspected non-cursor behaviors into original Chromadie choices
+
+The populated public profile audit exposed reusable, code-level behavior beyond
+the cursor: a masked ten-highlight rounded-border trail, a seven-stop rainbow
+name sweep, a fixed username glow, two entry reveal sequences, and a shipped
+display face. Port these values into the existing finite profile, Name Material,
+Name Motion, and Name Font boundaries. The border controller owns geometry and
+visibility; the Canvas owns name pixels; profile data selects keys only.
+
+Use the original product labels `Shimmer Track`, `Spectrum Flow`, `Soft Halo`,
+`Soft Orbit`, `Bounce In`, and `Fold In`. Source/vendor names remain in the
+research record and compatibility metadata only. A user-specific remote avatar
+decoration is not treated as a generic catalog renderer.
+
+The additive migration keeps the free expression baseline and leaves scoring,
+entitlements, RLS, profile authority, and historical values unchanged. Every new
+motion has a static/reduced-motion result, and the shimmer controller pauses
+when the document or profile is not visible.
+
 ## 2026-09-01 — Expand expression choices with source-backed behavior and original labels
 
 The inspected cursor source exposed six concrete behaviors that add meaningful

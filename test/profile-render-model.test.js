@@ -142,6 +142,23 @@ test('retired avatar selections fail closed at the render boundary', () => {
   assert.equal(snapshot.cosmetics.avatarEffectKey, '');
 });
 
+test('the source-backed shimmer border resolves from its namespaced catalog key', () => {
+  const snapshot = buildProfileRenderSnapshot({
+    profile: {
+      id: 'profile-shimmer-border',
+      username: 'shimmer-profile',
+      equipped_cosmetics: { profile_border: 'border_shimmer_track' }
+    },
+    profileConfig: { published: createDefaultProfileConfig('#123456') },
+    featureFlags: FLAGS,
+    mediaResolver,
+    mode: 'public',
+    previewMode: false
+  });
+
+  assert.equal(snapshot.cosmetics.borderKey, 'border_shimmer_track');
+});
+
 test('draft, media, identity, and cosmetic precedence is resolved before rendering', () => {
   const published = createRichConfiguration();
   published.layoutVariant = 'compact';

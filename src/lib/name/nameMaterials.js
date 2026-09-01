@@ -48,6 +48,9 @@ export const NAME_MATERIALS = Object.freeze({
   }),
   'blueprint-ink': composableMaterial('blueprint-ink', 'blueprint-ink', ['#7ec7ff', '#d8efff', '#6eb1e3'], {
     label: 'Draftline', collection: 'Signal', rarity: 'Rare'
+  }),
+  'halo-edge': composableMaterial('halo-edge', 'halo-edge', ['#f7fbff'], {
+    label: 'Soft Halo', collection: 'Prism', rarity: 'Rare'
   })
 });
 

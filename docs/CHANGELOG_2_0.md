@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-01 — Add source-backed profile expression layers
+
+- Added Shimmer Track for a moving rounded-profile edge, with a static fallback
+  for reduced motion and offscreen states.
+- Added Spectrum Flow and Soft Halo for animated and luminous name treatments,
+  plus Soft Orbit as a rounded display font choice.
+- Added Bounce In and Fold In entry animations to the shared profile card,
+  portfolio, and full-bleed layouts.
+- Kept product labels original to Chromadie and did not import a user-specific
+  remote avatar decoration as a catalog effect.
+- Expanded the active catalog to 98 rows without changing gameplay authority,
+  scoring, RLS, or historical ownership records.
+
 ## 2026-08-31 — Final launch stabilization
 
 - Kept the full daily Roll on `/roll`; profiles now contain only the current

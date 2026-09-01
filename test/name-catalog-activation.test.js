@@ -10,24 +10,24 @@ import { NAME_MOTIONS } from '../src/lib/name/nameMotions.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the curated catalog keeps the approved active Name rows and ten Profile Border rows', async () => {
+test('the curated catalog keeps the approved active Name rows and eleven Profile Border rows', async () => {
   const seed = await read('supabase/seed.sql');
-  assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 11);
-  assert.equal((seed.match(/^\s*\('name_material_[a-z0-9_]+'/gm) || []).length, 7);
-  assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 14);
-  assert.equal((seed.match(/^\s*\('border_(?:celestial|chroma|crystal|glitch|gold|neon|prism|void|signal|elastic)'/gm) || []).length, 10);
+  assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 12);
+  assert.equal((seed.match(/^\s*\('name_material_[a-z0-9_]+'/gm) || []).length, 8);
+  assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 15);
+  assert.equal((seed.match(/^\s*\('border_[a-z0-9_]+'/gm) || []).length, 11);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
-    fonts: 12,
-    materials: 8,
-    motions: 15,
-    paidFonts: 11,
-    paidMaterials: 7,
-    paidMotions: 14,
-    paidTotal: 32
+    fonts: 13,
+    materials: 9,
+    motions: 16,
+    paidFonts: 12,
+    paidMaterials: 8,
+    paidMotions: 15,
+    paidTotal: 35
   });
   assert.deepEqual(Object.keys(NAME_FONTS), [
-    'industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins',
+    'industrial-stencil', 'marker-tag', 'soft-orbit', 'satoshi', 'fira-code', 'poppins',
     'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit', 'kode-mono'
   ]);
   assert.equal(NAME_FONTS['soft-grotesk'], undefined);
@@ -36,12 +36,12 @@ test('the curated catalog keeps the approved active Name rows and ten Profile Bo
     'haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles',
     'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal',
     'haunt-split', 'haunt-flash', 'kinetic-echo', 'magnetic-type',
-    'neon-particle', 'raster-signal'
+    'neon-particle', 'raster-signal', 'spectrum-flow'
   ]);
 });
 
 test('the active Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
-  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration] = await Promise.all([
+  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
     read('supabase/migrations/20260803130000_use_reference_font_family_names.sql'),
@@ -49,14 +49,15 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     read('supabase/migrations/20260816110000_name_font_catalog_refresh.sql'),
     read('supabase/migrations/20260816120000_add_silkscreen_name_font.sql'),
     read('supabase/migrations/20260821090000_approved_cosmetic_effects.sql'),
-    read('supabase/migrations/20260901120000_source_backed_expression_expansion.sql')
+    read('supabase/migrations/20260901120000_source_backed_expression_expansion.sql'),
+    read('supabase/migrations/20260901140000_source_backed_profile_expression_expansion.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
   )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }))
     .filter(row => row.itemKey !== 'name_prism_atelier');
 
-  assert.equal(rows.length, 32);
+  assert.equal(rows.length, 35);
   assert.equal(new Set(rows.map(row => row.name)).size, rows.length);
 
   const registries = {
@@ -69,7 +70,7 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
     assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
     assert.equal(
-      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
+      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
       true,
       `${row.itemKey} label is missing from the production migrations`
     );
@@ -86,7 +87,7 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     'Velvet Antiqua', 'Narrowcast', 'Monument', 'Fixed Point', 'Soft Circuit',
     'Lowlight', 'Paper Lantern', 'Black Cathedral', 'Raster Bloom', 'Razor Script',
     'Foundry Slab', 'Split Serif', 'Cutline', 'Longwave', 'Greenroom',
-    'Soft Orbit', 'Handstamp', 'Front Page'
+    'Handstamp', 'Front Page'
   ]) {
     assert.equal(rows.some(row => row.name === inventedFontLabel), false, `invented font label remains: ${inventedFontLabel}`);
   }
@@ -108,6 +109,7 @@ test('active Font families are real assets and legacy families remain readable',
   assert.equal(getNameFont('name_font_soft_grotesk').family, 'Instrument Sans Variable');
   assert.match(stylesSource, /font-family: 'Array'/);
   assert.match(stylesSource, /font-family: 'Velocity'/);
+  assert.match(stylesSource, /font-family: 'Chillax'/);
   assert.match(assetReadme, /dafont\.com\/velocity\.font/);
 
   for (const familyImport of [

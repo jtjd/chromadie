@@ -1,6 +1,14 @@
 export const PROFILE_IDENTITY_PRESENTATION_VERSION = 1;
 export const PROFILE_IDENTITY_DESCRIPTION_MODES = Object.freeze(['plain', 'typewriter']);
-export const PROFILE_IDENTITY_ENTRY_ANIMATIONS = Object.freeze(['none', 'fade', 'rise', 'focus']);
+export const PROFILE_IDENTITY_ENTRY_ANIMATIONS = Object.freeze(['none', 'fade', 'rise', 'focus', 'pop', 'unfold']);
+export const PROFILE_IDENTITY_ENTRY_ANIMATION_LABELS = Object.freeze({
+  none: 'None',
+  fade: 'Soft Fade',
+  rise: 'Lift',
+  focus: 'Lens Focus',
+  pop: 'Bounce In',
+  unfold: 'Fold In'
+});
 export const PROFILE_IDENTITY_LIMITS = Object.freeze({ location: 60, timezone: 40 });
 
 const TIMEZONE_PATTERN = /^[A-Za-z0-9_+./:-]{1,40}$/;

@@ -75,6 +75,13 @@ const definitions = {
     label: 'Elastic Frame',
     collection: 'Signal',
     rarity: 'Epic'
+  },
+  'shimmer-track': {
+    key: 'shimmer-track',
+    itemKey: 'border_shimmer_track',
+    label: 'Shimmer Track',
+    collection: 'Prism',
+    rarity: 'Epic'
   }
 };
 
@@ -91,7 +98,8 @@ function canonicalBorderKey(value) {
   if (Object.prototype.hasOwnProperty.call(PROFILE_BORDER_DEFINITIONS, candidate)) return candidate;
   if (candidate.startsWith('border_')) {
     const itemKey = candidate.slice('border_'.length);
-    if (Object.prototype.hasOwnProperty.call(PROFILE_BORDER_DEFINITIONS, itemKey)) return itemKey;
+    const normalizedItemKey = itemKey.replaceAll('_', '-');
+    if (Object.prototype.hasOwnProperty.call(PROFILE_BORDER_DEFINITIONS, normalizedItemKey)) return normalizedItemKey;
   }
   return '';
 }

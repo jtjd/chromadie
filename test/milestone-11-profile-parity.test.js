@@ -8,7 +8,8 @@ import {
 } from '../src/lib/profileConfigurationV2.js';
 import {
   normalizeProfileIdentityPresentation,
-  profileIdentityMetadata
+  profileIdentityMetadata,
+  PROFILE_IDENTITY_ENTRY_ANIMATION_LABELS
 } from '../src/lib/profileIdentityPresentation.js';
 import { normalizeProfileMetadata } from '../src/lib/profileMetadata.js';
 import {
@@ -106,6 +107,10 @@ test('identity and metadata controls are finite, sanitized, and media-path scope
   assert.equal(identity.showAvatar, false);
   assert.equal(profileIdentityMetadata(identity).hasTimezone, true);
   assert.equal(normalizeProfileIdentityPresentation({ timezone: 'javascript:alert(1)' }).timezone, '');
+  assert.equal(normalizeProfileIdentityPresentation({ entryAnimation: 'pop' }).entryAnimation, 'pop');
+  assert.equal(normalizeProfileIdentityPresentation({ entryAnimation: 'unfold' }).entryAnimation, 'unfold');
+  assert.equal(PROFILE_IDENTITY_ENTRY_ANIMATION_LABELS.pop, 'Bounce In');
+  assert.equal(PROFILE_IDENTITY_ENTRY_ANIMATION_LABELS.unfold, 'Fold In');
 
   const userId = '11111111-1111-4111-8111-111111111111';
   const assetId = '22222222-2222-4222-8222-222222222222';

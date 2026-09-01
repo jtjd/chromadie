@@ -6,7 +6,7 @@
     countIdentityCharacters,
     normalizePublicIdentity
   } from './profileIdentity.js';
-  import { normalizeProfileIdentityPresentation, PROFILE_IDENTITY_DESCRIPTION_MODES, PROFILE_IDENTITY_ENTRY_ANIMATIONS } from './profileIdentityPresentation.js';
+  import { normalizeProfileIdentityPresentation, PROFILE_IDENTITY_DESCRIPTION_MODES, PROFILE_IDENTITY_ENTRY_ANIMATIONS, PROFILE_IDENTITY_ENTRY_ANIMATION_LABELS } from './profileIdentityPresentation.js';
   import Module from './foundation/Module.svelte';
 
   export let profileId = null;
@@ -223,7 +223,7 @@
       </div>
       <div class="identity-editor__grid identity-editor__grid--behavior">
         <label class="identity-editor__field"><span>Description rhythm</span><select value={draftPresentation.descriptionMode} disabled={saving} on:change={event => updateField('descriptionMode', event.currentTarget.value)}>{#each PROFILE_IDENTITY_DESCRIPTION_MODES as mode (mode)}<option value={mode}>{mode === 'typewriter' ? 'Finite typewriter' : 'Plain text'}</option>{/each}</select></label>
-        <label class="identity-editor__field"><span>Entry animation</span><select value={draftPresentation.entryAnimation} disabled={saving} on:change={event => updateField('entryAnimation', event.currentTarget.value)}>{#each PROFILE_IDENTITY_ENTRY_ANIMATIONS as mode (mode)}<option value={mode}>{mode === 'none' ? 'None' : mode[0].toUpperCase() + mode.slice(1)}</option>{/each}</select></label>
+        <label class="identity-editor__field"><span>Entry animation</span><select value={draftPresentation.entryAnimation} disabled={saving} on:change={event => updateField('entryAnimation', event.currentTarget.value)}>{#each PROFILE_IDENTITY_ENTRY_ANIMATIONS as mode (mode)}<option value={mode}>{PROFILE_IDENTITY_ENTRY_ANIMATION_LABELS[mode] || mode}</option>{/each}</select></label>
       </div>
     </div>
 

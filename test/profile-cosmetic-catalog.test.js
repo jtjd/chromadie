@@ -105,4 +105,6 @@ test('the profile card has a neutral no-border edge while valid border effects r
   assert.match(border, /profile-border-effect--none/);
   assert.match(border, /profile-border-effect--chroma/);
   assert.match(border, /profile-border-effect--glitch/);
+  assert.match(border, /profile-border-effect--shimmer-track/);
+  assert.match(border, /ProfileShimmerFrameEffect/);
 });

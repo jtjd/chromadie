@@ -12,7 +12,7 @@ import { getProfileAppearanceStyle, getProfileCanvasStyle } from '../src/lib/pro
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('all retained Profile Border keys resolve through the finite registry', () => {
-  assert.equal(PROFILE_BORDER_KEYS.length, 10);
+  assert.equal(PROFILE_BORDER_KEYS.length, 11);
   for (const key of PROFILE_BORDER_KEYS) {
     assert.equal(isProfileBorderKey(key), true);
     assert.equal(getProfileBorderDefinition(key)?.key, key);

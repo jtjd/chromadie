@@ -91,6 +91,16 @@ export function drawComposableMaterial(ctx, model) {
         target.stroke?.();
       });
       return;
+    case 'halo-edge':
+      // The inspected profile applies one fixed 16.5px username glow using
+      // the profile's effects color. Keep the same bounded halo while the
+      // name fill remains the semantic base color.
+      ctx.save?.();
+      ctx.shadowColor = rgba(first, 0.86);
+      ctx.shadowBlur = 16.5;
+      drawText(ctx, model, baseColor || first);
+      ctx.restore?.();
+      return;
     default:
       drawText(ctx, model, mixColors('#F7FBFF', todayColor, 0.1));
   }

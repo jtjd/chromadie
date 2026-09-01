@@ -41,7 +41,7 @@
   $: activeAvatarSource = avatarSrc && failedAvatarSource !== avatarSrc ? avatarSrc : avatarFallbackSrc;
   $: activeBannerSource = bannerSrc && failedBannerSource !== bannerSrc ? bannerSrc : '';
   $: safeDescriptionMode = descriptionMode === 'typewriter' ? 'typewriter' : 'plain';
-  $: safeEntryAnimation = ['none', 'fade', 'focus'].includes(entryAnimation) ? entryAnimation : 'none';
+  $: safeEntryAnimation = ['none', 'fade', 'focus', 'pop', 'unfold'].includes(entryAnimation) ? entryAnimation : 'none';
   $: safeAccent = normalizeHexColor(accentColor, '#00FFB3');
   $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .16;
   $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0);
@@ -229,8 +229,19 @@
 
   .profile-portfolio--entry-fade { animation: profile-portfolio-fade .65s ease both; }
   .profile-portfolio--entry-focus { animation: profile-portfolio-focus .75s cubic-bezier(.22,1,.36,1) both; }
+  .profile-portfolio--entry-pop { animation: profile-portfolio-pop .52s cubic-bezier(.18,1.15,.34,1) both; }
+  .profile-portfolio--entry-unfold { animation: profile-portfolio-unfold .7s cubic-bezier(.2,.72,.12,1) both; }
   @keyframes profile-portfolio-fade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes profile-portfolio-focus { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+  @keyframes profile-portfolio-pop {
+    0% { transform: scale(.985); }
+    62% { transform: scale(1.012); }
+    to { transform: scale(1); }
+  }
+  @keyframes profile-portfolio-unfold {
+    from { opacity: .82; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   @media (max-width: 36rem) {
     .profile-portfolio { gap: .9rem; padding-inline: .75rem; }
@@ -245,6 +256,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .profile-portfolio--entry-fade,
-    .profile-portfolio--entry-focus { animation: none; }
+    .profile-portfolio--entry-focus,
+    .profile-portfolio--entry-pop,
+    .profile-portfolio--entry-unfold { animation: none; }
   }
 </style>

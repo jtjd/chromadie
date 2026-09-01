@@ -19,6 +19,7 @@ const atelierExpressionMigrationPath = path.join(repoRoot, 'supabase/migrations/
 const nameFontRefreshMigrationPath = path.join(repoRoot, 'supabase/migrations/20260816110000_name_font_catalog_refresh.sql');
 const silkscreenFontMigrationPath = path.join(repoRoot, 'supabase/migrations/20260816120000_add_silkscreen_name_font.sql');
 const approvedEffectsMigrationPath = path.join(repoRoot, 'supabase/migrations/20260821090000_approved_cosmetic_effects.sql');
+const sourceBackedProfileExpansionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260901140000_source_backed_profile_expression_expansion.sql');
 
 function fail(message) {
   console.error(`Catalog drift detected: ${message}`);
@@ -326,16 +327,16 @@ const validCatalogStatuses = new Set(['active', 'legacy', 'retired']);
 // part of the active catalog and must not be treated as available purchases.
 const retiredExpressionKeys = new Set(['name_prism_atelier', 'bg_prism_atmosphere']);
 const rendererKeys = Object.freeze({
-  name_font: new Set(['industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins', 'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit', 'kode-mono']),
-  name_material: new Set(['glass-emboss', 'carbon-cut', 'neon-tube', 'velvet-ink', 'engraved-stone', 'crt-phosphor', 'blueprint-ink']),
-  name_motion: new Set(['haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles', 'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal', 'haunt-split', 'haunt-flash', 'kinetic-echo', 'magnetic-type', 'neon-particle', 'raster-signal']),
+  name_font: new Set(['industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins', 'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit', 'kode-mono', 'soft-orbit']),
+  name_material: new Set(['glass-emboss', 'carbon-cut', 'neon-tube', 'velvet-ink', 'engraved-stone', 'crt-phosphor', 'blueprint-ink', 'halo-edge']),
+  name_motion: new Set(['haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles', 'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal', 'haunt-split', 'haunt-flash', 'kinetic-echo', 'magnetic-type', 'neon-particle', 'raster-signal', 'spectrum-flow']),
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing', 'plasma-swarm', 'bubble-wake', 'character-bloom', 'emoji-bloom', 'following-dot', 'text-flag', 'springy-emoji']),
   avatar_effect: new Set(['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'bat-orbit']),
   profile_layout: new Set(['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']),
   profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare', 'prism-dust']),
   profile_motion: new Set(['perspective-tilt', 'halo-offset', 'wavefront'])
 });
-const expectedCounts = Object.freeze({ name_font: 11, name_material: 7, name_motion: 14, profile_border: 10, cursor_trail: 23, avatar_effect: 6, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 });
+const expectedCounts = Object.freeze({ name_font: 12, name_material: 8, name_motion: 15, profile_border: 11, cursor_trail: 23, avatar_effect: 6, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 });
 const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0, profile_motion: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
@@ -344,7 +345,7 @@ for (const item of seed.catalog.values()) {
   if (!Number.isSafeInteger(Number(item.cost)) || Number(item.cost) < 0) fail(`${item.item_key} has invalid cost ${item.cost}`);
   if (item.css_type === 'renderer') {
     const allowedRendererKeys = item.slot === 'profile_border'
-      ? new Set(['celestial', 'chroma', 'crystal', 'glitch', 'gold', 'neon', 'prism', 'void', 'signal', 'elastic'])
+      ? new Set(['celestial', 'chroma', 'crystal', 'glitch', 'gold', 'neon', 'prism', 'void', 'signal', 'elastic', 'shimmer-track'])
       : rendererKeys[item.slot];
     if (!allowedRendererKeys?.has(item.css_value)) fail(`${item.item_key} references an unknown ${item.slot} renderer ${item.css_value}`);
     if (!['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'].includes(item.slot)) {
@@ -365,8 +366,8 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 94) {
-  fail(`expected 94 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 98) {
+  fail(`expected 98 active catalog rows, found ${seed.catalog.size}`);
 }
 if ([...seed.catalog.values()].some(item => obsoleteSlots.includes(item.slot))) {
   fail('the seed still contains an obsolete cosmetic slot');
@@ -443,6 +444,26 @@ if (!atelierExpressionMigration.includes("'name_motion'") || !atelierExpressionM
 }
 if (!atelierExpressionMigration.includes("'chromadie_plus'")) fail('the Atelier expression migration does not use the canonical Plus entitlement');
 if (!atelierExpressionMigration.includes('Expected 99 active catalog rows')) fail('the Atelier expression migration has a stale active catalog count');
+const sourceBackedProfileExpansionMigration = await readFile(sourceBackedProfileExpansionMigrationPath, 'utf8');
+for (const requiredValue of [
+  "'border_shimmer_track'",
+  "'name_font_soft_orbit'",
+  "'name_material_halo_edge'",
+  "'name_motion_spectrum_flow'",
+  "'shimmer-track'",
+  "'soft-orbit'",
+  "'halo-edge'",
+  "'spectrum-flow'",
+  'Expected 98 active catalog rows',
+  'Expected 12 active Name Font rows',
+  'Expected 8 active Name Material rows',
+  'Expected 15 active Name Motion rows',
+  'Expected 11 active Profile Border rows'
+]) {
+  if (!sourceBackedProfileExpansionMigration.includes(requiredValue)) {
+    fail(`the source-backed profile expansion migration is missing ${requiredValue}`);
+  }
+}
 
 const supabase = getSupabaseCredentials(process.env);
 const supabaseUrl = supabase.url;
@@ -465,7 +486,7 @@ if (supabaseUrl && supabaseKey) {
 } else {
   console.log(
     `Catalog drift check passed locally: final seed is valid (${seed.catalog.size} items; ` +
-      `${expectedCounts.name_font} active Fonts, ${expectedCounts.name_material} active Materials, ${expectedCounts.name_motion} active Motions, ${expectedCounts.profile_border} active Profile Borders, ${expectedCounts.cursor_trail} active Cursor Trails, ${expectedCounts.avatar_effect} active Avatar Effects, ${expectedCounts.profile_layout} active structural Profile Layouts, ${expectedCounts.profile_atmosphere} active Atmospheres, ${expectedCounts.profile_motion} active Profile Motions; 94 active rows including non-renderer rows). ` +
+      `${expectedCounts.name_font} active Fonts, ${expectedCounts.name_material} active Materials, ${expectedCounts.name_motion} active Motions, ${expectedCounts.profile_border} active Profile Borders, ${expectedCounts.cursor_trail} active Cursor Trails, ${expectedCounts.avatar_effect} active Avatar Effects, ${expectedCounts.profile_layout} active structural Profile Layouts, ${expectedCounts.profile_atmosphere} active Atmospheres, ${expectedCounts.profile_motion} active Profile Motions; 98 active rows including non-renderer rows). ` +
     'Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY to include the remote catalog.'
   );
 }

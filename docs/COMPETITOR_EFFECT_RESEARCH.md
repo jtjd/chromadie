@@ -59,6 +59,36 @@ Vaults' shipped profile bundle was similarly inspected for its `Chillax` font
 face and profile effect vocabulary; its public [Supporter feature page](https://vaults.lol/wiki/what-is-supporter)
 was used to confirm the supported customization surface.
 
+## Non-cursor source findings implemented in this pass
+
+The populated profile routes exposed several concrete behaviors outside the
+cursor layer:
+
+- The `pop` entry uses a `.52s cubic-bezier(.18,1.15,.34,1)` scale sequence:
+  `.985` at the start, `1.012` at `62%`, then `1`. The `unfold` entry uses
+  `.7s cubic-bezier(.2,.72,.12,1)` with `opacity: .82` and a `-10px` vertical
+  offset resolving to the resting card.
+- The shimmer border is a masked rounded perimeter. Its controller advances
+  ten radial highlights around the measured border at `210px/s`, with trail
+  offsets `[0,8,17,29,44,62,84,110,140,174]`. The pulse layer runs for
+  `4.8s` and peaks at `48%` of the cycle.
+- The rainbow username uses a seven-stop `violet → indigo → blue → green →
+  yellow → orange → red` linear gradient, a `1400%` background size, and a
+  four-second linear sweep. Chromadie ports that as the `Spectrum Flow` Name
+  Motion on the existing bounded canvas.
+- Username glow is a fixed `16.5px` text shadow using the profile effect
+  color. Chromadie ports that as the `Soft Halo` Name Material, keeping the
+  fill and glow inside the existing Canvas renderer.
+- The Vaults bundle declares the Fontshare `Chillax` face for a profile. The
+  active Chromadie choice is called `Soft Orbit`; its product key is separate
+  from the source family name while the app-owned stylesheet supplies the
+  face.
+
+The profile route also exposed a user-specific Discord avatar-decoration asset,
+not a reusable generic renderer. No remote decoration asset was imported as a
+catalog effect; existing Chromadie avatar renderers remain the safe boundary
+for avatar expression.
+
 ## Chromadie mapping
 
 - `src/lib/competitor-effects/gunsEffectAlgorithms.js` contains the measured
@@ -76,9 +106,22 @@ was used to confirm the supported customization surface.
   the inspected cursor source and kept behind fixed renderer keys.
 - `src/lib/competitor-effects/gunsParallax.js` contains the pointer envelope;
   `AvatarEffect.svelte` applies it only to the existing `3d-parallax` effect.
-- `Chillax` is registered as a compatibility font for imported/historical
-  configurations. It is not a new catalog entitlement or database row in this
-  slice, so catalog counts and purchase boundaries remain unchanged.
+- `src/lib/profile-border/profileShimmerRenderer.js` owns the measured rounded
+  path, ten source offsets, `210px/s` clock, resize handling, visibility pause,
+  and CSS-variable output for `Shimmer Track`. The Svelte layer keeps the
+  source mask, ten radial gradients, pulse timing, and reduced-motion state.
+- `Soft Halo` is a finite Name Material rendered by
+  `src/lib/name/render/composableMaterials.js`; it does not accept a color,
+  shadow, or CSS value from profile data.
+- `Soft Orbit` is an active Name Font choice backed by the existing static
+  Fontshare declaration. Historical `chillax` values still resolve through the
+  compatibility registry without becoming a customer-facing label.
+- `Spectrum Flow` is rendered by `src/lib/name/render/composableMotions.js`
+  with the inspected seven-stop gradient, `1400%` equivalent canvas field,
+  four-second duration, and static/reduced-motion frame.
+- `PROFILE_IDENTITY_ENTRY_ANIMATIONS` now includes the two source values under
+  the original Chromadie labels `Bounce In` and `Fold In`. All profile layouts
+  consume the same finite allowlist and disable both on reduced-motion devices.
 - The inspected `Kode Mono` face is bundled as a new finite Name Font choice.
   Its product label is the original Chromadie name `Code Current`; the six
   cursor choices are labeled `Bubble Lift`, `Glyph Bloom`, `Joy Burst`,

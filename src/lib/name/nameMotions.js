@@ -41,7 +41,8 @@ export const NAME_MOTIONS = Object.freeze({
   'kinetic-echo': composableMotion('kinetic-echo', 3200, { label: 'Kinetic Echo', collection: 'Signal', rarity: 'Epic', description: 'Controlled afterimages follow the name in two offset, color-separated echoes.' }),
   'magnetic-type': composableMotion('magnetic-type', 3000, { label: 'Magnetic Type', collection: 'Prism', rarity: 'Epic', description: 'Each glyph responds to the pointer as if the name were suspended in a magnetic field.' }),
   'neon-particle': composableMotion('neon-particle', 3600, { label: 'Neon Particle', collection: 'Signal', rarity: 'Anomaly', description: 'A masked internal energy field, edge emission, and micro-particles keep the name electrically alive.' }),
-  'raster-signal': composableMotion('raster-signal', 2800, { label: 'Raster Signal', collection: 'Static Bloom', rarity: 'Epic', description: 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.' })
+  'raster-signal': composableMotion('raster-signal', 2800, { label: 'Raster Signal', collection: 'Static Bloom', rarity: 'Epic', description: 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.' }),
+  'spectrum-flow': composableMotion('spectrum-flow', 4000, { label: 'Spectrum Flow', collection: 'Prism', rarity: 'Epic', description: 'A full-spectrum color field travels continuously across the name with a clean, light-filled finish.' })
 });
 
 // Removed catalog rows remain valid historical values. They resolve to the

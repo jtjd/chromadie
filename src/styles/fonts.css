@@ -143,9 +143,9 @@
   font-weight: 800;
 }
 
-/* Chillax is a real Fontshare face used by the observed Vaults profile
-   implementation. It remains a code-owned compatibility face until it has a
-   catalog row and entitlement decision of its own. */
+/* Chillax is a real Fontshare face used by the observed public profile
+   implementation. The active catalog exposes it through the original
+   Chromadie choice "Soft Orbit"; the family declaration stays code-owned. */
 @font-face {
   font-family: 'Chillax';
   src: url('https://cdn.fontshare.com/wf/2T24MWUOKZU65SZJ33GPRGNOKE4KPOBX/T6LIXZJIPB23UDPMTIKURYWSZLXZBJ3A/THF5L6EHVL4N4NNE3GYDZNZSHABL5CH5.woff2') format('woff2');
