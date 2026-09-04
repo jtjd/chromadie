@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-03 — Retire unused presentation code
+
+- Removed obsolete homepage specimens and profile summary components that were
+  no longer reachable after the roll-first homepage and ProfileShell shipped.
+- Kept the current profile, roll, Studio, sharing, and collection surfaces in
+  place, with no change to public URLs, profile data, or earned history.
+
 ## 2026-09-03 — More trustworthy profile insights and safer service failures
 
 - Profile insight totals now ignore repeat events from the same privacy-safe

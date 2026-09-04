@@ -287,7 +287,7 @@ Deliverables:
 
 Exit criteria:
 
-- Profile mode remains on `ProfileModeHeader`/`ProfileShell`.
+- Profile mode remains on `SiteModeHeader`/`ProfileShell`.
 - Existing routes, direct refresh, auth, roll, backend, privacy, social,
   shop, and deployment contracts remain intact.
 - Desktop/mobile screenshot review confirms the surrounding site no longer

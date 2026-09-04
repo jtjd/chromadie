@@ -173,11 +173,12 @@ test('expanded provider cards remain allowlisted and capacity-limited', () => {
   assert.deepEqual(normalizeProfileWidgets(widgets, {}, { maxWidgets: 2 }).map(widget => widget.provider), ['github', 'twitch']);
 });
 
-test('V2 migration and share rendering preserve server authority and crawler-safe metadata', async () => {
-  const [migration, expressionMigration, share, richText, page] = await Promise.all([
+test('V2 migration and share metadata preserve server authority and crawler-safe metadata', async () => {
+  const [migration, expressionMigration, linksEditor, aliasesEditor, richText, page] = await Promise.all([
     read('supabase/migrations/20260808220000_profile_configuration_v2.sql'),
     read('supabase/migrations/20260811140000_profile_configuration_v2_expression_contract.sql'),
-    read('src/lib/ProfileShareDialog.svelte'),
+    read('src/lib/ProfileLinksEditor.svelte'),
+    read('src/lib/ProfileAliasesEditor.svelte'),
     read('src/lib/ProfileRichText.svelte'),
     read('functions/_profilePage.js')
   ]);
@@ -195,9 +196,11 @@ test('V2 migration and share rendering preserve server authority and crawler-saf
   assert.match(expressionMigration, /v_record.avatar_path/);
   assert.match(expressionMigration, /get_public_profile_configuration\(p_user_id\)/);
   assert.match(expressionMigration, /GRANT EXECUTE ON FUNCTION public\.get_public_profile_configuration_v2/);
-  assert.match(share, /QRCode\.toDataURL/);
-  assert.match(share, /download=/);
-  assert.match(share, /get_my_profile_aliases/);
+  assert.match(linksEditor, /Structured preview metadata/);
+  assert.match(linksEditor, /Share title/);
+  assert.match(linksEditor, /Share description/);
+  assert.match(aliasesEditor, /getProfileAliasPath/);
+  assert.match(aliasesEditor, /Add alias/);
   assert.match(richText, /rel="noopener noreferrer"/);
   assert.doesNotMatch(richText, /innerHTML|{@html}|new Function|eval\s*\(/);
   assert.match(page, /normalizeProfileMetadata/);

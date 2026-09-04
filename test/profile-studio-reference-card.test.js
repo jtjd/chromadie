@@ -30,17 +30,17 @@ test('Studio preview is a bounded reference card, not a public-profile renderer'
   assert.match(preview, /@media \(min-width: 1101px\)[\s\S]*padding-top: 5\.1rem/);
 });
 
-test('Studio and homepage share the reference card without sharing public layout wrappers', async () => {
+test('Studio keeps the reference card while homepage stays a roll-first surface', async () => {
   const [homepage, customize, layout, appearance, cosmetics] = await Promise.all([
-    read('src/lib/homepage/HomepageProfileDemo.svelte'),
+    read('src/lib/HomePage.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileReferenceLayoutEditor.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileCosmeticsEditor.svelte')
   ]);
 
-  assert.match(homepage, /import ProfileReferenceCard/);
-  assert.match(homepage, /presentation="homepage"/);
+  assert.match(homepage, /<RollPage/);
+  assert.doesNotMatch(homepage, /ProfileReferenceCard|HomepageProfileDemo|HomepageShowcase/);
   assert.match(customize, /import ProfileReferenceLayoutEditor/);
   assert.match(customize, /linksComponent|presentation="customize"/);
   assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}/);

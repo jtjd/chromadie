@@ -1,5 +1,23 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-03 — Retire unreachable presentation specimens
+
+Remove presentation components that have no production route, dynamic loader,
+or active test/fixture role after the roll-first homepage and ProfileShell
+replacements shipped. This retires the former compact-roll glyph, old profile
+expression/featured/today-color summaries, profile-mode header, standalone
+profile-share dialog, homepage hero/showcase/demo fixtures, avatar particle
+renderer, and internal composable Name catalog harness. Current equivalents
+remain authoritative: `ProfileRollSummary`, `ProfileReferenceCard`,
+`FeaturedCollection`, `SiteModeHeader`, the native roll share flow, and the
+roll-first `HomePage` surface.
+
+Keep `Profile.svelte` behind `legacy=1` because it still owns unique mood,
+pinned-badge, rival, and account-deletion controls. This cleanup does not
+change routes, profile data, scoring, roll authority, cosmetics, or historical
+records; the legacy renderer remains governed by the separate retirement
+milestone and its notice/rollback requirements.
+
 ## 2026-09-03 — Stabilize the audited authority, analytics, and client contracts
 
 Keep the existing server-authoritative roll, purchase, inventory, entitlement,

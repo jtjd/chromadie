@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Legacy presentation cleanup — 2026-09-03
+
+- Removed unreachable presentation specimens left behind by the roll-first
+  homepage and ProfileShell migration: the old homepage hero/showcase/demo
+  fixtures, compact roll glyph, profile expression/featured/today-color
+  summaries, profile-mode header, standalone share dialog, avatar particle
+  renderer, and internal Name catalog harness.
+- Updated focused contracts to cover the active `HomePage`,
+  `ProfileRollSummary`, `FeaturedCollection`, roll breakdown dialog, and
+  structured link/alias sharing surfaces instead of deleted files.
+- Added a retirement guard that keeps these modules out of the active route
+  graph while explicitly preserving `Profile.svelte` for the `legacy=1`
+  owner-controls compatibility path.
+- Existing profile data, public URLs, server authority, cosmetics, and
+  historical records are unchanged.
+
 ## Audit remediation stabilization — 2026-09-03
 
 - Replaced the live profile-insight browser RPC with an edge-derived,

@@ -1,12 +1,20 @@
 # Chromadie 2.0 — Current System Map
 
-**Audit date:** 2026-08-31
+**Audit date:** 2026-09-03
 **Application:** Svelte 5 + Vite SPA
 **Backend:** Supabase Auth/Postgres/RPCs/Edge Functions
 **Hosting:** Cloudflare Pages + Pages Functions
 **Scope:** Current post-reset runtime and migration seams. Historical phase
 records remain in their milestone documents; this map describes the supported
 alpha systems rather than the removed cosmetic catalog.
+
+The retired presentation specimens are intentionally absent from the supported
+graph: the old homepage showcase/demo, profile expression/featured summaries,
+standalone profile-mode header/share dialog/today-color card, compact roll
+preview, avatar particle renderer, and composable Name catalog harness no
+longer have a route or active consumer. `Profile.svelte` remains only behind
+the explicit `legacy=1` compatibility path until its owner-control retirement
+milestone is complete.
 
 ## Runtime shape
 

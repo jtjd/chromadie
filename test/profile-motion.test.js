@@ -122,18 +122,17 @@ test('layout metadata identifies the bounded content target instead of the page'
   );
 });
 
-test('homepage, public profiles, and Studio consume one motion renderer with separate surfaces', async () => {
-  const [motion, homepage, shell, studio, demo, catalogState] = await Promise.all([
+test('public profiles and Studio consume one motion renderer while homepage stays roll-first', async () => {
+  const [motion, homepage, shell, studio, catalogState] = await Promise.all([
     read('src/lib/profile-motion/ProfileMotionEffect.svelte'),
-    read('src/lib/homepage/HomepageHero.svelte'),
+    read('src/lib/HomePage.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
-    read('src/lib/homepage/HomepageProfileDemo.svelte'),
     read('src/lib/catalogState.js')
   ]);
 
-  assert.match(homepage, /import ProfileMotionEffect from '\.\.\/profile-motion\/ProfileMotionEffect\.svelte'/);
-  assert.match(homepage, /<ProfileMotionEffect[\s\S]*inputSurface="viewport"/);
+  assert.match(homepage, /<RollPage/);
+  assert.doesNotMatch(homepage, /ProfileMotionEffect|HomepageProfileDemo|HomepageHero|HomepageShowcase/);
   assert.match(shell, /import ProfileMotionEffect from '\.\/profile-motion\/ProfileMotionEffect\.svelte'/);
   assert.match(shell, /motionKey=\{profileMotionTarget === 'none' \? '' : profileMotionKey\}/);
   assert.match(shell, /inputSurface=\{previewMode \? 'container' : 'viewport'\}/);
@@ -144,7 +143,6 @@ test('homepage, public profiles, and Studio consume one motion renderer with sep
   assert.match(motion, /\{#if motionEnabled\}/);
   assert.match(motion, /\{:else\}[\s\S]*<slot><\/slot>/);
   assert.match(motion, /if \(!effectEnabled\) \{/);
-  assert.doesNotMatch(demo, /ProfileMotionEffect|ProfileShell|ProfileLayoutFrame/);
 });
 
 test('the canonical controller applies the supplied viewport and container formulas', () => {
@@ -209,7 +207,7 @@ test('coarse pointers and reduced motion disable tilt, and destroy removes liste
 test('motion owns rotation while the inner card owns roll scale, with no bundled visual chrome', async () => {
   const [motion, homepage, shell] = await Promise.all([
     read('src/lib/profile-motion/ProfileMotionEffect.svelte'),
-    read('src/lib/homepage/HomepageHero.svelte'),
+    read('src/lib/HomePage.svelte'),
     read('src/lib/ProfileShell.svelte')
   ]);
 
@@ -219,9 +217,9 @@ test('motion owns rotation while the inner card owns roll scale, with no bundled
   assert.match(motion, /will-change: transform/);
   assert.doesNotMatch(motion, /requestAnimationFrame|lerp|spring|radial-gradient|glare/);
   assert.match(motion, /createHaloOffsetController/);
-  assert.match(homepage, /<ProfileMotionEffect[\s\S]*<div class="homepage-profile-pop"/);
   assert.match(shell, /<ProfileMotionEffect[\s\S]*<div class="profile-shell__card-scale"/);
-  assert.doesNotMatch(homepage, /homepage-profile-pop--active|profileImpactActive|homepage-roll-particles/);
+  assert.match(homepage, /<RollPage/);
+  assert.doesNotMatch(homepage, /ProfileMotionEffect|homepage-profile-pop--active|profileImpactActive|homepage-roll-particles/);
   assert.match(shell, /\.profile-shell__card-scale \{ width: 100%; min-width: 0; \}/);
   assert.doesNotMatch(shell, /profile-shell-roll-settle|ProfileRoll/);
   assert.doesNotMatch(homepage, /handleViewportPointerMove|animateTilt|profileTilt/);

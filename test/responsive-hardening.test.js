@@ -25,7 +25,7 @@ const cosmetics = await read('src/lib/ProfileCosmeticsEditor.svelte');
 const mediaWorkspace = await read('src/lib/ProfileMediaWorkspace.svelte');
 const header = await read('src/lib/SiteModeHeader.svelte');
 const studioHeader = await read('src/lib/ProfileStudioHeader.svelte');
-const shareDialog = await read('src/lib/ProfileShareDialog.svelte');
+const breakdownDialog = await read('src/lib/RollResultBreakdown.svelte');
 const leaderboard = await read('src/lib/Leaderboard.svelte');
 const leaderboardEntry = await read('src/lib/LeaderboardEntry.svelte');
 const foundations = await read('src/styles/foundations.css');
@@ -87,12 +87,12 @@ test('profile mobile header keeps edit visible and moves account actions into th
   assert.match(dashboard, /\.profile-studio-shell__publish \{/);
 });
 
-test('share dialog has the same focus and scroll management contract as other dialogs', () => {
-  assert.match(shareDialog, /focusFirstElement/);
-  assert.match(shareDialog, /restoreFocus/);
-  assert.match(shareDialog, /trapFocus/);
-  assert.match(shareDialog, /document\.body\.style\.overflow/);
-  assert.match(shareDialog, /tabindex="-1"/);
+test('roll breakdown dialog has the same focus and scroll management contract as other dialogs', () => {
+  assert.match(breakdownDialog, /focusFirstElement/);
+  assert.match(breakdownDialog, /restoreFocus/);
+  assert.match(breakdownDialog, /trapFocus/);
+  assert.match(breakdownDialog, /document\.body\.style\.overflow/);
+  assert.match(breakdownDialog, /tabindex="-1"/);
 });
 
 test('editable controls use a mobile-safe text size without enlarging binary controls', () => {

@@ -5,8 +5,7 @@ import { readFile } from 'node:fs/promises';
 test('phase 11 profile composition uses one opening canvas and quiet supporting surfaces', async () => {
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
   const card = await readFile(new URL('../src/lib/ProfileReferenceCard.svelte', import.meta.url), 'utf8');
-  const expression = await readFile(new URL('../src/lib/ProfileExpression.svelte', import.meta.url), 'utf8');
-  const featured = await readFile(new URL('../src/lib/ProfileFeatured.svelte', import.meta.url), 'utf8');
+  const featured = await readFile(new URL('../src/lib/FeaturedCollection.svelte', import.meta.url), 'utf8');
   const summary = await readFile(new URL('../src/lib/ProfileRollSummary.svelte', import.meta.url), 'utf8');
 
   assert.match(shell, /profile-shell__opening/);
@@ -16,9 +15,9 @@ test('phase 11 profile composition uses one opening canvas and quiet supporting 
   assert.match(card, /<ProfileRollSummary/);
   assert.doesNotMatch(card, /<ProfileDailyRoll|liveRoll=/);
   assert.doesNotMatch(shell, /More of the color story|Connect with this profile|Public boundary/);
-  assert.doesNotMatch(featured, /Featured accomplishment/);
-  assert.doesNotMatch(expression, /<Module/);
-  assert.doesNotMatch(featured, /<Module/);
+  assert.match(shell, /<FeaturedCollection/);
+  assert.match(featured, /Color archive/);
+  assert.doesNotMatch(shell, /ProfileExpression|ProfileFeatured/);
   assert.match(summary, /data-profile-widget-mode="summary"/);
   assert.doesNotMatch(shell, /profileRollComponent|todayColorComponent|profileRollState/);
 });

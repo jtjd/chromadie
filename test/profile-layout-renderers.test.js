@@ -443,7 +443,7 @@ test('public profile does not inject filler bio copy or obsolete handle styles',
   const [shell, identity, homepage] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileReferenceCard.svelte'),
-    read('src/lib/homepage/HomepageProfileDemo.svelte')
+    read('src/lib/HomePage.svelte')
   ]);
   assert.doesNotMatch(shell + homepage, /No bio added yet/);
   assert.doesNotMatch(identity, /identity-card__handle-row|identity-card__handle/);
