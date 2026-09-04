@@ -54,7 +54,7 @@ test('active routes do not reference retired presentation components', async () 
     'NameComposableCatalogHarness'
   ];
   for (const component of retiredImportNames) {
-    assert.doesNotMatch(activeSources, new RegExp(`(?:import|export)[^;]*['\"](?:[^'\"]*[/])?${component}(?:\\.svelte|\\.js)?['\"]`));
+    assert.doesNotMatch(activeSources, new RegExp(`(?:import|export)[^;]*['"](?:[^'"]*[/])?${component}(?:\\.svelte|\\.js)?['"]`));
   }
 });
 

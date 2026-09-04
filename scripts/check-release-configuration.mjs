@@ -43,8 +43,7 @@ export async function fetchCloudflarePagesProject({
       authorization: `Bearer ${String(apiToken).trim()}`
     }
   });
-  let payload = null;
-  try { payload = await response.json(); } catch { payload = null; }
+  const payload = await response.json().catch(() => null);
   if (!response.ok || payload?.success !== true || !payload?.result) {
     throw new Error(`Cloudflare Pages production configuration could not be verified (HTTP ${response.status || 0}).`);
   }
