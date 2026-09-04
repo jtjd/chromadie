@@ -33,3 +33,9 @@ dist-ssr
 supabase/.temp/
 supabase/.branches/
 .DS_Store
+
+# Local audit, handoff, and generated review artifacts
+/*.zip
+/artifacts/
+/.codex-home-check*.png
+/ChatGPT Image *.png
