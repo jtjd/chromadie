@@ -1,5 +1,69 @@
 # Chromadie 2.0 Progress
 
+## Audit remediation stabilization — 2026-09-03
+
+- Replaced the live profile-insight browser RPC with an edge-derived,
+  privacy-preserving daily visitor digest. The service-only recorder validates
+  click keys against published links, visible projects, provider cards, and
+  rich-text About links; suppresses duplicate profile/metric/entry events;
+  rejects owner views; applies a separate 100-event visitor/day abuse ceiling;
+  and retains only the digest rows needed for 90-day aggregation cleanup. Raw
+  IP addresses never enter Supabase.
+- Added direct current SQL definitions and explicit grants/revokes for the
+  roll (including `roll_die_impl_progression_base`), purchase/equip,
+  progression, catalog, and public profile projection functions. The new
+  canonical migration terminates the source-extraction and textual-replacement
+  pattern without changing historical migrations or server authority.
+- Moved catalog, social, and toast state out of the application-wide store;
+  kept compatibility exports while consumers migrate incrementally. The catalog
+  RPC now fails closed in production instead of falling back to a direct table
+  read.
+- Updated the canonical seed achievement labels, returned stable checkout error
+  codes, and made the public-release configuration preflight query the live
+  Cloudflare Pages production environment on every main push/manual run.
+  Profile-insight integrity remains in database CI.
+- Recorded remaining scoped work rather than hiding it: legacy renderer
+  retirement requires an owner-controls migration milestone; moving atmosphere
+  media out of the deployment artifact requires an approved R2/CDN delivery
+  manifest and rollout; CSP style nonce/hash work requires a Svelte styling
+  migration. No budget threshold was raised.
+
+## Analytics and release-gate follow-up — 2026-09-03
+
+- Removed the incorrect universal six-click assumption. Valid published
+  links, all visible projects, provider cards, and sanitized About links can
+  each be recorded once per privacy-safe visitor/day; fabricated keys are
+  rejected before suppression or aggregation.
+- Added the complete current `roll_die_impl_progression_base(boolean)` body to
+  the canonical authority migration and asserted its service-only privilege
+  boundary.
+- Replaced the mirrored GitHub release variable with a Cloudflare Pages API
+  check for the production `PREVIEW_PROTECTION` setting. The check runs on
+  `main` pushes and `workflow_dispatch`, and fails closed when credentials or
+  the live `off` value are missing.
+- Added the database constraint that prevents a discovery milestone from
+  carrying the ordinary `objective` presentation role.
+
+## Progression discovery roles — 2026-09-03
+
+- Separated intentional Rank/Ritual objectives from stochastic Discovery in
+  the authoritative progression manifest without changing score probabilities,
+  achievement eligibility, rewards, inventory, or roll authority.
+- Classified Rare, Prime, High contrast, and Epic as open discoveries;
+  Legendary and Palindrome as lifetime discoveries; Anomaly as hidden until
+  earned; and retained Greyscale as historical-only.
+- Removed Discovery from next-objective selection and rebuilt the Profile,
+  dedicated Progression, and Studio surfaces around unexpected finds, honest
+  per-roll odds, and explicit lifetime language rather than a misleading shared
+  progress path.
+- Added manifest, client-state, SQL behavior, and balance assertions covering
+  role drift, hidden-owner reads, authoritative surprise grants, and revealed
+  owned discoveries.
+- Validation passed: build, Svelte check, ESLint, 507 Node tests, route/CSP,
+  username, balance, catalog, scoring-parity, and database-security gates;
+  local schema lint/reset; progression SQL behavior; progression Chromium
+  smoke; and profile certification.
+
 ## Profile expression layout compatibility — 2026-09-01
 
 - Sized the shared Profile Border host to each layout surface's authored

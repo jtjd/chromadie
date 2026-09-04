@@ -245,19 +245,28 @@ SELECT pg_temp.audit_assert(
   'profile insights aggregate table must remain RLS-protected and service-owned'
 );
 SELECT pg_temp.audit_assert(
-  has_function_privilege('anon', 'public.record_public_profile_view(text)', 'EXECUTE')
-    AND has_function_privilege('authenticated', 'public.record_public_profile_view(text)', 'EXECUTE')
+  NOT has_function_privilege('anon', 'public.record_public_profile_view(text)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.record_public_profile_view(text)', 'EXECUTE')
+    AND has_function_privilege('service_role', 'public.record_profile_insight_from_edge(text,text,text,text,text,text,text,uuid)', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.get_my_profile_insights(integer)', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.update_my_profile_insights_settings(boolean)', 'EXECUTE')
     AND NOT has_function_privilege('anon', 'public.get_my_profile_insights(integer)', 'EXECUTE')
     AND NOT has_function_privilege('anon', 'public.update_my_profile_insights_settings(boolean)', 'EXECUTE'),
-  'profile insights RPCs must expose recording separately from owner reads and settings'
+  'profile insights recording must be edge/service-only while owner reads and settings stay authenticated'
+);
+SELECT pg_temp.audit_assert(
+  NOT has_function_privilege('anon', 'public.profile_insight_entry_is_published(uuid,text)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.profile_insight_entry_is_published(uuid,text)', 'EXECUTE')
+    AND has_function_privilege('service_role', 'public.profile_insight_entry_is_published(uuid,text)', 'EXECUTE'),
+  'published analytics-entry validation must remain service-only'
 );
 SELECT pg_temp.audit_assert(
   (SELECT bool_and(p.proconfig @> ARRAY['search_path=public'])
    FROM pg_proc p
    WHERE p.oid IN (
      'public.record_public_profile_view(text)'::regprocedure,
+     'public.record_profile_insight_from_edge(text,text,text,text,text,text,text,uuid)'::regprocedure,
+     'public.profile_insight_entry_is_published(uuid,text)'::regprocedure,
      'public.get_my_profile_insights(integer)'::regprocedure,
      'public.update_my_profile_insights_settings(boolean)'::regprocedure,
      'public.cleanup_profile_view_daily()'::regprocedure
@@ -269,6 +278,7 @@ SELECT pg_temp.audit_assert(
    FROM pg_class
    WHERE oid IN (
      'public.profile_insight_daily'::regclass,
+     'public.profile_insight_visitor_daily'::regclass,
      'public.profile_guestbook_replies'::regclass,
      'public.profile_guestbook_likes'::regclass,
      'public.profile_guestbook_pins'::regclass,
@@ -276,6 +286,8 @@ SELECT pg_temp.audit_assert(
    ))
     AND NOT has_table_privilege('anon', 'public.profile_insight_daily', 'SELECT')
     AND NOT has_table_privilege('authenticated', 'public.profile_insight_daily', 'SELECT')
+    AND NOT has_table_privilege('anon', 'public.profile_insight_visitor_daily', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_insight_visitor_daily', 'SELECT')
     AND NOT has_table_privilege('authenticated', 'public.profile_guestbook_replies', 'INSERT')
     AND NOT has_table_privilege('authenticated', 'public.profile_guestbook_likes', 'INSERT')
     AND NOT has_table_privilege('authenticated', 'public.profile_guestbook_pins', 'INSERT')
@@ -283,8 +295,9 @@ SELECT pg_temp.audit_assert(
   'Milestone 12 aggregate and social-depth tables must remain RLS-protected and RPC-only'
 );
 SELECT pg_temp.audit_assert(
-  has_function_privilege('anon', 'public.record_profile_insight(text,text,text,text,text,text)', 'EXECUTE')
-    AND has_function_privilege('authenticated', 'public.record_profile_insight(text,text,text,text,text,text)', 'EXECUTE')
+  NOT has_function_privilege('anon', 'public.record_profile_insight(text,text,text,text,text,text)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.record_profile_insight(text,text,text,text,text,text)', 'EXECUTE')
+    AND has_function_privilege('service_role', 'public.record_profile_insight_from_edge(text,text,text,text,text,text,text,uuid)', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.update_my_profile_view_visibility(boolean)', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.get_my_profile_notifications(integer)', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.mark_my_profile_notifications_read(uuid[])', 'EXECUTE')
@@ -303,6 +316,7 @@ SELECT pg_temp.audit_assert(
    FROM pg_proc p
    WHERE p.oid IN (
      'public.record_profile_insight(text,text,text,text,text,text)'::regprocedure,
+     'public.record_profile_insight_from_edge(text,text,text,text,text,text,text,uuid)'::regprocedure,
      'public.update_my_profile_view_visibility(boolean)'::regprocedure,
      'public.get_my_profile_notifications(integer)'::regprocedure,
      'public.mark_my_profile_notifications_read(uuid[])'::regprocedure,
@@ -746,6 +760,13 @@ SELECT pg_temp.audit_assert(
     AND position('user_daily_reward_claims' IN pg_get_functiondef('public.roll_die_impl_pre_audit(boolean)'::regprocedure)) > 0
     AND position('NOT p_is_reroll' IN pg_get_functiondef('public.roll_die_impl_pre_audit(boolean)'::regprocedure)) > 0,
   'competitive roll function retained a forced or repeatable reward path'
+);
+SELECT pg_temp.audit_assert(
+  position('grant_progression_milestones' IN pg_get_functiondef('public.roll_die_impl_progression_base(boolean)'::regprocedure)) > 0
+    AND NOT has_function_privilege('anon', 'public.roll_die_impl_progression_base(boolean)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.roll_die_impl_progression_base(boolean)', 'EXECUTE')
+    AND NOT has_function_privilege('service_role', 'public.roll_die_impl_progression_base(boolean)', 'EXECUTE'),
+  'canonical progression roll implementation must remain internal'
 );
 
 CREATE TEMP TABLE audit_results (name text PRIMARY KEY, payload jsonb);

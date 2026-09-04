@@ -52,7 +52,9 @@ test('progression normalization preserves server-published journey lanes and wee
   assert.equal(progression.journeyState, 'ready');
   assert.equal(progression.journeyByTrack.ritual[0].reward.name, 'Velvet Ink');
   assert.equal(progression.journeyByTrack.discovery[0].progress, null);
-  assert.equal(progression.nextJourney.discovery.id, 'journey_rarity_rare');
+  assert.equal(progression.nextJourney.discovery, null);
+  assert.notEqual(progression.nextObjective?.track, 'discovery');
+  assert.equal(progression.journeyByTrack.discovery[0].presentationRole, 'open_discovery');
   assert.equal(progression.weeklyFocus.targetHex, '#8B7CF6');
   assert.equal(progression.weeklyFocus.bonusEp, 50000);
   assert.deepEqual(normalizeNewMilestones([{ id: 'journey_roll_10', track: 'ritual', metric: 'achievement', achievement_id: 'roll_10', reward: { item_key: 'name_material_velvet_ink', name: 'Velvet Ink', slot: 'name_material' } }]).map(item => item.id), ['journey_roll_10']);
@@ -137,8 +139,9 @@ test('progression keeps approaching deterministic goals and parallel discoveries
   const discovery = progression.journeyByTrack.discovery;
   assert.equal(discovery.length, 3);
   assert.ok(discovery.every(node => node.presentationState === 'active'));
-  assert.match(component, /if \(state === 'future'\) return 'future'/);
-  assert.match(component, /activeNodes: lane\.id === 'discovery' \? activeNodes : activeNodes\.slice\(0, 2\)/);
+  assert.match(component, /openDiscoveries/);
+  assert.match(component, /lifetimeDiscoveries/);
+  assert.match(component, /They never block your next Rank or Ritual milestone/);
 });
 
 test('the journey schema is additive, catalog-backed, and returned by the authoritative roll path', async () => {
@@ -214,10 +217,14 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(progression, /Today's direction/);
   assert.match(progression, /Build mastery/);
   assert.match(progression, /Find rare colors/);
-  assert.match(progression, /Each discovery is independent/);
+  assert.match(progression, /They never block your next Rank or Ritual milestone/);
+  assert.doesNotMatch(page, /nextJourney\?\.discovery/);
+  assert.match(page, /isIntentionalObjective/);
   assert.match(progression, /Cosmetics earned/);
   assert.doesNotMatch(progression, /No history yet/);
-  assert.match(overview, /Some goals unavailable/);
+  assert.match(overview, /Some discoveries unavailable/);
+  assert.match(overview, /lifetimeDiscoveryCount/);
+  assert.doesNotMatch(overview, /discoveryNext/);
   assert.match(progression, /Weekly color/);
   assert.match(progression, /IntersectionObserver/);
   assert.match(progression, /progression_goal_viewed/);

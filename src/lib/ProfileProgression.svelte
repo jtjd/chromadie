@@ -76,6 +76,7 @@
   $: previewColor = todayColor || '#FFFFFF';
   $: previewAvatar = account.avatar_url || account.avatar_path || '';
   $: focusGoal = resolveFocusGoal(progression);
+  $: resolvedFocusGoal = isIntentionalObjective(dailyFocusGoal) ? dailyFocusGoal : focusGoal;
 
   function ensurePageModeComponent() {
     if (pageModeComponent || pageModeRequest) return pageModeRequest;
@@ -148,6 +149,7 @@
     if (isUnlocked(node)) return 'complete';
     const explicit = explicitNodeState(node);
     if (explicit) return explicit;
+    if (track === 'discovery') return 'active';
     if (currentProgression?.nextJourney?.[track]?.id === node?.id) return 'active';
     if (Number(node?.progress?.current) > 0) return 'active';
     if (track === 'rank' && nodes.findIndex(candidate => !isUnlocked(candidate)) === nodes.indexOf(node)) return 'active';
@@ -167,6 +169,20 @@
         activeNodes.push(fallback);
       }
     }
+    if (lane.id === 'discovery') {
+      const locked = decorated.filter(node => !isUnlocked(node));
+      return {
+        ...lane,
+        nodes: decorated,
+        activeNodes: [],
+        featuredNode: null,
+        additionalActive: [],
+        openDiscoveries: locked.filter(node => node.presentationRole === 'open_discovery'),
+        lifetimeDiscoveries: locked.filter(node => node.presentationRole === 'lifetime_discovery'),
+        completed: decorated.filter(node => node.presentationState === 'complete' || node.presentationState === 'new'),
+        future: []
+      };
+    }
     return {
       ...lane,
       nodes: decorated,
@@ -181,11 +197,16 @@
   function resolveFocusGoal(currentProgression = progression) {
     const candidates = [
       currentProgression?.nextJourney?.ritual,
-      currentProgression?.nextJourney?.discovery,
       currentProgression?.nextJourney?.rank,
       currentProgression?.nextObjective
     ];
-    return candidates.find(node => node && !isUnlocked(node)) || null;
+    return candidates.find(node => isIntentionalObjective(node) && !isUnlocked(node)) || null;
+  }
+
+  function isIntentionalObjective(node) {
+    if (!node) return false;
+    return (node.presentationRole || node.presentation_role || '') === 'objective'
+      || node.track !== 'discovery';
   }
 
   function nodeTarget(node) {
@@ -219,6 +240,11 @@
 
   function goalPaceLabel(node) {
     const expectedRolls = Number(node?.expectedRolls ?? node?.expected_rolls);
+    const role = node?.presentationRole || node?.presentation_role;
+    if (node?.track === 'discovery' && Number.isFinite(expectedRolls) && expectedRolls > 0) {
+      const odds = `About 1 in ${formatNumber(Math.round(expectedRolls))} rolls`;
+      return role === 'lifetime_discovery' ? `Lifetime discovery · ${odds}` : odds;
+    }
     if (Number.isFinite(expectedRolls) && expectedRolls > 0 && expectedRolls <= 90) {
       return `Often within ${formatNumber(expectedRolls)} rolls`;
     }
@@ -226,14 +252,15 @@
     if (pace === 'days') return 'A few days of rolling';
     if (pace === 'weeks') return 'A few weeks of rolling';
     if (pace === 'months') return 'A longer-term goal';
-    if (pace === 'years' || pace === 'lifetime') return 'A rare, long-term find';
+    if (pace === 'years' || pace === 'lifetime') return 'A long-term milestone';
     return node?.metric === 'achievement' ? 'Find it whenever it appears' : 'Coming later';
   }
 
   function nodeStateLabel(node) {
     if (node?.presentationState === 'complete') return 'Complete';
     if (node?.presentationState === 'new') return 'New in your profile';
-    if (node?.track === 'discovery') return 'Find anytime';
+    if (node?.presentationRole === 'lifetime_discovery' || node?.presentation_role === 'lifetime_discovery') return 'Lifetime discovery';
+    if (node?.track === 'discovery') return 'Discover anytime';
     if (node?.presentationState === 'active') return 'In progress';
     return 'Coming later';
   }
@@ -248,13 +275,11 @@
 
   function focusDescription(node) {
     if (!node) return 'Roll today to add another piece to your profile story.';
-    if (node.track === 'discovery') return `${node.description || 'Find a rare color or pattern.'} Each discovery is independent.`;
     return node.description || 'Keep rolling to move your profile forward.';
   }
 
   function focusActionLabel(node) {
     if (!node) return 'Roll today';
-    if (node.track === 'discovery') return 'Roll and explore';
     return 'Roll today';
   }
 
@@ -318,7 +343,7 @@
         {dailyRollError}
         {dailyRollLoaded}
         {rollSignals}
-        focusGoal={dailyFocusGoal || focusGoal}
+        focusGoal={resolvedFocusGoal}
       />
     {:else}
       <div class="profile-progression-page-loading" role="status" aria-live="polite">Loading progression…</div>
@@ -333,7 +358,7 @@
       </div>
       <div class="profile-progression-heading__summary" aria-label="Progression completion">
         <strong>{formatNumber(journeyGoalComplete)}</strong>
-        <span>of {formatNumber(journeyGoalTotal)} goals complete</span>
+        <span>of {formatNumber(journeyGoalTotal)} milestones recorded</span>
       </div>
     </header>
 
@@ -388,7 +413,7 @@
     <div class="profile-progression-stats" aria-label="Progression summary">
       <div><span>Rolls</span><strong>{formatNumber(totalRolls)}</strong><small>Colors added</small></div>
       <div><span>Longest streak</span><strong>{formatNumber(longestStreak)} days</strong><small>Current: {formatNumber(currentStreak)} days</small></div>
-      <div><span>Goals complete</span><strong>{formatNumber(journeyGoalComplete)}</strong><small>Of {formatNumber(journeyGoalTotal)} journey goals</small></div>
+      <div><span>Milestones</span><strong>{formatNumber(journeyGoalComplete)}</strong><small>Of {formatNumber(journeyGoalTotal)} in your record</small></div>
       <div><span>Cosmetics earned</span><strong>{formatNumber(earnedCosmeticCount)}</strong><small>Profile rewards</small></div>
       {#if achievementTotal}
         <div><span>Achievements</span><strong>{formatNumber(achievementCount)} / {formatNumber(achievementTotal)}</strong><small>Unlocked</small></div>
@@ -416,8 +441,8 @@
 
       <section class="profile-progression-journey" aria-labelledby="profile-progression-journey-title">
       <div class="profile-progression-section-heading">
-        <div><span class="profile-progression-label">The journey</span><h3 id="profile-progression-journey-title">Three ways to build your story</h3><p class="profile-progression-section-heading__copy">Choose the goal that feels right today. The three paths grow independently.</p></div>
-        {#if journeyGoalTotal}<span>{journeyGoalComplete} of {journeyGoalTotal} complete</span>{/if}
+        <div><span class="profile-progression-label">Your progression</span><h3 id="profile-progression-journey-title">Build your profile, one roll at a time</h3><p class="profile-progression-section-heading__copy">Rank and Ritual give you milestones to pursue. Discoveries arrive whenever they do.</p></div>
+        {#if journeyGoalTotal}<span>{journeyGoalComplete} of {journeyGoalTotal} recorded</span>{/if}
       </div>
 
       <div class="profile-progression-lanes">
@@ -431,16 +456,41 @@
               <span>{lane.completed.length} of {lane.nodes.length}</span>
             </div>
 
-            {#if lane.featuredNode}
+            {#if lane.id === 'discovery' && lane.nodes.length}
+              <div class="profile-progression-active profile-progression-discoveries">
+                <p class="profile-progression-subhead">Unexpected finds</p>
+                <p>Discoveries can happen in any order. They never block your next Rank or Ritual milestone.</p>
+                {#if lane.openDiscoveries.length}
+                  <ol class="profile-progression-condensed-list profile-progression-condensed-list--active">
+                    {#each lane.openDiscoveries as node (node.id)}
+                      <li use:observeJourneyNode={node}><ProgressionPathIcon track="discovery" state="active" /><span><strong>{node.name || 'Discovery'}</strong><small>{node.description || 'A color pattern waiting to appear.'}</small></span><em>{nodeProgressLabel(node)}</em></li>
+                    {/each}
+                  </ol>
+                {/if}
+                {#if lane.lifetimeDiscoveries.length}
+                  <div class="profile-progression-more">
+                    <span>{lane.lifetimeDiscoveries.length} lifetime discover{lane.lifetimeDiscoveries.length === 1 ? 'y' : 'ies'}</span>
+                    <button type="button" aria-expanded={isSectionExpanded(expandedSections, lane.id, 'lifetime')} on:click={() => toggleSection(lane.id, 'lifetime')}>{isSectionExpanded(expandedSections, lane.id, 'lifetime') ? 'Hide' : 'See discoveries'}</button>
+                  </div>
+                  {#if isSectionExpanded(expandedSections, lane.id, 'lifetime')}
+                    <ol class="profile-progression-condensed-list">
+                      {#each lane.lifetimeDiscoveries as node (node.id)}
+                        <li use:observeJourneyNode={node}><ProgressionPathIcon track="discovery" state="active" /><span><strong>{node.name || 'Lifetime discovery'}</strong><small>{node.description || 'An exceptionally rare color event.'}</small></span><em>{nodeProgressLabel(node)}</em></li>
+                      {/each}
+                    </ol>
+                  {/if}
+                {/if}
+              </div>
+            {:else if lane.featuredNode}
               <div class="profile-progression-active">
-                <p class="profile-progression-subhead">{lane.id === 'discovery' ? 'Featured discovery' : 'Your next milestone'}</p>
+                <p class="profile-progression-subhead">Your next milestone</p>
                 <article use:observeJourneyNode={lane.featuredNode} class="profile-progression-node profile-progression-node--active">
                     <div class="profile-progression-node__head">
                       <ProgressionPathIcon track={lane.id} state={lane.featuredNode.presentationState} />
-                      <div><strong>{lane.featuredNode.name || 'Published goal'}</strong><small>{nodeStateLabel(lane.featuredNode)}</small></div>
+                      <div><strong>{lane.featuredNode.name || 'Milestone'}</strong><small>{nodeStateLabel(lane.featuredNode)}</small></div>
                       <span class="profile-progression-node__progress">{lane.featuredNode.reward?.name || 'Cosmetic reward'}</span>
                     </div>
-                    <p>{lane.featuredNode.description || 'A server-published goal for your profile.'}{lane.id === 'discovery' ? ' You can find this in any order.' : ''}</p>
+                    <p>{lane.featuredNode.description || 'A verified milestone for your profile.'}{lane.id === 'discovery' ? ' You can find this in any order.' : ''}</p>
                     {#if nodeTarget(lane.featuredNode)}
                       <div class="profile-progression-node__bar" role="progressbar" aria-label={`${lane.featuredNode.name || 'Goal'} progression`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={nodePercent(lane.featuredNode)}><span style={`width:${nodePercent(lane.featuredNode)}%`}></span></div>
                     {/if}
@@ -464,7 +514,7 @@
                 {/if}
               </div>
             {:else if lane.nodes.length}
-              <p class="profile-progression-empty">All published goals in this lane are complete.</p>
+              <p class="profile-progression-empty">All published milestones in this lane are complete.</p>
             {:else if lane.id === 'rank'}
               <p class="profile-progression-empty">Rank is calculated from lifetime experience points and remains part of your profile record.</p>
             {:else if journeyState === 'partial' || journeyState === 'unavailable'}
@@ -475,7 +525,7 @@
 
             {#if lane.completed.length}
               <div class="profile-progression-collapsed-row">
-                <span>{lane.completed.length} completed goal{lane.completed.length === 1 ? '' : 's'}</span>
+                <span>{lane.completed.length} completed {lane.id === 'discovery' ? 'discover' : 'milestone'}{lane.completed.length === 1 ? 'y' : lane.id === 'discovery' ? 'ies' : 's'}</span>
                 <button type="button" aria-expanded={isSectionExpanded(expandedSections, lane.id, 'completed')} on:click={() => toggleSection(lane.id, 'completed')}>{isSectionExpanded(expandedSections, lane.id, 'completed') ? 'Hide completed' : 'View completed'}</button>
               </div>
               {#if isSectionExpanded(expandedSections, lane.id, 'completed')}

@@ -10,12 +10,14 @@
     profileEntitlements,
     refreshProfileState,
     session,
-    userInventory,
+    userInventory
+  } from './stores';
+  import {
     loadCosmeticCatalog,
     cosmeticCatalogItems,
     cosmeticCatalogError,
-    cosmeticCatalogLoading,
-  } from './stores';
+    cosmeticCatalogLoading
+  } from './catalogState.js';
   import { supabase } from './supabase';
   import { trackProductEvent } from './productAnalytics.js';
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer, getNamePreviewLoadoutForSlot } from './name/nameLoadout.js';

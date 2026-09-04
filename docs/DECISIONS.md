@@ -1,5 +1,68 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-03 — Stabilize the audited authority, analytics, and client contracts
+
+Keep the existing server-authoritative roll, purchase, inventory, entitlement,
+and progression model. The corrective work is additive: a canonical SQL
+migration now declares the current complete bodies of the authority and public
+projection functions directly, rather than extending the historical
+`pg_get_functiondef()` textual-replacement chain. Historical migrations remain
+immutable for deployed databases; fresh rebuilds end at an inspectable final
+definition and explicit privilege assertions.
+
+Profile insight events now enter only through the Pages edge handler. It sends
+an opaque, salted visitor/day digest to a service-only RPC, which validates
+each click against the profile's published links, visible projects, provider
+cards, or real About links before recording it once per digest/day. A separate
+100-event visitor/day ceiling remains as an abuse limit; there is no guessed
+six-click cap that would hide legitimate projects, widgets, or rich-text
+links. The digest does not include browser-controlled User-Agent data, so a
+caller cannot rotate that header to bypass daily suppression. Raw IP addresses
+are neither stored nor sent to Supabase. Browser code no longer has a direct
+analytics-RPC fallback.
+
+The client must fail closed when `get_shop_catalog()` is missing in production;
+reading the legacy `shop_items` table is not a valid compatibility contract.
+Catalog, social, and ephemeral UI state now live in small domain modules, with
+`stores.js` retaining only compatibility re-exports while account hydration is
+migrated incrementally. Payment-provider errors expose stable public codes and
+are logged server-side without provider detail.
+
+The legacy profile renderer remains a compatibility path only until a dedicated
+retirement milestone ports or removes its unique mood, badge, rival, and delete
+controls. No new public behavior may be added to `legacy=1`; removal requires
+an instrumented owner migration notice, a replacement-owner-controls audit,
+and a release after the notice window. The existing Svelte dynamic-style CSP
+concession also remains a separately scoped hardening task; it cannot be
+removed safely by changing a header alone.
+
+The final canonical SQL migration also defines the complete
+`roll_die_impl_progression_base(boolean)` body alongside the pre-audit
+implementation and wrapper. The active roll authority can therefore be read
+from the final migration without reconstructing a renamed function from an
+August migration.
+
+The public-release preflight reads `deployment_configs.production.env_vars`
+from the Cloudflare Pages API with a protected account/project/token. A
+mirrored GitHub variable is not sufficient; pushes to `main` and manual
+preflights both verify that the live production `PREVIEW_PROTECTION` value is
+explicitly `off`.
+
+## 2026-09-03 — Keep rare colors rare; do not make them required progress
+
+Rank and Ritual are Chromadie's intentional progression paths. Discovery is a
+parallel record of stochastic color events, not a queue of objectives. The
+server-authored progression manifest now classifies discoveries as open,
+lifetime, hidden, or historical: Rare, Prime, High contrast, and Epic remain
+visible open finds; Legendary and Palindrome are visible lifetime curiosities;
+Anomaly is hidden until earned; Greyscale remains historical only.
+
+This changes no probability, score, achievement trigger, reward item,
+inventory grant, or roll authority. Locked hidden discoveries are omitted from
+the owner journey response, while the authoritative roll transaction can still
+grant and reveal them through the existing unlock queue. Clients may display
+the role returned by the server but may not derive or alter it.
+
 ## 2026-09-01 — Size expression layers to the authored profile surface
 
 Profile borders and decorative profile-motion shells must follow the rendered

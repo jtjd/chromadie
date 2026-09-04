@@ -170,11 +170,16 @@
   function resolveFocusGoal(currentProgression = progression) {
     const candidates = [
       currentProgression?.nextJourney?.ritual,
-      currentProgression?.nextJourney?.discovery,
       currentProgression?.nextJourney?.rank,
       currentProgression?.nextObjective
     ];
-    return candidates.find(node => node && node.unlocked !== true && !node.unlockedAt && !node.unlocked_at) || null;
+    return candidates.find(node => isIntentionalObjective(node) && node.unlocked !== true && !node.unlockedAt && !node.unlocked_at) || null;
+  }
+
+  function isIntentionalObjective(node) {
+    if (!node) return false;
+    return (node.presentationRole || node.presentation_role || '') === 'objective'
+      || node.track !== 'discovery';
   }
 
   function getReadableTextColor(value) {

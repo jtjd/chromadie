@@ -123,13 +123,13 @@ test('layout metadata identifies the bounded content target instead of the page'
 });
 
 test('homepage, public profiles, and Studio consume one motion renderer with separate surfaces', async () => {
-  const [motion, homepage, shell, studio, demo, stores] = await Promise.all([
+  const [motion, homepage, shell, studio, demo, catalogState] = await Promise.all([
     read('src/lib/profile-motion/ProfileMotionEffect.svelte'),
     read('src/lib/homepage/HomepageHero.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/homepage/HomepageProfileDemo.svelte'),
-    read('src/lib/stores.js')
+    read('src/lib/catalogState.js')
   ]);
 
   assert.match(homepage, /import ProfileMotionEffect from '\.\.\/profile-motion\/ProfileMotionEffect\.svelte'/);
@@ -139,8 +139,8 @@ test('homepage, public profiles, and Studio consume one motion renderer with sep
   assert.match(shell, /inputSurface=\{previewMode \? 'container' : 'viewport'\}/);
   assert.match(studio, /surfaceElement=\{previewStage\}/);
   assert.match(studio, /inputSurface="container"/);
-  assert.match(stores, /'profile_motion'\]\)/);
-  assert.match(stores, /isProfileMotionKey/);
+  assert.match(catalogState, /'profile_motion'\]\)/);
+  assert.match(catalogState, /isProfileMotionKey/);
   assert.match(motion, /\{#if motionEnabled\}/);
   assert.match(motion, /\{:else\}[\s\S]*<slot><\/slot>/);
   assert.match(motion, /if \(!effectEnabled\) \{/);

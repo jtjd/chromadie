@@ -85,12 +85,17 @@
 
   function goalPaceLabel(node) {
     const expectedRolls = Number(node?.expectedRolls ?? node?.expected_rolls);
+    const role = node?.presentationRole || node?.presentation_role;
+    if (node?.track === 'discovery' && Number.isFinite(expectedRolls) && expectedRolls > 0) {
+      const odds = `About 1 in ${formatNumber(Math.round(expectedRolls))} rolls`;
+      return role === 'lifetime_discovery' ? `Lifetime discovery · ${odds}` : odds;
+    }
     if (Number.isFinite(expectedRolls) && expectedRolls > 0 && expectedRolls <= 90) return `Often within ${formatNumber(expectedRolls)} rolls`;
     const pace = String(node?.paceBand || node?.pace_band || '').toLowerCase();
     if (pace === 'days') return 'A few days of rolling';
     if (pace === 'weeks') return 'A few weeks of rolling';
     if (pace === 'months') return 'A longer-term goal';
-    if (pace === 'years' || pace === 'lifetime') return 'A rare, long-term find';
+    if (pace === 'years' || pace === 'lifetime') return 'A long-term milestone';
     return node?.metric === 'achievement' ? 'Find it whenever it appears' : 'Coming later';
   }
 
@@ -134,7 +139,7 @@
   function laneMilestoneCopy(lane) {
     const node = lane.featuredNode;
     const rewardName = node?.reward?.name;
-    if (!node) return lane.completed.length ? 'You completed this path.' : 'You have no published goal here yet.';
+    if (!node) return lane.completed.length ? 'You completed this path.' : 'You have no published milestone here yet.';
     if (lane.id === 'rank') return `Reach ${rankState.next?.name || 'the top rank'}${rewardName ? ` to unlock ${rewardName}.` : '.'}`;
     if (lane.id === 'ritual') {
       const target = nodeTarget(node);
@@ -202,7 +207,7 @@
             {:else if dailyRollLoaded}
               <h2 id="progression-today-roll-title">Ready to roll</h2>
               <small>{focusGoal ? `${focusGoal.name} · ${focusProgressLabel(focusGoal)}` : 'No color recorded for today.'}</small>
-              <a class="site-button" href="/roll">{focusGoal?.track === 'discovery' ? 'Roll and explore' : 'Roll today'}</a>
+              <a class="site-button" href="/roll">Roll today</a>
             {:else}
               <h2 id="progression-today-roll-title">Checking today</h2>
               <small>Reading your server record.</small>
@@ -243,8 +248,8 @@
 
         <section class="profile-progression-journey profile-progression-journey--page" aria-labelledby="profile-progression-journey-title">
           <div class="profile-progression-section-heading profile-progression-section-heading--page">
-            <span class="profile-progression-label">Your Paths</span>
-            <span>{formatNumber(journeyGoalComplete)} of {formatNumber(journeyGoalTotal)} complete</span>
+            <span class="profile-progression-label">Your profile record</span>
+            <span>{formatNumber(journeyGoalComplete)} of {formatNumber(journeyGoalTotal)} recorded</span>
           </div>
 
           <div class="profile-progression-lanes profile-progression-lanes--page">
@@ -274,7 +279,31 @@
                   aria-hidden={expandedLane !== lane.id}
                   inert={expandedLane !== lane.id}
                 >
-                  {#if lane.featuredNode}
+                  {#if lane.id === 'discovery' && lane.nodes.length}
+                    <div class="profile-progression-discoveries">
+                      <p class="profile-progression-empty">Discoveries can happen in any order. They never block your next Rank or Ritual milestone.</p>
+                      {#if lane.openDiscoveries.length}
+                        <ol class="profile-progression-condensed-list profile-progression-condensed-list--active">
+                          {#each lane.openDiscoveries as node (node.id)}
+                            <li use:observeJourneyNode={node}><ProgressionPathIcon track="discovery" state="active" /><span><strong>{node.name || 'Discovery'}</strong><small>{node.description || 'A color pattern waiting to appear.'}</small></span><em>{nodeProgressLabel(node)}</em></li>
+                          {/each}
+                        </ol>
+                      {/if}
+                      {#if lane.lifetimeDiscoveries.length}
+                        <div class="profile-progression-more">
+                          <span>{lane.lifetimeDiscoveries.length} lifetime discover{lane.lifetimeDiscoveries.length === 1 ? 'y' : 'ies'}</span>
+                          <button type="button" aria-expanded={isSectionExpanded(expandedSections, lane.id, 'lifetime')} onclick={() => toggleSection(lane.id, 'lifetime')}>{isSectionExpanded(expandedSections, lane.id, 'lifetime') ? 'Hide' : 'See discoveries'}</button>
+                        </div>
+                        {#if isSectionExpanded(expandedSections, lane.id, 'lifetime')}
+                          <ol class="profile-progression-condensed-list">
+                            {#each lane.lifetimeDiscoveries as node (node.id)}
+                              <li use:observeJourneyNode={node}><ProgressionPathIcon track="discovery" state="active" /><span><strong>{node.name || 'Lifetime discovery'}</strong><small>{node.description || 'An exceptionally rare color event.'}</small></span><em>{nodeProgressLabel(node)}</em></li>
+                            {/each}
+                          </ol>
+                        {/if}
+                      {/if}
+                    </div>
+                  {:else if lane.featuredNode}
                     <article use:observeJourneyNode={lane.featuredNode} class="profile-progression-node profile-progression-node--active profile-progression-node--compact">
                       <p class="profile-progression-node__one-line">{laneMilestoneCopy(lane)}</p>
                       {#if lane.featuredNode.reward}<ProgressionRewardPreview reward={lane.featuredNode.reward} unlocked={isUnlocked(lane.featuredNode)} username={previewIdentity} displayColor={previewColor} avatarSrc={previewAvatar} milestoneId={lane.featuredNode.id} track={lane.id} analyticsSurface={analyticsSurface} presentation="wide" flat={true} />{/if}
@@ -299,7 +328,7 @@
 
                   {#if lane.completed.length}
                     <div class="profile-progression-collapsed-row">
-                      <span>{lane.completed.length} completed goal{lane.completed.length === 1 ? '' : 's'}</span>
+                      <span>{lane.completed.length} completed {lane.id === 'discovery' ? 'discover' : 'milestone'}{lane.completed.length === 1 ? 'y' : lane.id === 'discovery' ? 'ies' : 's'}</span>
                       <button type="button" aria-expanded={isSectionExpanded(expandedSections, lane.id, 'completed')} onclick={() => toggleSection(lane.id, 'completed')}>{isSectionExpanded(expandedSections, lane.id, 'completed') ? 'Hide completed' : 'View completed'}</button>
                     </div>
                     {#if isSectionExpanded(expandedSections, lane.id, 'completed')}
@@ -361,8 +390,8 @@
         </div>
         <div class="profile-progression-stat profile-progression-stat--goals">
           <svg class="profile-progression-stat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" /></svg>
-          <strong title={`${formatNumber(journeyGoalComplete)} of ${formatNumber(journeyGoalTotal)} goals complete`}>{journeyGoalTotal ? `${formatCompactNumber(journeyGoalComplete)}/${formatCompactNumber(journeyGoalTotal)}` : formatCompactNumber(journeyGoalComplete)}</strong>
-          <span>Goals</span>
+          <strong title={`${formatNumber(journeyGoalComplete)} of ${formatNumber(journeyGoalTotal)} milestones recorded`}>{journeyGoalTotal ? `${formatCompactNumber(journeyGoalComplete)}/${formatCompactNumber(journeyGoalTotal)}` : formatCompactNumber(journeyGoalComplete)}</strong>
+          <span>Milestones</span>
         </div>
         <div class="profile-progression-stat profile-progression-stat--unlocks">
           <svg class="profile-progression-stat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 10V7.5a4 4 0 0 1 7.6-1.8" /><rect x="5" y="10" width="14" height="10" rx="1.5" fill="currentColor" stroke="none" /><path d="M12 14v2.5" stroke="#111115" stroke-width="1.8" /></svg>

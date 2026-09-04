@@ -116,6 +116,23 @@ SELECT pg_temp.progression_assert(
   'locked_before_earned'
 );
 SELECT pg_temp.progression_assert(
+  NOT EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(public.get_my_progression()->'milestones') AS item
+    WHERE item->>'id' = 'journey_mythic'
+  ),
+  'locked hidden discovery leaked into the owner journey'
+);
+SELECT pg_temp.progression_assert(
+  EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(public.get_my_progression()->'milestones') AS item
+    WHERE item->>'id' = 'journey_rarity_anomaly'
+      AND item->>'presentation_role' = 'lifetime_discovery'
+  ),
+  'lifetime discovery role was not returned by the owner journey'
+);
+SELECT pg_temp.progression_assert(
   (public.equip_item('name_material_velvet_ink')->>'success') = 'false',
   'locked earned reward could be equipped before acquisition'
 );
@@ -213,6 +230,33 @@ SELECT pg_temp.progression_assert(
   (public.equip_item('name_material_velvet_ink')->>'success') = 'true',
   'earned reward could not be equipped after grant'
 );
+
+-- A hidden discovery stays hidden until an authoritative achievement grants
+-- it, then appears as a live surprise unlock with its server-authored role.
+INSERT INTO public.user_achievements (user_id, achievement_id, unlocked_at)
+VALUES ('20000000-0000-0000-0000-000000000001', 'mythic_roll', now())
+ON CONFLICT DO NOTHING;
+DO $hidden_discovery_grant$
+DECLARE
+  v_result jsonb;
+BEGIN
+  v_result := public.grant_progression_milestones('20000000-0000-0000-0000-000000000001');
+  PERFORM pg_temp.progression_assert(
+    v_result @> '[{"id":"journey_mythic","presentation_role":"hidden_discovery"}]'::jsonb,
+    'hidden discovery did not grant as a server-confirmed surprise'
+  );
+  PERFORM pg_temp.progression_assert(
+    EXISTS (
+      SELECT 1
+      FROM jsonb_array_elements(public.get_my_progression()->'milestones') AS item
+      WHERE item->>'id' = 'journey_mythic'
+        AND item->>'presentation_role' = 'hidden_discovery'
+        AND (item->>'unlocked')::boolean
+    ),
+    'earned hidden discovery was not revealed to its owner'
+  );
+END;
+$hidden_discovery_grant$;
 
 DO $presentation$
 DECLARE

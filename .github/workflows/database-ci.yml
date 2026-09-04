@@ -10,9 +10,11 @@ on:
       - 'supabase/**'
       - 'scripts/browser/**'
       - 'scripts/check-database-security.mjs'
+      - 'scripts/check-profile-insights-integrity.mjs'
       - 'scripts/check-progression-database.mjs'
       - 'scripts/check-scoring-parity.mjs'
       - 'scripts/run-supabase-sql-test.mjs'
+      - 'functions/analytics/**'
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -42,6 +44,8 @@ jobs:
         run: npx supabase db lint --local --level warning --fail-on warning
       - name: Run database security checks
         run: npm run check:db-security
+      - name: Run profile insight integrity checks
+        run: npm run check:profile-insights
       - name: Check username policy drift
         run: npm run check:username-policy-drift
       - name: Run progression database behavior checks

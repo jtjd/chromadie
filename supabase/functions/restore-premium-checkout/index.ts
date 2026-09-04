@@ -65,6 +65,6 @@ Deno.serve(async request => {
     });
   } catch (error) {
     console.error('restore-premium-checkout', error);
-    return jsonResponse({ error: error instanceof Error ? error.message : 'Checkout status could not be restored.' }, 500);
+    return jsonResponse({ error: 'Checkout status could not be restored. Please try again.', code: 'checkout_restore_unavailable' }, 502);
   }
 });

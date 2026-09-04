@@ -366,7 +366,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
       rank: document.querySelector('#profile-progression-rank-title')?.textContent?.trim() || '',
       stats,
       streakStrip: Boolean(document.querySelector('.progression-page__streak-strip')),
-      paths: text.toLowerCase().includes('your paths'),
+      progressionRecord: text.toLowerCase().includes('your profile record'),
       accordionExpanded: Boolean(document.querySelector('.profile-progression-lane__toggle[aria-expanded="true"]')),
       approachingRoll50: /42\\s*\\/\\s*50\\s+rolls/i.test(text),
       approachingGoalText: text.includes('50 rolls') ? text.slice(Math.max(0, text.indexOf('50 rolls') - 120), text.indexOf('50 rolls') + 180) : '',
@@ -396,7 +396,7 @@ async function inspectAuthenticatedProgression(width, height, label) {
   assert(/^Silver(?: rank)?$/.test(state.rank), `${label} did not render the established Silver rank: ${JSON.stringify(state)}.`);
   assert(state.stats.some(value => value.includes('42')), `${label} did not render the established 42-roll history: ${JSON.stringify(state)}.`);
   assert(state.stats.some(value => value.includes('9d')), `${label} did not render the established streak history: ${JSON.stringify(state)}.`);
-  assert(state.streakStrip && state.paths && state.accordionExpanded && state.approachingRoll50, `${label} did not render the focused progression hierarchy: ${JSON.stringify(state)}.`);
+  assert(state.streakStrip && state.progressionRecord && state.accordionExpanded && state.approachingRoll50, `${label} did not render the focused progression hierarchy: ${JSON.stringify(state)}.`);
   assert(!state.rollTodayButtonVisible && state.rollCompleteStatus === 'Rolled today', `${label} exposed a duplicate daily-roll action after the server recorded today's roll: ${JSON.stringify(state)}.`);
   assert(/#[0-9A-F]{6}/i.test(state.dailyRollDetail) && /pts/i.test(state.dailyRollDetail), `${label} did not render the recorded daily-roll details in the left rail: ${JSON.stringify(state)}.`);
   assert(state.rollSignalsDetail && !/scoring signals\s*$/i.test(state.rollSignalsDetail), `${label} did not render server-reported scoring signals in the left rail: ${JSON.stringify(state)}.`);

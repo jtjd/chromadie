@@ -2,6 +2,34 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-03 — More trustworthy profile insights and safer service failures
+
+- Profile insight totals now ignore repeat events from the same privacy-safe
+  visitor/day key and reject click IDs that are not published on the target
+  profile. Links, projects, provider cards, and rich-text About links are all
+  eligible without the old six-click shortcut; a separate abuse ceiling still
+  limits one visitor's daily fan-out.
+- Checkout and restore failures use clearer stable messages rather than showing
+  payment-provider implementation detail.
+- Rare discoveries remain surprises and normal Roll, Rank, Ritual, and
+  collection behavior is unchanged.
+
+## 2026-09-03 — Verify the live release switch
+
+- Public-release preflight now reads the production `PREVIEW_PROTECTION` value
+  from the Cloudflare Pages API instead of trusting a mirrored GitHub setting.
+- Main-branch pushes and manual preflight runs fail closed when the Cloudflare
+  credentials, project configuration, or explicit `off` value are missing.
+
+## 2026-09-03 — Make rare discoveries surprises, not chores
+
+- Rank and Ritual now provide the profile's next achievable progress.
+- Rare, Prime, High contrast, and Epic colors remain visible discoveries that
+  can appear in any order.
+- Legendary and Palindrome are labelled as lifetime discoveries; Anomaly stays
+  hidden until it is earned and then becomes part of the player's record.
+- Color rarity, rewards, and existing earned collections are unchanged.
+
 ## 2026-09-01 — Align expression effects with every profile layout
 
 - Profile borders now fit the rendered Default, Sleek, Full-bleed, Framed, and

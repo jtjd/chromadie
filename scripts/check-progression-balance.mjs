@@ -21,7 +21,23 @@ const DISCOVERY_BALANCE = Object.freeze({
 });
 
 const PACE_BANDS = new Set(['days', 'weeks', 'months', 'years']);
-const MAX_PUBLISHED_EXPECTED_ROLLS = 100_000;
+const PRESENTATION_ROLES = new Set([
+  'open_discovery',
+  'lifetime_discovery',
+  'hidden_discovery',
+  'historical'
+]);
+const DISCOVERY_PRESENTATION = Object.freeze({
+  journey_rarity_rare: 'open_discovery',
+  journey_roll_prime: 'open_discovery',
+  journey_high_contrast: 'open_discovery',
+  journey_rarity_epic: 'open_discovery',
+  journey_rarity_anomaly: 'lifetime_discovery',
+  journey_palindrome: 'lifetime_discovery',
+  journey_mythic: 'hidden_discovery',
+  journey_greyscale: 'historical'
+});
+const MAX_OPEN_DISCOVERY_EXPECTED_ROLLS = 90;
 
 function fail(message) {
   console.error(`Progression balance drift detected: ${message}`);
@@ -74,6 +90,20 @@ for (const [id, target] of Object.entries(LONG_TERM_GOALS)) {
 const greyscale = byId.get('journey_greyscale');
 if (!greyscale) failures.push('journey_greyscale must remain in the manifest as a historical goal');
 else if (isPublished(greyscale)) failures.push('journey_greyscale must be retired from the published journey');
+else if (progressionRowValue(greyscale, 'presentation_role') !== 'historical') {
+  failures.push('journey_greyscale must remain historical');
+}
+
+for (const [id, expectedRole] of Object.entries(DISCOVERY_PRESENTATION)) {
+  const goal = byId.get(id);
+  if (!goal) {
+    failures.push(`${id} is missing its discovery presentation role`);
+    continue;
+  }
+  if (progressionRowValue(goal, 'presentation_role') !== expectedRole) {
+    failures.push(`${id} must use ${expectedRole}`);
+  }
+}
 
 const publishedRitual = manifest
   .filter(row => row.track === 'ritual' && isPublished(row))
@@ -115,14 +145,21 @@ for (const goal of publishedDiscovery) {
     if (!compareNumbers(declared, expected)) {
       failures.push(`${goal.id} declares ${declared} expected rolls; exhaustive model measures ${expected.toFixed(2)}`);
     }
-    if (declared > MAX_PUBLISHED_EXPECTED_ROLLS) {
-      failures.push(`${goal.id} is outside the published discovery pacing ceiling (${declared} > ${MAX_PUBLISHED_EXPECTED_ROLLS})`);
-    }
   }
 
   const paceBand = progressionRowValue(goal, 'pace_band');
   if (paceBand !== undefined && paceBand !== null && !PACE_BANDS.has(paceBand)) {
     failures.push(`${goal.id} uses unknown pace_band ${JSON.stringify(paceBand)}`);
+  }
+  const role = progressionRowValue(goal, 'presentation_role');
+  if (!PRESENTATION_ROLES.has(role)) {
+    failures.push(`${goal.id} uses unknown discovery presentation_role ${JSON.stringify(role)}`);
+  } else if (role === 'open_discovery' && expected > MAX_OPEN_DISCOVERY_EXPECTED_ROLLS) {
+    failures.push(`${goal.id} cannot be an open discovery above ${MAX_OPEN_DISCOVERY_EXPECTED_ROLLS} expected rolls`);
+  } else if (role === 'lifetime_discovery' && expected <= MAX_OPEN_DISCOVERY_EXPECTED_ROLLS) {
+    failures.push(`${goal.id} is too common to be a lifetime discovery`);
+  } else if (role === 'hidden_discovery' && expected <= 4_096) {
+    failures.push(`${goal.id} is too common to be a hidden discovery`);
   }
   measuredDiscovery.push({ goal, expected });
 }
@@ -152,7 +189,7 @@ if (failures.length) {
 console.log(
   `Progression balance check passed: ${publishedRitual.length} published Ritual goals, ` +
   `${publishedDiscovery.length} published Discovery goals, ` +
-  `Legendary before Anomaly, Greyscale retired, and long-term goals at 730/1,095 rolls.`
+  `open/lifetime/hidden discovery roles, Greyscale retired, and long-term goals at 730/1,095 rolls.`
 );
 console.log(
   `Discovery expected rolls: ${measuredDiscovery.map(({ goal, expected }) => `${goal.id} ${expected.toFixed(2)}`).join('; ')}`

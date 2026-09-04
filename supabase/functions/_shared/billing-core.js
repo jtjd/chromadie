@@ -71,7 +71,14 @@ export async function stripeRequest(secret, path, options = {}) {
     ...(options.body ? { body: new URLSearchParams(options.body).toString() } : {})
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload?.error?.message || 'Stripe request failed.');
+  if (!response.ok) {
+    // Provider detail is useful in the function log but must never become a
+    // browser-visible message. Callers receive a stable, product-level code.
+    console.error('stripe_request_failed', { status: response.status, type: payload?.error?.type || 'unknown' });
+    const error = new Error('Billing provider unavailable.');
+    error.code = 'billing_provider_unavailable';
+    throw error;
+  }
   return payload;
 }
 

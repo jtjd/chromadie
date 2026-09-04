@@ -5,7 +5,6 @@ import { readFile } from 'node:fs/promises';
 import { PRODUCT_ANALYTICS_CONSENT_KEY } from '../src/lib/productAnalytics.js';
 import { normalizeProfileInsights } from '../src/lib/profileInsights.js';
 import {
-  PROFILE_VIEW_RECENCY_KEY,
   getProfileViewDateKey,
   recordPublicProfileView
 } from '../src/lib/profileViewAnalytics.js';
@@ -60,51 +59,45 @@ test('profile insights normalization keeps daily aggregates bounded', () => {
   assert.equal(normalized.daily[0].date <= normalized.daily.at(-1).date, true);
 });
 
-test('public profile view recording requires consent and deduplicates by profile and UTC day', async () => {
+test('public profile view recording uses the edge transport and deduplicates by profile and UTC day', async () => {
   const { storage, restore } = installStorage({ [PRODUCT_ANALYTICS_CONSENT_KEY]: 'granted' });
-  const calls = [];
-  const client = {
-    async rpc(name, args) {
-      calls.push({ name, args });
-      return { data: { success: true, recorded: true }, error: null };
-    }
+  const requests = [];
+  const fetcher = async (_url, options) => {
+    requests.push(JSON.parse(options.body));
+    return { ok: true, async json() { return { success: true, recorded: true }; } };
   };
   const now = new Date('2026-08-08T12:00:00Z');
 
   try {
     assert.equal(getProfileViewDateKey(now), '2026-08-08');
-    assert.deepEqual(await recordPublicProfileView(client, 'Ada', { storage, now }), {
+    assert.deepEqual(await recordPublicProfileView(null, 'Ada', { storage, now, edge: true, fetcher }), {
       accepted: true,
       recorded: true
     });
-    assert.deepEqual(calls, [{
-      name: 'record_public_profile_view',
-      args: { p_username: 'ada' }
-    }]);
-    assert.deepEqual(JSON.parse(storage.getItem(PROFILE_VIEW_RECENCY_KEY)), ['2026-08-08:ada']);
-    assert.deepEqual(await recordPublicProfileView(client, 'ada', { storage, now }), {
+    assert.deepEqual(requests, [{ username: 'ada', metric: 'view', entryKey: null }]);
+    assert.deepEqual(await recordPublicProfileView(null, 'ada', { storage, now, edge: true, fetcher }), {
       accepted: true,
       recorded: false,
       reason: 'already_recorded'
     });
-    assert.equal(calls.length, 1);
+    assert.equal(requests.length, 1);
   } finally {
     restore();
   }
 });
 
-test('denied or malformed profile views never invoke the recorder', async () => {
+test('disabled edge transport or malformed profile views never invoke the recorder', async () => {
   const { storage, restore } = installStorage({ [PRODUCT_ANALYTICS_CONSENT_KEY]: 'denied' });
   let calls = 0;
-  const client = { rpc: async () => { calls += 1; return { data: { success: true, recorded: true } }; } };
+  const fetcher = async () => { calls += 1; return { ok: true, async json() { return { success: true, recorded: true }; } }; };
 
   try {
-    assert.deepEqual(await recordPublicProfileView(client, 'Ada', { storage }), {
+    assert.deepEqual(await recordPublicProfileView(null, 'Ada', { storage, fetcher }), {
       accepted: false,
       recorded: false,
-      reason: 'consent_required'
+      reason: 'edge_required'
     });
-    assert.deepEqual(await recordPublicProfileView(client, 'not a username', { storage }), {
+    assert.deepEqual(await recordPublicProfileView(null, 'not a username', { storage, edge: true, fetcher }), {
       accepted: false,
       recorded: false,
       reason: 'invalid_profile'
@@ -125,10 +118,10 @@ test('profile insights preserve the privacy and dashboard boundaries', async () 
     read('supabase/migrations/20260808170000_profile_insights.sql')
   ]);
 
-  assert.match(shell, /recordPublicProfileView\(supabase, targetProfile\.username\)/);
-  assert.match(recorder, /getProductAnalyticsConsent\(\) !== 'granted'/);
-  assert.match(recorder, /record_public_profile_view/);
-  assert.doesNotMatch(recorder, /fetch\s*\(|sendBeacon|XMLHttpRequest/);
+  assert.match(shell, /recordPublicProfileView\(supabase, targetProfile\.username/);
+  assert.match(recorder, /recordProfileInsightEvent/);
+  assert.match(recorder, /edge_required/);
+  assert.doesNotMatch(recorder, /record_public_profile_view/);
   assert.match(component, /update_my_profile_insights_settings/);
   assert.match(component, /Visitor identities, IP addresses, and exact visit times are never stored/);
   assert.match(component, /prefers-reduced-motion/);

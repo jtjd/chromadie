@@ -165,6 +165,11 @@ function parseWhereTerm(term, row, source) {
   if (equality) {
     return row[equality[1]] === decodeSqlValue(equality[2], source);
   }
+  const nullity = normalized.match(/^([a-z_][a-z0-9_]*)\s+IS\s+(NOT\s+)?NULL$/i);
+  if (nullity) {
+    const isNull = row[nullity[1]] === null || row[nullity[1]] === undefined;
+    return nullity[2] ? !isNull : isNull;
+  }
   const inList = normalized.match(/^([a-z_][a-z0-9_]*)\s+IN\s*\(([^)]+)\)$/i);
   if (inList) {
     const values = splitSqlValues(inList[2], source).map(value => decodeSqlValue(value, source));

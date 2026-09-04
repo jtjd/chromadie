@@ -30,7 +30,9 @@
   $: journeyState = progression?.journeyState || 'unavailable';
   $: progressionMilestones = Array.isArray(progression?.milestones) ? progression.milestones : [];
   $: ritualNext = getFocusGoal('ritual', progression, progressionMilestones);
-  $: discoveryNext = getFocusGoal('discovery', progression, progressionMilestones);
+  $: discoveryNodes = getDiscoveryNodes(progression, progressionMilestones);
+  $: openDiscoveryCount = discoveryNodes.filter(node => presentationRole(node) === 'open_discovery').length;
+  $: lifetimeDiscoveryCount = discoveryNodes.filter(node => presentationRole(node) === 'lifetime_discovery').length;
   $: weeklyFocus = progression?.weeklyFocus || null;
 
   function getFocusGoal(track, currentProgression, currentMilestones) {
@@ -40,6 +42,17 @@
       ? currentProgression.journeyByTrack[track]
       : currentMilestones.filter(node => node?.track === track);
     return source.find(node => node && !node.unlocked && !node.unlocked_at && node.published !== false) || null;
+  }
+
+  function presentationRole(node) {
+    return node?.presentationRole || node?.presentation_role || '';
+  }
+
+  function getDiscoveryNodes(currentProgression, currentMilestones) {
+    const source = Array.isArray(currentProgression?.journeyByTrack?.discovery)
+      ? currentProgression.journeyByTrack.discovery
+      : currentMilestones.filter(node => node?.track === 'discovery');
+    return source.filter(node => node && !node.unlocked && !node.unlocked_at && node.published !== false);
   }
 
   function formatNumber(value) {
@@ -97,7 +110,7 @@
     <section class="profile-studio-overview__progression" aria-label="Progression focus">
       <div><span class="profile-studio-overview__label">Rank / mastery</span><strong>{rankState.current.name}</strong><small>{formatNumber(lifetimeEp)} EP</small></div>
       <div><span class="profile-studio-overview__label">Ritual</span><strong>{ritualNext?.name || (journeyState === 'empty' ? 'No goals yet' : journeyState === 'unavailable' ? 'Unavailable' : 'Journey complete')}</strong><small>{ritualNext?.reward?.name || 'Sustained practice'}</small></div>
-      <div><span class="profile-studio-overview__label">Discovery</span><strong>{discoveryNext?.name || (journeyState === 'partial' ? 'Some goals unavailable' : journeyState === 'empty' ? 'No goals yet' : journeyState === 'unavailable' ? 'Unavailable' : 'Journey complete')}</strong><small>{discoveryNext?.reward?.name || 'Unusual color finds'}</small></div>
+      <div><span class="profile-studio-overview__label">Discovery</span><strong>{journeyState === 'partial' ? 'Some discoveries unavailable' : journeyState === 'empty' ? 'No discoveries yet' : journeyState === 'unavailable' ? 'Unavailable' : openDiscoveryCount ? `${openDiscoveryCount} finds can appear` : 'Finds recorded'}</strong><small>{lifetimeDiscoveryCount ? `${lifetimeDiscoveryCount} lifetime discover${lifetimeDiscoveryCount === 1 ? 'y' : 'ies'} can appear anytime` : 'Unexpected color finds'}</small></div>
     </section>
 
     <nav class="profile-studio-overview__actions" aria-label="Profile studio actions">
@@ -137,7 +150,7 @@
           <div><dt>Current streak</dt><dd>{formatNumber(account.current_streak)} days</dd></div>
           <div><dt>Achievements</dt><dd>{formatNumber(achievementCount)}{achievementTotal ? ` / ${formatNumber(achievementTotal)}` : ''}</dd></div>
           <div><dt>Story collection</dt><dd>{storyUnlocks.collectionUnlocked ? 'Unlocked' : `${storyUnlocks.collectionRollsRequired} rolls`}</dd></div>
-          <div><dt>Next cosmetic</dt><dd>{journeyEnabled ? (ritualNext?.reward?.name || discoveryNext?.reward?.name || (journeyState === 'empty' ? 'No goals yet' : journeyState === 'partial' ? 'Some goals unavailable' : journeyState === 'unavailable' ? 'Unavailable' : 'Journey complete')) : (nextReward?.name || 'Rank track')}</dd></div>
+          <div><dt>Next cosmetic</dt><dd>{journeyEnabled ? (ritualNext?.reward?.name || nextReward?.name || (journeyState === 'empty' ? 'No milestones yet' : journeyState === 'partial' ? 'Some milestones unavailable' : journeyState === 'unavailable' ? 'Unavailable' : 'Journey complete')) : (nextReward?.name || 'Rank track')}</dd></div>
         </dl>
         <p>{weeklyFocus?.completed ? 'This week’s color is complete. ' : ''}{recentUnlockCount ? `${formatNumber(recentUnlockCount)} progression reward${recentUnlockCount === 1 ? '' : 's'} recently unlocked.` : collectionItems.length ? `${formatNumber(collectionItems.length)} collection item${collectionItems.length === 1 ? '' : 's'} recorded.` : 'No collection items recorded yet.'}</p>
       </section>

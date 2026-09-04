@@ -174,6 +174,24 @@ and must begin one at a time.
 
 ## Deferred themes
 
+### Stabilization follow-through
+
+These are deliberately separate from the completed remediation slice and must
+not be folded into routine feature work:
+
+1. **Legacy public-profile retirement.** Inventory every `legacy=1` owner
+   control, provide an equivalent modern owner flow or explicitly retire it,
+   issue an owner notice, then remove the renderer after the notice window. No
+   new functionality belongs on the legacy path.
+2. **Atmosphere delivery cutover.** Move media only after an approved R2/CDN
+   asset manifest, cache/CORS contract, rollback plan, and browser evidence
+   prove the public profile can load every current atmosphere outside the Pages
+   artifact. Do not raise the 90 MiB source-media ceiling as a substitute.
+3. **CSP style hardening.** Replace dynamic inline styling only through a
+   component-by-component Svelte styling migration with desktop, mobile, and
+   reduced-motion verification. Removing `'unsafe-inline'` before that work
+   would break authored profile expression.
+
 Richer expression data, broader discovery, operational
 moderation tooling, raw analytics ownership and retention, payment/webhook
 entitlement issuance, private messaging, notifications, comparisons, and any

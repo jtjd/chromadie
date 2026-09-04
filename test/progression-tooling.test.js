@@ -42,6 +42,7 @@ test('progression manifest parser evaluates the final CASE-based migration patch
 
   assert.equal(byId.get('journey_rarity_rare').sort_order, 10);
   assert.equal(byId.get('journey_rarity_rare').expected_rolls, 3);
+  assert.equal(byId.get('journey_rarity_rare').presentation_role, 'open_discovery');
   assert.equal(byId.get('journey_roll_prime').sort_order, 20);
   assert.equal(byId.get('journey_roll_prime').expected_rolls, 7);
   assert.equal(byId.get('journey_high_contrast').sort_order, 30);
@@ -50,12 +51,15 @@ test('progression manifest parser evaluates the final CASE-based migration patch
   assert.equal(byId.get('journey_rarity_epic').expected_rolls, 26);
   assert.equal(byId.get('journey_rarity_anomaly').sort_order, 50);
   assert.equal(byId.get('journey_rarity_anomaly').expected_rolls, 927);
+  assert.equal(byId.get('journey_rarity_anomaly').presentation_role, 'lifetime_discovery');
   assert.equal(byId.get('journey_mythic').sort_order, 70);
   assert.equal(byId.get('journey_mythic').expected_rolls, 33894);
+  assert.equal(byId.get('journey_mythic').presentation_role, 'hidden_discovery');
   assert.equal(byId.get('journey_palindrome').sort_order, 60);
   assert.equal(byId.get('journey_palindrome').expected_rolls, 4096);
   assert.equal(byId.get('journey_streak_14').progress_source, 'longest_streak');
   assert.equal(byId.get('journey_greyscale').published, false);
+  assert.equal(byId.get('journey_greyscale').presentation_role, 'historical');
   assert.equal(byId.get('journey_roll_730').achievement_id, null);
   assert.equal(byId.get('journey_roll_730').progress_target, 730);
 });
@@ -67,7 +71,8 @@ test('progression balance gate blocks probability and pacing regressions', async
   assert.match(source, /journey_greyscale/);
   assert.match(source, /Legendary must precede Anomaly/);
   assert.match(source, /expected_rolls/);
-  assert.match(source, /MAX_PUBLISHED_EXPECTED_ROLLS/);
+  assert.match(source, /MAX_OPEN_DISCOVERY_EXPECTED_ROLLS/);
+  assert.match(source, /DISCOVERY_PRESENTATION/);
   assert.match(source, /longest_streak/);
   assert.match(source, /must not depend on an achievement row/);
   assert.match(source, /simulateBalance\(\{ exhaustive: true \}\)/);

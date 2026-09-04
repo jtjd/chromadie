@@ -1,4 +1,4 @@
-import { cosmeticCatalogItems } from './stores';
+import { cosmeticCatalogItems } from './catalogState.js';
 import { get } from 'svelte/store';
 
 /**

@@ -26,7 +26,7 @@
         <h2 id="profile-content-projects-heading">Projects</h2>
         <div class="profile-content__project-list">
           {#each visible.projects as project (project.order)}
-            <a class="profile-content__project" href={project.url} target="_blank" rel="noopener noreferrer" on:click={() => onEntryClick(project.key || `project-${project.order}`)}>
+            <a class="profile-content__project" href={project.url} target="_blank" rel="noopener noreferrer" on:click={() => onEntryClick(`project-${project.order}`)}>
               <span>
                 <strong>{project.title}</strong>
                 {#if project.description}<span>{project.description}</span>{/if}

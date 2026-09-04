@@ -139,6 +139,6 @@ Deno.serve(async request => {
     return jsonResponse({ checkout_url: checkout.url, session_id: checkout.id });
   } catch (error) {
     console.error('create-premium-checkout', error);
-    return jsonResponse({ error: error instanceof Error ? error.message : 'Checkout could not be created.' }, 500);
+    return jsonResponse({ error: 'Checkout could not be created. Please try again.', code: 'checkout_unavailable' }, 502);
   }
 });

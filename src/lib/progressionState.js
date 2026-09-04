@@ -27,6 +27,15 @@ const VALID_PROGRESS_SOURCES = new Set([
 const VALID_JOURNEY_STATES = new Set(['ready', 'partial', 'empty', 'unavailable']);
 const VALID_PACE_BANDS = new Set(['days', 'weeks', 'months', 'season', 'years', 'lifetime', 'unknown']);
 const VALID_ACCESS_TIERS = new Set(['free', 'earned', 'premium']);
+// Presentation is server-authored. It separates intentional progress from
+// stochastic discoveries without changing how a milestone is earned.
+const VALID_PRESENTATION_ROLES = new Set([
+  'objective',
+  'open_discovery',
+  'lifetime_discovery',
+  'hidden_discovery',
+  'historical'
+]);
 
 export const PROGRESSION_TRACKS = Object.freeze([
   Object.freeze({
@@ -216,6 +225,19 @@ function normalizePublished(value) {
   return published !== false;
 }
 
+function normalizePresentationRole(value, track, published) {
+  const role = normalizeText(
+    isRecord(value)
+      ? value.presentation_role ?? value.presentationRole
+      : value,
+    '',
+    32
+  ).toLowerCase();
+  if (VALID_PRESENTATION_ROLES.has(role)) return role;
+  if (published === false) return 'historical';
+  return track === 'discovery' ? 'open_discovery' : 'objective';
+}
+
 function normalizePaceBand(value, expectedRolls = null) {
   const raw = normalizeText(value, '', 24).toLowerCase();
   const aliases = {
@@ -331,6 +353,7 @@ function fallbackMilestone(manifest, entry = {}) {
   const source = isRecord(entry) ? entry : {};
   const unlock = normalizeUnlockFields(source);
   const progress = normalizeProgress(source.progress);
+  const published = normalizePublished(source);
   return {
     id: manifest.id,
     name: normalizeText(source.name, manifest.name, 100),
@@ -346,7 +369,8 @@ function fallbackMilestone(manifest, entry = {}) {
     progressTarget: manifest.threshold,
     expectedRolls: null,
     paceBand: 'unknown',
-    published: normalizePublished(source),
+    published,
+    presentationRole: normalizePresentationRole(source, 'rank', published),
     reward: normalizeReward(source.reward, manifest.reward) || { ...manifest.reward },
     progress,
     unlocked: source.unlocked === true || Boolean(unlock.unlockedAt),
@@ -432,6 +456,7 @@ function normalizeMilestoneEntry(value) {
     expectedRolls,
     paceBand: normalizePaceBand(value.pace_band || value.paceBand, expectedRolls),
     published,
+    presentationRole: normalizePresentationRole(value, track, published),
     reward,
     progress: normalizeProgress(value.progress),
     unlocked,
@@ -521,6 +546,8 @@ function createTrackGroups(nodes) {
 }
 
 function getNextJourney(nodes, track) {
+  // Discoveries are independent events, not a queue of required objectives.
+  if (track === 'discovery') return null;
   const trackNodes = nodes.filter(node => node.track === track && node.published !== false);
   return trackNodes.find(node => node.presentationState === 'active')
     || trackNodes.find(node => !node.unlocked)
@@ -550,8 +577,8 @@ function derivePresentationState(milestone, trackNodes, pendingIds) {
   if (milestone.unlocked) return 'completed';
 
   // Discovery conditions are independent stochastic facts. Every still-locked
-  // published discovery remains an honest unfound opportunity; it must not be
-  // presented as blocked behind an earlier random result.
+  // visible discovery remains an honest unfound opportunity; it must not be
+  // presented as blocked behind an earlier random result or as the next task.
   if (milestone.track === 'discovery') return 'active';
 
   const firstLocked = trackNodes.find(node => !node.unlocked);
@@ -601,6 +628,7 @@ export function createEmptyProgression() {
     trackProgress: {},
     nextJourney: { rank: null, mastery: null, ritual: null, discovery: null },
     activeGoals: [],
+    activeObjectives: [],
     completedGoals: [],
     futureGoals: [],
     newGoals: [],
@@ -678,6 +706,7 @@ export function normalizeProgressionData(value, fallbackEp = null) {
     ? journeyByTrack.rank.find(milestone => milestone.rankId === nextRank.id)
     : journeyByTrack.rank.find(milestone => milestone.presentationState === 'active');
   const activeGoals = publishedMilestones.filter(milestone => milestone.isActive);
+  const activeObjectives = activeGoals.filter(milestone => milestone.presentationRole === 'objective');
   const completedGoals = publishedMilestones.filter(milestone => milestone.isCompleted);
   const futureGoals = publishedMilestones.filter(milestone => milestone.isFuture);
   const newGoals = publishedMilestones.filter(milestone => milestone.isNew);
@@ -723,7 +752,8 @@ export function normalizeProgressionData(value, fallbackEp = null) {
       ritual: getNextJourney(journeyNodes, 'ritual'),
       discovery: getNextJourney(journeyNodes, 'discovery')
     },
-    nextObjective: activeGoals[0] || null,
+    nextObjective: activeObjectives[0] || null,
+    activeObjectives,
     activeGoals,
     completedGoals,
     futureGoals,

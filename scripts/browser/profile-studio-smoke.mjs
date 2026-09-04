@@ -2588,11 +2588,24 @@ try {
     if (smokeMode !== 'preview') {
       return { developmentMode: true, hashedAssetCheck: 'production-only' };
     }
+    const successfulAssetUrls = new Set(page.requestLog
+      .filter(request => Number(request.status) > 0 && Number(request.status) < 400)
+      .map(request => request.url));
+    const benignCancelledAssets = [];
     const failedAssets = page.requestLog.filter(request => {
       let sameOrigin = false;
       try { sameOrigin = new URL(request.url).origin === new URL(appUrl).origin; } catch { /* ignore malformed/third-party telemetry URLs */ }
       const isAsset = /\/assets\/|\.(?:css|js)(?:\?|$)/i.test(request.url);
-      return sameOrigin && isAsset && (request.failed || Number(request.status) >= 400);
+      if (!sameOrigin || !isAsset) return false;
+      // A direct-refresh intentionally replaces the document. Chromium can
+      // label a request cancelled by that navigation ERR_NETWORK_CHANGED even
+      // when the same immutable hashed asset loaded successfully immediately
+      // after. Preserve real failures while avoiding a false red test result.
+      if (request.failed && request.errorText === 'net::ERR_NETWORK_CHANGED' && successfulAssetUrls.has(request.url)) {
+        benignCancelledAssets.push(request);
+        return false;
+      }
+      return request.failed || Number(request.status) >= 400;
     });
     assert(!failedAssets.length, `Profile build requested missing or failed assets: ${JSON.stringify(failedAssets.slice(0, 8))}.`);
     const state = await page.evaluate(`(() => {
@@ -2607,6 +2620,7 @@ try {
     assert(!state.missing.length && state.canonicalRendererCss && studioPreviewCss.length > 0, `Critical profile CSS was not active or did not load during Studio: ${JSON.stringify({ ...state, studioPreviewCss })}.`);
     return {
       failedAssets,
+      benignCancelledAssets,
       activePublicSheets: state.sheets.filter(href => /ProfileShell-|ProfileReferenceCard-|ProfileFullBleedLayout-|ProfilePortfolioLayout-/.test(href)),
       studioPreviewCss: studioPreviewCss.map(request => ({ url: request.url, status: request.status }))
     };

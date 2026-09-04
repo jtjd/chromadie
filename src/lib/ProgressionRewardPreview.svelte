@@ -105,10 +105,10 @@
       // Keep the canonical renderer and catalog out of the progression route's
       // initial payload. The catalog remains server-owned and the renderer
       // receives the same normalized item used by Studio and the shop.
-      const stores = await import('./stores.js');
-      await stores.loadCosmeticCatalog();
-      catalogItems = get(stores.cosmeticCatalogItems) || {};
-      catalogError = get(stores.cosmeticCatalogError) || '';
+      const catalog = await import('./catalogState.js');
+      await catalog.loadCosmeticCatalog();
+      catalogItems = get(catalog.cosmeticCatalogItems) || {};
+      catalogError = get(catalog.cosmeticCatalogError) || '';
       if (!catalogError && !catalogItems[itemKey]) {
         catalogError = 'This cosmetic is not available in the current catalog.';
       }
