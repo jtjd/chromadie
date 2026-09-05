@@ -816,6 +816,13 @@ SELECT pg_temp.audit_assert(
          FROM public.profiles WHERE id = '10000000-0000-0000-0000-000000000002'),
   'identity update did not normalize and persist the authenticated projection'
 );
+INSERT INTO audit_results VALUES ('profile_identity_owner', public.get_my_profile()::jsonb);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'display_name' = 'audit_recovery'
+      AND payload->>'bio' = 'A quiet record of daily colors.'
+   FROM audit_results WHERE name = 'profile_identity_owner'),
+  'authenticated owner profile projection omitted persisted identity values'
+);
 INSERT INTO audit_results VALUES (
   'identity_retry',
   public.update_my_profile_identity('Renée ✦', 'A quiet record of daily colors.')

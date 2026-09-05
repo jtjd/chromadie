@@ -9,8 +9,12 @@
   profile action, quieted the countdown, and added the next progression goal.
 - Reworked the static profile roll widget to borrow its host surface and text
   treatment instead of drawing a card inside the profile; the color swatch,
-  identity, HEX/rarity metadata, and keyboard-accessible score disclosure stay
-  bounded across the shared renderers.
+  identity, and HEX/rarity metadata stay bounded across the shared renderers,
+  with rarity text using the canonical rarity color and no score disclosure.
+- Fixed Profile Studio identity hydration and publishing: the authenticated
+  profile projection now includes the existing display name and bio, and the
+  publish boundary prefers the mounted editor's freshest draft before falling
+  back to the tab-persistent identity draft.
 - Added a bounded curated Tjz example with the real Sleek renderer, lazy
   loading, a dated result, and no autoplay media or editor dependency.
 - Simplified scoring examples and empty boards; refresh public discovery after

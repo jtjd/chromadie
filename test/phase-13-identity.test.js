@@ -40,9 +40,12 @@ test('identity validation is optional, trimmed, and character-aware', () => {
 });
 
 test('identity values stay plain text in the public render contract', async () => {
-  const identityCard = await readFile(new URL('../src/lib/ProfileReferenceCard.svelte', import.meta.url), 'utf8');
-  const identityEditor = await readFile(new URL('../src/lib/IdentityEditor.svelte', import.meta.url), 'utf8');
-  const migration = await readFile(new URL('../supabase/migrations/20260725150000_profile_identity.sql', import.meta.url), 'utf8');
+  const [identityCard, identityEditor, migration, ownerProjectionMigration] = await Promise.all([
+    readFile(new URL('../src/lib/ProfileReferenceCard.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/IdentityEditor.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20260725150000_profile_identity.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20260905100000_profile_identity_owner_projection.sql', import.meta.url), 'utf8')
+  ]);
   const dangerous = '<strong>**not markup**</strong>';
 
   assert.equal(normalizePublicIdentity({ displayName: dangerous, bio: dangerous }).displayName, dangerous);
@@ -54,6 +57,10 @@ test('identity values stay plain text in the public render contract', async () =
   assert.match(migration, /auth\.uid\(\)/);
   assert.match(migration, /UPDATE public\.profiles/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.update_my_profile_identity\(text, text\) TO authenticated/);
+  assert.match(ownerProjectionMigration, /CREATE OR REPLACE FUNCTION public\.get_my_profile\(\)/);
+  assert.match(ownerProjectionMigration, /'display_name', p\.display_name/);
+  assert.match(ownerProjectionMigration, /'bio', p\.bio/);
+  assert.match(ownerProjectionMigration, /GRANT EXECUTE ON FUNCTION public\.get_my_profile\(\) TO authenticated/);
   const projection = migration.match(/CREATE OR REPLACE FUNCTION public\.public_profile_identity_projection[\s\S]*?\$function\$/)?.[0] || '';
   assert.doesNotMatch(projection, /SELECT \*/);
   assert.doesNotMatch(projection, /ep_spent|reroll_shards|staff_test_ep/);

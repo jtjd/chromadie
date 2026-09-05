@@ -27,6 +27,7 @@ test('compact profiles compose identity and a static daily-roll summary as one s
   assert.equal((card.match(/data-profile-widget="roll"/g) || []).length, 0);
   assert.match(summary, /profile-roll-summary__swatch/);
   assert.match(summary, /profile-roll-summary__identity/);
+  assert.match(summary, /profile-roll-summary__rarity/);
   assert.match(summary, /safeRarity/);
   assert.match(summary, /normalizeHexColor/);
   assert.doesNotMatch(summary, /<ProfileRoll|<TodayColor|rollstart|rollcomplete|RollResultBreakdown/);

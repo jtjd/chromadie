@@ -12,8 +12,10 @@ test('completed result text separates earned values from the rolled-color accent
   assert.match(summary, /color: var\(--profile-text, inherit\)/);
   assert.match(summary, /background: transparent/);
   assert.match(summary, /background: var\(--profile-roll-summary-color\)/);
-  assert.match(summary, /<summary>View roll details<\/summary>/);
-  assert.match(summary, /summary:focus-visible/);
+  assert.match(summary, /getRarityPresentation/);
+  assert.match(summary, /--profile-roll-summary-rarity/);
+  assert.match(summary, /profile-roll-summary__rarity/);
+  assert.doesNotMatch(summary, /View roll details|<details|<summary|summary:focus-visible/);
   assert.match(summary, /data-profile-widget-mode="summary"/);
   assert.doesNotMatch(summary, /RollResultBreakdown|today-color|supabase|roll_die/);
 });

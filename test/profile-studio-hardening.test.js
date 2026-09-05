@@ -38,6 +38,8 @@ test('Profile Studio publishes identity and the complete expression-aware config
   assert.match(settings, /publish_profile_studio_v2/);
   assert.doesNotMatch(settings, /update_my_profile_identity/);
   assert.match(settings, /profile\.update\(/);
+  assert.match(settings, /const editorIdentity = getDashboardEditor\(\)\?\.getDraftIdentity\?\.\(\);/);
+  assert.match(settings, /mounted identity editor has the freshest keystroke-level value/);
   assert.match(settings, /bio: nextBio/);
   assert.match(settings, /dirtySourceForEvent/);
   assert.match(settings, /let loading = true/);

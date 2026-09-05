@@ -1,4 +1,5 @@
 <script>
+  import { getRarityPresentation } from './rarityPresentation.js';
   import { normalizeHexColor } from './utils.js';
 
   /** @type {Record<string, any> | null} */
@@ -10,12 +11,11 @@
   $: safeHex = normalizeHexColor(result?.hex_code || result?.hex || '', normalizeHexColor(accentColor, '#8B7CF6'));
   $: safeIdentity = String(result?.identity || 'Daily color').trim().slice(0, 120) || 'Daily color';
   $: safeRarity = String(result?.rarity || '').trim().slice(0, 32);
-  $: scoreValue = result?.score === null || result?.score === undefined || result?.score === '' ? null : Number(result.score);
-  $: hasScore = Number.isFinite(scoreValue);
+  $: rarityPresentation = getRarityPresentation(safeRarity || 'Common');
 </script>
 
 <div class="profile-roll-summary" class:profile-roll-summary--compact={compact}
-  style={`--profile-roll-summary-color:${safeHex};`}
+  style={`--profile-roll-summary-color:${safeHex};--profile-roll-summary-rarity:${rarityPresentation.color};`}
   data-profile-widget="roll" data-profile-widget-mode="summary"
   aria-label={result ? 'Daily roll summary' : 'No daily roll yet'}>
   <span class="profile-roll-summary__label">{label}</span>
@@ -26,18 +26,10 @@
         <strong class="profile-roll-summary__identity">{safeIdentity}</strong>
         <div class="profile-roll-summary__meta">
           <span>{safeHex}</span>
-          {#if safeRarity}<span aria-hidden="true">·</span><span>{safeRarity}</span>{/if}
+          {#if safeRarity}<span aria-hidden="true">·</span><span class="profile-roll-summary__rarity">{safeRarity}</span>{/if}
         </div>
       </div>
     </div>
-    {#if hasScore}
-      {#key result}
-        <details class="profile-roll-summary__details">
-          <summary>View roll details</summary>
-          <p>Score <strong>{scoreValue.toLocaleString()}</strong></p>
-        </details>
-      {/key}
-    {/if}
   {:else}
     <p class="profile-roll-summary__empty">No color rolled yet.</p>
   {/if}
@@ -93,24 +85,7 @@
     font-size: .65rem;
     line-height: 1.4;
   }
-  .profile-roll-summary__details { font-size: .65rem; line-height: 1.4; }
-  .profile-roll-summary__details summary {
-    width: fit-content;
-    min-height: 24px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: .2em;
-    list-style: none;
-  }
-  .profile-roll-summary__details summary::-webkit-details-marker { display: none; }
-  .profile-roll-summary__details summary:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 3px;
-    border-radius: 2px;
-  }
-  .profile-roll-summary__details p { margin: .15rem 0 0; }
+  .profile-roll-summary__rarity { color: var(--profile-roll-summary-rarity, currentColor); }
   .profile-roll-summary__empty { margin: 0; font-size: .75rem; }
   .profile-roll-summary--compact .profile-roll-summary__identity { font-size: .76rem; }
 </style>

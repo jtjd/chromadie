@@ -24,11 +24,19 @@ heading and roll-label props preserve existing renderer defaults.
 
 The static roll widget follows the same composition boundary: its parent
 profile owns the surface, spacing, and text palette. The widget contributes
-only the swatch and bounded color metadata; score remains available through a
-native keyboard-accessible disclosure so the profile does not become a card
-inside a card. The shared widget contract is used by Compact, Sleek, Modern,
-Portfolio, Studio, and the curated homepage example, while the interactive
-roll and full condition breakdown remain dedicated to `/roll`.
+only the swatch and bounded color metadata; rarity uses the canonical rarity
+presentation color, and score is intentionally omitted so the profile does
+not become a card inside a card. The shared widget contract is used by
+Compact, Sleek, Modern, Portfolio, Studio, and the curated homepage example,
+while the interactive roll and full condition breakdown remain dedicated to
+`/roll`.
+
+The authenticated `get_my_profile()` projection must include the same bounded
+`display_name` and `bio` identity fields used by Profile Studio. Keeping the
+owner bootstrap complete prevents a saved bio from hydrating as empty and then
+being overwritten by a later publish. The publish adapter also merges the
+mounted editor draft with its tab-persistent identity state so the latest bio
+keystrokes survive a publish click or tab remount.
 
 Production smoke exposed a separate existing initialization defect: a new
 account has no profile_configurations row, and get_my_profile_configuration_v2

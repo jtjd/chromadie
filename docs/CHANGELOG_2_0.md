@@ -10,8 +10,12 @@ Document user-visible redesign changes by milestone.
 - The daily roll has more presence, an explicit invitation, and a prominent
   View your profile action after rolling. The next-roll timer is quiet status.
 - Static profile roll summaries now inherit their host surface instead of
-  rendering a nested card; the swatch, identity, color metadata, and score
-  disclosure remain available without duplicating the playable roll.
+  rendering a nested card; the swatch, identity, and color metadata remain
+  available without duplicating the playable roll, and rarity text uses its
+  canonical rarity color.
+- Profile Studio now hydrates and publishes the existing bio correctly,
+  including it in the authenticated owner profile projection and preserving
+  the latest draft while switching Customize tabs.
 - Empty boards take less space, scoring examples explain concrete colors, and
   a curated Tjz profile demonstrates how a personal profile can look.
 - Guest results accurately describe local storage rather than claiming they

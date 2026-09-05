@@ -424,7 +424,12 @@
   }
 
   function getDashboardIdentity() {
-    return studioIdentityDraft || getDashboardEditor()?.getDraftIdentity?.() || null;
+    const editorIdentity = getDashboardEditor()?.getDraftIdentity?.();
+    if (!studioIdentityDraft && !editorIdentity) return null;
+    // The mounted identity editor has the freshest keystroke-level value. The
+    // parent draft remains the source when the editor is remounted between
+    // Customize tabs, so publish always sees the latest bio in either state.
+    return { ...(studioIdentityDraft || {}), ...(editorIdentity || {}) };
   }
 
   function applyDashboardConfiguration({ draft, published, updatedAt, publishedAt }) {
