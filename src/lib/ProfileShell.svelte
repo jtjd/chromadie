@@ -723,6 +723,7 @@
                   {:else}
                     <div class="profile-shell__empty">Pinned badges will appear here when this player chooses them.</div>
                   {/if}
+                  {#if isOwnProfile}<a class="profile-shell__record-link" href="/progression?tab=achievements">View all achievements</a>{/if}
                   <div class="profile-shell__story-divider" aria-hidden="true"></div>
                   <div class="profile-shell__story-heading">
                     <div>
@@ -746,6 +747,7 @@
                       </div>
                     </div>
                   {/if}
+                  {#if isOwnProfile}<a class="profile-shell__record-link" href="/progression?tab=collection">Open full collection</a>{/if}
                 </Module>
               {/if}
             {/each}
@@ -859,6 +861,8 @@
   .profile-shell__achievement-icon { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: color-mix(in srgb, var(--profile-accent) 18%, transparent); color: var(--profile-accent); font-size: 1.1rem; }
   .profile-shell__achievement strong { color: var(--color-ink-strong); font-size: var(--type-small); }
   .profile-shell__achievement p { margin: var(--space-1) 0 0; color: var(--color-ink-muted); font-size: var(--type-label); line-height: 1.4; }
+  .profile-shell__record-link { display:inline-flex; margin-top:var(--space-4); color:var(--color-ink-muted); font-size:var(--type-label); font-weight:650; text-decoration:none; }
+  .profile-shell__record-link:hover, .profile-shell__record-link:focus-visible { color:var(--profile-accent); }
   .profile-shell__story-divider { height: 1px; margin: var(--space-6) 0; background: var(--color-line-subtle); }
   .profile-shell__story-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
   .profile-shell__story-heading h3 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h3) / 1.1 var(--font-display-stack); }

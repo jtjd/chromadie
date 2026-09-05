@@ -3,12 +3,25 @@
   import { loadDailyRollColor, loadProgressionData } from './progressionData.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { getVividHexColor } from './profileAppearanceColors.js';
-  import { getRankState } from './ranks.js';
   import ProfileProgression from './ProfileProgression.svelte';
   import ProgressionPathIcon from './ProgressionPathIcon.svelte';
   import { accountState, authInitialized, isAuthenticated, profile, session } from './stores.js';
   import { supabase } from './supabase.js';
   import { normalizeHexColor } from './utils.js';
+
+  export let initialTab = 'journey';
+
+  const TAB_LABELS = Object.freeze({
+    journey: 'Journey',
+    achievements: 'Achievements',
+    collection: 'Collection',
+    history: 'History'
+  });
+  const DETAIL_LOADERS = Object.freeze({
+    achievements: () => import('./ProgressionAchievements.svelte'),
+    collection: () => import('./ProgressionCollection.svelte'),
+    history: () => import('./ProgressionHistory.svelte')
+  });
 
   let progression = null;
   let loading = true;
@@ -22,6 +35,19 @@
   let requestId = 0;
   let legacyBadgeMeta = {};
   let legacyBadgeLoadRequested = false;
+  let visiblePendingUnlocks = [];
+  let detailComponent = null;
+  let detailLoading = false;
+  let detailError = '';
+  let requestedDetailTab = '';
+  let unlockQueueComponent = null;
+  let unlockQueueRequested = false;
+
+  $: activeTab = TAB_LABELS[initialTab] ? initialTab : 'journey';
+  $: visiblePendingUnlocks = Array.isArray(progression?.pendingUnlocks) ? progression.pendingUnlocks : [];
+  $: if (accountProfile?.id && activeTab !== 'journey' && requestedDetailTab !== activeTab) {
+    void loadDetail(activeTab);
+  }
 
   $: accountId = $session?.user?.id || $profile?.id || '';
   $: accountProfile = $profile?.id && accountId && $profile.id === accountId ? $profile : {};
@@ -37,9 +63,6 @@
   $: accentVivid = getVividHexColor(accentColor, '#FFFFFF');
   $: accentInk = getReadableTextColor(accentVivid);
   $: currentStreak = Math.max(0, Number(progression?.currentStreak ?? accountProfile?.current_streak) || 0);
-  $: lifetimeEp = Math.max(0, Number(progression?.currentEp ?? accountProfile?.lifetime_ep) || 0);
-  $: pageRankState = getRankState(lifetimeEp);
-  $: pageRankPercent = Math.round((pageRankState?.progress || 0) * 100);
   $: focusGoal = resolveFocusGoal(progression);
   $: pageLoading = !$authInitialized
     || $accountState === ACCOUNT_STATES.PROFILE_LOADING
@@ -95,6 +118,9 @@
       if (currentRequestId !== requestId || userId !== $session?.user?.id) return;
 
       progression = result.data || {};
+      if (Array.isArray(result.data?.pendingUnlocks) && result.data.pendingUnlocks.length) {
+        void loadUnlockQueue();
+      }
       dailyRollColor = dailyRoll.color;
       dailyRollData = dailyRoll.data || null;
       dailyRollError = dailyRoll.error?.message || '';
@@ -118,6 +144,39 @@
   function retry() {
     if (!accountId || !$isAuthenticated) return;
     void loadProgressionContext(accountId);
+  }
+
+  async function loadDetail(tab) {
+    const loader = DETAIL_LOADERS[tab];
+    if (!loader) return;
+    requestedDetailTab = tab;
+    detailLoading = true;
+    detailError = '';
+    detailComponent = null;
+    try {
+      const module = await loader();
+      if (requestedDetailTab !== tab) return;
+      detailComponent = module.default;
+    } catch {
+      if (requestedDetailTab === tab) detailError = 'This part of your record could not be opened.';
+    } finally {
+      if (requestedDetailTab === tab) detailLoading = false;
+    }
+  }
+
+  async function loadUnlockQueue() {
+    if (unlockQueueComponent || unlockQueueRequested) return;
+    unlockQueueRequested = true;
+    try {
+      unlockQueueComponent = (await import('./ProgressionUnlockQueue.svelte')).default;
+    } catch {
+      unlockQueueRequested = false;
+    }
+  }
+
+  function handleUnlockAcknowledgement(event) {
+    const id = event.detail?.unlock?.id;
+    if (id) visiblePendingUnlocks = visiblePendingUnlocks.filter(unlock => unlock.id !== id);
   }
 
   function resolveRollSignals(data) {
@@ -199,7 +258,7 @@
 </script>
 
 <svelte:head>
-  <title>Progress · ChromaDie</title>
+  <title>{TAB_LABELS[activeTab]} · Progress · ChromaDie</title>
 </svelte:head>
 
 <div class="progression-page" style={`--progression-accent:${accentColor};--progression-accent-vivid:${accentVivid};--progression-accent-ink:${accentInk};--progression-accent-light:${accentVivid};--progression-accent-glow:color-mix(in srgb,${accentVivid} 42%,transparent);--progression-accent-glow-strong:color-mix(in srgb,${accentVivid} 68%,transparent)`}>
@@ -213,7 +272,7 @@
               <div class="progression-page__streak-copy">
                 <ProgressionPathIcon track="ritual" state="active" />
                 <strong>{currentStreak}-day streak</strong>
-                {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`}></span>{/if}
+                {#if todayColor}<span class="progression-page__color-chip" style={`--data-color:${todayColor}`} aria-label={`Today's rolled color ${todayColor}`} hidden></span>{/if}
                 <span class="progression-page__streak-days" aria-hidden="true">
                   {#each [0, 1, 2, 3, 4, 5, 6] as day (day)}<span class="progression-page__streak-day" class:progression-page__streak-day--active={day === 0 && currentStreak > 0}></span>{/each}
                 </span>
@@ -232,14 +291,13 @@
             </section>
           {/if}
         </div>
-        {#if accountProfile?.id}
-          <div class="progression-page__header-meta" aria-label="Active progress">
-            <span>Active progress</span>
-            <strong>{pageRankPercent}%</strong>
-            <small>{pageRankState.current?.name || 'Unranked'} rank</small>
-          </div>
-        {/if}
       </header>
+
+      <nav class="progression-page__tabs" aria-label="Progress record">
+        {#each Object.entries(TAB_LABELS) as [tab, label] (tab)}
+          <a href={tab === 'journey' ? '/progression' : `/progression?tab=${tab}`} aria-current={activeTab === tab ? 'page' : undefined}>{label}</a>
+        {/each}
+      </nav>
 
       {#if accountProfile?.id && error}
         <div class="progression-page__warning" role="status">
@@ -280,25 +338,40 @@
           <button type="button" class="site-button site-button--secondary" on:click={retry}>Retry</button>
         </section>
       {:else if accountProfile?.id}
-        <ProfileProgression
-          profile={accountProfile}
-          timelineEvents={[]}
-          collectionItems={[]}
-          allAchievements={[]}
-          unlockedAchievements={{}}
-          {progression}
-          {featureFlags}
-          currentRollColor={todayColor}
-          {dailyRollData}
-          {dailyRollHex}
-          {dailyRollLoaded}
-          {dailyRollError}
-          {hasRolledToday}
-          {rollSignals}
-          dailyFocusGoal={focusGoal}
-          pageMode={true}
-          analyticsSurface="progression"
-        />
+        {#if activeTab === 'journey'}
+          {#if visiblePendingUnlocks.length && unlockQueueComponent}
+            <svelte:component
+              this={unlockQueueComponent}
+              unlocks={visiblePendingUnlocks}
+              surface="progression"
+              username={accountProfile.display_name || accountProfile.username || 'You'}
+              displayColor={todayColor || accountProfile.mood_color || '#FFFFFF'}
+              compact={true}
+              on:acknowledge={handleUnlockAcknowledgement}
+            />
+          {/if}
+          <ProfileProgression
+            profile={accountProfile}
+            {progression}
+            {featureFlags}
+            currentRollColor={todayColor}
+            {dailyRollData}
+            {dailyRollHex}
+            {dailyRollLoaded}
+            {dailyRollError}
+            {hasRolledToday}
+            {rollSignals}
+            dailyFocusGoal={focusGoal}
+            pageMode={true}
+            analyticsSurface="progression"
+          />
+        {:else if detailLoading}
+          <section class="progression-page__state" role="status" aria-busy="true"><div><strong>Opening {TAB_LABELS[activeTab].toLowerCase()}</strong><p>Reading this part of your profile record.</p></div></section>
+        {:else if detailError}
+          <section class="progression-page__state" role="alert"><div><strong>Record unavailable</strong><p>{detailError}</p></div><button type="button" class="site-button site-button--secondary" on:click={() => loadDetail(activeTab)}>Retry</button></section>
+        {:else if detailComponent}
+          <svelte:component this={detailComponent} userId={accountId} {progression} {accountProfile} />
+        {/if}
       {/if}
     </div>
   </div>
@@ -335,8 +408,6 @@
     text-transform: uppercase;
   }
 
-  .progression-page__color-chip { display:none; }
-
   .progression-page__intro h1 {
     margin: 0;
     color: var(--progression-text);
@@ -345,24 +416,7 @@
     text-transform: uppercase;
   }
 
-  .progression-page__header-meta {
-    display:none;
-    justify-items:end;
-    gap:.2rem;
-    min-width:9rem;
-    color:var(--progression-muted);
-    text-align:right;
-  }
-
-  .progression-page__header-meta span,
-  .progression-page__header-meta small {
-    color:var(--progression-muted);
-    font:500 .72rem/1.25 var(--font-body-stack, sans-serif);
-  }
-
-  .progression-page__header-meta span { letter-spacing:.09em; text-transform:uppercase; }
-  .progression-page__header-meta strong { color:var(--progression-text); font:600 1rem/1.1 var(--font-display-stack, sans-serif); }
-  .progression-page__header-meta small { font-size:.68rem; }
+  .progression-page__tabs{display:flex;gap:.3rem;overflow-x:auto;padding:.25rem;border:1px solid var(--progression-line);border-radius:.8rem;background:var(--surface,#161619);scrollbar-width:none}.progression-page__tabs::-webkit-scrollbar{display:none}.progression-page__tabs a{flex:1 0 auto;min-width:7rem;padding:.65rem .85rem;border-radius:.6rem;color:var(--progression-muted);font:650 .72rem/1 var(--font-body-stack,sans-serif);text-align:center;text-decoration:none}.progression-page__tabs a[aria-current="page"]{background:var(--surface-strong,#242429);color:var(--progression-text);box-shadow:inset 0 -2px var(--progression-accent-vivid)}.progression-page__tabs a:focus-visible{outline:2px solid var(--progression-text);outline-offset:2px}
 
   .progression-page__account-bar {
     display:flex;
@@ -502,7 +556,6 @@
     }
 
     .progression-page__intro { align-items:flex-start; flex-direction:column; gap:1.25rem; }
-    .progression-page__header-meta { justify-items:start; text-align:left; }
     .progression-page__account-bar { width:100%; }
 
     .progression-page__state,

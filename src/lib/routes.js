@@ -8,10 +8,12 @@ import {
 } from './routeContract.js';
 
 export const VALID_VIEWS = Object.freeze(['home', 'game', 'leaderboard', 'profile', 'profile-settings', 'progression', 'prototype', 'pricing'])
-export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'monthly'])
+export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'monthly', 'rivals'])
+export const VALID_PROGRESSION_TABS = Object.freeze(['journey', 'achievements', 'collection', 'history'])
 
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
 const VALID_LEADERBOARD_TAB_SET = new Set(VALID_LEADERBOARD_TABS)
+const VALID_PROGRESSION_TAB_SET = new Set(VALID_PROGRESSION_TABS)
 const CLEAN_APP_PATHS = new Set(['/', '/roll', '/shop', '/leaderboard', '/profile', '/profile/settings', '/progression', '/pricing', '/pricing/success'])
 
 export function isPrototypeRouteEnabled() {
@@ -20,6 +22,7 @@ export function isPrototypeRouteEnabled() {
 
 export function viewToCanonicalPath(view, {
   tab = 'today',
+  progressionTab = 'journey',
   username = null,
   userId = null,
   legacyProfile = false,
@@ -38,8 +41,14 @@ export function viewToCanonicalPath(view, {
     }
     case 'profile-settings':
       return '/profile/settings';
-    case 'progression':
-      return '/progression';
+    case 'progression': {
+      const params = new URLSearchParams();
+      if (VALID_PROGRESSION_TAB_SET.has(progressionTab) && progressionTab !== 'journey') {
+        params.set('tab', progressionTab);
+      }
+      const search = params.toString();
+      return `/progression${search ? `?${search}` : ''}`;
+    }
     case 'prototype':
       return prototypeEnabled ? '/prototype/profile' : null;
     case 'pricing':
@@ -138,6 +147,7 @@ export function parseRouteLocation(pathname = '/', search = '', {
           ? routeView
         : getCleanPathView(rawPath, prototypeEnabled) || 'home',
     leaderboardTab: VALID_LEADERBOARD_TAB_SET.has(routeTab) ? routeTab : 'today',
+    progressionTab: VALID_PROGRESSION_TAB_SET.has(routeTab) ? routeTab : 'journey',
     profileUsername,
     profileRouteKind,
     legacyProfile: params.get('legacy') === '1',

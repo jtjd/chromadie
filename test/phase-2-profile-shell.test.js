@@ -45,6 +45,9 @@ function createFakeSupabase({ profile, profileError = null, scores = [], achieve
     async rpc(name, args) {
       calls.push({ type: 'rpc', name, args });
       if (name === 'get_my_profile') return { data: profile, error: profileError };
+      if (name === 'get_public_profile_identity' || name === 'get_public_profile_identity_by_id') {
+        return { data: profile, error: profileError };
+      }
       if (name === 'get_public_profile_scores') return { data: scores, error: null };
       return { data: null, error: null };
     }
@@ -109,7 +112,8 @@ test('profile context keeps visitor data public and does not request unlock prog
   assert.equal(context.targetProfile.id, 'user-2');
   assert.deepEqual(context.unlockedAchievements, {});
   assert.equal(supabase.calls.some(call => call.type === 'rpc' && call.name === 'get_my_profile'), false);
-  assert.equal(supabase.calls.some(call => call.type === 'select' && call.table === 'profiles'), true);
+  assert.equal(supabase.calls.some(call => call.type === 'rpc' && call.name === 'get_public_profile_identity'), true);
+  assert.equal(supabase.calls.some(call => call.type === 'select' && call.table === 'profiles'), false);
   assert.equal(supabase.calls.some(call => call.type === 'select' && call.table === 'user_achievements'), false);
 });
 

@@ -5466,3 +5466,41 @@ responsive desktop two-column/mobile stacked composition.
   changing catalog rows, entitlements, or database state.
 - Added source evidence, profile links, fidelity tests, and explicit reduced-
   motion/static fallbacks in [COMPETITOR_EFFECT_RESEARCH.md](COMPETITOR_EFFECT_RESEARCH.md).
+
+## Owner surface accessibility — 2026-09-04
+
+- Expanded `/progression` into direct-linkable Journey, Achievements,
+  Collection, and History tabs, with lazy data loading and an owner unlock
+  queue.
+- Added achievement state/progress filters and direct badge pinning, a complete
+  found/locked condition catalog with hints, and a compact 40-row paginated
+  profile-event history.
+- Restored the existing profile content and provider-widget editors as the
+  Studio Content tab and connected them to the shared draft, preview, dirty
+  state, and publish flow.
+- Added an authenticated Rivals leaderboard tab for all existing follows,
+  including privacy-safe inaccessible placeholders and removal.
+- Added owner-only progression and rivals RPCs, plus database behavior tests
+  covering grants, auth boundaries, pagination, activity privacy, block
+  redaction, and relationship removal.
+- Removed stale lint failures in the scoring generator and scoring contract
+  test. The build, Svelte checks, repository-wide ESLint, 526 tests, clean
+  local database reset, schema lint, and owner-surface database checks pass.
+- Link, CSP, performance, username-policy, balance, catalog, scoring parity,
+  generated scoring-spec, database-security, and authenticated Chromium checks
+  also pass. Browser evidence covers desktop, mobile, reduced motion, the three
+  new owner records, Studio Content, and Rivals.
+
+Follow-up from the September 4 audit is intentionally bounded: the owner
+surface SQL check is now part of database CI, compatibility fallback behavior
+is restricted to explicit missing-RPC errors, and user-facing copy no longer
+claims knowledge of private Rival activity or universal historical completeness.
+`profile_events` remains a monitored scale decision; no retention migration is
+being introduced until aggregate, compaction, archive, or partition behavior
+can be selected with production-volume evidence.
+
+The final owner-authoring follow-up is also complete: failed V2 configuration
+reads return no synthetic editable draft, preserve a prior snapshot only as a
+read-only display, disable publish/reset and configuration editors, and expose
+a retry path. Full-context refreshes use the same invariant and cannot replace
+an authoritative configuration with failed-read defaults.

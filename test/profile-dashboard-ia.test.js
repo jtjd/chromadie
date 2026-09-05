@@ -57,7 +57,10 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(identity, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 2; grid-row: 4;/);
   assert.match(identity, /identity-editor__grid--meta \.identity-editor__field:first-child/);
   assert.match(identity, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
-  assert.doesNotMatch(customize, /id="customize-other"|id="customize-content"|id="customize-widgets"|contentComponent|widgetComponent/);
+  assert.doesNotMatch(customize, /id="customize-other"/);
+  assert.match(customize, /id="customize-content"/);
+  assert.match(customize, /contentComponent/);
+  assert.match(customize, /widgetComponent/);
   for (const label of ['Profile text', 'Handle & metadata', 'Username', 'Bio text', 'Page background', 'Profile surface', 'Accent']) {
     assert.match(appearanceColors, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
@@ -71,7 +74,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(appearance, /Profile colors/);
   assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
   assert.match(studio, /ProfilePremiumPage\.svelte/);
-  for (const section of ['media', 'identity', 'appearance', 'effects', 'links', 'layout']) {
+  for (const section of ['media', 'content', 'identity', 'appearance', 'effects', 'links', 'layout']) {
     assert.match(customize, new RegExp(`id="customize-${section === 'identity' || section === 'effects' ? section : section}"`));
   }
   assert.doesNotMatch(customize, /data-editor-section=|hidden=|class:is-tab-hidden/);
@@ -96,7 +99,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);
   assert.match(studio, /role="tablist" aria-label="Customize profile"/);
-  assert.match(studio, /Appearance[\s\S]*Media[\s\S]*Links[\s\S]*Layout/);
+  assert.match(studio, /Appearance[\s\S]*Media[\s\S]*Content[\s\S]*Links[\s\S]*Layout/);
   assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
   assert.match(studio, /'customize-effects': 'appearance'/);
   assert.match(customize, /export let activeTab = 'appearance'/);

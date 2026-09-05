@@ -62,7 +62,7 @@ test('provider widget renderer and storage contract remain allowlisted', async (
   assert.match(renderer, /deferMedia/);
   assert.doesNotMatch(renderer, /innerHTML|new Function|eval\s*\(/);
   assert.match(shell, /<ProfileWidgets/);
-  assert.doesNotMatch(registry, /ProfileWidgetEditor\.svelte/);
+  assert.match(registry, /ProfileWidgetEditor\.svelte/);
   assert.match(migration, /normalize_profile_widgets/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content', 'widgets'\)/);
   assert.match(migration, /SECURITY DEFINER/);

@@ -42,6 +42,9 @@ function createStorySupabase({ profile, story }) {
     async rpc(name, args) {
       calls.push({ type: 'rpc', name, args });
       if (name === 'get_my_profile') return { data: profile, error: null };
+      if (name === 'get_public_profile_identity' || name === 'get_public_profile_identity_by_id') {
+        return { data: profile, error: null };
+      }
       if (name === 'get_public_profile_scores') return { data: [], error: null };
       if (name === 'get_public_profile_story') return { data: story, error: null };
       if (name === 'get_my_profile_configuration') {

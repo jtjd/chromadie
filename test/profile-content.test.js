@@ -54,7 +54,8 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.doesNotMatch(content, /innerHTML|iframe|new Function|eval\s*\(/);
   assert.match(shell, /<ProfileContent/);
   assert.match(renderModel, /getVisibleProfileContent/);
-  assert.doesNotMatch(registry, /ProfileContentEditor\.svelte/);
+  assert.match(registry, /ProfileContentEditor\.svelte/);
+  assert.match(settings, /activeCustomizeTab === 'content'/);
   assert.match(migration, /normalize_profile_content/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content'\)/);
   assert.match(migration, /profile_content_patch/);

@@ -13,13 +13,11 @@
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
-  import { V6_SCORE_ACHIEVEMENT_THRESHOLDS } from './balanceConfig.js';
+  import { NON_PINNABLE_BADGE_IDS, resolveAchievementProgress } from './achievementProgress.js';
 
   export let profileUsername = null;
   export let userId = null;
   const dispatch = createEventDispatcher();
-  const NON_PINNABLE_BADGE_IDS = new Set(['launch_edition']);
-  const SCORE_ACHIEVEMENT_TARGETS = V6_SCORE_ACHIEVEMENT_THRESHOLDS;
 
   let targetProfile = null;
   let targetScores = [];
@@ -247,21 +245,11 @@
   }
 
   function getProgress(achId) {
-    if (/^roll_\d+$/.test(achId)) {
-      const target = parseInt(achId.replace('roll_', ''));
-      return { current: totalRolls, target: target };
-    }
-    if (/^streak_\d+$/.test(achId)) {
-      const target = parseInt(achId.replace('streak_', ''));
-      return { current: targetProfile?.longest_streak || 0, target: target };
-    }
-    if (SCORE_ACHIEVEMENT_TARGETS[achId]) {
-      return {
-        current: Number(displayBestRoll?.score) || 0,
-        target: SCORE_ACHIEVEMENT_TARGETS[achId]
-      };
-    }
-    return null;
+    return resolveAchievementProgress(achId, {
+      totalRolls,
+      longestStreak: targetProfile?.longest_streak,
+      bestScore: displayBestRoll?.score
+    });
   }
 
   function formatStat(value) {

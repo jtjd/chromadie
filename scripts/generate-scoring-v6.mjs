@@ -16,12 +16,10 @@ import {
   CONDITION_PROBABILITY_TIERS,
   RGB_COLOR_COUNT,
   SCORE_MODEL_V6_VERSION,
-  V6_SCORE_ACHIEVEMENT_THRESHOLDS_V5,
   getConditionRarityFromProbability,
   getSemanticBonus,
   interpolateProbabilityReward
 } from '../src/lib/scoringV6Spec.js';
-import v6BalanceFixture from '../src/lib/generated/scoringV6BalanceFixture.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,7 +32,6 @@ const generatedSqlPath = path.join(repoRoot, 'supabase/generated/scoringV6Evalua
 // emitted as forward-only replacements so stored roll outcomes keep their
 // original interpretation.
 const generatedMigrationPath = path.join(repoRoot, 'supabase/migrations/20260831110000_score_model_v6_bee_catalog.sql');
-const V6_SCORE_ACHIEVEMENT_THRESHOLDS = v6BalanceFixture.progression.scoreAchievementThresholds;
 
 const hasCheckFlag = process.argv.includes('--check');
 const hasJsonFlag = process.argv.includes('--json');
@@ -361,28 +358,6 @@ function buildSqlEvaluator(manifest) {
     '    v_score := v_score + v_awarded;',
     "    IF v_score > 9223372036854775807 - v_awarded THEN RAISE EXCEPTION 'v6 score exceeds bigint capacity'; END IF;\n    v_score := v_score + v_awarded;"
   ).replace('\nIMMUTABLE\nSECURITY DEFINER', '\nSTABLE\nSECURITY DEFINER');
-}
-
-function buildMigrationBody(sqlEvaluator) {
-  return `-- Score model v6 corrected probability catalog.\n-- GENERATED evaluator sections are produced by scripts/generate-scoring-v6.mjs.\nBEGIN;\n\nDO $preserve_v6_history$\nDECLARE\n  v_has_v6_rows boolean;\nBEGIN\n  IF to_regprocedure('public.calculate_roll_v6(integer,integer,integer)') IS NULL THEN\n    RAISE EXCEPTION 'The historical calculate_roll_v6 function is required before installing corrected v6';\n  END IF;\n  IF to_regprocedure('public.calculate_roll_v6_legacy(integer,integer,integer)') IS NOT NULL THEN\n    RAISE EXCEPTION 'calculate_roll_v6_legacy already exists; refusing to alter score history twice';\n  END IF;\n  SELECT EXISTS (SELECT 1 FROM public.scores WHERE score_version = 6) INTO v_has_v6_rows;\n  ALTER FUNCTION public.calculate_roll_v6(integer,integer,integer) RENAME TO calculate_roll_v6_legacy;\n  REVOKE ALL ON FUNCTION public.calculate_roll_v6_legacy(integer,integer,integer) FROM PUBLIC, anon, authenticated, service_role;\n  IF v_has_v6_rows THEN\n    RAISE NOTICE 'Preserved existing score_version = 6 rows behind calculate_roll_v6_legacy';\n  END IF;\nEND;\n$preserve_v6_history$;\n\n${sqlEvaluator}\n\nDO $patch_roll_v6_corrected$\nDECLARE\n  v_definition text;\nBEGIN\n  SELECT pg_get_functiondef('public.roll_die_impl_pre_audit(boolean)'::regprocedure)\n  INTO v_definition;\n\n  IF position('public.calculate_roll_v6(' IN v_definition) = 0\n     AND position('public.calculate_roll_v5(' IN v_definition) = 0\n     AND position('public.calculate_roll_v4(' IN v_definition) = 0\n     AND position('public.calculate_roll_v3(' IN v_definition) = 0 THEN\n    RAISE EXCEPTION 'roll_die_impl_pre_audit no longer exposes a supported scoring call';\n  END IF;\n  v_definition := replace(v_definition, 'public.calculate_roll_v5(', 'public.calculate_roll_v6(');\n  v_definition := replace(v_definition, 'public.calculate_roll_v4(', 'public.calculate_roll_v6(');\n  v_definition := replace(v_definition, 'public.calculate_roll_v3(', 'public.calculate_roll_v6(');\n  v_definition := replace(v_definition, 'score_version = 5', 'score_version = 6');\n  v_definition := replace(v_definition, 'score_version = 4', 'score_version = 6');\n  v_definition := replace(v_definition, 'score_version = 3', 'score_version = 6');\n  v_definition := replace(\n    v_definition,\n    'VALUES (v_user_id, v_hex_upper, v_total_score, v_rarity, public.game_utc_date(), ''[]''::jsonb, 5);',\n    'VALUES (v_user_id, v_hex_upper, v_total_score, v_rarity, public.game_utc_date(), ''[]''::jsonb, 6);'\n  );\n  v_definition := replace(\n    v_definition,\n    'VALUES (v_user_id, v_hex_upper, v_total_score, v_rarity, public.game_utc_date(), ''[]''::jsonb, 4);',\n    'VALUES (v_user_id, v_hex_upper, v_total_score, v_rarity, public.game_utc_date(), ''[]''::jsonb, 6);'\n  );\n  v_definition := replace(\n    v_definition,\n    'VALUES (v_user_id, v_hex_upper, v_total_score, v_rarity, public.game_utc_date(), ''[]''::jsonb, 3);',\n    'VALUES (v_user_id, v_hex_upper, v_total_score, v_rarity, public.game_utc_date(), ''[]''::jsonb, 6);'\n  );\n  EXECUTE v_definition;\nEND;\n$patch_roll_v6_corrected$;\n\nCOMMIT;\n`;
-}
-
-function buildAchievementThresholdPatch() {
-  const replacements = Object.entries(V6_SCORE_ACHIEVEMENT_THRESHOLDS).map(([id, threshold]) => {
-    const historicalThreshold = V6_SCORE_ACHIEVEMENT_THRESHOLDS_V5[id];
-    return `  v_definition := replace(v_definition, 'v_total_score >= ${historicalThreshold}', 'v_total_score >= ${threshold}');`;
-  }).join('\n');
-
-  return `DO $patch_v6_score_achievement_thresholds$
-DECLARE
-  v_definition text;
-BEGIN
-  SELECT pg_get_functiondef('public.roll_die_impl_pre_audit(boolean)'::regprocedure)
-  INTO v_definition;
-${replacements}
-  EXECUTE v_definition;
-END;
-$patch_v6_score_achievement_thresholds$;`;
 }
 
 function buildMigration(sqlEvaluator) {

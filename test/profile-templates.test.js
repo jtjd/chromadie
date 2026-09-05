@@ -25,7 +25,7 @@ test('profile config carries the paired layout marker without changing safe defa
   assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'custom', layoutVariant: 'modern' }).templateKey, 'compact');
 });
 
-test('the redesigned Customize surface has no template picker or obsolete editor layers', async () => {
+test('the redesigned Customize surface has no template picker and registers structured content editors', async () => {
   const [customize, registry, links, workspace, settings, cosmetics, preview, shell, migration] = await Promise.all([
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
@@ -40,10 +40,13 @@ test('the redesigned Customize surface has no template picker or obsolete editor
 
   assert.doesNotMatch(customize, /ProfileTemplatePicker|showLayout|showLinks/);
   assert.match(registry, /ProfileLinksEditor\.svelte/);
-  assert.doesNotMatch(registry, /ProfileEditor\.svelte|ProfileContentEditor\.svelte|ProfileWidgetEditor\.svelte/);
+  assert.doesNotMatch(registry, /ProfileEditor\.svelte/);
+  assert.match(registry, /ProfileContentEditor\.svelte/);
+  assert.match(registry, /ProfileWidgetEditor\.svelte/);
   assert.match(links, /export function validateDraft/);
   assert.match(links, /PROFILE_LINK_DEFINITIONS/);
-  assert.doesNotMatch(workspace, /profile-content|profile-widgets|contentEditor|widgetEditor/);
+  assert.match(customize, /contentEditor/);
+  assert.match(customize, /widgetEditor/);
   assert.match(workspace, /identityDraft=\{studioIdentityDraft\}/);
   assert.match(customize, /stagedLoadout=\{cosmeticPreviewLoadout\}/);
   assert.match(settings, /cosmeticPreviewLoadout = null/);

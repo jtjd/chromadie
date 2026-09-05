@@ -65,6 +65,7 @@ test('public route parsing preserves profile, challenge, and app route contracts
     routeMode: 'app',
     view: 'profile',
     leaderboardTab: 'today',
+    progressionTab: 'journey',
     profileUsername: 'NeonUser',
     profileRouteKind: 'compatibility',
     legacyProfile: false,

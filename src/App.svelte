@@ -32,6 +32,7 @@
     : null;
   let view = initialRoute?.view || 'home';
   let leaderboardTab = initialRoute?.leaderboardTab || 'today';
+  let progressionTab = initialRoute?.progressionTab || 'journey';
   let routeMode = initialRoute?.routeMode || 'app';
   let authRouteTab = initialRoute?.authTab || 'login';
   let authRouteNext = initialRoute?.authNext || '';
@@ -84,6 +85,34 @@
 
     trackCurrentRoute();
   }
+
+  function redirectSignedOutRivals() {
+    const nextPath = '/leaderboard?tab=rivals';
+    routeMode = 'auth';
+    view = 'home';
+    authRouteTab = 'login';
+    authRouteNext = nextPath;
+    authRouteUsername = '';
+    selectedProfileUsername = null;
+    profileRouteKind = null;
+    selectedUserId.set(null);
+    legacyProfile = false;
+    challengeData = null;
+
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', `/login?next=${encodeURIComponent(nextPath)}`);
+    }
+    trackCurrentRoute();
+  }
+
+  $: if (
+    routeInitialized
+    && $authInitialized
+    && $accountState === ACCOUNT_STATES.SIGNED_OUT
+    && routeMode === 'app'
+    && view === 'leaderboard'
+    && leaderboardTab === 'rivals'
+  ) redirectSignedOutRivals();
   function getProfileVisualFixture() {
     if (!import.meta.env.DEV || typeof window === 'undefined' || window.location.hostname !== '127.0.0.1') return '';
     const value = new URLSearchParams(window.location.search).get('profile_fixture');
@@ -100,7 +129,8 @@
     const surfaceKey = route === 'profile'
       ? selectedProfileUsername ? 'username' : $selectedUserId ? 'id' : 'self'
       : '';
-    const routeKey = `${route}:${surfaceKey}:${leaderboardTab}`;
+    const activeTab = route === 'leaderboard' ? leaderboardTab : route === 'progression' ? progressionTab : '';
+    const routeKey = `${route}:${surfaceKey}:${activeTab}`;
     if (routeKey === lastTrackedRouteKey) return;
     lastTrackedRouteKey = routeKey;
     trackProductEvent('route_view', { route });
@@ -188,6 +218,7 @@
       challengeData = null;
     }
     leaderboardTab = parsed.leaderboardTab;
+    progressionTab = parsed.progressionTab;
     routeInitialized = true;
     trackCurrentRoute();
   }
@@ -241,6 +272,7 @@
       ? '/pricing/success'
       : viewToCanonicalPath(view, {
         tab: leaderboardTab,
+        progressionTab,
         username: routeUsername,
         userId: $selectedUserId,
         legacyProfile
@@ -313,6 +345,7 @@
     updateHomepageHeaderTransition({ routeMode: 'app', view: nextView });
     const nextPath = viewToCanonicalPath(nextView, {
       tab: options.tab || leaderboardTab,
+      progressionTab: nextView === 'progression' ? options.tab || progressionTab : progressionTab,
       username: options.username || options.profileUsername || $profile?.username || $authUser?.user_metadata?.username || null,
       userId: options.userId || null,
       legacyProfile: Boolean(options.legacyProfile)
@@ -503,6 +536,7 @@
     routeMode: currentRouteMode,
     view: currentView,
     tab,
+    progressionTab: currentProgressionTab,
     isAuthenticated: authenticated,
     sessionState,
     authInitialized: initialized,
@@ -605,8 +639,8 @@
     if (currentView === 'progression') {
       return {
         loaderKey: 'progression',
-        componentKey: 'progression',
-        componentProps: {},
+        componentKey: `progression:${currentProgressionTab}`,
+        componentProps: { initialTab: currentProgressionTab },
         loadingLabel: 'Opening progress'
       };
     }
@@ -685,6 +719,7 @@
     routeMode,
     view,
     tab: leaderboardTab,
+    progressionTab,
     isAuthenticated: $isAuthenticated,
     sessionState: $session,
     authInitialized: $authInitialized,

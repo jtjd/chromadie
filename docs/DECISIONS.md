@@ -6807,3 +6807,62 @@ validated profile URL boundary, visibility throttling, mobile behavior, and
 but remains on Chromadie's existing bounded atmosphere layer; no database or
 catalog entitlement change is part of this slice. Full evidence and links are
 in [COMPETITOR_EFFECT_RESEARCH.md](COMPETITOR_EFFECT_RESEARCH.md).
+
+## 2026-09-04 — Give durable progression records one canonical owner surface
+
+Existing achievements, discovered score conditions, and roll history now live
+under `/progression` as direct-linkable Journey, Achievements, Collection, and
+History tabs. The new views read the existing authoritative records and active
+v6 scoring catalog; they do not introduce a second achievement, collection, or
+history store. Locked collection entries reveal their names and hints because
+the catalog is already public game knowledge, while roll results and unlock
+state remain owner-scoped.
+
+Large records are loaded only when their tab opens. History uses a 40-row
+keyset page, collection is returned as a bounded aggregate, and achievement
+pinning continues through the existing badge RPC. This keeps the profile as
+the outward expression of progress without moving progression authority into
+the browser.
+
+## 2026-09-04 — Restore content editing and rivals through existing shells
+
+Profile content and provider widgets are exposed as a Content tab in Studio,
+using the existing validated v2 profile configuration and publish RPC. This is
+a restoration of a hidden capability, not a new free-form content system:
+existing length, count, provider, URL, and renderer boundaries still apply.
+
+Rivals are exposed as an authenticated Leaderboard tab backed by the existing
+five-follow relationship. Blocked or otherwise inaccessible followed accounts
+remain removable through an intentionally sparse placeholder, private activity
+does not disclose today's roll, and adding a rival retains all existing block,
+privacy, rate-limit, and capacity checks.
+
+## 2026-09-04 — Keep profile event scale work ahead of retention pressure
+
+`profile_events` remains the durable source for the recorded History surface,
+but it is not an unlimited free-form analytics store. We will preserve the
+current detailed event rows while activity volume is modest and avoid a
+premature migration that could endanger historical records. Before sustained
+multi-year or large-scale traffic, evaluate a compact per-user/per-condition
+aggregate maintained at write time, then choose between compaction, archival,
+or partitioning for payload fields that lifetime History does not need.
+
+Collection should eventually read the aggregate for discovery counts rather
+than repeatedly unpacking every historical JSON condition array. Any future
+retention or archive change must preserve the owner-only History contract and
+the existing server-authoritative roll record boundary.
+
+## 2026-09-04 — Keep owner configuration authoring fail-closed
+
+An owner Profile Studio read failure must never manufacture an editable default
+configuration. The V2 loader now returns no owner configuration and marks the
+configuration unavailable for transient, permission, and malformed responses;
+legacy fallback remains limited to an explicitly missing RPC. A previously
+loaded configuration may remain visible during a failed refresh, but the
+authoring gate stays closed and its publish/reset token cannot be used.
+
+Configuration-dependent Studio sections show a retry state, while unrelated
+account, social, progression, and read-only surfaces remain available. A
+successful authoritative load clears the unavailable state. This keeps public
+profile visual degradation separate from owner authoring and prevents a failed
+read from turning `p_expected_updated_at = NULL` into an overwrite path.

@@ -2,17 +2,20 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import { supabase } from './supabase';
   import LeaderboardEntry from './LeaderboardEntry.svelte';
+  import RivalRow from './RivalRow.svelte';
   import {
     DISCOVERY_PAGE_SIZE,
     getDiscoverySurface,
-    normalizeDiscoveryResponse
+    normalizeDiscoveryResponse,
+    normalizeMyRivalsResponse
   } from './discoveryData.js';
   import { VALID_LEADERBOARD_TABS } from './routes.js';
+  import { toggleFollow } from './stores.js';
 
   export let initialTab = 'today';
 
   const dispatch = createEventDispatcher();
-  const LEADERBOARD_TAB_ORDER = Object.freeze(['monthly', 'today']);
+  const LEADERBOARD_TAB_ORDER = Object.freeze(['monthly', 'today', 'rivals']);
   const TAB_META = {
     today: {
       label: 'Today',
@@ -23,6 +26,11 @@
       label: 'This month',
       title: "This month's top rolls",
       description: "Best scores recorded by each player this month."
+    },
+    rivals: {
+      label: 'Rivals',
+      title: 'Your rivals today',
+      description: 'The five profiles you follow, with today’s public roll when available.'
     }
   };
 
@@ -34,6 +42,7 @@
   let hasMore = false;
   let currentPage = 0;
   let loadRequestId = 0;
+  let removingId = '';
 
   $: meta = TAB_META[activeTab] || TAB_META.today;
 
@@ -50,13 +59,15 @@
     }
     loadError = '';
 
-    const { data, error } = await supabase.rpc('get_public_discovery', {
-      p_surface: getDiscoverySurface(activeTab),
-      p_rarity: null,
-      p_query: null,
-      p_page: requestedPage,
-      p_limit: DISCOVERY_PAGE_SIZE
-    });
+    const { data, error } = activeTab === 'rivals'
+      ? await supabase.rpc('get_my_rivals')
+      : await supabase.rpc('get_public_discovery', {
+        p_surface: getDiscoverySurface(activeTab),
+        p_rarity: null,
+        p_query: null,
+        p_page: requestedPage,
+        p_limit: DISCOVERY_PAGE_SIZE
+      });
 
     if (requestId !== loadRequestId) return;
     if (error) {
@@ -67,10 +78,16 @@
       return;
     }
 
-    const response = normalizeDiscoveryResponse(data);
-    items = reset ? response.items : [...items, ...response.items];
-    currentPage = response.page;
-    hasMore = response.hasMore;
+    if (activeTab === 'rivals') {
+      items = normalizeMyRivalsResponse(data);
+      currentPage = 0;
+      hasMore = false;
+    } else {
+      const response = normalizeDiscoveryResponse(data);
+      items = reset ? response.items : [...items, ...response.items];
+      currentPage = response.page;
+      hasMore = response.hasMore;
+    }
     loading = false;
     loadingMore = false;
   }
@@ -84,6 +101,17 @@
 
   function forwardNavigation(event) {
     dispatch('navigate', event.detail);
+  }
+
+  async function removeRival(event) {
+    const item = event.detail?.item;
+    if (!item?.userId || removingId) return;
+    removingId = item.userId;
+    const result = await toggleFollow(item.userId);
+    if (result?.success && result.action === 'unfollowed') {
+      items = items.filter(current => current.userId !== item.userId);
+    }
+    removingId = '';
   }
 
   onMount(() => {
@@ -130,12 +158,12 @@
         </div>
       {:else if items.length === 0}
         <div class="roll-leaderboard__state">
-          <div><strong>No rolls on this board yet</strong><p>Check back after the next public roll.</p></div>
+          <div><strong>{activeTab === 'rivals' ? 'No rivals yet' : 'No rolls on this board yet'}</strong><p>{activeTab === 'rivals' ? 'Open a public profile and add up to five players as rivals.' : 'Check back after the next public roll.'}</p></div>
         </div>
       {:else}
-        <section class="roll-leaderboard__results" aria-labelledby="leaderboard-results-title">
+        <section class="roll-leaderboard__results" class:roll-leaderboard__results--rivals={activeTab === 'rivals'} aria-labelledby="leaderboard-results-title">
           <h3 id="leaderboard-results-title" class="roll-leaderboard__sr-only">Ranked profiles</h3>
-          <div class="roll-leaderboard__column-headings" aria-hidden="true">
+          {#if activeTab !== 'rivals'}<div class="roll-leaderboard__column-headings" aria-hidden="true">
             <span></span>
             <span></span>
             <span class="roll-leaderboard__column-heading-metrics">
@@ -143,18 +171,18 @@
               <span>Rarity</span>
               <span>Score</span>
             </span>
-          </div>
-          <ol class="roll-leaderboard__list">
-            {#each items as item, index (`ranked:${item.username}:${item.rollDate || item.hexCode || index}`)}
-              <li class="roll-leaderboard__list-item">
-                <LeaderboardEntry
-                  {item}
-                  position={index}
-                  on:navigate={forwardNavigation}
-                />
-              </li>
-            {/each}
-          </ol>
+          </div>{/if}
+          {#if activeTab === 'rivals'}
+            <ul class="roll-leaderboard__list">
+              {#each items as item (item.userId)}<li class="roll-leaderboard__list-item"><RivalRow {item} removing={removingId === item.userId} on:navigate={forwardNavigation} on:remove={removeRival} /></li>{/each}
+            </ul>
+          {:else}
+            <ol class="roll-leaderboard__list">
+              {#each items as item, index (`ranked:${item.username}:${item.rollDate || item.hexCode || index}`)}
+                <li class="roll-leaderboard__list-item"><LeaderboardEntry {item} position={index} on:navigate={forwardNavigation} /></li>
+              {/each}
+            </ol>
+          {/if}
         </section>
 
         {#if hasMore}

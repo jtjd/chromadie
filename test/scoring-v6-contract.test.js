@@ -19,7 +19,6 @@ import {
   getRollRarityV6
 } from '../src/lib/scoringV6Spec.js';
 import {
-  resolveConditionRewardV6,
   scoreCandidateColorV6
 } from '../src/lib/scoringV6.js';
 import {

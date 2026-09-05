@@ -12,6 +12,7 @@ on:
       - 'scripts/check-database-security.mjs'
       - 'scripts/check-profile-insights-integrity.mjs'
       - 'scripts/check-progression-database.mjs'
+      - 'scripts/check-owner-surfaces-database.mjs'
       - 'scripts/check-scoring-parity.mjs'
       - 'scripts/run-supabase-sql-test.mjs'
       - 'functions/analytics/**'
@@ -50,6 +51,8 @@ jobs:
         run: npm run check:username-policy-drift
       - name: Run progression database behavior checks
         run: npm run check:progression-db
+      - name: Run owner-surface database behavior checks
+        run: npm run check:owner-surfaces-db
       - name: Check SQL and JavaScript scoring parity
         run: npm run check:scoring-parity
       - name: Locate preinstalled browser

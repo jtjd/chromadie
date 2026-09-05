@@ -75,13 +75,13 @@ test('profile mapping includes only the bounded identity additions', () => {
   assert.equal(mapped.ep_spent, 99);
 });
 
-function createIdentitySupabase(profile) {
+function createIdentitySupabase(profile, { identityError = null } = {}) {
   const calls = [];
   return {
     calls,
     async rpc(name, args) {
       calls.push({ name, args });
-      if (name === 'get_public_profile_identity') return { data: profile, error: null };
+      if (name === 'get_public_profile_identity') return { data: profile, error: identityError };
       if (name === 'get_public_profile_scores') return { data: [], error: null };
       if (name === 'get_public_profile_story') return { data: { timeline: [], collection: [] }, error: null };
       if (name === 'get_public_profile_configuration') return { data: null, error: null };
@@ -99,7 +99,7 @@ function createIdentitySupabase(profile) {
   };
 }
 
-test('visitor profile hydration uses the bounded identity RPC before any legacy fallback', async () => {
+test('visitor profile hydration uses only the bounded identity RPC', async () => {
   const supabase = createIdentitySupabase({
     id: 'user-1',
     username: 'Nova',
@@ -116,5 +116,20 @@ test('visitor profile hydration uses the bounded identity RPC before any legacy 
 
   assert.equal(context.targetProfile.display_name, 'Nova Prime');
   assert.equal(context.targetProfile.bio, 'A short public bio.');
+  assert.equal(supabase.calls.some(call => call.name === 'select' && call.table === 'profiles'), false);
+});
+
+test('a missing public identity RPC remains a visible load failure', async () => {
+  const supabase = createIdentitySupabase(null, {
+    identityError: { code: 'PGRST202', message: 'function does not exist' }
+  });
+  const context = await loadProfileContext({
+    supabaseClient: supabase,
+    isAuthenticated: false,
+    profileUsername: 'Nova'
+  });
+
+  assert.equal(context.targetProfile, null);
+  assert.match(context.loadError, /could not be loaded/);
   assert.equal(supabase.calls.some(call => call.name === 'select' && call.table === 'profiles'), false);
 });

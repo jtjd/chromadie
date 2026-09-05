@@ -9,6 +9,7 @@ export const PROFILE_STUDIO_FALLBACK_COLOR = '#CDD2FF';
 export const PROFILE_STUDIO_CUSTOMIZE_TABS = Object.freeze([
   { id: 'appearance', label: 'Appearance', description: 'Color, identity, and presence' },
   { id: 'media', label: 'Media', description: 'Avatar, background, music, and uploads' },
+  { id: 'content', label: 'Content', description: 'About, projects, and provider widgets' },
   { id: 'links', label: 'Links', description: 'Public links, sharing, and aliases' },
   { id: 'layout', label: 'Layout', description: 'Profile structure and reading order' }
 ]);
@@ -20,6 +21,7 @@ export const PROFILE_STUDIO_CUSTOMIZE_TAB_IDS = Object.freeze(
 export const PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES = Object.freeze({
   appearance: 'customize-appearance',
   media: 'customize-media',
+  content: 'customize-content',
   links: 'customize-links',
   layout: 'customize-layout'
 });
@@ -42,10 +44,12 @@ export const PROFILE_STUDIO_CUSTOMIZE_TAB_ALIASES = Object.freeze({
   'customize-effects': 'appearance',
   collection: 'appearance',
   'profile-collection': 'appearance',
-  content: 'media',
-  widgets: 'appearance',
-  'customize-content': 'media',
-  'customize-widgets': 'appearance',
+  content: 'content',
+  widgets: 'content',
+  'profile-content': 'content',
+  'profile-widgets': 'content',
+  'customize-content': 'content',
+  'customize-widgets': 'content',
   layout: 'layout',
   templates: 'layout',
   'customize-layout': 'layout',
@@ -80,6 +84,8 @@ export const PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS = Object.freeze([
   'customize',
   'profile-identity',
   'profile-media',
+  'profile-content',
+  'profile-widgets',
   'profile-collection',
   'profile-layout',
   'profile-aliases'
@@ -107,6 +113,8 @@ export const PROFILE_STUDIO_HASH_ALIASES = Object.freeze({
   effects: 'customize',
   'customize-appearance': 'customize',
   'customize-media': 'customize',
+  'customize-content': 'customize',
+  'customize-widgets': 'customize',
   'customize-effects': 'customize',
   'customize-layout': 'customize',
   templates: 'customize',

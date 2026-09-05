@@ -20,6 +20,7 @@
   export let staff = false;
   export let isAuthenticated = false;
   export let featureFlags = {};
+  export let configurationUnavailable = false;
   /** @type {any} */
   export let studioIdentityDraft = null;
   /** @type {any} */
@@ -31,6 +32,7 @@
 
   $: isCustomize = activeSection === 'customize';
   $: activeRegistration = getProfileStudioSectionRegistration(activeSection);
+  $: configurationBlocked = configurationUnavailable && ['customize', 'profile-identity', 'profile-media', 'profile-layout'].includes(activeSection);
 
   function forward(event) {
     dispatch(event.type, event.detail);
@@ -71,6 +73,12 @@
     <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h1>Loading</h1></div>
   {:else if error}
     <div class="profile-studio-workspace__state" role="alert"><Surface variant="panel" padding="lg"><h1>{error}</h1><a class="profile-studio-workspace__back" href={profilePath}>Back to profile</a></Surface></div>
+  {:else if context && configurationBlocked}
+    <div class="profile-studio-workspace__state" role="alert">
+      <h1>Profile customization unavailable</h1>
+      <p>Retry before making changes.</p>
+      <button class="profile-studio-workspace__retry" type="button" on:click={() => dispatch('configurationretry')}>Retry loading configuration</button>
+    </div>
   {:else if context}
     <div class="profile-studio-workspace__content" id={isCustomize ? 'profile-customize-tabpanel' : undefined} role={isCustomize ? 'tabpanel' : undefined} aria-labelledby={isCustomize ? `profile-customize-tab-${activeCustomizeTab}` : undefined}>
       {#if isCustomize}
@@ -148,5 +156,7 @@
   .profile-studio-workspace__state :global(.surface) { max-width: 42rem; }
   .profile-studio-workspace__back { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; margin-top: .8rem; padding: .45rem .75rem; border: 1px solid var(--studio-border-strong, #45475a); border-radius: .35rem; color: var(--studio-text, #cdd6f4); font-size: .8rem; font-weight: 650; text-decoration: none; }
   .profile-studio-workspace__back:hover, .profile-studio-workspace__back:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-focus, #b4befe); }
+  .profile-studio-workspace__retry { min-height: 2.25rem; margin-top: .35rem; padding: .45rem .75rem; border: 1px solid var(--studio-border-strong, #45475a); border-radius: .35rem; background: transparent; color: var(--studio-text, #cdd6f4); font: inherit; cursor: pointer; }
+  .profile-studio-workspace__retry:hover, .profile-studio-workspace__retry:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-focus, #b4befe); }
   @media (prefers-reduced-motion: reduce) { .profile-studio-workspace { scroll-behavior: auto; } }
 </style>

@@ -16,6 +16,7 @@
   export let mobileDirty = false;
   export let mobileSaving = false;
   export let dirty = false;
+  export let configurationReady = true;
   export let showBrand = true;
   /** @type {any} */
   export let previewRenderSnapshot = null;
@@ -121,7 +122,7 @@
         <button
           class="profile-studio-shell__publish"
           type="button"
-          disabled={!dirty || mobileSaving}
+          disabled={!dirty || mobileSaving || !configurationReady}
           aria-busy={mobileSaving ? 'true' : 'false'}
           on:click={() => dispatch('publish')}
         >{mobileSaving ? 'Publishing…' : 'Publish profile'}</button>
@@ -144,7 +145,7 @@
               <span class="profile-studio-shell__menu-divider" role="separator"></span>
               <a href="/progression" role="menuitem" on:click={() => closeMore()} on:keydown={handleMenuKeydown}>Progression</a>
               <span class="profile-studio-shell__menu-divider" role="separator"></span>
-              <button type="button" role="menuitem" disabled={!dirty || mobileSaving} on:click={resetChanges} on:keydown={handleMenuKeydown}>Reset changes</button>
+              <button type="button" role="menuitem" disabled={!dirty || mobileSaving || !configurationReady} on:click={resetChanges} on:keydown={handleMenuKeydown}>Reset changes</button>
             </div>
           {/if}
         </div>
@@ -176,7 +177,7 @@
   {#if mobileDirty}
     <div class="profile-studio-shell__mobile-actions" role="region" aria-label="Unpublished profile changes">
       <span>Unpublished changes</span>
-      <button type="button" on:click={() => dispatch('publish')} disabled={mobileSaving}>{mobileSaving ? 'Publishing…' : 'Publish profile'}</button>
+      <button type="button" on:click={() => dispatch('publish')} disabled={mobileSaving || !configurationReady}>{mobileSaving ? 'Publishing…' : 'Publish profile'}</button>
     </div>
   {/if}
 

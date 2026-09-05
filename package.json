@@ -32,6 +32,7 @@
     "check:release-config": "node scripts/check-release-configuration.mjs",
     "check:release-config:cloudflare": "node scripts/check-release-configuration.mjs --cloudflare",
     "check:progression-db": "node scripts/check-progression-database.mjs",
+    "check:owner-surfaces-db": "node scripts/check-owner-surfaces-database.mjs",
     "check:profile-media-cutover": "node scripts/check-profile-media-cutover.mjs",
     "test:r2:integration": "node scripts/r2-control-plane-smoke.mjs",
     "check:profile-certification": "node scripts/check-profile-parity-certification.mjs",

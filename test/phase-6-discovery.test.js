@@ -145,8 +145,9 @@ test('rivals retain the existing authenticated follow identifier only at the com
   assert.equal(normalizeRivalItem({ ...publicItem, user_id: 'not-a-uuid' }), null);
 });
 
-test('leaderboard route parsing accepts only the active today and monthly periods', () => {
+test('leaderboard route parsing accepts the public periods and authenticated rivals', () => {
   assert.equal(parseRouteLocation('/leaderboard', '?tab=monthly').leaderboardTab, 'monthly');
+  assert.equal(parseRouteLocation('/leaderboard', '?tab=rivals').leaderboardTab, 'rivals');
   assert.equal(parseRouteLocation('/leaderboard', '?tab=weekly').leaderboardTab, 'today');
   assert.equal(parseRouteLocation('/leaderboard', '?tab=random').leaderboardTab, 'today');
   assert.equal(parseRouteLocation('/leaderboard', '?tab=private').leaderboardTab, 'today');

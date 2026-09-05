@@ -41,6 +41,9 @@ function createSocialSupabase({ profile, social, settings = null }) {
     async rpc(name, args) {
       calls.push({ type: 'rpc', name, args });
       if (name === 'get_my_profile') return { data: profile, error: null };
+      if (name === 'get_public_profile_identity' || name === 'get_public_profile_identity_by_id') {
+        return { data: profile, error: null };
+      }
       if (name === 'get_public_profile_social') return { data: social, error: null };
       if (name === 'get_my_profile_social_settings') return { data: settings, error: null };
       if (name === 'get_public_profile_scores') return { data: [], error: null };

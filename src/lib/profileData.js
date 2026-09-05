@@ -3,6 +3,8 @@ import { createDefaultProfileConfig, normalizeProfileConfig } from './profileCon
 import { normalizeProfileStory } from './profileStory.js';
 import { normalizeUsernameSegment } from './routeContract.js';
 import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
+import { loadAchievementDefinitions } from './achievementData.js';
+import { PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE } from './profile-studio/authoringState.js';
 import {
   createDefaultProfileSocialSettings,
   createEmptyProfileSocial,
@@ -10,12 +12,9 @@ import {
   normalizeProfileSocialSettings
 } from './profileSocial.js';
 
-export const PUBLIC_PROFILE_SELECT = 'id, username, display_name, bio, created_at, current_streak, longest_streak, lifetime_ep, total_rolls, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff';
-
 const INVALID_PROFILE_MESSAGE = 'That profile address is invalid.';
 const PROFILE_LOAD_MESSAGE = 'The profile could not be loaded. Please check your connection and retry.';
-let achievementsCache = null;
-let achievementsRequest = null;
+const MISSING_RPC_ERROR_CODES = new Set(['PGRST202', '42883']);
 
 function isV2ConfigurationPayload(value) {
   return Boolean(value
@@ -43,25 +42,64 @@ function isValidV2ConfigurationResponse(response) {
   return Boolean(getV2ConfigurationPayload(value, 'draft') || getV2ConfigurationPayload(value, 'published'));
 }
 
+function isMissingRpcResponse(response) {
+  return Boolean(response?.error && MISSING_RPC_ERROR_CODES.has(response.error.code));
+}
+
+function invalidV2ConfigurationResponse(response) {
+  return {
+    ...(response || {}),
+    error: response?.error || {
+      code: 'PROFILE_CONFIGURATION_INVALID',
+      message: 'The profile configuration response was invalid.'
+    }
+  };
+}
+
+function configurationRequestFailure(error) {
+  return {
+    data: null,
+    error: error instanceof Error
+      ? error
+      : {
+          code: 'PROFILE_CONFIGURATION_REQUEST_FAILED',
+          message: String(error?.message || error || 'The profile configuration request failed.')
+        }
+  };
+}
+
+async function requestConfigurationRpc(supabaseClient, name, args) {
+  try {
+    const response = await supabaseClient.rpc(name, args);
+    return response && typeof response === 'object'
+      ? response
+      : configurationRequestFailure('The profile configuration response was empty.');
+  } catch (error) {
+    return configurationRequestFailure(error);
+  }
+}
+
 /**
- * V2 owns the expression-aware read contract. Keep the legacy read as a
+ * V2 owns the expression-aware read contract. Keep the legacy read only as a
  * compatibility fallback while older deployments finish applying the additive
- * RPC migration; this prevents a partial rollout from turning a valid avatar
- * into the initials fallback.
+ * RPC migration. Other failures must remain visible instead of silently
+ * replacing newer content with a legacy configuration.
  */
 async function loadProfileConfiguration(supabaseClient, { viewingOwnProfile, profileId, useV2 }) {
   const legacyName = viewingOwnProfile
     ? 'get_my_profile_configuration'
     : 'get_public_profile_configuration';
   const legacyArgs = viewingOwnProfile ? {} : { p_user_id: profileId };
-  if (!useV2) return supabaseClient.rpc(legacyName, legacyArgs);
+  if (!useV2) return requestConfigurationRpc(supabaseClient, legacyName, legacyArgs);
 
-  const v2Response = await supabaseClient.rpc(
+  const v2Response = await requestConfigurationRpc(
+    supabaseClient,
     viewingOwnProfile ? 'get_my_profile_configuration_v2' : 'get_public_profile_configuration_v2',
     legacyArgs
   );
   if (isValidV2ConfigurationResponse(v2Response)) return v2Response;
-  return supabaseClient.rpc(legacyName, legacyArgs);
+  if (isMissingRpcResponse(v2Response)) return requestConfigurationRpc(supabaseClient, legacyName, legacyArgs);
+  return invalidV2ConfigurationResponse(v2Response);
 }
 
 async function normalizeV2Configuration(value, fallbackColor, options) {
@@ -69,44 +107,16 @@ async function normalizeV2Configuration(value, fallbackColor, options) {
   return module.normalizeProfileConfigurationV2(value, fallbackColor, options);
 }
 
-async function loadAchievements(supabaseClient) {
-  if (achievementsCache) return { data: achievementsCache, error: null };
-  if (!achievementsRequest) {
-    achievementsRequest = supabaseClient
-      .from('achievements')
-      .select('*')
-      .then(response => {
-        if (response.data) achievementsCache = response.data;
-        achievementsRequest = null;
-        return response;
-      });
-  }
-  return achievementsRequest;
-}
-
-async function loadLegacyPublicProfile(supabaseClient, { username, userId }) {
-  let profileQuery = supabaseClient
-    .from('profiles')
-    .select(PUBLIC_PROFILE_SELECT);
-  profileQuery = username
-    ? profileQuery.ilike('username', username)
-    : profileQuery.eq('id', userId);
-  return profileQuery.maybeSingle();
-}
-
 /**
- * Use the bounded RPC as the public contract. The explicit-column fallback is
- * retained only while an older deployment is rolling forward to Phase 13; it
- * never requests private profile fields.
+ * Use the bounded RPC as the only public identity contract. If it is missing,
+ * that is a deployment/schema failure and should remain visible to the caller;
+ * direct table reads do not provide a valid compatibility path under the
+ * current profile read lockdown.
  */
 async function loadPublicProfile(supabaseClient, { username, userId }) {
-  const rpcResponse = username
+  return username
     ? await supabaseClient.rpc('get_public_profile_identity', { p_username: username })
     : await supabaseClient.rpc('get_public_profile_identity_by_id', { p_user_id: userId });
-
-  if (!rpcResponse.error && rpcResponse.data) return rpcResponse;
-  if (rpcResponse.error && !['PGRST202', '42883'].includes(rpcResponse.error.code)) return rpcResponse;
-  return loadLegacyPublicProfile(supabaseClient, { username, userId });
 }
 
 function emptyProfileContext(overrides = {}) {
@@ -125,6 +135,7 @@ function emptyProfileContext(overrides = {}) {
     unlockedAchievements: {},
     progression: null,
     totalRolls: 0,
+    configurationUnavailable: false,
     loadError: '',
     dataWarning: '',
     ...overrides
@@ -169,9 +180,9 @@ export async function loadProfileStudioContext({
   });
 
   if (configResponse.error || configResponse.data?.success === false) {
-    context.dataWarning = 'Profile customization is temporarily unavailable.';
-    const fallback = createDefaultProfileConfig(fallbackColor);
-    context.profileConfig = { draft: fallback, published: fallback, version: 1 };
+    context.dataWarning = PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
+    context.configurationUnavailable = true;
+    context.profileConfig = null;
     return context;
   }
 
@@ -296,7 +307,7 @@ export async function loadProfileContext({
         isStaff: Boolean(context.targetProfile?.is_staff)
       })
     });
-    const achievementsRequestForProfile = loadAchievements(supabaseClient);
+    const achievementsRequestForProfile = loadAchievementDefinitions(supabaseClient);
     const progressionRequest = viewingOwnProfile
       ? import('./profileOwnerProgression.js')
         .then(module => module.loadOwnerProfileProgression(supabaseClient, context.profileId))
@@ -370,11 +381,14 @@ export async function loadProfileContext({
       isStaff: Boolean(context.targetProfile?.is_staff)
     });
     if (configResponse.error || (viewingOwnProfile && configResponse.data?.success === false)) {
-      context.dataWarning = context.dataWarning || 'Profile customization is temporarily unavailable.';
-      const fallback = createDefaultProfileConfig(fallbackColor);
-      context.profileConfig = viewingOwnProfile
-        ? { draft: fallback, published: fallback, version: 1 }
-        : { draft: null, published: fallback, version: 1 };
+      context.dataWarning = context.dataWarning || PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
+      context.configurationUnavailable = viewingOwnProfile;
+      if (viewingOwnProfile) {
+        context.profileConfig = null;
+      } else {
+        const fallback = createDefaultProfileConfig(fallbackColor);
+        context.profileConfig = { draft: null, published: fallback, version: 1 };
+      }
     } else if (viewingOwnProfile) {
       const v2Draft = profileConfigurationV2Enabled
         ? getV2ConfigurationPayload(configResponse.data, 'draft')

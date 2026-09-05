@@ -31,7 +31,6 @@
     applyProfileStudioIdentityPatch,
     buildConfigurationV2 as buildConfigurationV2Model,
     createEditorProfileConfig,
-    createEmptyEditorProfileConfig,
     createProfileStudioPreviewModel,
     hasServerDraftChanges,
     preserveExpressionFields,
@@ -43,6 +42,11 @@
     hasDirtySources,
     updateDirtySource
   } from './profile-studio/dirtyState.js';
+  import {
+    isProfileConfigurationWritable,
+    mergeProfileStudioContext,
+    PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE
+  } from './profile-studio/authoringState.js';
 
   const SECTION_LOADERS = PROFILE_STUDIO_SECTION_LOADERS;
 
@@ -53,7 +57,7 @@
   const CUSTOMIZE_TAB_HASHES = PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES;
   const SETTINGS_SECTIONS = PROFILE_STUDIO_SECTIONS;
   const HASH_ALIASES = PROFILE_STUDIO_HASH_ALIASES;
-  const CUSTOMIZE_TAB_LABELS = Object.freeze({ appearance: 'Appearance', media: 'Media', links: 'Links', layout: 'Layout' });
+  const CUSTOMIZE_TAB_LABELS = Object.freeze({ appearance: 'Appearance', media: 'Media', content: 'Content', links: 'Links', layout: 'Layout' });
 
   const dispatch = createEventDispatcher();
 
@@ -66,7 +70,8 @@
       targetScores: [],
       timelineEvents: [],
       collectionItems: [],
-      profileConfig: createEmptyEditorProfileConfig(),
+      profileConfig: null,
+      configurationUnavailable: false,
       social: createEmptyProfileSocial(),
       socialSettings: createDefaultProfileSocialSettings(),
       allAchievements: [],
@@ -143,6 +148,7 @@
   // a helper function.
   $: editorProfileConfig = createStudioEditorProfileConfig(context?.profileConfig, studioDraft);
   $: dashboardDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
+  $: configurationWriteAvailable = isProfileConfigurationWritable(context);
   $: previewModel = createProfileStudioPreviewModel({
     targetProfile: context?.targetProfile,
     profileConfig: context?.profileConfig,
@@ -390,6 +396,8 @@
       ? ['customize', 'profile-identity', 'profile-collection']
       : activeCustomizeTab === 'media'
         ? ['customize', 'profile-media']
+        : activeCustomizeTab === 'content'
+          ? ['customize', 'profile-content', 'profile-widgets']
         : activeCustomizeTab === 'links'
           ? ['customize', 'profile-layout', 'profile-aliases']
           : ['customize'];
@@ -425,6 +433,7 @@
     const nextDraft = toEditorProfileConfig(nextDraftV2);
     context = {
       ...context,
+      configurationUnavailable: false,
       profileConfig: {
         ...(context.profileConfig || {}),
         version: 2,
@@ -459,6 +468,11 @@
 
   async function publishDashboard() {
     if (dashboardSaving) return;
+    if (!configurationWriteAvailable) {
+      dashboardError = PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
+      dashboardStatus = '';
+      return;
+    }
     const editor = getDashboardEditor();
     if (editor?.validateDraft && !editor.validateDraft()) {
       dashboardError = 'Finish the highlighted fields before publishing.';
@@ -504,6 +518,11 @@
 
   async function resetDashboard() {
     if (dashboardSaving || !dashboardDirty) return;
+    if (!configurationWriteAvailable) {
+      dashboardError = PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
+      dashboardStatus = '';
+      return;
+    }
     dashboardSaving = true;
     dashboardError = '';
     dashboardStatus = 'Resetting profile changes…';
@@ -550,12 +569,25 @@
       loading = false;
       return;
     }
+    if (nextContext.configurationUnavailable) {
+      context = mergeProfileStudioContext(previousContext, nextContext);
+      studioDraft = context.profileConfig
+        ? (studioDraft || toEditorProfileConfig(context.profileConfig.draft, FALLBACK_PROFILE_COLOR))
+        : null;
+      studioIdentityDraft = studioDraft
+        ? { bio: context.targetProfile?.bio || '', identityPresentation: studioDraft.identityPresentation }
+        : null;
+      cosmeticPreviewLoadout = null;
+      loading = false;
+      return;
+    }
     context = nextContext;
-    studioDraft = toEditorProfileConfig(nextContext.profileConfig?.draft, FALLBACK_PROFILE_COLOR);
-    studioIdentityDraft = {
-      bio: nextContext.targetProfile?.bio || '',
-      identityPresentation: studioDraft.identityPresentation
-    };
+    studioDraft = nextContext.profileConfig
+      ? toEditorProfileConfig(nextContext.profileConfig.draft, FALLBACK_PROFILE_COLOR)
+      : null;
+    studioIdentityDraft = studioDraft
+      ? { bio: nextContext.targetProfile?.bio || '', identityPresentation: studioDraft.identityPresentation }
+      : null;
     cosmeticPreviewLoadout = null;
     loading = false;
     if (nextContext.loadError) error = nextContext.loadError;
@@ -573,20 +605,17 @@
       currentUsername: accountUsername
     }).then(nextContext => {
       if (nextRequestId !== requestId) return context;
-      if (nextContext.targetProfile || nextContext.profileConfig) {
-        context = {
-          ...context,
-          ...nextContext,
-          targetProfile: nextContext.targetProfile || context.targetProfile,
-          profileConfig: nextContext.profileConfig || context.profileConfig
-        };
-        studioDraft = toEditorProfileConfig(context.profileConfig?.draft, FALLBACK_PROFILE_COLOR);
-        studioIdentityDraft = {
-          bio: context.targetProfile?.bio || '',
-          identityPresentation: studioDraft?.identityPresentation
-        };
+      if (nextContext.targetProfile || nextContext.profileConfig || nextContext.configurationUnavailable) {
+        context = mergeProfileStudioContext(context, nextContext);
+        const refreshedProfileConfig = context.profileConfig;
+        studioDraft = refreshedProfileConfig
+          ? (studioDraft || toEditorProfileConfig(refreshedProfileConfig.draft, FALLBACK_PROFILE_COLOR))
+          : null;
+        studioIdentityDraft = studioDraft
+          ? { bio: context.targetProfile?.bio || '', identityPresentation: studioDraft.identityPresentation }
+          : null;
       }
-      fullContextLoaded = true;
+      fullContextLoaded = nextContext.configurationUnavailable !== true;
       return context;
     }).catch(loadError => {
       context = { ...context, dataWarning: loadError instanceof Error ? loadError.message : 'Additional profile details are temporarily unavailable.' };
@@ -598,6 +627,7 @@
   }
 
   function updateConfiguration(event) {
+    if (!configurationWriteAvailable) return;
     const currentDraft = toEditorProfileConfig(context?.profileConfig?.draft);
     const currentPublished = toEditorProfileConfig(context?.profileConfig?.published);
     const nextDraft = normalizeProfileConfig(preserveExpressionFields(event.detail?.draft, currentDraft), FALLBACK_PROFILE_COLOR);
@@ -629,6 +659,7 @@
   }
 
   function updateExpression(event) {
+    if (!configurationWriteAvailable) return;
     const fields = event.detail || {};
     const updatedAt = fields.updatedAt || fields.updated_at || context.profileConfig?.updatedAt || null;
     const nextDraft = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.draft), ...fields }, FALLBACK_PROFILE_COLOR);
@@ -651,6 +682,7 @@
   }
 
   function updateAppearance(event) {
+    if (!configurationWriteAvailable) return;
     studioDraft = applyProfileStudioDraftPatch(
       studioDraft || context.profileConfig?.draft,
       { scope: 'appearance', detail: event.detail || {} },
@@ -667,6 +699,7 @@
   }
 
   function applyStudioPatch(event) {
+    if (!configurationWriteAvailable) return;
     const patch = event.detail || {};
     const scope = patch.scope;
     // Dynamic Customize tabs can forward one additional event envelope when
@@ -716,6 +749,7 @@
   function handleSocialChange() { void ensureFullContext({ force: true }); }
 
   function updateIdentity(event) {
+    if (!configurationWriteAvailable) return;
     const nextPresentation = event.detail?.identityPresentation;
     const currentConfig = context.profileConfig || {};
     if (!nextPresentation) {
@@ -772,6 +806,7 @@
   mobileDirty={dashboardDirty}
   mobileSaving={dashboardSaving}
   dirty={dashboardDirty}
+  configurationReady={configurationWriteAvailable}
   previewRenderSnapshot={previewRenderSnapshot}
   showPreview={showDashboardPreview}
   showBrand={true}
@@ -781,7 +816,12 @@
   on:publish={publishDashboard}
 >
   <div class="profile-settings-page" data-dashboard-adapter="profile-studio" aria-busy={loading}>
-    {#if context?.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
+    {#if context?.dataWarning}
+      <div class="profile-settings-page__warning" role="status">
+        <span>{context.dataWarning}</span>
+        {#if context.configurationUnavailable}<button type="button" on:click={() => loadSettings(accountKey)} disabled={loading}>Retry</button>{/if}
+      </div>
+    {/if}
     {#if context && !loading && !error}
       <ProfileStudioHeader
         {activeSection}
@@ -815,6 +855,7 @@
       staff={Boolean(context?.targetProfile?.is_staff)}
       isAuthenticated={$isAuthenticated}
       {featureFlags}
+      configurationUnavailable={context?.configurationUnavailable === true}
       on:studiopatch={applyStudioPatch}
       on:cosmeticpreview={updateCosmeticPreview}
       on:dirty={handleSectionDirty}
@@ -824,6 +865,7 @@
       on:configreloaded={handleConfigurationReloaded}
       on:socialchange={handleSocialChange}
       on:accountdeleted={handleAccountDeleted}
+      on:configurationretry={() => loadSettings(accountKey)}
     />
   </div>
 
@@ -851,7 +893,9 @@
 
 <style>
   .profile-settings-page { width: 100%; min-width: 0; }
-  .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--studio-warning, #f5c26f) 35%, transparent); border-radius: .35rem; color: var(--studio-warning, #f5c26f); font-size: .8rem; }
+  .profile-settings-page__warning { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--studio-warning, #f5c26f) 35%, transparent); border-radius: .35rem; color: var(--studio-warning, #f5c26f); font-size: .8rem; }
+  .profile-settings-page__warning button { min-height: 2rem; padding: .35rem .65rem; border: 1px solid color-mix(in srgb, var(--studio-warning, #f5c26f) 55%, transparent); border-radius: .3rem; background: transparent; color: inherit; font: inherit; font-weight: 650; cursor: pointer; }
+  .profile-settings-page__warning button:hover, .profile-settings-page__warning button:focus-visible { border-color: currentColor; }
   .profile-settings-page__preview-state { display: grid; min-height: 22rem; place-items: center; padding: 1rem; color: var(--studio-muted, #8f9099); font: 400 .8rem/1.45 'Inter', sans-serif; text-align: center; }
   .profile-settings-page__preview-state[role="alert"] { color: #ff5578; }
   @media (prefers-reduced-motion: reduce) { .profile-settings-page { scroll-behavior: auto; } }

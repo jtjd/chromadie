@@ -4327,3 +4327,42 @@ direct route behavior.
   bitmap was added.
 - Product-facing names are original Chromadie labels. Source/vendor names are
   retained only in the research record for traceability.
+
+## Progression, Content, and Rivals surfaces — 2026-09-04
+
+- Added Journey, Achievements, Collection, and History tabs to Progression.
+- Players can now review unlocked and locked achievements, see supported
+  progress, and pin or unpin earned badges without leaving the page.
+- Added a searchable condition collection that shows every current discovery's
+  name and hint, plus archived discoveries from earlier catalogs.
+- Added paginated roll and profile-created history from the durable profile
+  event record.
+- Restored Profile Studio's Content tab for headings, Markdown sections,
+  projects, and approved provider widgets.
+- Added a signed-in Rivals leaderboard for the player's existing follows, with
+  direct profile access and removal controls.
+- Preserved blocked-user and private-activity boundaries across the new owner
+  surfaces.
+
+## Owner-surface audit follow-up — 2026-09-04
+
+- Wired the owner-surface database behavior check into database CI and its
+  push path filters.
+- Removed the public profile table-read compatibility path; public identity
+  now fails visibly when its canonical RPC is unavailable.
+- Restricted V2 profile configuration fallback to explicit missing-function
+  errors so transient, permission, and malformed responses are not replaced
+  by stale legacy content.
+- Clarified History, Rival, and provider-widget copy, and documented the
+  scale decision for durable `profile_events` before retention pressure.
+
+## Profile Studio fail-closed authoring — 2026-09-04
+
+- Removed the synthetic default owner configuration shown after failed V2
+  reads; public rendering may still use a safe visual fallback separately.
+- Preserved a previously loaded Studio configuration for display during a
+  failed refresh while marking it unavailable for writes.
+- Disabled publish, reset, and configuration-dependent editors until an
+  authoritative reload succeeds, with a keyboard-accessible retry action.
+- Added regression coverage for transient, permission, malformed, and
+  full-context refresh failures so they cannot reach a publish overwrite path.

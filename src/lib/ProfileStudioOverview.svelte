@@ -124,7 +124,7 @@
       <section class="profile-studio-overview__trace" aria-labelledby="profile-studio-trace-title">
         <div class="profile-studio-overview__section-heading">
           <div><span class="profile-studio-overview__label">Recent history</span><h3 id="profile-studio-trace-title">Recent rolls</h3></div>
-          <a href="/progression">See all</a>
+          <a href="/progression?tab=history">See all</a>
         </div>
         {#if timelineEvents.length}
           <ol>
@@ -148,8 +148,8 @@
         <dl>
           <div><dt>Daily rolls</dt><dd>{formatNumber(account.total_rolls)}</dd></div>
           <div><dt>Current streak</dt><dd>{formatNumber(account.current_streak)} days</dd></div>
-          <div><dt>Achievements</dt><dd>{formatNumber(achievementCount)}{achievementTotal ? ` / ${formatNumber(achievementTotal)}` : ''}</dd></div>
-          <div><dt>Story collection</dt><dd>{storyUnlocks.collectionUnlocked ? 'Unlocked' : `${storyUnlocks.collectionRollsRequired} rolls`}</dd></div>
+          <div><dt><a href="/progression?tab=achievements">Achievements</a></dt><dd>{formatNumber(achievementCount)}{achievementTotal ? ` / ${formatNumber(achievementTotal)}` : ''}</dd></div>
+          <div><dt><a href="/progression?tab=collection">Story collection</a></dt><dd>{storyUnlocks.collectionUnlocked ? 'Unlocked' : `${storyUnlocks.collectionRollsRequired} rolls`}</dd></div>
           <div><dt>Next cosmetic</dt><dd>{journeyEnabled ? (ritualNext?.reward?.name || nextReward?.name || (journeyState === 'empty' ? 'No milestones yet' : journeyState === 'partial' ? 'Some milestones unavailable' : journeyState === 'unavailable' ? 'Unavailable' : 'Journey complete')) : (nextReward?.name || 'Rank track')}</dd></div>
         </dl>
         <p>{weeklyFocus?.completed ? 'This week’s color is complete. ' : ''}{recentUnlockCount ? `${formatNumber(recentUnlockCount)} progression reward${recentUnlockCount === 1 ? '' : 's'} recently unlocked.` : collectionItems.length ? `${formatNumber(collectionItems.length)} collection item${collectionItems.length === 1 ? '' : 's'} recorded.` : 'No collection items recorded yet.'}</p>

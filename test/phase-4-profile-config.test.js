@@ -12,9 +12,20 @@ import {
   normalizeProfileConfig,
   setProfileStoryVisible
 } from '../src/lib/profileConfig.js';
-import { loadProfileContext } from '../src/lib/profileData.js';
+import { loadProfileContext, loadProfileStudioContext } from '../src/lib/profileData.js';
+import { isProfileConfigurationWritable } from '../src/lib/profile-studio/authoringState.js';
 
-function createConfigSupabase({ profile, draft, published, v2Draft = null, v2Published = null, publicV2 = null }) {
+function createConfigSupabase({
+  profile,
+  draft,
+  published,
+  v2Draft = null,
+  v2Published = null,
+  publicV2 = null,
+  ownerV2Response = null,
+  publicV2Response = null,
+  v2Error = { code: 'PGRST202', message: 'function does not exist' }
+}) {
   const calls = [];
 
   function from(table) {
@@ -47,15 +58,25 @@ function createConfigSupabase({ profile, draft, published, v2Draft = null, v2Pub
     async rpc(name, args) {
       calls.push({ type: 'rpc', name, args });
       if (name === 'get_my_profile') return { data: profile, error: null };
+      if (name === 'get_public_profile_identity' || name === 'get_public_profile_identity_by_id') {
+        return { data: profile, error: null };
+      }
       if (name === 'get_public_profile_scores') return { data: [], error: null };
       if (name === 'get_my_profile_configuration') {
         return { data: { success: true, version: 1, draft, published }, error: null };
+      }
+      if (name === 'get_my_profile_configuration_v2' && ownerV2Response) {
+        return typeof ownerV2Response === 'function' ? ownerV2Response() : ownerV2Response;
       }
       if (name === 'get_my_profile_configuration_v2' && v2Draft) {
         return { data: { success: true, version: 2, draft: v2Draft, published: v2Published || v2Draft }, error: null };
       }
       if (name === 'get_public_profile_configuration') return { data: published, error: null };
+      if (name === 'get_public_profile_configuration_v2' && publicV2Response) return publicV2Response;
       if (name === 'get_public_profile_configuration_v2' && publicV2) return { data: publicV2, error: null };
+      if (name === 'get_my_profile_configuration_v2' || name === 'get_public_profile_configuration_v2') {
+        return { data: null, error: v2Error };
+      }
       return { data: null, error: null };
     }
   };
@@ -297,6 +318,103 @@ test('public profile context does not switch contracts based on missing expressi
   assert.equal(supabaseClient.calls.some(call => call.name === 'get_public_profile_configuration'), false);
 });
 
+test('V2 configuration falls back only when the V2 RPC is explicitly missing', async () => {
+  const draft = createDefaultProfileConfig('#112233');
+  const supabaseClient = createConfigSupabase({
+    profile: { id: 'user-1', username: 'NeonUser', mood_color: '#778899' },
+    draft,
+    published: draft,
+    v2Error: { code: 'PGRST202', message: 'function does not exist' }
+  });
+
+  const owner = await loadProfileContext({
+    supabaseClient,
+    isAuthenticated: true,
+    sessionUserId: 'user-1',
+    currentUsername: 'NeonUser',
+    profileUsername: 'neonuser'
+  });
+
+  assert.equal(owner.profileConfig.draft.version, 1);
+  assert.equal(supabaseClient.calls.some(call => call.name === 'get_my_profile_configuration_v2'), true);
+  assert.equal(supabaseClient.calls.some(call => call.name === 'get_my_profile_configuration'), true);
+});
+
+test('V2 configuration errors and malformed envelopes do not fall back to legacy data', async () => {
+  const draft = createDefaultProfileConfig('#112233');
+  const transientErrorSupabase = createConfigSupabase({
+    profile: { id: 'user-1', username: 'NeonUser', mood_color: '#778899' },
+    draft,
+    published: draft,
+    ownerV2Response: { data: null, error: { code: '42501', message: 'permission denied' } }
+  });
+  const transientError = await loadProfileStudioContext({
+    supabaseClient: transientErrorSupabase,
+    profileRecord: { id: 'user-1', username: 'NeonUser', mood_color: '#778899' },
+    sessionUserId: 'user-1'
+  });
+
+  assert.match(transientError.dataWarning, /couldn't be loaded/);
+  assert.equal(transientError.profileConfig, null);
+  assert.equal(transientError.configurationUnavailable, true);
+  assert.equal(isProfileConfigurationWritable(transientError), false);
+  assert.equal(transientErrorSupabase.calls.some(call => call.name === 'get_my_profile_configuration'), false);
+
+  const malformedSupabase = createConfigSupabase({
+    profile: { id: 'user-1', username: 'NeonUser', mood_color: '#778899' },
+    draft,
+    published: draft,
+    ownerV2Response: { data: { success: true, version: 2 }, error: null }
+  });
+  const malformed = await loadProfileStudioContext({
+    supabaseClient: malformedSupabase,
+    profileRecord: { id: 'user-1', username: 'NeonUser', mood_color: '#778899' },
+    sessionUserId: 'user-1'
+  });
+
+  assert.match(malformed.dataWarning, /couldn't be loaded/);
+  assert.equal(malformed.profileConfig, null);
+  assert.equal(malformed.configurationUnavailable, true);
+  assert.equal(isProfileConfigurationWritable(malformed), false);
+  assert.equal(malformedSupabase.calls.some(call => call.name === 'get_my_profile_configuration'), false);
+
+  const fullContextSupabase = createConfigSupabase({
+    profile: { id: 'user-1', username: 'NeonUser', mood_color: '#778899' },
+    draft,
+    published: draft,
+    ownerV2Response: { data: null, error: { code: '42501', message: 'permission denied' } }
+  });
+  const fullContext = await loadProfileContext({
+    supabaseClient: fullContextSupabase,
+    isAuthenticated: true,
+    sessionUserId: 'user-1',
+    currentUsername: 'NeonUser',
+    profileUsername: 'neonuser'
+  });
+
+  assert.equal(fullContext.profileConfig, null);
+  assert.equal(fullContext.configurationUnavailable, true);
+  assert.equal(isProfileConfigurationWritable(fullContext), false);
+  assert.equal(fullContextSupabase.calls.some(call => call.name === 'get_my_profile_configuration'), false);
+
+  const rejectedSupabase = createConfigSupabase({
+    profile: { id: 'user-1', username: 'NeonUser', mood_color: '#778899' },
+    draft,
+    published: draft,
+    ownerV2Response: () => Promise.reject(new Error('network unavailable'))
+  });
+  const rejected = await loadProfileStudioContext({
+    supabaseClient: rejectedSupabase,
+    profileRecord: { id: 'user-1', username: 'NeonUser', mood_color: '#778899' },
+    sessionUserId: 'user-1'
+  });
+
+  assert.equal(rejected.profileConfig, null);
+  assert.equal(rejected.configurationUnavailable, true);
+  assert.equal(isProfileConfigurationWritable(rejected), false);
+  assert.equal(rejectedSupabase.calls.some(call => call.name === 'get_my_profile_configuration'), false);
+});
+
 test('profile configuration editor and renderer retain safe draft/publish boundaries', async () => {
   const editor = await readFile(new URL('../src/lib/ProfileLinksEditor.svelte', import.meta.url), 'utf8');
   const profileData = await readFile(new URL('../src/lib/profileData.js', import.meta.url), 'utf8');
@@ -314,6 +432,7 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   assert.doesNotMatch(editor, /innerHTML|new Function|eval\s*\(/);
   assert.match(profileData, /get_my_profile_configuration/);
   assert.match(profileData, /get_public_profile_configuration/);
+  assert.doesNotMatch(profileData, /from\(['"]profiles['"]\)/);
   assert.match(settings, /save_profile_configuration_v2/);
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /loadProfileStudioContext/);

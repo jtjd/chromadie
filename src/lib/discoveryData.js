@@ -238,6 +238,34 @@ export function normalizeRivalItem(raw) {
   return { ...item, userId: raw.user_id };
 }
 
+export function normalizeMyRivalsResponse(raw) {
+  const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const items = Array.isArray(source.items) ? source.items : [];
+  return items.map(entry => {
+    if (!UUID_PATTERN.test(entry?.userId || '')) return null;
+    if (entry.inaccessible === true) {
+      return { userId: entry.userId, inaccessible: true, username: '', displayName: 'Unavailable rival', currentStreak: 0, profileAccent: null, todayRoll: null };
+    }
+    if (!isSafeDiscoveryUsername(entry?.username)) return null;
+    const roll = entry.todayRoll && typeof entry.todayRoll === 'object' ? {
+      hexCode: normalizeHex(entry.todayRoll.hexCode),
+      score: safeScore(entry.todayRoll.score),
+      rarity: RARITIES.has(entry.todayRoll.rarity) ? entry.todayRoll.rarity : null,
+      identity: safeText(entry.todayRoll.identity),
+      rollDate: safeDate(entry.todayRoll.rollDate)
+    } : null;
+    return {
+      userId: entry.userId,
+      inaccessible: false,
+      username: entry.username,
+      displayName: safeText(entry.displayName, 40) || entry.username,
+      currentStreak: safeCount(entry.currentStreak),
+      profileAccent: normalizeHex(entry.profileAccent),
+      todayRoll: roll?.score === null ? null : roll
+    };
+  }).filter(Boolean).slice(0, 5);
+}
+
 export function normalizeDiscoveryQuery(value) {
   const query = typeof value === 'string' ? value.trim() : '';
   return /^[A-Za-z0-9_]{0,20}$/.test(query) ? query : '';

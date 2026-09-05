@@ -604,7 +604,12 @@ try {
     assert(!premiumState.horizontalOverflow, 'Premium Profile Studio overflows horizontally: ' + JSON.stringify(premiumState) + '.');
 
     await chromium.page.navigate(appUrl + '/' + canonicalUsername, 'established public profile');
-    await chromium.page.waitFor("location.pathname === " + JSON.stringify('/' + canonicalUsername) + " && document.querySelector('.profile-shell-page')", 'public profile shell', 30000);
+    try {
+      await chromium.page.waitFor("location.pathname === " + JSON.stringify('/' + canonicalUsername) + " && document.querySelector('.profile-shell-page')", 'public profile shell', 30000);
+    } catch (error) {
+      const diagnostic = await chromium.page.evaluate("(() => ({ path: location.pathname + location.search + location.hash, title: document.title, body: document.body?.innerText?.trim().replace(/\\s+/g, ' ').slice(0, 700) || '', main: document.querySelector('#main-content')?.innerHTML?.slice(0, 500) || '' }))()");
+      throw new Error(error.message + ': ' + JSON.stringify(diagnostic), { cause: error });
+    }
     await chromium.page.waitFor("document.querySelector('.profile-shell-page[aria-busy=\"false\"]')", 'public profile shell hydration', 30000);
     let publicStoryRpc;
     try {
@@ -634,6 +639,43 @@ try {
     await chromium.page.screenshot(screenshot);
     results.screenshots.push(screenshot);
     return { fixture, progression: state, rareDiscovery, premium: premiumState, publicProfile: publicState };
+  });
+
+  await step('owner record, Content, and Rivals surfaces remain usable at desktop and mobile widths', async () => {
+    await chromium.page.setReducedMotion(false);
+    const surfaces = [];
+    const inspect = async ({ path, selector, label, ready = '' }) => {
+      for (const [width, height, viewport] of [[1440, 1000, 'desktop'], [390, 844, 'mobile']]) {
+        await chromium.page.setViewport(width, height);
+        await chromium.page.navigate(appUrl + path, `${viewport} ${label}`);
+        await chromium.page.waitFor(`location.pathname === ${JSON.stringify(path.split(/[?#]/)[0])} && document.querySelector(${JSON.stringify(selector)})${ready}`, `${viewport} ${label}`, 30000);
+        const state = await chromium.page.evaluate(`(() => ({
+          path: location.pathname + location.search + location.hash,
+          visible: Boolean(document.querySelector(${JSON.stringify(selector)})),
+          horizontalOverflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1,
+          width: innerWidth
+        }))()`);
+        assert(state.visible && !state.horizontalOverflow, `${viewport} ${label} is missing or overflows: ${JSON.stringify(state)}.`);
+        surfaces.push({ label, viewport, ...state });
+      }
+    };
+
+    await inspect({ path: '/progression?tab=achievements', selector: '.record-panel', label: 'achievement record' });
+    await inspect({ path: '/progression?tab=collection', selector: '.collection .grid', label: 'condition collection' });
+    const collectionState = await chromium.page.evaluate("(() => ({ cards: document.querySelectorAll('.collection .grid article').length, lockedNames: [...document.querySelectorAll('.collection .grid article.locked h3')].map(node => node.textContent.trim()).filter(Boolean).length }))()");
+    assert(collectionState.cards > 0 && collectionState.lockedNames > 0, 'The collection did not expose named locked discoveries: ' + JSON.stringify(collectionState) + '.');
+    await inspect({ path: '/progression?tab=history', selector: '.history', label: 'profile history' });
+    await inspect({ path: '/profile/settings#customize-content', selector: '.profile-content-editor', label: 'Studio Content editor', ready: " && document.querySelector('.profile-widget-editor')" });
+    const contentState = await chromium.page.evaluate("(() => { const heading = document.querySelector('.profile-content-editor input[maxlength=\"40\"]'); const markdown = document.querySelector('.profile-content-editor textarea[maxlength=\"1200\"]'); const active = [...document.querySelectorAll('[role=\"tab\"]')].find(tab => tab.getAttribute('aria-selected') === 'true'); return { headingLimit: heading?.maxLength || 0, markdownLimit: markdown?.maxLength || 0, activeTab: active?.textContent?.trim() || '', widgetEditor: Boolean(document.querySelector('.profile-widget-editor')) }; })()");
+    assert(contentState.headingLimit === 40 && contentState.markdownLimit === 1200 && contentState.activeTab === 'Content' && contentState.widgetEditor, 'Studio Content did not expose its bounded editors: ' + JSON.stringify(contentState) + '.');
+    await inspect({ path: '/leaderboard?tab=rivals', selector: '.roll-leaderboard[data-leaderboard-tab="rivals"]', label: 'Rivals leaderboard' });
+    const rivalsState = await chromium.page.evaluate("(() => ({ active: [...document.querySelectorAll('.roll-leaderboard__tabs [role=\"tab\"]')].some(tab => tab.textContent.trim() === 'Rivals' && tab.getAttribute('aria-selected') === 'true'), state: document.querySelector('.roll-leaderboard__state')?.textContent?.trim().replace(/\\s+/g, ' ') || '' }))()");
+    assert(rivalsState.active && /No rivals yet|Open a public profile/i.test(rivalsState.state), 'The authenticated Rivals tab did not expose its empty state: ' + JSON.stringify(rivalsState) + '.');
+
+    const screenshot = join(evidenceDir, 'owner-surfaces-mobile.png');
+    await chromium.page.screenshot(screenshot);
+    results.screenshots.push(screenshot);
+    return { surfaces, collection: collectionState, content: contentState, rivals: rivalsState };
   });
 
   await step('authenticated mobile and reduced-motion progression remain usable', async () => {

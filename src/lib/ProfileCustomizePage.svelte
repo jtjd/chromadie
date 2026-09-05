@@ -21,15 +21,19 @@
   let identityEditor = null;
   let appearanceEditor = null;
   let mediaWorkspaceEditor = null;
+  let contentEditor = null;
+  let widgetEditor = null;
   let linksEditor = null;
   let layoutEditor = null;
 
   $: identityComponent = components['profile-identity'];
   $: mediaComponent = components['profile-media'];
   $: collectionComponent = components['profile-collection'];
+  $: contentComponent = components['profile-content'];
+  $: widgetComponent = components['profile-widgets'];
   $: linksComponent = components['profile-layout'];
   $: aliasesComponent = components['profile-aliases'];
-  $: selectedTab = ['appearance', 'media', 'links', 'layout'].includes(activeTab) ? activeTab : 'appearance';
+  $: selectedTab = ['appearance', 'media', 'content', 'links', 'layout'].includes(activeTab) ? activeTab : 'appearance';
 
   function forwardPatch(scope, event) {
     dispatch('studiopatch', { scope, detail: event.detail || {} });
@@ -44,7 +48,7 @@
   }
 
   export function validateDraft() {
-    return [identityEditor, appearanceEditor, linksEditor, layoutEditor]
+    return [identityEditor, appearanceEditor, contentEditor, widgetEditor, linksEditor, layoutEditor]
       .filter(Boolean)
       .every(editor => editor.validateDraft?.() !== false);
   }
@@ -53,6 +57,8 @@
     identityEditor?.acceptSaved?.(nextConfig);
     appearanceEditor?.acceptSaved?.(nextConfig?.appearance || nextConfig);
     mediaWorkspaceEditor?.acceptSaved?.(nextConfig?.appearance || nextConfig);
+    contentEditor?.acceptSaved?.(nextConfig);
+    widgetEditor?.acceptSaved?.(nextConfig);
     linksEditor?.acceptSaved?.(nextConfig);
     layoutEditor?.acceptSaved?.(nextConfig);
   }
@@ -61,6 +67,8 @@
     identityEditor?.resetChanges?.();
     appearanceEditor?.resetChanges?.();
     mediaWorkspaceEditor?.resetChanges?.();
+    contentEditor?.resetChanges?.();
+    widgetEditor?.resetChanges?.();
     linksEditor?.resetChanges?.();
     layoutEditor?.resetChanges?.();
   }
@@ -147,6 +155,46 @@
           />
         {:else}
           <div class="studio-loading" role="status">Loading media controls…</div>
+        {/if}
+      </section>
+    </div>
+  {:else if selectedTab === 'content'}
+    <div class="studio-panel" id="customize-content" role="region" aria-label="Profile content">
+      <section class="studio-section studio-section--content" aria-label="About and projects">
+        {#if contentComponent}
+          <svelte:component
+            this={contentComponent}
+            bind:this={contentEditor}
+            {profileId}
+            draftConfig={profileConfig?.draft}
+            publishedConfig={profileConfig?.published}
+            updatedAt={profileConfig?.updatedAt}
+            {entitlements}
+            {staff}
+            on:dirty={event => forwardDirty('customize:content', event)}
+            on:configpreview={event => forwardPatch('content', event)}
+          />
+        {:else}
+          <div class="studio-loading" role="status">Loading content controls…</div>
+        {/if}
+      </section>
+
+      <section class="studio-section studio-section--widgets" aria-label="Provider widgets">
+        {#if widgetComponent}
+          <svelte:component
+            this={widgetComponent}
+            bind:this={widgetEditor}
+            {profileId}
+            draftConfig={profileConfig?.draft}
+            publishedConfig={profileConfig?.published}
+            updatedAt={profileConfig?.updatedAt}
+            {entitlements}
+            {staff}
+            on:dirty={event => forwardDirty('customize:widgets', event)}
+            on:configpreview={event => forwardPatch('widgets', event)}
+          />
+        {:else}
+          <div class="studio-loading" role="status">Loading widget controls…</div>
         {/if}
       </section>
     </div>
