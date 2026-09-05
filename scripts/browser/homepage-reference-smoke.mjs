@@ -62,7 +62,7 @@ try {
   await page.waitFor('Boolean(document.querySelector(".homepage-reference .roll-page") && document.querySelector(".roll-stage--preroll, .roll-stage--results"))', 'playable homepage');
   await page.evaluate('document.fonts.ready.then(() => true)');
 
-  await check('homepage is the real game without a profile specimen or competing claim action', async () => {
+  await check('homepage keeps one playable hero without retired specimens or competing claim actions', async () => {
     const state = await page.evaluate(`(() => {
       const root = document.querySelector('.homepage-reference');
       const headerLabels = [...document.querySelectorAll('.site-mode-header__nav button, .site-mode-header__nav a')].map(node => node.textContent?.trim());
@@ -86,8 +86,8 @@ try {
     })()`);
     assert(state.rollPageCount === 1 && state.gameCount === 1, `Homepage did not mount one real game: ${JSON.stringify(state)}.`);
     assert(state.rollButtonCount === 1 && state.rollButtonLabel === 'Roll today’s color', `Primary action drifted: ${JSON.stringify(state)}.`);
-    assert(state.title === 'Today’s color' && state.accountPrompt.includes('to save your roll.'), `First-visit explanation drifted: ${JSON.stringify(state)}.`);
-    assert(state.bestRollCount === 1 && state.bestRollTitle === 'Today’s best roll', `Best-roll invitation drifted: ${JSON.stringify(state)}.`);
+    assert(state.title === 'What color is your day?' && state.accountPrompt.includes('to start your profile history.'), `First-visit explanation drifted: ${JSON.stringify(state)}.`);
+    assert(state.bestRollCount === 1 && state.bestRollTitle === 'Today’s top roll', `Best-roll invitation drifted: ${JSON.stringify(state)}.`);
     assert(state.profileSpecimenCount === 0 && state.sceneryCount === 0 && state.finalClaimCount === 0, `Retired homepage marketing returned: ${JSON.stringify(state)}.`);
     assert(!state.directionalGlyph && !state.headerLabels.includes('Roll') && !state.headerLabels.includes('Claim handle'), `Competing controls returned: ${JSON.stringify(state)}.`);
   });
@@ -98,7 +98,7 @@ try {
     return state;
   });
 
-  for (const [width, height] of [[2048, 1024], [1440, 900], [1280, 800], [1024, 900], [768, 1024], [390, 844], [375, 812]]) {
+  for (const [width, height] of [[2048, 1024], [1440, 900], [1280, 720], [1280, 800], [1024, 900], [768, 1024], [390, 844], [375, 812], [320, 812]]) {
     await page.setViewport(width, height);
     await page.waitFor('Boolean(document.querySelector(".homepage-reference .roll-page") && document.querySelector(".roll-stage--preroll, .roll-stage--results"))', `${width}x${height} playable homepage`);
     await page.evaluate('document.fonts.ready.then(() => true)');
@@ -119,6 +119,7 @@ try {
         bestRoll: rect(bestRoll),
         game: rect(game),
         scoring: rect(document.querySelector('.homepage-scoring')),
+        nextSection: rect(document.querySelector('.homepage-loop')),
         board: rect(document.querySelector('.homepage-community'))
       };
     })()`);
@@ -126,8 +127,9 @@ try {
     assert(state.grid && state.grid.left >= -1 && state.grid.right <= width + 1, `${width}x${height} roll grid escapes: ${JSON.stringify(state)}.`);
     assert(state.action && state.action.left >= -1 && state.action.right <= width + 1, `${width}x${height} roll action escapes: ${JSON.stringify(state)}.`);
     assert(state.scoring && state.board, `${width}x${height} explanatory content is missing: ${JSON.stringify(state)}.`);
-    if (width <= 900) assert(state.columns.trim().split(' ').length === 1, `${width}x${height} roll grid did not stack: ${JSON.stringify(state)}.`);
+    if (width < 1000) assert(state.columns.trim().split(' ').length === 1, `${width}x${height} roll grid did not stack: ${JSON.stringify(state)}.`);
     else {
+      assert(state.nextSection?.top >= height - 1, `${width}x${height} next section bleeds into the hero: ${JSON.stringify(state)}.`);
       assert(state.columns.trim().split(' ').length === 2, `${width}x${height} roll grid did not use the side-by-side composition: ${JSON.stringify(state)}.`);
       assert(state.bestRoll && state.game && state.game.left < state.bestRoll.left, `${width}x${height} kept the pre-roll game on the wrong side of today's best roll: ${JSON.stringify(state)}.`);
     }

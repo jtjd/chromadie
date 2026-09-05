@@ -2,7 +2,7 @@
   <div class="homepage-section__inner">
     <div class="homepage-section-kicker">How it works</div>
     <h2 id="homepage-loop-title" class="homepage-section-heading">A complete daily ritual in <span>one roll.</span></h2>
-    <p class="homepage-section-sub">There is no strategy and no rerolling the odds. Chromadie generates one RGB color, explains what is unusual about it, and gives everyone the same daily chance.</p>
+    <p class="homepage-section-sub">Find your daily color, discover what makes it unusual, and meet the people collecting theirs.</p>
 
     <div class="homepage-steps">
       <article class="homepage-step">
@@ -14,13 +14,13 @@
       <article class="homepage-step">
         <div class="homepage-step__num">02</div>
         <h3>Decode</h3>
-        <p>See the HEX value, rarity, score, and exact conditions that made this color ordinary, unusual, or exceptionally rare.</p>
+        <p>Discover the patterns hidden in your color, from matching digits to rare shades. See how they add up to your score.</p>
         <div class="homepage-step__visual homepage-step__visual--build" aria-hidden="true"></div>
       </article>
       <article class="homepage-step">
         <div class="homepage-step__num">03</div>
         <h3>Compare</h3>
-        <p>Share the result, see where it sits on today’s board, and return tomorrow for another independent roll.</p>
+        <p>Share your color and explore the profiles behind today’s board. Come back tomorrow to add to your story.</p>
         <div class="homepage-step__visual homepage-step__visual--seen" aria-hidden="true"><span></span><span></span><span></span></div>
       </article>
     </div>

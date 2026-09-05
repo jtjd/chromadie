@@ -1,5 +1,37 @@
 # Chromadie 2.0 Progress
 
+## Homepage account correction and visual refinement — 2026-09-05
+
+- Replaced stale account snapshots in the roll summary with reactive account
+  state; account-scoped result events reject cross-account/guest late responses.
+- Corrected guest persistence copy, loading/error controls, and signup guards.
+- Tightened hero geometry, clarified the pre-roll invitation, emphasized the
+  profile action, quieted the countdown, and added the next progression goal.
+- Reworked the static profile roll widget to borrow its host surface and text
+  treatment instead of drawing a card inside the profile; the color swatch,
+  identity, HEX/rarity metadata, and keyboard-accessible score disclosure stay
+  bounded across the shared renderers.
+- Added a bounded curated Tjz example with the real Sleek renderer, lazy
+  loading, a dated result, and no autoplay media or editor dependency.
+- Simplified scoring examples and empty boards; refresh public discovery after
+  results and UTC rollover. Local Wrangler artifacts are ignored by Git/lint.
+- Browser regression harness covers both profile/roll hydration orders,
+  token refresh, profile errors/recovery, account changes, logout, guest
+  restoration, public feed errors/retry, and responsive result/example layouts.
+- Widget evidence: artifacts/profile-color-signature; homepage evidence:
+  artifacts/homepage-account-refinement and artifacts/homepage-roll-first.
+- Desktop hero now occupies at least the first viewport below the header;
+  browser assertions prohibit next-section bleed in both pre-roll and result
+  states. The curated example has an explicit inner-card containment assertion.
+- Validation passed: build, svelte-check (zero diagnostics), full ESLint,
+  531/531 Node tests, links, CSP, username/balance/catalog drift, 5,000-sample
+  scoring parity, database security, homepage geometry and account browser
+  harnesses, and all enforced performance budgets. Aggregate asset catalog
+  advisories remain above their soft targets; those limits were not changed.
+- Production Studio smoke remains blocked by a pre-existing missing-row
+  initialization failure for newly registered accounts; the V2 RPC returns
+  Profile not found. Its normal-authoring assertion has not been weakened.
+
 ## Legacy presentation cleanup — 2026-09-03
 
 - Removed unreachable presentation specimens left behind by the roll-first

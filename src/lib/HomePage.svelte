@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import './homepage/homepage-reference.css';
+  import './homepage/homepage-refinement.css';
   import { ACCOUNT_STATES } from './authState.js';
   import SiteFooter from './SiteFooter.svelte';
   import RollPage from './RollPage.svelte';
@@ -8,6 +9,7 @@
   import HomepageHeader from './homepage/HomepageHeader.svelte';
   import HomepageLoop from './homepage/HomepageLoop.svelte';
   import HomepageScoring from './homepage/HomepageScoring.svelte';
+  import HomepageProfileExample from './homepage/HomepageProfileExample.svelte';
 
   export let isAuthenticated = false;
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.BOOTING);
@@ -16,6 +18,7 @@
 
   const dispatch = createEventDispatcher();
   let homepageDiscovery = { rows: [], loading: true, error: '' };
+  let discoveryRefresh = 0;
 
   function handleLeaderboard(event) {
     const detail = event?.detail || {};
@@ -31,7 +34,7 @@
   }
 </script>
 
-<div class="homepage-reference homepage-reference--roll-first">
+<div id="chromadie-homepage" class="homepage-reference homepage-reference--roll-first">
   <HomepageHeader
     {accountState}
     {isAuthenticated}
@@ -54,12 +57,15 @@
       bestRollError={homepageDiscovery.error}
       on:navigate={forwardAction}
       on:promptlogin={forwardAction}
+      on:resultready={() => discoveryRefresh += 1}
+      on:discoveryretry={() => discoveryRefresh += 1}
     />
 
     <div class="homepage-content">
       <HomepageLoop />
+      <HomepageProfileExample />
       <HomepageScoring />
-      <HomepageCommunity {isAuthenticated} {username} on:leaderboard={handleLeaderboard} />
+      <HomepageCommunity {isAuthenticated} {username} refreshKey={discoveryRefresh} on:leaderboard={handleLeaderboard} />
       <SiteFooter {isAuthenticated} />
     </div>
   </main>

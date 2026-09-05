@@ -94,12 +94,12 @@ test('account actions are contextual before and after the guest roll', () => {
   assert.match(sharedHeader, /export let showClaim = true/);
   assert.match(sharedHeader, /!isAuthenticated && showClaim/);
   assert.match(preRoll, /Sign up/);
-  assert.match(preRoll, /to save your roll\./);
+  assert.match(preRoll, /to start your profile history\./);
   assert.match(game, /on:signup=\{\(\) => beginGuestSignup\(signupNext\)\}/);
   assert.match(game, /beginGuestSignup\(signupNext\)/);
   assert.match(game, /Create an account/);
   assert.match(game, /Save future rolls and earn EP\./);
-  assert.match(game, /View it on your profile/);
+  assert.match(game, /View your profile/);
   assert.match(game, /Share result/);
 });
 
@@ -107,10 +107,10 @@ test('the lower homepage explains play and scoring before authentic profile disc
   for (const step of ['Roll', 'Decode', 'Compare']) assert.match(loop, new RegExp(`<h3>${step}</h3>`));
   assert.match(scoring, /Why some colors score/);
   assert.match(scoring, /Repeated digits/);
-  assert.match(scoring, /Symmetry and sequences/);
+  assert.match(scoring, /Mirrored digits/);
   assert.match(scoring, /Recognizable values/);
   assert.match(scoring, /href="\/how-to-play"/);
-  assert.match(community, /Today’s five strongest public results/);
+  assert.match(community, /Meet the people behind today’s colors/);
   assert.match(community, /supabase\.rpc\('get_public_discovery',/);
   assert.match(community, /supabase\.rpc\('get_public_discovery_spotlight'/);
   assert.match(community, /const DAILY_LEADERBOARD_LIMIT = 5/);

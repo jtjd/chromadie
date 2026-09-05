@@ -52,7 +52,7 @@ test('the dedicated Roll unlock sits beneath the left reward strip with a wide c
 
   const rewardStripIndex = page.indexOf('<div class="roll-page__proof"');
   const unlockQueueIndex = page.indexOf('<ProgressionUnlockQueue', rewardStripIndex);
-  const streakIndex = page.indexOf('{#if rollContext.isAuthenticated}', rewardStripIndex);
+  const streakIndex = page.indexOf('{#if account.isAuthenticated}', unlockQueueIndex);
 
   assert.ok(rewardStripIndex >= 0 && unlockQueueIndex > rewardStripIndex && unlockQueueIndex < streakIndex);
   assert.doesNotMatch(game, /ProgressionUnlockQueue/);

@@ -45,7 +45,7 @@
 <aside class="homepage-daily-leaderboard" aria-label="Today’s top rolls" aria-busy={loading} aria-live="polite">
   <div class="homepage-daily-leaderboard__header">
     <div class="homepage-daily-leaderboard__kicker">Today’s top rolls</div>
-    <span class="homepage-daily-leaderboard__reset" role="timer" aria-label={`Resets in ${resetLabel}`}>
+    <span class="homepage-daily-leaderboard__reset" role="timer" aria-live="off" aria-label={`Resets in ${resetLabel}`}>
       <span>Resets in</span>
       <strong>{resetLabel}</strong>
     </span>

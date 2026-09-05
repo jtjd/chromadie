@@ -3,7 +3,8 @@
   import RollPreRoll from './RollPreRoll.svelte';
   import RollResultBreakdown from './RollResultBreakdown.svelte';
   import { supabase } from './supabase';
-  import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
+  import { session, profile, authUser, authInitialized, accountState, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
+  import { ACCOUNT_STATES } from './authState.js';
   import { createChallengeLink } from './challenges';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
@@ -101,19 +102,13 @@
     if (!dedicated) return;
 
     dispatch('rollstate', {
+      accountKey: initialStateKey,
       phase,
       identity,
       hex: phase === 'results' ? normalizeHexColor(displayColor, '') : '',
       revealHex: phase === 'rolling' ? displayHex : '',
       rarity,
       score: Number(score) || 0,
-      currentStreak: Number($profile?.current_streak) || 0,
-      longestStreak: Number($profile?.longest_streak) || 0,
-      totalRolls: Number($profile?.total_rolls) || 0,
-      lifetimeEp: Number($profile?.lifetime_ep) || 0,
-      isAuthenticated: Boolean($isAuthenticated),
-      username: $profile?.username || 'You',
-      avatarSrc: $profile?.avatar_url || $profile?.avatar_path || '',
       newProgressionUnlocks: newMilestones,
       weeklyFocusComplete: cotwHit
     });
@@ -541,6 +536,7 @@
     rerollRequestInFlight = false;
     error = null;
     resetRollPresentation();
+    dispatchRollState();
     loading = true;
 
     if (getRollAccountMode($session) === 'authenticated') {
@@ -779,6 +775,7 @@
   }
 
   function beginGuestSignup(next = '') {
+    if ($accountState !== ACCOUNT_STATES.SIGNED_OUT) return;
     const safeNext = typeof next === 'string' ? next : '';
     if (!$isAuthenticated) {
       clearGuestRoll();
@@ -866,6 +863,7 @@
         loading={loading}
         authInitialized={$authInitialized}
         isAuthenticated={$isAuthenticated}
+        signedOut={$accountState === ACCOUNT_STATES.SIGNED_OUT}
         on:roll={() => initiateRoll(false)}
         on:signup={() => beginGuestSignup(signupNext)}
       />
@@ -958,7 +956,7 @@
     </div>
 
   {:else if phase === 'results'}
-    <div class="card roll-stage roll-stage--results" style={`--roll-result-color: ${normalizeHexColor(displayColor, '#ffffff')}; --roll-rarity: ${getRarityPresentation(rarity || 'Common').color};`} aria-labelledby="roll-result-title">
+    <div class="card roll-stage roll-stage--results" style={`--roll-action-ink: ${rollActionInk}; --roll-result-color: ${normalizeHexColor(displayColor, '#ffffff')}; --roll-rarity: ${getRarityPresentation(rarity || 'Common').color};`} aria-labelledby="roll-result-title">
       <div class="roll-card-header">
         <div class="roll-card-header__copy">
           <h2 class="roll-card-header__title">Daily Roll</h2>
@@ -990,7 +988,7 @@
         totalScore={displayScore}
       />
 
-      <button
+      {#if !dedicated}<button
         type="button"
         class="roll-btn roll-action__button roll-action__button--claimed"
         style={`--roll-action-ink: ${rollActionInk};`}
@@ -1003,18 +1001,18 @@
         {:else}
           Claimed! +{displayScore.toLocaleString()}
         {/if}
-      </button>
+      </button>{:else}
+        <p class="roll-countdown" role="timer" aria-live="off">Next roll in <strong>{countdownString}</strong></p>
+      {/if}
 
       {#if showAcquisitionActions}
         <div class="roll-acquisition-actions" aria-label="Roll result actions">
           {#if $isAuthenticated}
-            <button class="chroma-btn result-action result-action--primary" on:click={shareResultsText}>
+            <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
+            <button class="roll-acquisition-actions__quiet" on:click={shareResultsText}>
               {copied ? 'Copied' : 'Share result'}
             </button>
-            <button class="roll-acquisition-actions__quiet" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>
-              View it on your profile
-            </button>
-          {:else}
+          {:else if $accountState === ACCOUNT_STATES.SIGNED_OUT}
             <button class="roll-acquisition-actions__quiet" type="button" on:click={shareResultsText}>
               {copied ? 'Copied' : 'Share result'}
             </button>

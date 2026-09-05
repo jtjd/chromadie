@@ -10,6 +10,7 @@
   const dispatch = createEventDispatcher();
   export let isAuthenticated = false;
   export let username = '';
+  export let refreshKey = 0;
   let rows = [];
   let currentUser = null;
   let loading = true;
@@ -19,9 +20,11 @@
   let loadedIdentityKey = null;
   let resetLabel = '—';
   let resetInterval;
+  let loadedRefreshKey = -1;
+  let lastDay = '';
 
   $: identityKey = isAuthenticated && typeof username === 'string' ? username.trim().toLowerCase() : '';
-  $: if (mounted && identityKey !== loadedIdentityKey) {
+  $: if (mounted && (identityKey !== loadedIdentityKey || refreshKey !== loadedRefreshKey)) {
     void loadCommunity();
   }
 
@@ -47,6 +50,9 @@
 
   function updateResetLabel() {
     const now = new Date();
+    const day = now.toISOString().slice(0, 10);
+    if (lastDay && day !== lastDay) void loadCommunity();
+    lastDay = day;
     const nextReset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
     const seconds = Math.max(0, Math.floor((nextReset - now.getTime()) / 1000));
     const hours = Math.floor(seconds / 3600);
@@ -56,6 +62,7 @@
   }
 
   async function loadCommunity() {
+    loadedRefreshKey = refreshKey;
     loadedIdentityKey = identityKey;
     const currentRequestId = ++requestId;
     loading = true;
@@ -117,11 +124,14 @@
   });
 </script>
 
-<section class="homepage-section homepage-community" id="community" aria-labelledby="homepage-community-title">
+<section class="homepage-section homepage-community" class:homepage-community--empty={!loading && !error && !rows.length} id="community" aria-label="Today’s public board">
+  {#if !loading && !error && !rows.length}
+    <a href="/leaderboard">Explore the leaderboard</a>
+  {:else}
   <div class="homepage-community__copy">
     <div class="homepage-section-kicker">Today’s board</div>
     <h2 id="homepage-community-title" class="homepage-section-heading">See what everyone else <span>rolled.</span></h2>
-    <p class="homepage-section-sub">Today’s five strongest public results come directly from real account rolls. Player names open the profiles behind those results.</p>
+    <p class="homepage-section-sub">Meet the people behind today’s colors. Open a profile and see their story.</p>
   </div>
 
   <div class="homepage-community__board">
@@ -133,6 +143,7 @@
       {resetLabel}
     />
   </div>
+  {/if}
 </section>
 
 <style>

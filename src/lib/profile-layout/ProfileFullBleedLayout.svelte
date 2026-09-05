@@ -29,6 +29,8 @@
   export let linkStyle = null;
   export let accentColor = '#00FFB3';
   export let roll = null;
+  export let rollLabel = 'Daily color';
+  export let headingTag = 'h1';
   export let surfaceStyle = '';
   export let layoutVariant = 'full-bleed';
   export let colorizeAvatarEffect = false;
@@ -118,11 +120,11 @@
         recentColors={nameRecentColors}
         context="profile"
         mode="animated"
-        semanticTag="h1"
+        semanticTag={headingTag === 'h2' ? 'h2' : 'h1'}
         semanticClass="profile-full-bleed__name"
       />
     {:else}
-      <h1 class="profile-full-bleed__name">{safeDisplayName}</h1>
+      <svelte:element this={headingTag === 'h2' ? 'h2' : 'h1'} class="profile-full-bleed__name">{safeDisplayName}</svelte:element>
     {/if}
 
     {#if bio}
@@ -140,7 +142,7 @@
 
     {#if rollHex}
       <div class="profile-full-bleed__roll" data-profile-roll-slot="summary">
-        <ProfileRollSummary result={roll} accentColor={safeAccent} label="Daily color" compact={layoutVariant === 'sleek'} />
+        <ProfileRollSummary result={roll} accentColor={safeAccent} label={rollLabel} compact={layoutVariant === 'sleek'} />
       </div>
     {/if}
 

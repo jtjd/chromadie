@@ -4,7 +4,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'artifacts/**', 'design/reference/**', 'supabase/.temp/**', 'supabase/.branches/**']
+    ignores: ['dist/**', 'node_modules/**', '.wrangler/**', 'artifacts/**', 'design/reference/**', 'supabase/.temp/**', 'supabase/.branches/**']
   },
   js.configs.recommended,
   ...svelte.configs['flat/recommended'],

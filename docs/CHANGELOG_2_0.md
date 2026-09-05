@@ -2,6 +2,21 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-05 — A clearer homepage and consistent account controls
+
+- Signed-in players no longer see a stale Create an account prompt when their
+  daily roll loads before their profile. Account loading and retry states stay
+  distinct from guest play, and switching accounts clears the previous result.
+- The daily roll has more presence, an explicit invitation, and a prominent
+  View your profile action after rolling. The next-roll timer is quiet status.
+- Static profile roll summaries now inherit their host surface instead of
+  rendering a nested card; the swatch, identity, color metadata, and score
+  disclosure remain available without duplicating the playable roll.
+- Empty boards take less space, scoring examples explain concrete colors, and
+  a curated Tjz profile demonstrates how a personal profile can look.
+- Guest results accurately describe local storage rather than claiming they
+  are already saved to an account's profile history.
+
 ## 2026-09-03 — Retire unused presentation code
 
 - Removed obsolete homepage specimens and profile summary components that were

@@ -240,7 +240,7 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(game, /clearGuestRoll\(\)/);
   assert.match(game, /Save future rolls and earn EP/);
   assert.match(preRoll, /Sign up/);
-  assert.match(preRoll, /to save your roll\./);
+  assert.match(preRoll, /to start your profile history\./);
   assert.match(shell, /Recent unlocks/);
   assert.match(preferences, /90 days/);
   assert.doesNotMatch(game, /insert\(.*(?:progression|inventory)/s);

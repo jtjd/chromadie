@@ -1,5 +1,6 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
   import { getPublicProfilePath } from '../discoveryData.js';
   import { getProfileMediaUrl } from '../profileMedia.js';
   import RollResultBreakdown from '../RollResultBreakdown.svelte';
@@ -79,7 +80,7 @@
     {#if loading && !bestRoll}
       <div class="homepage-best-roll__state" role="status">Finding today’s best roll…</div>
     {:else if error && !bestRoll}
-      <div class="homepage-best-roll__state" role="alert">{error}</div>
+      <div class="homepage-best-roll__state" role="alert">{error}<button type="button" on:click={() => dispatch('retry')}>Retry</button></div>
     {:else if bestRoll}
       <div class="homepage-best-roll__identity-row">
         <a class="homepage-best-roll__identity-link" href={profileHref} aria-label={`View ${displayName}'s profile`}>
@@ -121,8 +122,8 @@
       </div>
     {:else}
       <div class="homepage-best-roll__state">
-        <strong>No public roll yet.</strong>
-        <span>Be the first color on today’s board.</span>
+        <strong>No public roll today.</strong>
+        <span>Be the first to appear on the board.</span>
       </div>
     {/if}
 

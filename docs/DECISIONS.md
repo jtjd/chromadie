@@ -1,5 +1,42 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-05 — Reactive homepage identity and a contained profile example
+
+Account controls and progression read the canonical account/session/profile
+stores, independently of Game's result events. Events carry their originating
+account key; stale events cannot carry a guest or another account's result
+into the current summary. Booting, profile loading, and profile errors are
+never treated as signed out. Guest copy explicitly describes device storage.
+
+Preserve the dark, roll-first composition while tightening hero spacing,
+making the profile action primary, and collapsing empty community chrome.
+At desktop widths (1000px and up), preserve a full first viewport beneath the
+88px header so the next section never bleeds into the hero. Mobile stays
+content-sized; short screens may scroll rather than clip tall result cards.
+The single bounded public discovery feed refreshes after results and UTC
+rollover; no owner result is inserted into a public board by the client.
+
+The approved lower-page addition is a labeled, lazy curated Tjz example using
+the canonical Sleek renderer and public appearance. Its sample roll has a
+fixed date. It does not import editor code, autoplay media, hydrate an owner
+profile, or imply that the snapshot is a live leaderboard entry. Optional
+heading and roll-label props preserve existing renderer defaults.
+
+The static roll widget follows the same composition boundary: its parent
+profile owns the surface, spacing, and text palette. The widget contributes
+only the swatch and bounded color metadata; score remains available through a
+native keyboard-accessible disclosure so the profile does not become a card
+inside a card. The shared widget contract is used by Compact, Sleek, Modern,
+Portfolio, Studio, and the curated homepage example, while the interactive
+roll and full condition breakdown remain dedicated to `/roll`.
+
+Production smoke exposed a separate existing initialization defect: a new
+account has no profile_configurations row, and get_my_profile_configuration_v2
+returns success=false / Profile not found. The removed legacy fallback used
+to create the missing row on demand. Do not restore that broad fallback or
+weaken the smoke test; an additive server initialization fix is separate from
+the homepage work. The current Studio write gate remains correct.
+
 ## 2026-09-03 — Retire unreachable presentation specimens
 
 Remove presentation components that have no production route, dynamic loader,

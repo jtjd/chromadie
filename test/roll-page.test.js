@@ -177,7 +177,7 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(game, /\.roll-reveal-discovery__list \{[\s\S]*align-content: start;[\s\S]*grid-auto-rows: max-content;/);
   assert.match(game, /beginGuestSignup\(signupNext\)/);
   assert.match(preRoll, /Sign up/);
-  assert.match(preRoll, /to save your roll\./);
+  assert.match(preRoll, /to start your profile history\./);
   assert.match(game, /Save future rolls and earn EP\./);
   assert.doesNotMatch(game, /guest-prompt__icon|>△</);
   assert.match(app, /requestedNext\.startsWith\('\/'\)/);

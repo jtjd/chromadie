@@ -1,0 +1,35 @@
+/* Keep the player's action anchored across reveal states. */
+#chromadie-homepage .roll-page { min-height: 0; padding: clamp(64px, 7vh, 96px) 24px 64px; }
+#chromadie-homepage .roll-page .roll-page__game { width: min(100%, 1040px); grid-template-columns: minmax(0, 440px) minmax(0, 460px); column-gap: clamp(64px, 5vw, 88px); }
+#chromadie-homepage .roll-page .roll-page__context,
+#chromadie-homepage .roll-page .game-container--dedicated { max-width: 460px !important; }
+#chromadie-homepage .roll-page--homepage-preroll .roll-page__context h1 { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; font-size: clamp(2rem, 3vw, 2.8rem); margin-top: 24px; }
+#chromadie-homepage .roll-page--homepage-preroll .roll-page__description { margin: 16px auto 0; }
+#chromadie-homepage .roll-page .roll-stage--results .roll-display { padding: 0 0 20px; border: 0; border-bottom: 1px solid var(--roll-border); border-radius: 0; background: transparent; }
+#chromadie-homepage .roll-page .roll-stage--results > .roll-result-summary { padding: 0; border: 0; background: transparent; }
+#chromadie-homepage .roll-countdown { margin: 0; color: var(--roll-muted); text-align: center; font-size: .85rem; font-variant-numeric: tabular-nums; }
+#chromadie-homepage .roll-countdown strong { color: var(--roll-text); }
+#chromadie-homepage .roll-page .roll-acquisition-actions .result-action--primary { min-height: 48px; background: var(--roll-result-color); color: var(--roll-action-ink, #0e0e10); }
+#chromadie-homepage .homepage-best-roll .homepage-best-roll__state { min-height: 0; padding: 24px 12px; border: 0; }
+#chromadie-homepage .homepage-best-roll__result-summary { background: transparent; border: 0; }
+#chromadie-homepage .homepage-best-roll__result-summary .roll-result-summary { padding: 0; border: 0; background: transparent; }
+#chromadie-homepage .homepage-best-roll__color-display { border: 0; border-bottom: 1px solid var(--homepage-border); border-radius: 0; background: transparent; }
+#chromadie-homepage .homepage-community--empty { display: block; padding-block: 32px 48px; }
+#chromadie-homepage .homepage-loop,
+#chromadie-homepage .homepage-scoring,
+#chromadie-homepage .homepage-community { padding-block: 72px; }
+@media (min-width: 1000px) {
+  /* The shared desktop header is 88px. Keep the next section below the fold,
+     while allowing tall result cards to grow naturally on short screens. */
+  #chromadie-homepage .roll-page { min-height: calc(100svh - 88px); }
+}
+@media (max-width: 999px) {
+  #chromadie-homepage .roll-page { padding: 40px 16px 48px; }
+  #chromadie-homepage .roll-page .roll-page__game { width: min(100%, 460px); grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  #chromadie-homepage .roll-page .roll-page__context { grid-column: 1; grid-row: 1; }
+  #chromadie-homepage .roll-page .game-container--dedicated { grid-column: 1; grid-row: 2; }
+  #chromadie-homepage .roll-page .homepage-best-roll { grid-column: 1; grid-row: 3; margin-top: 0; }
+  #chromadie-homepage .homepage-loop,
+  #chromadie-homepage .homepage-scoring,
+  #chromadie-homepage .homepage-community { padding-block: 48px; }
+}

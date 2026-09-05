@@ -3,8 +3,11 @@
   import { SvelteSet } from 'svelte/reactivity';
   import Game from './Game.svelte';
   import HomepageBestRoll from './homepage/HomepageBestRoll.svelte';
+  import HomepageNextMilestone from './homepage/HomepageNextMilestone.svelte';
   import ProgressionUnlockQueue from './ProgressionUnlockQueue.svelte';
-  import { createRollPageContext, deriveRollPagePresentation } from './rollPageContext.js';
+  import { createRollPageContext, deriveRollPagePresentation, deriveRollAccountPresentation, acceptRollPageEvent } from './rollPageContext.js';
+  import { accountState, session, profile } from './stores.js';
+  import { ACCOUNT_STATES } from './authState.js';
   import { trackProductEvent } from './productAnalytics.js';
 
   const dispatch = createEventDispatcher();
@@ -16,7 +19,9 @@
   export let bestRollLoading = true;
   export let bestRollError = '';
   let gameRef = null;
-  let rollContext = createRollPageContext();
+  let rollEvent = createRollPageContext();
+  $: account = deriveRollAccountPresentation($accountState, $session, $profile);
+  $: rollContext = { ...(rollEvent.accountKey === account.accountKey ? rollEvent : createRollPageContext()), ...account };
   const progressionViewsTracked = new SvelteSet();
 
   $: contextPresentation = deriveRollPagePresentation(rollContext, { homepage });
@@ -37,18 +42,21 @@
   }
 
   function handleRollState(event) {
-    rollContext = { ...rollContext, ...(event.detail || {}) };
+    const previous = rollEvent;
+    rollEvent = acceptRollPageEvent(rollEvent, event.detail, $session?.user?.id || 'guest');
+    if (rollEvent !== previous && rollEvent.phase === 'results' && previous.phase !== 'results') dispatch('resultready');
   }
 
   function requestGuestSignup() {
+    if ($accountState !== ACCOUNT_STATES.SIGNED_OUT) return;
     gameRef?.beginGuestSignupFromParent(signupNext);
   }
 
   function handleProgressionUnlockAcknowledgement(event) {
     const unlockId = event?.detail?.unlock?.id;
     if (!unlockId) return;
-    rollContext = {
-      ...rollContext,
+    rollEvent = {
+      ...rollEvent,
       newProgressionUnlocks: (rollContext.newProgressionUnlocks || [])
         .filter(unlock => unlock.id !== unlockId)
     };
@@ -76,7 +84,8 @@
           <span class="roll-page__description-rarity">{rollContext.rarity || 'Daily'} roll</span>
           ·
           <strong class="roll-page__description-score">{Number(rollContext.score).toLocaleString()} score</strong>.
-          This color is now part of your profile history.
+          {#if account.isAuthenticated}This color is now part of your profile history.
+          {:else if account.signedOut}This roll is saved on this device. Create an account to start your profile history.{/if}
         </p>
 
         {#if rollContext.newProgressionUnlocks?.length || rollContext.weeklyFocusComplete}
@@ -110,7 +119,7 @@
           </div>
         {/if}
 
-        {#if !rollContext.isAuthenticated}
+        {#if account.signedOut}
           <div class="roll-page__guest-cta">
             <button type="button" on:click={requestGuestSignup}>Create an account</button>
           </div>
@@ -119,14 +128,20 @@
         <p class="roll-page__eyebrow">A NEW COLOR, EVERY DAY</p>
         {#if homepage}
           <div class="roll-page__unknown" aria-hidden="true">{homepage && rollContext.phase === 'rolling' ? (rollContext.revealHex || '#??????') : '#??????'}</div>
-          <h1 id="roll-page-title">Today’s color</h1>
+          <h1 id="roll-page-title">What color is your day?</h1>
+          <p class="roll-page__description">One daily roll. A new piece of your profile.</p>
         {:else}
           <h1 id="roll-page-title">Roll today’s color.</h1>
           <p class="roll-page__description">One of 16,777,216 colors. See the patterns, rarity, and score hidden in yours.</p>
         {/if}
       {/if}
 
-      {#if rollContext.isAuthenticated}
+      {#if $accountState === ACCOUNT_STATES.PROFILE_LOADING || $accountState === ACCOUNT_STATES.BOOTING}
+        <p class="roll-page__description" role="status">Loading your account…</p>
+      {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
+        <p class="roll-page__description" role="alert">Your account details couldn’t be loaded. <button type="button" on:click={() => window.location.reload()}>Retry</button></p>
+      {/if}
+      {#if account.isAuthenticated}
         <div class="roll-page__streak">
           <span class="roll-page__streak-icon" aria-hidden="true"></span>
           <div>
@@ -143,8 +158,9 @@
           <div class="roll-page__progression-bar" role="progressbar" aria-label={`${contextProgress}% toward ${contextRank.next?.name || 'the final rank'}`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={contextProgress}>
             <span style={`width: ${contextProgress}%`}></span>
           </div>
-          <small>{contextRank.next ? `${Math.max(0, contextRank.next.min - contextRank.lifetimeEp).toLocaleString()} EP to ${contextRank.next.name}` : 'Final rank reached'}</small>
+          <small>{contextRank.next ? `${contextProgress}% toward ${contextRank.next.name}` : 'Final rank reached'}</small>
         </div>
+        <HomepageNextMilestone userId={$session.user.id} refreshKey={`${rollContext.phase}:${rollContext.hex}:${rollContext.totalRolls}`} />
 
       {/if}
     </div>
@@ -163,6 +179,7 @@
         rows={bestRollRows}
         loading={bestRollLoading}
         error={bestRollError}
+        on:retry={() => dispatch('discoveryretry')}
       />
     {/if}
   </section>
@@ -793,6 +810,7 @@
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-display) { order: 0; }
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-result-summary) { order: 1; }
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-action__button) { order: 2; }
+  .roll-page :global(.roll-countdown) { order: 2; margin: 0; text-align: center; color: var(--roll-muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-acquisition-actions) { order: 3; }
   .roll-page :global(.game-container--dedicated .roll-stage--results > .cotw-success-banner) { order: 4; }
   .roll-page__context :global(.progression-reward-preview--wide .progression-reward-preview__trigger) { min-height:4.8rem; padding:.3rem .65rem .3rem .3rem; border-color:var(--roll-border); background:var(--roll-panel-card); }

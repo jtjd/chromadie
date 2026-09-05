@@ -4,6 +4,7 @@
   export let loading = false;
   export let authInitialized = false;
   export let isAuthenticated = false;
+  export let signedOut = false;
 
   const dispatch = createEventDispatcher();
 </script>
@@ -34,10 +35,10 @@
     {loading ? 'Reading…' : 'Roll today’s color'}
   </button>
 
-  {#if !isAuthenticated}
+  {#if signedOut && !isAuthenticated}
     <p class="guest-prompt guest-prompt--preroll guest-prompt--quiet">
       <button type="button" class="guest-prompt__text-action" on:click={() => dispatch('signup')}>Sign up</button>
-      <span>to save your roll.</span>
+      <span>to start your profile history.</span>
     </p>
   {/if}
 </div>

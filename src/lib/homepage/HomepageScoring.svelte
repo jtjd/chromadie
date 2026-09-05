@@ -2,7 +2,7 @@
   <div class="homepage-scoring__copy">
     <div class="homepage-section-kicker">Probability, not opinion</div>
     <h2 id="homepage-scoring-title" class="homepage-section-heading">Why some colors score <span>higher.</span></h2>
-    <p class="homepage-section-sub">Every RGB color is checked against the same deterministic condition catalog. Repeated digits, symmetry, sequences, channel relationships, and exact recognizable values earn more when they are less likely to occur.</p>
+    <p class="homepage-section-sub">Some colors hide unusual patterns. Matching digits, mirrored numbers, and exact shades can make a roll special. Rarer patterns earn more points.</p>
     <a class="homepage-text-link" href="/how-to-play">Read how scoring works</a>
   </div>
 
@@ -11,21 +11,21 @@
       <span class="homepage-scoring__swatch homepage-scoring__swatch--repeat" aria-hidden="true"></span>
       <div>
         <h3>Repeated digits</h3>
-        <p>Patterns such as six matching HEX digits are far less common than an ordinary color.</p>
+        <p><code>#111111</code> repeats the same digit six times. Only a handful of colors do that.</p>
       </div>
     </article>
     <article>
       <span class="homepage-scoring__swatch homepage-scoring__swatch--symmetry" aria-hidden="true"></span>
       <div>
-        <h3>Symmetry and sequences</h3>
-        <p>Palindromes, ramps, reversals, and channel progressions add probability-weighted score.</p>
+        <h3>Mirrored digits</h3>
+        <p><code>#123321</code> reads the same forward and backward. That hidden symmetry adds to its score.</p>
       </div>
     </article>
     <article>
       <span class="homepage-scoring__swatch homepage-scoring__swatch--exact" aria-hidden="true"></span>
       <div>
         <h3>Recognizable values</h3>
-        <p>Exact colors and meaningful numeric patterns become rare discoveries instead of arbitrary labels.</p>
+        <p><code>#FF0000</code> is pure red: all red, no green or blue. Landing on that exact shade is a rare discovery.</p>
       </div>
     </article>
   </div>
@@ -75,8 +75,8 @@
   }
 
   .homepage-scoring__swatch--repeat { --swatch: #111111; }
-  .homepage-scoring__swatch--symmetry { --swatch: #4a9a7a; }
-  .homepage-scoring__swatch--exact { --swatch: #ff4d8d; }
+  .homepage-scoring__swatch--symmetry { --swatch: #123321; }
+  .homepage-scoring__swatch--exact { --swatch: #ff0000; }
 
   .homepage-scoring__examples h3 {
     margin: 0;

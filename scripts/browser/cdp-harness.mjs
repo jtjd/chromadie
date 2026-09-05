@@ -330,9 +330,21 @@ export class CdpPage {
   }
 
   async pressKey(key) {
-    const code = key === 'Escape' ? 'Escape' : key === 'Tab' ? 'Tab' : key;
-    await this.command('Input.dispatchKeyEvent', { type: 'keyDown', key, code });
-    await this.command('Input.dispatchKeyEvent', { type: 'keyUp', key, code });
+    const keyInfo = {
+      Escape: { key: 'Escape', code: 'Escape', virtualKeyCode: 27 },
+      Tab: { key: 'Tab', code: 'Tab', virtualKeyCode: 9 },
+      Enter: { key: 'Enter', code: 'Enter', virtualKeyCode: 13, text: '\r' },
+      Space: { key: ' ', code: 'Space', virtualKeyCode: 32, text: ' ' },
+      ' ': { key: ' ', code: 'Space', virtualKeyCode: 32, text: ' ' }
+    }[key] || { key, code: key };
+    const event = {
+      key: keyInfo.key,
+      code: keyInfo.code,
+      ...(keyInfo.virtualKeyCode ? { windowsVirtualKeyCode: keyInfo.virtualKeyCode, nativeVirtualKeyCode: keyInfo.virtualKeyCode } : {}),
+      ...(keyInfo.text ? { text: keyInfo.text, unmodifiedText: keyInfo.text } : {})
+    };
+    await this.command('Input.dispatchKeyEvent', { type: 'keyDown', ...event });
+    await this.command('Input.dispatchKeyEvent', { type: 'keyUp', ...event });
     await delay(100);
   }
 
