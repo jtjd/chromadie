@@ -76,27 +76,27 @@
 
 <style>
   .homepage-start {
-    padding-block: 104px 110px;
+    padding-block: 96px 104px;
     border-top: 1px solid var(--homepage-border);
   }
 
   .homepage-start__content {
     display: grid;
-    width: min(100%, 980px);
+    width: min(100%, 920px);
     margin-inline: auto;
     justify-items: center;
     text-align: center;
   }
 
   .homepage-start__content :global(.homepage-section-heading) {
-    max-width: 760px;
-    margin-bottom: 34px;
+    max-width: 720px;
+    margin-bottom: 30px;
   }
 
   .homepage-start__claim {
     display: grid;
-    grid-template-columns: minmax(320px, 1fr) auto;
-    width: min(100%, 760px);
+    grid-template-columns: minmax(300px, 1fr) auto;
+    width: min(100%, 720px);
     gap: 12px;
     margin: 0;
   }
@@ -104,19 +104,18 @@
   .homepage-start__field {
     display: flex;
     min-width: 0;
-    min-height: 60px;
+    min-height: 58px;
     align-items: center;
     padding: 0 18px;
-    border: 1px solid rgba(255,255,255,.16);
-    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 9px;
     background: #f5f5f7;
-    color: #4f4f58;
     cursor: text;
   }
 
   .homepage-start__field:focus-within {
     border-color: rgba(255,255,255,.52);
-    box-shadow: 0 0 0 3px rgba(255,255,255,.08);
+    box-shadow: 0 0 0 3px rgba(255,255,255,.07);
   }
 
   .homepage-start__field--invalid {
@@ -148,8 +147,8 @@
   }
 
   .homepage-start .homepage-button {
-    min-height: 60px;
-    padding-inline: 28px;
+    min-height: 58px;
+    padding-inline: 26px;
     border: 0;
     color: #08080a;
     font: 600 .96rem / 1 var(--homepage-display);
@@ -158,24 +157,24 @@
   }
 
   .homepage-start__claim-button {
-    min-width: 210px;
+    min-width: 205px;
   }
 
   .homepage-start__signin {
     display: inline-flex;
-    min-height: 42px;
+    min-height: 38px;
     align-items: center;
-    margin-top: 14px;
+    margin-top: 12px;
     color: var(--homepage-secondary-muted);
-    font-size: .88rem;
+    font-size: .86rem;
     text-underline-offset: 4px;
   }
 
   .homepage-start__error {
-    width: min(100%, 760px);
-    margin: 9px 0 0;
+    width: min(100%, 720px);
+    margin: 8px 0 0;
     color: #f38ba8;
-    font-size: .82rem;
+    font-size: .8rem;
     text-align: left;
   }
 
@@ -203,15 +202,15 @@
   .homepage-start__field input:focus-visible { outline: 0; }
 
   @media (max-width: 720px) {
-    .homepage-start { padding-block: 72px 78px; }
-    .homepage-start__content :global(.homepage-section-heading) { margin-bottom: 26px; }
+    .homepage-start { padding-block: 70px 76px; }
+    .homepage-start__content :global(.homepage-section-heading) { margin-bottom: 24px; }
     .homepage-start__claim { grid-template-columns: 1fr; }
     .homepage-start__claim-button { width: 100%; }
   }
 
   @media (max-width: 520px) {
-    .homepage-start { padding-block: 60px 66px; }
-    .homepage-start__field { min-height: 56px; padding-inline: 15px; }
-    .homepage-start .homepage-button { min-height: 56px; }
+    .homepage-start { padding-block: 58px 64px; }
+    .homepage-start__field { min-height: 54px; padding-inline: 15px; }
+    .homepage-start .homepage-button { min-height: 54px; }
   }
 </style>
