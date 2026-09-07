@@ -125,6 +125,7 @@
 
   .homepage-start__field span {
     flex: 0 0 auto;
+    margin-right: 0;
     color: #75757e;
     font: 600 1rem / 1 var(--homepage-display);
   }
