@@ -26,6 +26,7 @@
   export let descriptionMode = 'plain';
   export let entryAnimation = 'none';
   export let links = [];
+  export let linksInteractive = true;
   export let linkStyle = null;
   export let accentColor = '#00FFB3';
   export let roll = null;
@@ -50,7 +51,10 @@
   $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .16;
   $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0);
   $: visibleLinks = (Array.isArray(links) ? links : [])
-    .filter(link => link && typeof link.url === 'string' && link.url)
+    .filter(link => {
+      if (!link || typeof link.type !== 'string' || !link.type) return false;
+      return linksInteractive ? typeof link.url === 'string' && Boolean(link.url) : true;
+    })
     .slice(0, PROFILE_LINK_LIMITS.maxLinks)
     .map(link => ({ ...link, definition: getProfileLinkDefinition(link.type) }));
   $: metadata = [
@@ -148,18 +152,29 @@
 
     {#if visibleLinks.length}
       <nav class="profile-full-bleed__links" aria-label={`${safeDisplayName} profile links`}>
-        {#each visibleLinks as link, index (link.key || link.order || link.url || index)}
-          <a
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={link.label || link.definition.label}
-            title={link.label || link.definition.label}
-            on:click={() => onEntryClick(link.key || `link-${link.order ?? index}`)}
-          >
-            <img src={linkIconSource(link)} alt="" loading="lazy" aria-hidden="true" />
-            <span>{link.label || link.definition.label}</span>
-          </a>
+        {#each visibleLinks as link, index (link.key || link.order || link.url || link.type || index)}
+          {#if linksInteractive}
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={link.label || link.definition.label}
+              title={link.label || link.definition.label}
+              on:click={() => onEntryClick(link.key || `link-${link.order ?? index}`)}
+            >
+              <img src={linkIconSource(link)} alt="" loading="lazy" aria-hidden="true" />
+              <span>{link.label || link.definition.label}</span>
+            </a>
+          {:else}
+            <span
+              class="profile-full-bleed__link-placeholder"
+              aria-label={link.label || link.definition.label}
+              title={link.label || link.definition.label}
+            >
+              <img src={linkIconSource(link)} alt="" loading="lazy" aria-hidden="true" />
+              <span>{link.label || link.definition.label}</span>
+            </span>
+          {/if}
         {/each}
       </nav>
     {/if}
@@ -367,8 +382,10 @@
     margin: 1.15rem auto 0;
   }
 
-  .profile-full-bleed__links a {
+  .profile-full-bleed__links a,
+  .profile-full-bleed__link-placeholder {
     display: grid;
+    position: relative;
     width: calc(2.4rem * var(--profile-full-bleed-link-scale, 1));
     height: calc(2.4rem * var(--profile-full-bleed-link-scale, 1));
     place-items: center;
@@ -376,10 +393,16 @@
     border-radius: 50%;
     color: var(--profile-text, #ffffff);
     text-decoration: none;
+  }
+
+  .profile-full-bleed__links a {
     transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
   }
 
-  .profile-full-bleed__links a img {
+  .profile-full-bleed__link-placeholder { cursor: default; }
+
+  .profile-full-bleed__links a img,
+  .profile-full-bleed__link-placeholder img {
     display: block;
     width: calc(2.2rem * var(--profile-full-bleed-link-scale, 1));
     height: calc(2.2rem * var(--profile-full-bleed-link-scale, 1));
@@ -388,7 +411,8 @@
     opacity: .9;
   }
 
-  .profile-full-bleed__links a span {
+  .profile-full-bleed__links a > span,
+  .profile-full-bleed__link-placeholder > span {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -418,49 +442,19 @@
   .profile-full-bleed--entry-pop { animation: profile-full-bleed-pop 520ms cubic-bezier(.18, 1.15, .34, 1) both; }
   .profile-full-bleed--entry-unfold { animation: profile-full-bleed-unfold 700ms cubic-bezier(.2, .72, .12, 1) both; }
 
-  @keyframes profile-full-bleed-fade { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes profile-full-bleed-focus { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
-  @keyframes profile-full-bleed-pop {
-    0% { transform: scale(.985); }
-    62% { transform: scale(1.012); }
-    to { transform: scale(1); }
-  }
-  @keyframes profile-full-bleed-unfold {
-    from { opacity: .82; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes profile-full-bleed-fade { from { opacity: 0; transform: translateY(.9rem); } }
+  @keyframes profile-full-bleed-focus { from { opacity: 0; filter: blur(14px); transform: scale(.97); } }
+  @keyframes profile-full-bleed-pop { from { opacity: 0; transform: scale(.9); } }
+  @keyframes profile-full-bleed-unfold { from { opacity: 0; clip-path: inset(0 50% 0 50% round 2rem); } }
 
-  @media (max-width: 36rem) {
-    :global(.profile-full-bleed__boundary--full-bleed),
-    :global(.profile-full-bleed__boundary--sleek) {
-      width: 100%;
-      max-width: 100%;
-    }
-
-    .profile-full-bleed { padding-inline: .75rem; }
-    .profile-full-bleed__avatar-shell { margin-bottom: .55rem; }
-    .profile-full-bleed__name { font-size: clamp(1.45rem, 7vw, 1.9rem); }
-    .profile-full-bleed__bio { max-width: 22rem; font-size: clamp(.76rem, 4vw, 1rem); }
-    .profile-full-bleed__links {
-      column-gap: .2rem;
-      row-gap: .3rem;
-      margin-top: 1rem;
-    }
-
+  @media (max-width: 680px) {
     .profile-full-bleed--sleek {
-      width: 100%;
-      min-height: 19.4rem;
-      padding: 6.1rem 1.8rem 1.5rem;
-      border-radius: var(--profile-border-radius, 2rem);
+      min-height: 18rem;
+      padding: 6.2rem 1.35rem 1.45rem;
     }
 
-    .profile-full-bleed--sleek .profile-full-bleed__avatar-shell { left: 1.8rem; width: 7.5rem; height: 7.5rem; }
-    .profile-full-bleed--sleek .profile-full-bleed__roll { position: static; width: min(100%, 20rem); margin: .85rem 0 0; }
-    .profile-full-bleed--sleek.profile-full-bleed--no-roll { min-height: 15.5rem; }
-    .profile-full-bleed--sleek.profile-full-bleed--no-avatar.profile-full-bleed--no-banner { min-height: 0; padding-top: 1.8rem; }
-    .profile-full-bleed--sleek.profile-full-bleed--no-avatar.profile-full-bleed--has-banner { padding-top: 7.8rem; }
-    .profile-full-bleed--sleek .profile-full-bleed__links { margin-top: .8rem; }
-    .profile-full-bleed--sleek .profile-full-bleed__metadata { margin-top: 1rem; }
+    .profile-full-bleed--sleek .profile-full-bleed__avatar-shell { left: 1.35rem; }
+    .profile-full-bleed--sleek .profile-full-bleed__roll { top: 1.05rem; right: 1rem; width: min(47%, 12rem); }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -468,8 +462,7 @@
     .profile-full-bleed--entry-focus,
     .profile-full-bleed--entry-pop,
     .profile-full-bleed--entry-unfold { animation: none; }
+
     .profile-full-bleed__links a { transition: none; }
-    .profile-full-bleed__links a:hover,
-    .profile-full-bleed__links a:focus-visible { transform: none; }
   }
 </style>
