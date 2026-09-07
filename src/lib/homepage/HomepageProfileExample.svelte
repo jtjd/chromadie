@@ -15,19 +15,29 @@
     { type: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/gripgod' },
     { type: 'instagram', label: 'Instagram', url: 'https://instagram.com/gripgod' }
   ];
+
   async function load() {
     failed = false;
     try {
       const module = await import('../profile-layout/ProfileFullBleedLayout.svelte');
       if (!disposed) renderer = module.default;
-    } catch { if (!disposed) failed = true; }
+    } catch {
+      if (!disposed) failed = true;
+    }
   }
+
   onMount(() => {
     const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); void load(); }
+      if (entries.some(entry => entry.isIntersecting)) {
+        observer.disconnect();
+        void load();
+      }
     }, { rootMargin: '160px' });
     observer.observe(host);
-    return () => { disposed = true; observer.disconnect(); };
+    return () => {
+      disposed = true;
+      observer.disconnect();
+    };
   });
 </script>
 
@@ -37,25 +47,24 @@
     <p class="homepage-section-sub">Pick a layout. Add your links. Change the fonts, effects, and background. Put your daily roll on a page you want to share.</p>
   </div>
 
-  <figure aria-label="Profile customization preview">
-    <div class="profile-example__stage">
-      <div class="profile-example__canvas">
-        {#if renderer}
-          <svelte:component this={renderer} displayName="Tjz" avatarSrc={avatar}
-            layoutVariant="sleek" headingTag="h2" avatarEffectKey="avatar_effect_butterfly_orbit"
-            roll={{ hex_code: '#5EBAE3', identity: 'Balanced Vivid Azure', rarity: 'Uncommon', score: 38697 }} rollLabel="September 4, 2026"
-            nameLoadout={{ fontKey: 'name_font_velocity', motionKey: 'name_motion_neon_particle', materialKey: '' }}
-            profileBorderKey="border_void" accentColor="#99C1F1" location="Siberia" timezone="Russia"
-            {links} linkStyle={{ size: 2, glow: 2 }}
-            surfaceStyle="--profile-surface-fill: transparent; --profile-text: #16AEBB; --profile-border-radius: 22px; --profile-border-color: #E01B24; --profile-border-opacity: .11; --profile-username: #FFFFFF; --profile-secondary-text: #FFFFFF;"
-          />
-        {:else if failed}
-          <p class="profile-example__state">Preview couldn’t load. <button type="button" on:click={load}>Retry</button></p>
-        {:else}<p class="profile-example__state" role="status">Loading profile example…</p>{/if}
-      </div>
+  <div class="profile-example__stage" aria-label="Profile customization preview">
+    <div class="profile-example__canvas">
+      {#if renderer}
+        <svelte:component this={renderer} displayName="Tjz" avatarSrc={avatar}
+          layoutVariant="sleek" headingTag="h2" avatarEffectKey="avatar_effect_butterfly_orbit"
+          roll={{ hex_code: '#5EBAE3', identity: 'Balanced Vivid Azure', rarity: 'Uncommon', score: 38697 }} rollLabel="September 4, 2026"
+          nameLoadout={{ fontKey: 'name_font_velocity', motionKey: 'name_motion_neon_particle', materialKey: '' }}
+          profileBorderKey="border_void" accentColor="#99C1F1" location="Siberia" timezone="Russia"
+          {links} linkStyle={{ size: 2, glow: 2 }}
+          surfaceStyle="--profile-surface-fill: transparent; --profile-text: #16AEBB; --profile-border-radius: 22px; --profile-border-color: #E01B24; --profile-border-opacity: .11; --profile-username: #FFFFFF; --profile-secondary-text: #FFFFFF;"
+        />
+      {:else if failed}
+        <p class="profile-example__state">Preview couldn’t load. <button type="button" on:click={load}>Retry</button></p>
+      {:else}
+        <p class="profile-example__state" role="status">Loading profile example…</p>
+      {/if}
     </div>
-    <figcaption><strong>chm.lol/tjz</strong><span>Layout · links · effects · daily color</span></figcaption>
-  </figure>
+  </div>
 </section>
 
 <style>
@@ -63,21 +72,28 @@
     --profile-demo-color: #5ebae3;
     --profile-demo-accent: #99c1f1;
     display: grid;
-    grid-template-columns: minmax(0, .62fr) minmax(0, 1.45fr);
+    grid-template-columns: minmax(350px, .8fr) minmax(0, 1.35fr);
     align-items: center;
-    gap: clamp(48px, 5vw, 80px);
-    padding-block: 112px 104px;
+    gap: clamp(48px, 5vw, 84px);
+    padding-block: 76px 84px;
     border-top: 1px solid var(--homepage-border);
     scroll-margin-top: 24px;
   }
 
-  .profile-example__copy { position: relative; z-index: 2; }
-  figure { min-width: 0; margin: 0; }
+  .profile-example__copy {
+    position: relative;
+    z-index: 2;
+    max-width: 440px;
+  }
+
+  .profile-example__copy :global(.homepage-section-heading) {
+    white-space: nowrap;
+  }
 
   .profile-example__stage {
     position: relative;
     display: grid;
-    min-height: 500px;
+    min-height: 430px;
     place-items: center;
     isolation: isolate;
   }
@@ -85,7 +101,7 @@
   .profile-example__stage::before {
     position: absolute;
     z-index: -1;
-    inset: 14% 2% 8%;
+    inset: 12% -1% 5%;
     border-radius: 50%;
     background:
       radial-gradient(circle at 24% 34%, color-mix(in srgb, var(--profile-demo-accent) 22%, transparent), transparent 34%),
@@ -100,15 +116,14 @@
     display: grid;
     width: 100%;
     min-width: 0;
-    min-height: 440px;
+    min-height: 390px;
     place-items: center;
-    padding: 14px 0;
     overflow: visible;
     isolation: isolate;
   }
 
   .profile-example__canvas :global(.profile-full-bleed__boundary) {
-    width: min(100%, 790px);
+    width: min(100%, 810px);
     max-width: 100%;
   }
 
@@ -118,37 +133,23 @@
     font-size: .95rem;
   }
 
-  figcaption {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    margin-top: 12px;
-    padding-top: 14px;
-    border-top: 1px solid color-mix(in srgb, var(--profile-demo-color) 22%, var(--homepage-border));
-    color: var(--homepage-muted);
-    font-size: .82rem;
-    line-height: 1.4;
-  }
-
-  figcaption strong {
-    color: var(--homepage-secondary);
-    font: 600 .84rem / 1.2 var(--homepage-display);
-  }
-
   button { min-height: 42px; }
   button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
 
   @media (max-width: 1199px) {
-    .profile-example { grid-template-columns: minmax(0, 1fr); gap: 34px; padding-block: 64px; }
+    .profile-example {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 28px;
+      padding-block: 60px 64px;
+    }
     .profile-example__copy { max-width: 650px; }
-    .profile-example__stage { min-height: 430px; }
+    .profile-example__copy :global(.homepage-section-heading) { white-space: normal; }
+    .profile-example__stage { min-height: 410px; }
   }
 
   @media (max-width: 600px) {
-    .profile-example { padding-block: 56px; }
-    .profile-example__stage { min-height: 360px; }
-    .profile-example__canvas { min-height: 330px; padding: 4px 0; }
-    figcaption { align-items: flex-start; flex-direction: column; gap: 5px; }
+    .profile-example { padding-block: 52px 56px; }
+    .profile-example__stage { min-height: 350px; }
+    .profile-example__canvas { min-height: 325px; }
   }
 </style>

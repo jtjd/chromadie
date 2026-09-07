@@ -24,11 +24,15 @@
         {#each conditions as condition (condition.id)}
           <div class="homepage-collection__condition" style={`--condition-color:${getRarityPresentation(condition.rarity).color}`}>
             <span class="homepage-collection__condition-mark" aria-hidden="true"></span>
-            <strong>{condition.name}</strong>
-            <small>{condition.rarity}</small>
+            <div class="homepage-collection__condition-copy">
+              <strong>{condition.name}</strong>
+              <small>{condition.rarity}</small>
+            </div>
+            <span class="homepage-collection__condition-status">FOUND</span>
           </div>
         {/each}
       </div>
+
       <div class="homepage-collection__progress" aria-label="Example collection progress">
         <div><span>COLLECTION</span><strong>18 / 31 found</strong></div>
         <div class="homepage-collection__bar" aria-hidden="true"><span></span></div>
@@ -60,27 +64,25 @@
 </section>
 
 <style>
-  .homepage-collection { padding-block: 96px 104px; border-top: 1px solid var(--homepage-border); }
+  .homepage-collection { padding-block: 88px 96px; border-top: 1px solid var(--homepage-border); }
   .homepage-collection__intro { display: grid; grid-template-columns: 1fr .9fr; gap: 72px; align-items: end; }
   .homepage-collection__intro p { margin: 0; max-width: 470px; }
 
   .homepage-collection__experience {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
-    gap: 28px;
-    margin-top: 48px;
-    align-items: stretch;
+    gap: 40px;
+    margin-top: 46px;
+    align-items: center;
   }
 
   article { min-width: 0; }
-
-  .homepage-collection__found {
-    padding: 10px 0 0;
-  }
+  .homepage-collection__found { padding-top: 4px; }
 
   .homepage-collection__eyebrow,
   .homepage-collection__reward-copy > span,
-  .homepage-collection__progress span {
+  .homepage-collection__progress span,
+  .homepage-collection__condition-status {
     color: var(--homepage-muted);
     font: 600 .68rem / 1.2 'Inter', sans-serif;
     letter-spacing: .12em;
@@ -89,45 +91,75 @@
   .homepage-collection__condition-strip {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    gap: 14px;
     margin-top: 18px;
   }
 
   .homepage-collection__condition {
+    position: relative;
     display: grid;
     grid-template-columns: auto 1fr;
-    grid-template-areas: 'mark name' 'mark rarity';
-    column-gap: 10px;
-    row-gap: 4px;
-    align-items: center;
+    grid-template-areas: 'mark copy' 'status status';
+    column-gap: 12px;
+    row-gap: 14px;
+    align-items: start;
     min-width: 0;
-    padding: 17px 16px;
-    border-top: 1px solid color-mix(in srgb, var(--condition-color) 52%, var(--homepage-border));
-    background: linear-gradient(180deg, color-mix(in srgb, var(--condition-color) 7%, transparent), transparent);
+    min-height: 128px;
+    padding: 20px 18px 16px;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--condition-color) 28%, var(--homepage-border));
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--condition-color) 13%, transparent), transparent 38%),
+      linear-gradient(180deg, color-mix(in srgb, var(--condition-color) 5%, #151519), #121215);
+  }
+
+  .homepage-collection__condition::after {
+    position: absolute;
+    right: -26px;
+    bottom: -34px;
+    width: 100px;
+    height: 100px;
+    border: 1px solid color-mix(in srgb, var(--condition-color) 26%, transparent);
+    border-radius: 50%;
+    content: '';
+    opacity: .55;
   }
 
   .homepage-collection__condition-mark {
     grid-area: mark;
-    width: 9px;
-    height: 9px;
+    width: 11px;
+    height: 11px;
+    margin-top: 4px;
     border-radius: 50%;
     background: var(--condition-color);
-    box-shadow: 0 0 18px color-mix(in srgb, var(--condition-color) 55%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--condition-color) 60%, transparent);
+  }
+
+  .homepage-collection__condition-copy {
+    grid-area: copy;
+    display: grid;
+    min-width: 0;
+    gap: 5px;
   }
 
   .homepage-collection__condition strong {
-    grid-area: name;
     min-width: 0;
     overflow: hidden;
-    font: 600 .93rem / 1.25 var(--homepage-display);
+    font: 600 .98rem / 1.2 var(--homepage-display);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .homepage-collection__condition small {
-    grid-area: rarity;
     color: var(--condition-color);
-    font-size: .78rem;
+    font-size: .8rem;
+  }
+
+  .homepage-collection__condition-status {
+    grid-area: status;
+    color: color-mix(in srgb, var(--condition-color) 70%, var(--homepage-muted));
+    letter-spacing: .09em;
   }
 
   .homepage-collection__progress {
@@ -157,32 +189,39 @@
   }
 
   .homepage-collection__reward {
+    position: relative;
     display: grid;
     align-content: center;
     min-height: 320px;
-    padding: 30px;
-    overflow: hidden;
-    border: 1px solid var(--homepage-border);
-    border-radius: 18px;
-    background:
-      radial-gradient(circle at 50% 42%, rgba(141,220,255,.11), transparent 42%),
-      #131316;
+    padding: 20px 8px 12px 30px;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .homepage-collection__reward::before {
+    position: absolute;
+    z-index: -1;
+    inset: 12% 8% 2% 5%;
+    border-radius: 38%;
+    background: radial-gradient(circle at 50% 45%, rgba(141,220,255,.16), rgba(203,166,247,.07) 40%, transparent 70%);
+    content: '';
+    filter: blur(22px);
   }
 
   .homepage-collection__reward-copy { display: grid; gap: 7px; }
-  .homepage-collection__reward-copy strong { font: 600 1.35rem / 1.1 var(--homepage-display); }
+  .homepage-collection__reward-copy strong { font: 600 1.45rem / 1.1 var(--homepage-display); }
   .homepage-collection__reward-copy small { color: var(--homepage-muted); font-size: .82rem; }
 
   .homepage-collection__reward-preview {
     display: grid;
-    min-height: 125px;
+    min-height: 150px;
     place-items: center;
-    margin-top: 10px;
+    margin: 2px -26px 0 -12px;
     overflow: visible;
   }
 
-  .homepage-collection__reward-preview :global(.name-effect-canvas) { width: 100%; max-width: 320px; text-align: center; }
-  .homepage-collection__reward-preview :global(.profile-name) { font-size: clamp(2.3rem, 5vw, 4rem); }
+  .homepage-collection__reward-preview :global(.name-effect-canvas) { width: 100%; max-width: 360px; text-align: center; overflow: visible; }
+  .homepage-collection__reward-preview :global(.profile-name) { font-size: clamp(2.7rem, 5vw, 4.5rem); }
 
   .homepage-collection__link {
     display: inline-flex;
@@ -197,14 +236,14 @@
 
   @media (max-width: 960px) {
     .homepage-collection__experience { grid-template-columns: 1fr; }
-    .homepage-collection__reward { min-height: 280px; }
+    .homepage-collection__reward { min-height: 280px; padding-left: 0; }
   }
 
   @media (max-width: 780px) {
     .homepage-collection { padding-block: 64px; }
     .homepage-collection__intro { grid-template-columns: 1fr; gap: 24px; }
     .homepage-collection__condition-strip { grid-template-columns: 1fr; }
-    .homepage-collection__condition { grid-template-columns: auto 1fr auto; grid-template-areas: 'mark name rarity'; }
-    .homepage-collection__reward { padding: 24px; }
+    .homepage-collection__condition { min-height: 100px; }
+    .homepage-collection__reward-preview { margin-inline: 0; }
   }
 </style>
