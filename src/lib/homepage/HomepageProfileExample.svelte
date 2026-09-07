@@ -1,10 +1,14 @@
 <script>
   import { onMount } from 'svelte';
+  import ProfileMotionEffect from '../profile-motion/ProfileMotionEffect.svelte';
+
   let host;
   let renderer = null;
   let failed = false;
   let disposed = false;
+
   const avatar = 'https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/15afd8fa-8efd-4f41-9a0a-12c937c4ce67/1e11b00999d15292077382af55c9b34567c786602874d9652b151608c62ae629.webp';
+
   // Marketing-only profile specimen. Social entries intentionally have no destinations.
   const links = [
     { type: 'github', label: 'GitHub' },
@@ -13,19 +17,30 @@
     { type: 'tiktok', label: 'TikTok' },
     { type: 'instagram', label: 'Instagram' }
   ];
+
   async function load() {
     failed = false;
     try {
       const module = await import('../profile-layout/ProfileFullBleedLayout.svelte');
       if (!disposed) renderer = module.default;
-    } catch { if (!disposed) failed = true; }
+    } catch {
+      if (!disposed) failed = true;
+    }
   }
+
   onMount(() => {
     const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); void load(); }
+      if (entries.some(entry => entry.isIntersecting)) {
+        observer.disconnect();
+        void load();
+      }
     }, { rootMargin: '160px' });
+
     observer.observe(host);
-    return () => { disposed = true; observer.disconnect(); };
+    return () => {
+      disposed = true;
+      observer.disconnect();
+    };
   });
 </script>
 
@@ -39,28 +54,34 @@
     <div class="profile-example__stage">
       <div class="profile-example__canvas">
         {#if renderer}
-          <svelte:component this={renderer}
-            displayName="chm"
-            bio="making things i like on the internet."
-            location="New York, NY"
-            avatarSrc={avatar}
-            layoutVariant="sleek"
-            headingTag="h2"
-            avatarEffectKey="avatar_effect_butterfly_orbit"
-            roll={{ hex_code: '#FFFFFF', identity: 'The Light', rarity: 'Mythic' }}
-            rollLabel="Daily color"
-            nameLoadout={{ fontKey: 'name_font_velocity', motionKey: 'name_motion_neon_particle', materialKey: '' }}
-            nameTodayColor="#FFFFFF"
-            profileBorderKey="border_void"
-            accentColor="#FFFFFF"
-            {links}
-            linksInteractive={false}
-            linkStyle={{ size: 2, glow: 2 }}
-            surfaceStyle="--profile-surface-fill: transparent; --profile-text: #FFFFFF; --profile-border-radius: 22px; --profile-border-color: #FFFFFF; --profile-border-opacity: .12; --profile-username: #FFFFFF; --profile-secondary-text: #D7D7DB; --profile-description: rgba(245,245,247,.82);"
-          />
+          <div class="profile-example__motion-shell">
+            <ProfileMotionEffect motionKey="profile_motion_perspective_tilt" inputSurface="viewport">
+              <svelte:component this={renderer}
+                displayName="chm"
+                bio="making things i like on the internet."
+                location="New York, NY"
+                avatarSrc={avatar}
+                layoutVariant="sleek"
+                headingTag="h2"
+                avatarEffectKey="avatar_effect_butterfly_orbit"
+                roll={{ hex_code: '#FFFFFF', identity: 'The Light', rarity: 'Mythic' }}
+                rollLabel="Daily color"
+                nameLoadout={{ fontKey: 'name_font_velocity', motionKey: 'name_motion_neon_particle', materialKey: '' }}
+                nameTodayColor="#FFFFFF"
+                profileBorderKey="border_void"
+                accentColor="#FFFFFF"
+                {links}
+                linksInteractive={false}
+                linkStyle={{ size: 2, glow: 2 }}
+                surfaceStyle="--profile-surface-fill: transparent; --profile-text: #FFFFFF; --profile-border-radius: 22px; --profile-border-color: #FFFFFF; --profile-border-opacity: .12; --profile-username: #FFFFFF; --profile-secondary-text: #D7D7DB; --profile-description: rgba(245,245,247,.82);"
+              />
+            </ProfileMotionEffect>
+          </div>
         {:else if failed}
           <p class="profile-example__state">Preview couldn’t load. <button type="button" on:click={load}>Retry</button></p>
-        {:else}<p class="profile-example__state" role="status">Loading profile example…</p>{/if}
+        {:else}
+          <p class="profile-example__state" role="status">Loading profile example…</p>
+        {/if}
       </div>
     </div>
   </figure>
@@ -79,8 +100,16 @@
     scroll-margin-top: 24px;
   }
 
-  .profile-example__copy { position: relative; z-index: 2; max-width: 430px; }
-  figure { min-width: 0; margin: 0; }
+  .profile-example__copy {
+    position: relative;
+    z-index: 2;
+    max-width: 430px;
+  }
+
+  figure {
+    min-width: 0;
+    margin: 0;
+  }
 
   .profile-example__stage {
     position: relative;
@@ -115,9 +144,22 @@
     isolation: isolate;
   }
 
-  .profile-example__canvas :global(.profile-full-bleed__boundary) {
+  .profile-example__motion-shell {
     width: min(100%, 790px);
+    min-width: 0;
+  }
+
+  .profile-example__canvas :global(.profile-full-bleed__boundary) {
+    width: 100%;
     max-width: 100%;
+  }
+
+  /* The cosmetic border is already the authored frame. Suppress the sleek
+     layout's base border/shadow here so the marketing specimen does not read
+     as a card nested inside another card. */
+  .profile-example__canvas :global(.profile-full-bleed--sleek) {
+    border-color: transparent;
+    box-shadow: none;
   }
 
   .profile-example__state {
@@ -126,18 +168,42 @@
     font-size: .95rem;
   }
 
-  button { min-height: 42px; }
-  button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+  button {
+    min-height: 42px;
+  }
+
+  button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 5px;
+  }
 
   @media (max-width: 1199px) {
-    .profile-example { grid-template-columns: minmax(0, 1fr); gap: 30px; padding-block: 58px; }
-    .profile-example__copy { max-width: 650px; }
-    .profile-example__stage { min-height: 400px; }
+    .profile-example {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 30px;
+      padding-block: 58px;
+    }
+
+    .profile-example__copy {
+      max-width: 650px;
+    }
+
+    .profile-example__stage {
+      min-height: 400px;
+    }
   }
 
   @media (max-width: 600px) {
-    .profile-example { padding-block: 52px; }
-    .profile-example__stage { min-height: 350px; }
-    .profile-example__canvas { min-height: 320px; }
+    .profile-example {
+      padding-block: 52px;
+    }
+
+    .profile-example__stage {
+      min-height: 350px;
+    }
+
+    .profile-example__canvas {
+      min-height: 320px;
+    }
   }
 </style>
