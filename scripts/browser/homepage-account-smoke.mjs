@@ -58,7 +58,8 @@ try {
     const geometry = await page.evaluate(`({width:innerWidth,scroll:document.documentElement.scrollWidth, action:document.querySelector('.roll-acquisition-actions .result-action--primary')?.getBoundingClientRect().toJSON(), heading:document.querySelector('.roll-page__context h1')?.getBoundingClientRect().toJSON()})`);
     assert.ok(geometry.scroll <= width + 1, JSON.stringify(geometry));
     assert.ok(geometry.action.width > 0 && geometry.action.left >= 0 && geometry.action.right <= width, JSON.stringify(geometry));
-    if (width >= 1000) assert.ok(await page.evaluate('document.querySelector(".homepage-loop").getBoundingClientRect().top >= innerHeight - 1'), 'Next section must remain below the desktop hero');
+    if (width >= 1000) assert.ok(await page.evaluate('document.querySelector(".profile-example").getBoundingClientRect().top >= innerHeight - 1'), 'Next section must remain below the desktop hero');
+    assert.ok(await page.evaluate('(() => { const r=document.querySelector(".roll-page__game").getBoundingClientRect();return Math.abs((r.left+r.right)/2-innerWidth/2)<=1;})()'), 'Result hero stays horizontally centered');
     await page.screenshot(join(evidenceDir, `result-${width}.png`));
   }
   await page.setViewport(1440,900);

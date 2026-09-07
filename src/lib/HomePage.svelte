@@ -7,8 +7,9 @@
   import RollPage from './RollPage.svelte';
   import HomepageCommunity from './homepage/HomepageCommunity.svelte';
   import HomepageHeader from './homepage/HomepageHeader.svelte';
-  import HomepageLoop from './homepage/HomepageLoop.svelte';
-  import HomepageScoring from './homepage/HomepageScoring.svelte';
+  import HomepageCollection from './homepage/HomepageCollection.svelte';
+  import HomepageStart from './homepage/HomepageStart.svelte';
+  import HomepageQuestions from './homepage/HomepageQuestions.svelte';
   import HomepageProfileExample from './homepage/HomepageProfileExample.svelte';
 
   export let isAuthenticated = false;
@@ -62,10 +63,11 @@
     />
 
     <div class="homepage-content">
-      <HomepageLoop />
       <HomepageProfileExample />
-      <HomepageScoring />
+      <HomepageCollection />
       <HomepageCommunity {isAuthenticated} {username} refreshKey={discoveryRefresh} on:leaderboard={handleLeaderboard} />
+      <HomepageStart {isAuthenticated} {accountState} on:retry={forwardAction} />
+      <HomepageQuestions />
       <SiteFooter {isAuthenticated} />
     </div>
   </main>

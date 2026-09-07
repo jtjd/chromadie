@@ -1,5 +1,47 @@
 # Chromadie 2.0 Progress
 
+## Homepage presentation and direct copy — 2026-09-07
+
+- Kept the playable hero and moved the real profile preview directly below it.
+- Replaced duplicated scoring/how-it-works sections with canonical collection
+  and achievement examples, a bounded public profile gallery, account-aware
+  signup/customize controls, and practical FAQs.
+- Reduced secondary heading sizes, removed section eyebrows and arrow glyphs,
+  and made secondary text readable. Removed the preview caption/visit CTA and
+  redundant visible action labels on clickable player cards at user direction.
+- Removed a supplementary hero link that displaced the horizontal flex
+  layout; browser checks now assert the actual grid center in both pre-roll
+  and result states, in addition to containment and viewport height.
+- Reused existing profile rendering and public feed boundaries; no schema,
+  auth, scoring, grant, or private-data changes. The gallery is explicitly
+  sourced from today's top rolls and handles loading, failure/retry, and empty
+  data without invented players.
+- Browser regressions cover desktop/mobile geometry, keyboard FAQ disclosure,
+  reduced motion, CTA contrast, signup routing, guest/owner/loading/error
+  states, token refresh, account switches, and feed failure/retry.
+- Evidence: `artifacts/homepage-presentation`, `artifacts/homepage-roll-first`,
+  and `artifacts/homepage-account-refinement`. Gallery fixtures in presentation
+  screenshots are local test data; production uses the public RPC response.
+- Validation passed: production build, Svelte check (zero diagnostics), source
+  ESLint, 534 Node tests, links, CSP, enforced performance budgets,
+  username/balance/catalog drift, 5,000-sample scoring parity, database
+  security, and all three homepage browser harnesses. Existing aggregate
+  JavaScript/CSS catalog advisories remain; enforced budgets were not raised.
+
+## Owner profile navigation — 2026-09-07
+
+- Added an owner-only header linking to `/` and `/profile/settings`, with
+  visible keyboard focus and 44px targets on desktop and mobile.
+- Reused route ownership and homepage transition guards; lazy loading keeps
+  header styles out of other route budgets.
+- Added regression coverage for ownership gating and canonical navigation.
+- Browser fixture checks passed at 1440px, 390px, and 320px with reduced
+  motion, and Home navigation passed. The subsequent visitor navigation
+  smoke timed out, so that browser check remains unverified.
+- Validation: build, Svelte check, source ESLint, 533 Node tests, links, CSP,
+  performance budgets, username/balance/catalog drift, scoring parity, and
+  database security pass. Existing aggregate asset advisories remain.
+
 ## Homepage account correction and visual refinement — 2026-09-05
 
 - Replaced stale account snapshots in the roll summary with reactive account

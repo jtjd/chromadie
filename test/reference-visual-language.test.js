@@ -65,7 +65,7 @@ test('the homepage shell uses the Roll and Progression visual language without p
   assert.doesNotMatch(homepageDailyLeaderboard, /box-shadow: 0 8px 32px rgba\(0, 0, 0, \.25\)/);
   assert.doesNotMatch(homepageDailyLeaderboard, /transform: translateY\(clamp\(-3\.5rem, -6vh, -2rem\)\)/);
   assert.match(scoring, /Probability, not opinion/);
-  assert.match(community, /Today’s board/);
+  assert.match(community, /See who’s rolling/);
   for (const step of ['Roll', 'Decode', 'Compare']) assert.match(loop, new RegExp(`<h3>${step}</h3>`));
   assert.match(styles, /prefers-reduced-motion/);
   assert.doesNotMatch(`${styles}${home}${scoring}${loop}`, /blob|orb|dashboard statistic|illustration/i);

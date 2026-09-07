@@ -2,6 +2,20 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-07 — Clearer homepage sections and language
+
+- Moved the profile example directly below the playable roll.
+- Replaced repeated explanations and abstract diagrams with collection and
+  achievement examples, using the game's canonical definitions.
+- Added public profile cards, a free-profile/customize action, and short FAQs.
+- Reduced oversized supporting headings and removed forced branding language
+  from the active homepage sections.
+
+## 2026-09-07 — Navigation on your profile
+
+- Your profile now has a header with Home and Customize profile links,
+  available on desktop and mobile. Other visitors do not see this header.
+
 ## 2026-09-05 — A clearer homepage and consistent account controls
 
 - Signed-in players no longer see a stale Create an account prompt when their

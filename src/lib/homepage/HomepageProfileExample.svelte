@@ -1,14 +1,13 @@
 <script>
   import { onMount } from 'svelte';
-  import { getCanonicalProfilePath } from '../routeContract.js';
-  const profileHref = getCanonicalProfilePath('tjz');
   let host;
   let renderer = null;
   let failed = false;
   let disposed = false;
   const avatar = 'https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/15afd8fa-8efd-4f41-9a0a-12c937c4ce67/1e11b00999d15292077382af55c9b34567c786602874d9652b151608c62ae629.webp';
   // Curated public appearance captured September 5, 2026. The dated result
-  // comes from the supplied screenshot; the link opens the current profile.
+  // comes from the supplied screenshot. This is a product preview, not a
+  // featured-player recommendation.
   const links = [
     { type: 'github', label: 'GitHub', url: 'https://github.com/jtjd' },
     { type: 'youtube', label: 'YouTube', url: 'https://youtube.com/@gripg' },
@@ -32,15 +31,12 @@
   });
 </script>
 
-<section class="homepage-section profile-example" bind:this={host} aria-labelledby="profile-example-title">
+<section class="homepage-section profile-example" id="profiles" bind:this={host} aria-labelledby="profile-example-title">
   <div>
-    <div class="homepage-section-kicker">Your color. Your space.</div>
-    <h2 id="profile-example-title" class="homepage-section-heading">Every roll becomes part of your profile.</h2>
-    <p class="homepage-section-sub">Make a home for your colors, your links, and the things you’ve earned. Shape a profile that feels like you.</p>
-    <a class="profile-example__link" href={profileHref}>Explore Tjz’s profile</a>
+    <h2 id="profile-example-title" class="homepage-section-heading">Your colors.<br />Your own page.</h2>
+    <p class="homepage-section-sub">Pick a layout. Add your links. Change the fonts, effects, and background. Put your daily roll on a page you want to share.</p>
   </div>
-  <figure>
-    <figcaption>Example profile · Tjz</figcaption>
+  <figure aria-label="Profile customization preview">
     <div class="profile-example__canvas">
       {#if renderer}
         <svelte:component this={renderer} displayName="Tjz" avatarSrc={avatar}
@@ -59,14 +55,11 @@
 </section>
 
 <style>
-  .profile-example { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 680px); align-items: center; gap: 48px; padding-block: 72px; border-top: 1px solid var(--homepage-border); }
-  .profile-example .homepage-section-heading { font-size: clamp(2.5rem, 4vw, 4rem); }
-  .profile-example__link { display: inline-block; margin-top: 24px; text-underline-offset: 5px; }
+  .profile-example { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.25fr); align-items: center; gap: 64px; padding-block: 100px; border-top: 1px solid var(--homepage-border); scroll-margin-top: 24px; }
   figure { min-width: 0; margin: 0; }
-  figcaption { color: var(--homepage-muted); font-size: .8rem; margin-bottom: 16px; }
   .profile-example__canvas { display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; min-height: 420px; min-width: 0; padding: 24px; overflow: hidden; isolation: isolate; border: 1px solid var(--homepage-border); border-radius: 22px; background: #000; }
   .profile-example__canvas :global(.profile-full-bleed__boundary) { width: min(100%, 640px); max-width: 100%; }
-  .profile-example a:focus-visible, button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+  button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
   @media (max-width: 1199px) { .profile-example { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 48px; } }
   @media (max-width: 460px) { .profile-example__canvas { padding: 16px 8px; } }
 </style>

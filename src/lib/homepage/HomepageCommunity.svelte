@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import HomepageDailyLeaderboard from './HomepageDailyLeaderboard.svelte';
+  import HomepagePlayerCard from './HomepagePlayerCard.svelte';
   import { getCanonicalProfilePath } from '../routeContract.js';
   import { supabase } from '../supabase.js';
   import { normalizeDiscoveryResponse } from '../discoveryData.js';
@@ -18,7 +18,6 @@
   let requestId = 0;
   let mounted = false;
   let loadedIdentityKey = null;
-  let resetLabel = '—';
   let resetInterval;
   let loadedRefreshKey = -1;
   let lastDay = '';
@@ -53,12 +52,6 @@
     const day = now.toISOString().slice(0, 10);
     if (lastDay && day !== lastDay) void loadCommunity();
     lastDay = day;
-    const nextReset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-    const seconds = Math.max(0, Math.floor((nextReset - now.getTime()) / 1000));
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-    resetLabel = [hours, minutes, remainingSeconds].map(value => String(value).padStart(2, '0')).join(':');
   }
 
   async function loadCommunity() {
@@ -124,37 +117,32 @@
   });
 </script>
 
-<section class="homepage-section homepage-community" class:homepage-community--empty={!loading && !error && !rows.length} id="community" aria-label="Today’s public board">
-  {#if !loading && !error && !rows.length}
-    <a href="/leaderboard">Explore the leaderboard</a>
-  {:else}
+<section class="homepage-section homepage-community" class:homepage-community--empty={!loading && !error && !rows.length} id="community" aria-labelledby="homepage-community-title" aria-busy={loading}>
   <div class="homepage-community__copy">
-    <div class="homepage-section-kicker">Today’s board</div>
-    <h2 id="homepage-community-title" class="homepage-section-heading">See what everyone else <span>rolled.</span></h2>
-    <p class="homepage-section-sub">Meet the people behind today’s colors. Open a profile and see their story.</p>
+    <div>
+    <h2 id="homepage-community-title" class="homepage-section-heading">See who’s rolling.</h2>
+    <p class="homepage-section-sub">Players from today’s top rolls. Open their profiles to see their layouts, links, and collections.</p></div>
+    <a href="/leaderboard">View the leaderboard</a>
   </div>
-
-  <div class="homepage-community__board">
-    <HomepageDailyLeaderboard
-      {rows}
-      {currentUser}
-      {loading}
-      {error}
-      {resetLabel}
-    />
-  </div>
+  {#if loading}<p class="homepage-community__state" role="status">Loading public profiles…</p>
+  {:else if error}<div class="homepage-community__state" role="alert"><p>{error}</p><button type="button" on:click={loadCommunity}>Try again</button></div>
+  {:else if rows.length}<div class="homepage-community__players">{#each rows.slice(0, 3) as player (player.username)}<HomepagePlayerCard {player} />{/each}</div>
+  {:else}<p class="homepage-community__state">No public rolls yet today. Profiles will appear here as players roll.</p>
   {/if}
 </section>
 
 <style>
-  .homepage-community { display: grid; grid-template-columns: 0.9fr 1.1fr; align-items: center; gap: 80px; padding: 112px 0 120px; }
-  .homepage-community__copy .homepage-section-heading { font-size: clamp(2.9rem, 4vw, 4.4rem); }
-  .homepage-community__board { min-width: 0; display: flex; justify-content: flex-end; }
-  .homepage-community__board :global(.homepage-daily-leaderboard) { width: min(100%, 480px); transform: none; }
-
+  .homepage-community { padding-block: 80px; border-top: 1px solid var(--homepage-border); }
+  .homepage-community__copy { display: flex; justify-content: space-between; align-items: end; gap: 32px; }
+  .homepage-community__copy > a { display: inline-flex; align-items: center; min-height: 44px; flex-shrink: 0; font-size: 1rem; text-underline-offset: 5px; }
+  .homepage-community__players { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 36px; }
+  .homepage-community__state { margin: 32px 0 0; padding: 24px; border: 1px solid var(--homepage-border); border-radius: var(--homepage-radius); color: var(--homepage-secondary-muted); font-size: .95rem; line-height: 1.6; }
+  .homepage-community__state p { margin: 0 0 12px; }
+  .homepage-community__state button { min-height: 44px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
   @media (max-width: 780px) {
-    .homepage-community { grid-template-columns: 1fr; gap: 48px; padding: 88px 0 94px; }
-    .homepage-community__board { justify-content: stretch; }
-    .homepage-community__board :global(.homepage-daily-leaderboard) { width: 100%; }
+    .homepage-community { padding-block: 56px; }
+    .homepage-community__copy { align-items: start; flex-direction: column; gap: 16px; }
+    .homepage-community__players { grid-template-columns: 1fr; gap: 16px; margin-top: 24px; }
   }
 </style>

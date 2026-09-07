@@ -1,5 +1,32 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-07 — Direct homepage copy and product examples
+
+The homepage moves from the playable roll to the existing profile example,
+collection/reward examples, public profiles, account-aware start controls, and
+a short FAQ. Use concrete verbs and objects: roll, collect conditions, earn
+achievements, customize a profile, add links. Avoid vague appeals to a
+“journey,” “story,” or “ritual” in this marketing copy.
+
+The example profile demonstrates the product; it does not promote visiting
+Tjz or need an “Example profile” caption. Omit redundant “Open profile” labels on already-clickable player cards.
+Do not add decorative arrow glyphs, tiny section labels, or repeated eyebrow
+text. Let readable headings and the actual content establish the hierarchy.
+
+Keep the existing game visual language and curated profile rendering. Reduce
+supporting headline sizes and replace abstract diagrams with canonical badge
+metadata. The discovery gallery reuses the existing public feed and labels
+its selection as players from today's top rolls. Do not invent testimonials,
+featured users, or profile layouts. No migrations or authority changes.
+
+## 2026-09-07 — Owner profile navigation
+
+Show a compact Home and Customize profile header when the existing route
+ownership check identifies the current player's modern profile. Use canonical
+links and the existing internal-link router. Load the component only for this
+surface to preserve supporting-route CSS budgets. No schema migration or
+authority change is required.
+
 ## 2026-09-05 — Reactive homepage identity and a contained profile example
 
 Account controls and progression read the canonical account/session/profile

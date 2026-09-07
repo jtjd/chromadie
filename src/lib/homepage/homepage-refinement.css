@@ -14,10 +14,6 @@
 #chromadie-homepage .homepage-best-roll__result-summary { background: transparent; border: 0; }
 #chromadie-homepage .homepage-best-roll__result-summary .roll-result-summary { padding: 0; border: 0; background: transparent; }
 #chromadie-homepage .homepage-best-roll__color-display { border: 0; border-bottom: 1px solid var(--homepage-border); border-radius: 0; background: transparent; }
-#chromadie-homepage .homepage-community--empty { display: block; padding-block: 32px 48px; }
-#chromadie-homepage .homepage-loop,
-#chromadie-homepage .homepage-scoring,
-#chromadie-homepage .homepage-community { padding-block: 72px; }
 @media (min-width: 1000px) {
   /* The shared desktop header is 88px. Keep the next section below the fold,
      while allowing tall result cards to grow naturally on short screens. */
@@ -29,7 +25,4 @@
   #chromadie-homepage .roll-page .roll-page__context { grid-column: 1; grid-row: 1; }
   #chromadie-homepage .roll-page .game-container--dedicated { grid-column: 1; grid-row: 2; }
   #chromadie-homepage .roll-page .homepage-best-roll { grid-column: 1; grid-row: 3; margin-top: 0; }
-  #chromadie-homepage .homepage-loop,
-  #chromadie-homepage .homepage-scoring,
-  #chromadie-homepage .homepage-community { padding-block: 48px; }
 }

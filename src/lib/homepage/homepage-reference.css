@@ -78,8 +78,8 @@
   max-width: 780px;
   margin: 0;
   color: var(--homepage-text);
-  font: 600 clamp(3rem, 5vw, 5.25rem) / 0.94 var(--homepage-display);
-  letter-spacing: -0.048em;
+  font: 600 clamp(2.25rem, 3.5vw, 3.25rem) / 1.08 var(--homepage-display);
+  letter-spacing: -0.04em;
 }
 
 .homepage-section-heading span { color: var(--homepage-accent); }
@@ -112,7 +112,7 @@
   .homepage-shell { width: calc(100% - 30px); }
   .homepage-section,
   .homepage-section__inner { width: calc(100% - 30px); }
-  .homepage-section-heading { font-size: clamp(2.9rem, 13vw, 4rem); }
+  .homepage-section-heading { font-size: clamp(1.9rem, 7vw, 2.5rem); }
   .homepage-final { padding-top: 88px; padding-bottom: 48px; }
 }
 

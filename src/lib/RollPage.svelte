@@ -128,8 +128,8 @@
         <p class="roll-page__eyebrow">A NEW COLOR, EVERY DAY</p>
         {#if homepage}
           <div class="roll-page__unknown" aria-hidden="true">{homepage && rollContext.phase === 'rolling' ? (rollContext.revealHex || '#??????') : '#??????'}</div>
-          <h1 id="roll-page-title">What color is your day?</h1>
-          <p class="roll-page__description">One daily roll. A new piece of your profile.</p>
+          <h1 id="roll-page-title">Roll today’s color.</h1>
+          <p class="roll-page__description">A daily color game. Roll, collect, and customize your profile.</p>
         {:else}
           <h1 id="roll-page-title">Roll today’s color.</h1>
           <p class="roll-page__description">One of 16,777,216 colors. See the patterns, rarity, and score hidden in yours.</p>

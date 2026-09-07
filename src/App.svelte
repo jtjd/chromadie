@@ -848,6 +848,11 @@
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div id="header-mount">
+    {#if profileModeOwner && !homepageHeaderTransitionPending}
+      {#await import('./lib/ProfileOwnerHeader.svelte') then headerModule}
+        <svelte:component this={headerModule.default} />
+      {/await}
+    {/if}
     {#if !profileModeVisible && !homeModeVisible && !profileSettingsModeVisible && !homepageHeaderTransitionPending}
       <SiteModeHeader
         activeView={routeMode === 'app' ? view : routeMode}

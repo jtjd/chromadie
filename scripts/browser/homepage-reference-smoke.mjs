@@ -86,10 +86,10 @@ try {
     })()`);
     assert(state.rollPageCount === 1 && state.gameCount === 1, `Homepage did not mount one real game: ${JSON.stringify(state)}.`);
     assert(state.rollButtonCount === 1 && state.rollButtonLabel === 'Roll today’s color', `Primary action drifted: ${JSON.stringify(state)}.`);
-    assert(state.title === 'What color is your day?' && state.accountPrompt.includes('to start your profile history.'), `First-visit explanation drifted: ${JSON.stringify(state)}.`);
+    assert(state.title === 'Roll today’s color.' && state.accountPrompt.includes('to start your profile history.'), `First-visit explanation drifted: ${JSON.stringify(state)}.`);
     assert(state.bestRollCount === 1 && state.bestRollTitle === 'Today’s top roll', `Best-roll invitation drifted: ${JSON.stringify(state)}.`);
     assert(state.profileSpecimenCount === 0 && state.sceneryCount === 0 && state.finalClaimCount === 0, `Retired homepage marketing returned: ${JSON.stringify(state)}.`);
-    assert(!state.directionalGlyph && !state.headerLabels.includes('Roll') && !state.headerLabels.includes('Claim handle'), `Competing controls returned: ${JSON.stringify(state)}.`);
+    assert(!state.headerLabels.includes('Roll') && !state.headerLabels.includes('Claim handle'), `Competing controls returned: ${JSON.stringify(state)}.`);
   });
 
   await check('homepage keeps one bounded authentic discovery feed', async () => {
@@ -118,13 +118,14 @@ try {
         action: rect(action),
         bestRoll: rect(bestRoll),
         game: rect(game),
-        scoring: rect(document.querySelector('.homepage-scoring')),
-        nextSection: rect(document.querySelector('.homepage-loop')),
+        scoring: rect(document.querySelector('.homepage-collection')),
+        nextSection: rect(document.querySelector('.profile-example')),
         board: rect(document.querySelector('.homepage-community'))
       };
     })()`);
     assert(state.scrollWidth <= width + 1 && state.bodyScrollWidth <= width + 1, `${width}x${height} homepage overflows: ${JSON.stringify(state)}.`);
     assert(state.grid && state.grid.left >= -1 && state.grid.right <= width + 1, `${width}x${height} roll grid escapes: ${JSON.stringify(state)}.`);
+    assert(Math.abs((state.grid.left + state.grid.right) / 2 - width / 2) <= 1, `${width}x${height} roll grid is not centered: ${JSON.stringify(state)}.`);
     assert(state.action && state.action.left >= -1 && state.action.right <= width + 1, `${width}x${height} roll action escapes: ${JSON.stringify(state)}.`);
     assert(state.scoring && state.board, `${width}x${height} explanatory content is missing: ${JSON.stringify(state)}.`);
     if (width < 1000) assert(state.columns.trim().split(' ').length === 1, `${width}x${height} roll grid did not stack: ${JSON.stringify(state)}.`);

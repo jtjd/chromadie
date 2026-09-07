@@ -11,8 +11,8 @@ const [home, rollPage, rollPageContext, game, preRoll, bestRoll, loop, scoring, 
   read('src/lib/Game.svelte'),
   read('src/lib/RollPreRoll.svelte'),
   read('src/lib/homepage/HomepageBestRoll.svelte'),
-  read('src/lib/homepage/HomepageLoop.svelte'),
-  read('src/lib/homepage/HomepageScoring.svelte'),
+  read('src/lib/homepage/HomepageCollection.svelte'),
+  read('src/lib/homepage/HomepageQuestions.svelte'),
   read('src/lib/homepage/HomepageCommunity.svelte'),
   read('src/lib/homepage/HomepageDailyLeaderboard.svelte'),
   read('src/lib/homepage/HomepageHeader.svelte'),
@@ -25,8 +25,8 @@ const [home, rollPage, rollPageContext, game, preRoll, bestRoll, loop, scoring, 
   read('index.html')
 ]);
 
-test('the homepage is the real daily roll followed by explanation and one public board', () => {
-  for (const component of ['HomepageHeader', 'RollPage', 'HomepageLoop', 'HomepageScoring', 'HomepageCommunity', 'SiteFooter']) {
+test('the homepage leads from the real roll to profiles, collection, discovery, and signup', () => {
+  for (const component of ['HomepageHeader', 'RollPage', 'HomepageProfileExample', 'HomepageCollection', 'HomepageCommunity', 'HomepageStart', 'HomepageQuestions', 'SiteFooter']) {
     assert.match(home, new RegExp(component));
   }
   assert.match(home, /surface="homepage"/);
@@ -85,7 +85,7 @@ test('the first viewport states the game plainly and has one authoritative roll 
   assert.match(game, /on:roll=\{\(\) => initiateRoll\(false\)\}/);
   assert.match(game, /phase = 'rolling';[\s\S]{0,800}dispatchRollState\(\);/);
   assert.match(game, /requestRoll\(supabase, isReroll\)/);
-  assert.doesNotMatch(home + rollPage, /[‹›↗→↓]/);
+  assert.doesNotMatch(rollPage, /roll-page__profile-link/);
   assert.doesNotMatch(home, /href="\/roll"/);
 });
 
@@ -103,20 +103,42 @@ test('account actions are contextual before and after the guest roll', () => {
   assert.match(game, /Share result/);
 });
 
-test('the lower homepage explains play and scoring before authentic profile discovery', () => {
-  for (const step of ['Roll', 'Decode', 'Compare']) assert.match(loop, new RegExp(`<h3>${step}</h3>`));
-  assert.match(scoring, /Why some colors score/);
-  assert.match(scoring, /Repeated digits/);
-  assert.match(scoring, /Mirrored digits/);
-  assert.match(scoring, /Recognizable values/);
+test('the lower homepage uses canonical examples and direct copy with authentic discovery', () => {
+  assert.match(loop, /getBadgeMeta/);
+  assert.match(loop, /aria-label="Example color condition collection"/);
+  assert.match(loop, /aria-label="Example achievement"/);
+  assert.match(scoring, /What makes a color score higher/);
   assert.match(scoring, /href="\/how-to-play"/);
-  assert.match(community, /Meet the people behind today’s colors/);
+  assert.match(community, /Players from today’s top rolls/);
+  assert.match(community, /HomepagePlayerCard/);
+  assert.doesNotMatch(home + loop + scoring + community, /your story|journey|daily ritual/i);
   assert.match(community, /supabase\.rpc\('get_public_discovery',/);
   assert.match(community, /supabase\.rpc\('get_public_discovery_spotlight'/);
   assert.match(community, /const DAILY_LEADERBOARD_LIMIT = 5/);
   assert.match(board, /View full leaderboard/);
   assert.match(board, /LeaderboardEntry/);
   assert.match(footer, /href="\/privacy"/);
+});
+
+test('the profile preview is an example, with account actions kept in the closing section', async () => {
+  const preview = await read('src/lib/homepage/HomepageProfileExample.svelte');
+  const start = await read('src/lib/homepage/HomepageStart.svelte');
+  const player = await read('src/lib/homepage/HomepagePlayerCard.svelte');
+  assert.doesNotMatch(player, />Open profile|homepage-player__open/);
+  assert.match(player, /aria-label=\{`Open \$\{name\}’s profile`\}/);
+  assert.match(preview, /<figure aria-label="Profile customization preview">/);
+  assert.doesNotMatch(preview, /<figcaption/);
+  assert.doesNotMatch(preview, /profileHref|profile-example__link|Open Tjz|Explore Tjz|chm\.lol\/tjz/);
+  const sections = ['<RollPage', '<HomepageProfileExample', '<HomepageCollection', '<HomepageCommunity', '<HomepageStart', '<HomepageQuestions', '<SiteFooter'];
+  const positions = sections.map(section => home.indexOf(section));
+  assert.ok(positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1])));
+  assert.match(start, /accountState === ACCOUNT_STATES\.SIGNED_OUT && !isAuthenticated/);
+  assert.match(start, /ACCOUNT_STATES\.PROFILE_ERROR/);
+  assert.match(start, /href="\/signup\?next=%2Fprofile%2Fsettings"/);
+  assert.match(start, /href="\/profile\/settings"/);
+  assert.doesNotMatch(preview + start + loop + scoring + community, /your story|journey|daily ritual/i);
+  assert.doesNotMatch(preview + start + loop + scoring + community + rollPage, /[↗→↓]/);
+  assert.doesNotMatch(preview + start + loop + community, /homepage-section-kicker/);
 });
 
 test('root and compatibility metadata identify one canonical playable entry', () => {
