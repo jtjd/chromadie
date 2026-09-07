@@ -9,13 +9,13 @@
 </section>
 
 <style>
-  .homepage-questions { display: grid; grid-template-columns: .8fr 1.2fr; gap: 64px; padding-block: 56px 80px; border-top: 1px solid var(--homepage-border); }
-  h2 { margin: 0; font: 600 1.5rem / 1.3 var(--homepage-display); letter-spacing: -.025em; }
+  .homepage-questions { display: grid; grid-template-columns: .7fr 1.3fr; gap: 72px; padding-block: 48px 64px; border-top: 1px solid var(--homepage-border); }
+  h2 { margin: 0; color: var(--homepage-secondary); font: 600 1.35rem / 1.3 var(--homepage-display); letter-spacing: -.025em; }
   details { border-bottom: 1px solid var(--homepage-border); }
-  summary { min-height: 56px; padding: 16px 0; cursor: pointer; font-size: 1rem; line-height: 1.5; }
-  details:first-child summary { padding-top: 0; min-height: 40px; }
-  p { margin: 0; padding: 0 0 20px; color: var(--homepage-secondary-muted); font-size: .95rem; line-height: 1.65; }
+  summary { min-height: 52px; padding: 14px 0; cursor: pointer; color: var(--homepage-secondary); font-size: .96rem; line-height: 1.5; }
+  details:first-child summary { padding-top: 0; min-height: 38px; }
+  p { margin: 0; padding: 0 0 18px; color: var(--homepage-secondary-muted); font-size: .92rem; line-height: 1.65; }
   a { text-underline-offset: 4px; }
   summary:focus-visible, a:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
-  @media (max-width: 780px) { .homepage-questions { grid-template-columns: 1fr; gap: 24px; padding-block: 40px 56px; } }
+  @media (max-width: 780px) { .homepage-questions { grid-template-columns: 1fr; gap: 20px; padding-block: 40px 52px; } }
 </style>
