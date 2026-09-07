@@ -10,9 +10,9 @@
         <img class="site-footer__brand-logo" src="/brand/am-mark-v1.webp" alt="" width="52" height="42" decoding="async" />
       </a>
     {:else}
-      <span>chm.lol</span>
+      <span class="site-footer__name">chm.lol</span>
     {/if}
-    <span>A public profile that changes every day.</span>
+    <span class="site-footer__tagline">A public profile that changes every day.</span>
   </div>
 
   <nav class="site-footer__nav" aria-label="Footer navigation">
@@ -32,7 +32,7 @@
 <style>
   .site-footer {
     --site-footer-border: var(--homepage-border, rgba(255, 255, 255, 0.11));
-    --site-footer-muted: var(--homepage-muted-2, #6f6f79);
+    --site-footer-muted: var(--homepage-muted, #95959f);
     --site-footer-ink: var(--homepage-text, #f5f5f7);
     position: relative;
     z-index: 1;
@@ -40,19 +40,27 @@
     width: min(1160px, calc(100% - 48px));
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
+    gap: 28px;
     margin: auto auto 0;
-    padding: 28px 0 36px;
+    padding: 30px 0 38px;
     border-top: 1px solid var(--site-footer-border);
     color: var(--site-footer-muted);
-    font: 400 0.76rem / 1.4 'Inter', sans-serif;
+    font: 400 0.79rem / 1.45 'Inter', sans-serif;
   }
 
   .site-footer__identity {
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
+    align-items: baseline;
+    gap: 12px 24px;
   }
+
+  .site-footer__name {
+    color: rgba(245,245,247,.74);
+    font-weight: 600;
+  }
+
+  .site-footer__tagline { color: rgba(245,245,247,.52); }
 
   .site-footer__nav {
     display: flex;
@@ -62,7 +70,7 @@
   }
 
   .site-footer__nav a {
-    color: inherit;
+    color: rgba(245,245,247,.55);
     text-decoration: none;
     transition: color 0.18s ease;
   }
@@ -79,9 +87,7 @@
       flex-direction: column;
     }
 
-    .site-footer__nav {
-      justify-content: flex-start;
-    }
+    .site-footer__nav { justify-content: flex-start; }
   }
 
   @media (max-height: 32rem) {
