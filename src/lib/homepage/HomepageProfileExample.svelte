@@ -41,7 +41,8 @@
         {#if renderer}
           <svelte:component this={renderer}
             displayName="chm"
-            bio="one color a day. a profile that keeps changing."
+            bio="making things i like on the internet."
+            location="New York, NY"
             avatarSrc={avatar}
             layoutVariant="sleek"
             headingTag="h2"
