@@ -32,34 +32,123 @@
 </script>
 
 <section class="homepage-section profile-example" id="profiles" bind:this={host} aria-labelledby="profile-example-title">
-  <div>
+  <div class="profile-example__copy">
     <h2 id="profile-example-title" class="homepage-section-heading">Your colors.<br />Your own page.</h2>
     <p class="homepage-section-sub">Pick a layout. Add your links. Change the fonts, effects, and background. Put your daily roll on a page you want to share.</p>
   </div>
+
   <figure aria-label="Profile customization preview">
-    <div class="profile-example__canvas">
-      {#if renderer}
-        <svelte:component this={renderer} displayName="Tjz" avatarSrc={avatar}
-          layoutVariant="sleek" headingTag="h2" avatarEffectKey="avatar_effect_butterfly_orbit"
-          roll={{ hex_code: '#5EBAE3', identity: 'Balanced Vivid Azure', rarity: 'Uncommon', score: 38697 }} rollLabel="September 4, 2026"
-          nameLoadout={{ fontKey: 'name_font_velocity', motionKey: 'name_motion_neon_particle', materialKey: '' }}
-          profileBorderKey="border_void" accentColor="#99C1F1" location="Siberia" timezone="Russia"
-          {links} linkStyle={{ size: 2, glow: 2 }}
-          surfaceStyle="--profile-surface-fill: transparent; --profile-text: #16AEBB; --profile-border-radius: 22px; --profile-border-color: #E01B24; --profile-border-opacity: .11; --profile-username: #FFFFFF; --profile-secondary-text: #FFFFFF;"
-        />
-      {:else if failed}
-        <p>Preview couldn’t load. <button type="button" on:click={load}>Retry</button></p>
-      {:else}<p role="status">Loading profile example…</p>{/if}
+    <div class="profile-example__stage">
+      <div class="profile-example__canvas">
+        {#if renderer}
+          <svelte:component this={renderer} displayName="Tjz" avatarSrc={avatar}
+            layoutVariant="sleek" headingTag="h2" avatarEffectKey="avatar_effect_butterfly_orbit"
+            roll={{ hex_code: '#5EBAE3', identity: 'Balanced Vivid Azure', rarity: 'Uncommon', score: 38697 }} rollLabel="September 4, 2026"
+            nameLoadout={{ fontKey: 'name_font_velocity', motionKey: 'name_motion_neon_particle', materialKey: '' }}
+            profileBorderKey="border_void" accentColor="#99C1F1" location="Siberia" timezone="Russia"
+            {links} linkStyle={{ size: 2, glow: 2 }}
+            surfaceStyle="--profile-surface-fill: transparent; --profile-text: #16AEBB; --profile-border-radius: 22px; --profile-border-color: #E01B24; --profile-border-opacity: .11; --profile-username: #FFFFFF; --profile-secondary-text: #FFFFFF;"
+          />
+        {:else if failed}
+          <p class="profile-example__state">Preview couldn’t load. <button type="button" on:click={load}>Retry</button></p>
+        {:else}<p class="profile-example__state" role="status">Loading profile example…</p>{/if}
+      </div>
     </div>
+    <figcaption><strong>chm.lol/tjz</strong><span>Layout · links · effects · daily color</span></figcaption>
   </figure>
 </section>
 
 <style>
-  .profile-example { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.25fr); align-items: center; gap: 64px; padding-block: 100px; border-top: 1px solid var(--homepage-border); scroll-margin-top: 24px; }
+  .profile-example {
+    --profile-demo-color: #5ebae3;
+    --profile-demo-accent: #99c1f1;
+    display: grid;
+    grid-template-columns: minmax(0, .62fr) minmax(0, 1.45fr);
+    align-items: center;
+    gap: clamp(48px, 5vw, 80px);
+    padding-block: 112px 104px;
+    border-top: 1px solid var(--homepage-border);
+    scroll-margin-top: 24px;
+  }
+
+  .profile-example__copy { position: relative; z-index: 2; }
   figure { min-width: 0; margin: 0; }
-  .profile-example__canvas { display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; min-height: 420px; min-width: 0; padding: 24px; overflow: hidden; isolation: isolate; border: 1px solid var(--homepage-border); border-radius: 22px; background: #000; }
-  .profile-example__canvas :global(.profile-full-bleed__boundary) { width: min(100%, 640px); max-width: 100%; }
+
+  .profile-example__stage {
+    position: relative;
+    display: grid;
+    min-height: 500px;
+    place-items: center;
+    isolation: isolate;
+  }
+
+  .profile-example__stage::before {
+    position: absolute;
+    z-index: -1;
+    inset: 14% 2% 8%;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 24% 34%, color-mix(in srgb, var(--profile-demo-accent) 22%, transparent), transparent 34%),
+      radial-gradient(circle at 74% 64%, color-mix(in srgb, var(--profile-demo-color) 18%, transparent), transparent 38%);
+    content: '';
+    filter: blur(38px);
+    opacity: .72;
+    pointer-events: none;
+  }
+
+  .profile-example__canvas {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    min-height: 440px;
+    place-items: center;
+    padding: 14px 0;
+    overflow: visible;
+    isolation: isolate;
+  }
+
+  .profile-example__canvas :global(.profile-full-bleed__boundary) {
+    width: min(100%, 790px);
+    max-width: 100%;
+  }
+
+  .profile-example__state {
+    margin: 0;
+    color: var(--homepage-secondary-muted);
+    font-size: .95rem;
+  }
+
+  figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 12px;
+    padding-top: 14px;
+    border-top: 1px solid color-mix(in srgb, var(--profile-demo-color) 22%, var(--homepage-border));
+    color: var(--homepage-muted);
+    font-size: .82rem;
+    line-height: 1.4;
+  }
+
+  figcaption strong {
+    color: var(--homepage-secondary);
+    font: 600 .84rem / 1.2 var(--homepage-display);
+  }
+
+  button { min-height: 42px; }
   button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
-  @media (max-width: 1199px) { .profile-example { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 48px; } }
-  @media (max-width: 460px) { .profile-example__canvas { padding: 16px 8px; } }
+
+  @media (max-width: 1199px) {
+    .profile-example { grid-template-columns: minmax(0, 1fr); gap: 34px; padding-block: 64px; }
+    .profile-example__copy { max-width: 650px; }
+    .profile-example__stage { min-height: 430px; }
+  }
+
+  @media (max-width: 600px) {
+    .profile-example { padding-block: 56px; }
+    .profile-example__stage { min-height: 360px; }
+    .profile-example__canvas { min-height: 330px; padding: 4px 0; }
+    figcaption { align-items: flex-start; flex-direction: column; gap: 5px; }
+  }
 </style>
