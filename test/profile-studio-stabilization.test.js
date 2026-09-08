@@ -102,7 +102,8 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.doesNotMatch(preview, /ProfileEnvironmentLayer/);
   assert.doesNotMatch(preview, /ProfileShell|overflow-y:\s*auto/);
   assert.match(identity, /profile-reference-card--studio/);
-  assert.match(environment, /inputMode=\{mode === 'studio' \? 'demo' : 'window'\}/);
+  assert.match(environment, /inputMode="window"/);
+  assert.doesNotMatch(environment, /\? 'demo'/);
   assert.match(cursor, /inputMode = 'window'/);
   assert.match(cursor, /inputMode === 'demo'/);
   assert.match(cursor, /function demoPoint/);

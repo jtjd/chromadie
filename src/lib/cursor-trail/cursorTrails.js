@@ -35,6 +35,28 @@ const normalizedDefinitions = Object.fromEntries(
 export const CURSOR_TRAIL_KEYS = Object.freeze(Object.keys(normalizedDefinitions));
 export const CURSOR_TRAIL_DEFINITIONS = Object.freeze(normalizedDefinitions);
 
+// Presentation-only consolidation: saved IDs and server catalog validation
+// continue to resolve exactly. No inventory or entitlement is remapped.
+export const CURSOR_TRAIL_REPLACEMENTS = Object.freeze({
+  'signal-trace': 'rain-trace',
+  'chroma-ribbon': 'color-memory',
+  'comet-thread': 'solar-sparks',
+  'static-echo': 'pixel-wake',
+  'ghost-tail': 'orbit-dust',
+  'marker-stroke': 'ink-drops',
+  'following-dot': 'orbit-dust'
+});
+
+export function getCursorTrailRendererKey(value) {
+  const key = getCursorTrailKey(value);
+  return CURSOR_TRAIL_REPLACEMENTS[key] || key;
+}
+
+export function isCuratedCursorTrail(value) {
+  const key = getCursorTrailKey(value);
+  return Boolean(key && !CURSOR_TRAIL_REPLACEMENTS[key]);
+}
+
 export function getCursorTrailDefinition(value) {
   if (typeof value !== 'string') return null;
   const candidate = value.trim();

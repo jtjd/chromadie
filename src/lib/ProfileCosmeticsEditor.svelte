@@ -23,6 +23,7 @@
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer, getNamePreviewLoadoutForSlot } from './name/nameLoadout.js';
   import { isCustomNameFontKey } from './name/nameFonts.js';
   import { createFittingRoom, getShopAccessLabel, hasShopEntitlement, SHOP_SLOT_LABELS, isShopCosmetic } from './shopCatalog.js';
+  import { isCuratedCursorTrail } from './cursor-trail/cursorTrails.js';
   import { getProfileMediaUrl } from './profileMedia.js';
 
   export let accountProfile = null;
@@ -91,7 +92,8 @@
       || left.name.localeCompare(right.name));
   $: borderItems = availableCosmetics.filter(item => item.slot === 'profile_border');
   $: avatarItems = availableCosmetics.filter(item => item.slot === 'avatar_effect');
-  $: cursorItems = availableCosmetics.filter(item => item.slot === 'cursor_trail');
+  $: cursorItems = availableCosmetics.filter(item => item.slot === 'cursor_trail'
+    && (isCuratedCursorTrail(item.css_value) || item.item_key === previewLoadout.cursor_trail));
   $: atmosphereItems = availableCosmetics.filter(item => item.slot === 'profile_atmosphere');
   $: profileMotionItems = availableCosmetics.filter(item => item.slot === 'profile_motion');
   $: previewItems = Object.fromEntries(COSMETIC_SLOTS.map(slot => [slot, $cosmeticCatalogItems[previewLoadout[slot]] || null]));

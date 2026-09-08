@@ -7,7 +7,6 @@
   export let active = true;
   export let className = '';
   export let inputMode = 'window';
-  export let cursorSrc = '';
 
   let CursorTrailLayer = null;
 
@@ -26,5 +25,5 @@
 </script>
 
 {#if CursorTrailLayer}
-  <svelte:component this={CursorTrailLayer} {trailKey} {recentColors} {todayColor} {active} {className} {inputMode} {cursorSrc} />
+  <svelte:component this={CursorTrailLayer} {trailKey} {recentColors} {todayColor} {active} {className} {inputMode} />
 {/if}

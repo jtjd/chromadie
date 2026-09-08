@@ -1,5 +1,44 @@
 # Chromadie 2.0 Progress
 
+## Customize cursor input correction — 2026-09-08
+
+- Changed the full-page Studio environment from automatic demo input to real
+  pointer input. Compact cards retain their demos.
+- Browser regression mounts the actual Studio environment and verifies no
+  initial animation, real pointer emission, idle shutdown and reduced motion.
+  Updated the Studio tab-switch check to send pointer movement explicitly.
+- All 551 tests, the focused browser regression and required validation checks
+  pass. No schema, configuration or entitlement changes; not deployed.
+
+## Cursor trail saturation follow-up — 2026-09-08
+
+- Strengthened fixed palettes to fully saturated hues, replaced pastel glyphs
+  and bubbles, and colored formerly white particle highlights.
+- Increased color retention during particle fading and plasma opacity; removed
+  additive plasma bleaching. Color Memory retains actual rolled colors.
+- Added palette saturation and Color Memory preservation coverage. All 551
+  tests and required validation commands pass; Svelte reports zero diagnostics.
+  Desktop/mobile browser checks pass, including idle and reduced-motion behavior.
+  Reviewed the saturated desktop palette in the browser gallery. Enforced
+  performance budgets pass; aggregate catalog sizes remain advisory. Not deployed.
+
+## Cursor trail curation — 2026-09-08
+
+- Reduced the default chooser from 23 to 16 effects; historical equipped IDs
+  resolve safely and remain selectable while equipped.
+- Rebuilt nine generic line/square effects as distinct authored particles;
+  preserved Glyph Bloom, Joy Burst and Bubble Lift artwork and algorithms.
+- Removed unused path/follower rendering, fixed idle expiry, bounded emission,
+  hybrid pointer detection, hidden-document scheduling and static preview resize.
+- Browser audit passes for all 16 desktop previews, real pointer emission and
+  idle clearing, reduced-motion suppression, and compact static previews.
+  Reviewed screenshots: `/tmp/chromadie-cursor-trails/desktop.png` and
+  `/tmp/chromadie-cursor-trails/mobile-reduced.png`.
+- Validation: 550 tests pass; Svelte check has zero errors/warnings. Build,
+  ESLint, links, CSP, performance, username policy, balance, catalog, scoring
+  parity and database security pass. Performance catalog totals remain advisory;
+  all enforced route/asset budgets pass. No schema migration; not deployed.
+
 ## Homepage product showcase and footer — 2026-09-08
 
 - Added a live product gallery to the existing profile section. Three local,

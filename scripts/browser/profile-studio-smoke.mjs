@@ -1512,7 +1512,7 @@ try {
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-effects')`, 'effects after tab switching');
     await page.evaluate(`document.querySelector('#customize-effects')?.scrollIntoView({ block: 'start' })`);
     try {
-      await page.waitFor(`document.querySelector('.profile-environment--studio .cursor-trail-layer[data-input-mode="demo"][data-trail-key="pixel-wake"]') && document.querySelector('.profile-environment--studio [data-atmosphere="silk-folds"][data-atmosphere-state="animated"]')`, 'cosmetic animations resumed after tab switching');
+      await page.waitFor(`document.querySelector('.profile-environment--studio .cursor-trail-layer[data-input-mode="window"][data-trail-key="pixel-wake"]') && document.querySelector('.profile-environment--studio [data-atmosphere="silk-folds"][data-atmosphere-state="animated"]')`, 'cosmetic animations resumed after tab switching');
     } catch (error) {
       const animationState = await page.evaluate(`(() => {
         const cursor = document.querySelector('.profile-environment--studio .cursor-trail-layer[data-trail-key="pixel-wake"]');
@@ -1530,6 +1530,7 @@ try {
       })()`);
       throw new Error(`${error.message} State: ${JSON.stringify(animationState)}`, { cause: error });
     }
+    await page.command('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 420, y: 320 });
     await delay(180);
     const afterTabSwitch = await page.evaluate(`(() => {
       const cursorCanvas = document.querySelector('.profile-environment--studio .cursor-trail-layer[data-trail-key="pixel-wake"] canvas');
@@ -1543,7 +1544,7 @@ try {
       };
     })()`);
     assert(afterTabSwitch.atmosphereState === 'animated' && !afterTabSwitch.videoPaused, `Atmosphere did not resume after tab switching: ${JSON.stringify({ beforeTabSwitch, afterTabSwitch })}.`);
-    assert(afterTabSwitch.cursorFrame && afterTabSwitch.cursorFrame !== beforeTabSwitch.cursorFrame, 'Cursor trail demo frame did not advance after tab switching.');
+    assert(afterTabSwitch.cursorFrame && afterTabSwitch.cursorFrame !== beforeTabSwitch.cursorFrame, 'Cursor trail did not respond to pointer movement after tab switching.');
     await capture('05-effects-live-preview');
     } else {
       await page.click('#profile-customize-tab-appearance', 'approved effects Appearance tab');

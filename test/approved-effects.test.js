@@ -246,7 +246,9 @@ test('the three approved reference effects keep their authored visual primitives
   assert.doesNotMatch(raster, /fillStyle = '#08090[dD]'/);
   assert.doesNotMatch(raster, /#00EFFF|#6E5CFF|#FF4AD4/);
 
-  assert.match(cursorTrail, /const color = particle\.hot \? '#7CFFFA' : '#7A4DFF'/);
+  // September's saturation follow-up preserves the particle field and
+  // replaces its pastel palette with saturated cyan and violet.
+  assert.match(cursorTrail, /const color = particle\.hot \? '#00FFFF' : '#9900FF'/);
   assert.match(cursorTrail, /createRadialGradient\(node\.x, node\.y/);
   assert.match(cursorTrail, /context\.quadraticCurveTo\(controlX, controlY, other\.x, other\.y\)/);
   assert.doesNotMatch(cursorTrail, /const colors = getColors\(\);\n\s*const time = staticFrame/);

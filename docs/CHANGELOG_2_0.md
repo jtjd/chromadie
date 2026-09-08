@@ -2,6 +2,26 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-08 — Pointer-driven Customize trails
+
+- Fixed the full-page Customize trail moving on its own: it now follows your
+  pointer. Small effect cards retain automatic demonstrations.
+
+## 2026-09-08 — Richer cursor trail color
+
+- Increased saturation across cursor palettes, glyphs, bubbles and plasma.
+- Replaced washed-out white accents with vivid highlights and kept color
+  stronger during fading. Color Memory retains your actual rolled colors.
+
+## 2026-09-08 — Distinct, vivid cursor trails
+
+- Curated 16 cursor trails, absorbing seven redundant variants while preserving
+  existing equipped selections and inventory.
+- Added prismatic facets, rising embers, ink splashes, orbiting stars, rain
+  ripples, tumbling gold foil, pixel fragments, color stamps and eclipse rings.
+- Improved preview density and motion, stopped lingering idle trails, and
+  provided static reduced-motion previews with no live pointer animation.
+
 ## 2026-09-08 — Product-led homepage showcase
 
 - Added three animated, product-native profile scenes using the real public

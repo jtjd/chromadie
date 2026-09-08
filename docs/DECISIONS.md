@@ -1,5 +1,38 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-08 — Customize trails follow the real pointer
+
+The full-page Studio environment now uses window pointer input, matching public
+profiles. Automatic demo paths belong only to compact effect cards. This fixes
+the unsolicited floating trail in Customize without changing trail artwork,
+saved configuration, touch suppression or reduced-motion behavior.
+
+## 2026-09-08 — Increase cursor trail saturation
+
+Cursor palettes now use full-saturation hues, including Glyph Bloom and cyan
+Bubble Lift. Replace broad white/pastel accents with chromatic highlights and
+keep particles more opaque through their lifetime. Plasma uses source-over
+compositing so overlapping colors retain their hue instead of bleaching toward
+white. Color Memory still uses the player's actual rolled colors for its fills;
+emoji artwork remains native. Motion, geometry and catalog selection are unchanged.
+
+## 2026-09-08 — Curate cursor trails at the presentation boundary
+
+The default Studio chooser exposes 16 distinct trails, consolidating seven
+line/follower variants through finite renderer aliases. All 23 server catalog
+keys, inventories, progression rewards and equipped values remain valid; an
+already-selected consolidated row stays available until changed. This avoids
+rewriting ownership or granting replacement entitlements in client code.
+The old Ghost Tail image-copy behavior is absorbed into Orbit Dust; uploaded
+native profile cursors remain independent and unchanged.
+
+Nine particle treatments now own distinct shapes and motion with vivid default
+palettes; Color Memory retains actual profile colors. Glyph Bloom, Joy Burst,
+Bubble Lift and the retained reference algorithms keep their existing artwork.
+Shared bounded emission and idle expiry replace pointer-event-rate-dependent
+spawning. Reduced-motion public profiles omit pointer decoration, while cards
+show a static sample. No schema or external deployment change is needed.
+
 ## 2026-09-08 — Show the product through live profile scenes
 
 The landing page now demonstrates the product with three deterministic local

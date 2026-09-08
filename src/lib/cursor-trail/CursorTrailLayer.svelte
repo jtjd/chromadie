@@ -1,29 +1,23 @@
 <script>
   import { onDestroy, onMount } from 'svelte';
-  import { getCursorTrailKey } from './cursorTrails.js';
+  import { getCursorTrailRendererKey } from './cursorTrails.js';
+  import { AUTHORED_PARTICLE_KEYS, createAuthoredParticle, advanceAuthoredParticle, drawAuthoredParticle } from './authoredParticles.js';
   import {
     GUNS_BUBBLE_BASE_DIMENSION,
-    GUNS_FOLLOWING_DOT_RADIUS,
     GUNS_SPRINGY_EMOJI_NODES,
     GUNS_TEXT_FLAG_GAP,
-    GUNS_TRAILING_CURSOR_PARTICLES,
-    GUNS_TRAILING_CURSOR_RATE,
     advanceGunsBubbleParticle,
     advanceGunsCharacterParticle,
     advanceGunsEmojiParticle,
     advanceGunsFairyDustParticle,
-    advanceGunsFollowingDot,
     advanceGunsSpringyEmojiNodes,
     advanceGunsTextFlag,
-    advanceGunsTrailingCursorNodes,
     createGunsBubbleParticle,
     createGunsCharacterParticle,
     createGunsEmojiParticle,
     createGunsFairyDustParticle,
-    createGunsFollowingDot,
     createGunsSpringyEmojiNodes,
-    createGunsTextFlagNodes,
-    createGunsTrailingCursorNodes
+    createGunsTextFlagNodes
   } from '../competitor-effects/gunsCursorAlgorithms.js';
 
   export let trailKey = '';
@@ -31,7 +25,6 @@
   export let todayColor = '#8B7CF6';
   export let active = true;
   export let className = '';
-  export let cursorSrc = '';
   // Live profiles listen to the window pointer. Compact fitting-room cards
   // use the same renderer with a deterministic demo path so a card never
   // invents a second, CSS-only version of an effect.
@@ -56,22 +49,17 @@
   let particles = [];
   let plasmaNodes = [];
   let plasmaParticles = [];
-  let trailingNodes = [];
-  let trailingImage = null;
-  let requestedCursorSrc = null;
-  let trailingKey = '';
   let effectStateKey = '';
   let characterSprites = [];
   let emojiSprites = [];
   let springyEmojiSprite = null;
-  let followingDot = createGunsFollowingDot();
   let textFlagNodes = [];
   let textFlagPhase = 0;
   let springyEmojiNodes = createGunsSpringyEmojiNodes();
   let mounted = false;
-  let demoCycle = 0;
+  let lastEmission = null;
 
-  $: resolvedKey = getCursorTrailKey(trailKey);
+  $: resolvedKey = getCursorTrailRendererKey(trailKey);
   $: resolvedInputMode = inputMode === 'demo' ? 'demo' : 'window';
   $: isRunning = Boolean(resolvedKey && active && visible && (resolvedInputMode === 'demo' || !touchOnly));
   $: classList = ['cursor-trail-layer', className, `cursor-trail-layer--${resolvedInputMode}`, isRunning ? 'cursor-trail-layer--active' : '', reducedMotion ? 'cursor-trail-layer--reduced' : ''].filter(Boolean).join(' ');
@@ -82,7 +70,7 @@
   // boundary as well as from the IntersectionObserver callback.
   $: if (mounted && visible && isRunning && resolvedInputMode === 'demo' && !reducedMotion) startLoop();
 
-  const FALLBACK_COLORS = ['#8B7CF6', '#8DDCFF', '#B7FD4D', '#F7B7E2'];
+  const FALLBACK_COLORS = ['#7700FF', '#00D5FF', '#B0FF00', '#FF0090'];
 
   function safeColor(value, fallback = '#8B7CF6') {
     return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? String(value).toUpperCase() : fallback;
@@ -101,11 +89,11 @@
   }
 
   const GUNS_CHARACTER_GLYPHS = ['h', 'e', 'l', 'l', 'o'];
-  const GUNS_CHARACTER_COLORS = ['#6622CC', '#A755C2', '#B07C9E', '#B59194', '#D2A1B8'];
+  const GUNS_CHARACTER_COLORS = ['#9900FF', '#FF00CC', '#00CCFF', '#FF0066', '#AA00FF'];
   const GUNS_EMOJI_GLYPHS = ['😀', '😂', '😆', '😊'];
   const GUNS_TEXT_FLAG_TEXT = ' Chromadie';
-  const PARTICLE_TRAIL_KEYS = new Set(['pixel-wake', 'glass-shards', 'ember-ash', 'gold-fleck', 'solar-sparks', 'bubble-wake', 'character-bloom', 'emoji-bloom']);
-  const CONTINUOUS_TRAIL_KEYS = new Set(['following-dot', 'text-flag', 'springy-emoji']);
+  const PARTICLE_TRAIL_KEYS = new Set([...AUTHORED_PARTICLE_KEYS, 'solar-sparks', 'bubble-wake', 'character-bloom', 'emoji-bloom']);
+  const CONTINUOUS_TRAIL_KEYS = new Set(['text-flag', 'springy-emoji']);
 
   function createGlyphSprite(value, font, heightMultiplier = 2, color = '') {
     if (typeof document === 'undefined') return null;
@@ -145,12 +133,8 @@
     history = [];
     particles = [];
     pointer = null;
-    trailingNodes = [];
-    trailingKey = '';
-    requestedCursorSrc = null;
-    trailingImage = null;
-    demoCycle = -1;
-    followingDot = createGunsFollowingDot({ x: width / 2, y: height / 2 });
+    lastEmission = null;
+    lastTime = 0;
     textFlagPhase = 0;
     textFlagNodes = createGunsTextFlagNodes(GUNS_TEXT_FLAG_TEXT, { x: width / 2, y: height / 2 });
     springyEmojiNodes = createGunsSpringyEmojiNodes({ x: width / 2, y: height / 2 }, GUNS_SPRINGY_EMOJI_NODES);
@@ -191,6 +175,10 @@
     if (reducedMotion) {
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
+      clear();
+      history = [];
+      particles = [];
+      pointer = null;
       if (resolvedInputMode === 'demo') drawDemoFrame(performance.now(), true);
     } else if (resolvedInputMode === 'demo') {
       startLoop();
@@ -199,7 +187,7 @@
 
   function updateInputMode() {
     const coarse = window.matchMedia?.('(pointer: coarse)').matches;
-    const fine = window.matchMedia?.('(pointer: fine)').matches;
+    const fine = window.matchMedia?.('(any-pointer: fine)').matches;
     // A hybrid laptop can report touch points and a coarse primary pointer
     // while still having a real mouse/trackpad. Disable only when no fine
     // pointer is available, so the native cursor remains the source of truth.
@@ -220,10 +208,10 @@
     context.clearRect(0, 0, width, height);
     resetPlasmaState();
     if (!pointer) {
-      followingDot = createGunsFollowingDot({ x: width / 2, y: height / 2 });
       textFlagNodes = createGunsTextFlagNodes(GUNS_TEXT_FLAG_TEXT, { x: width / 2, y: height / 2 });
       springyEmojiNodes = createGunsSpringyEmojiNodes({ x: width / 2, y: height / 2 }, GUNS_SPRINGY_EMOJI_NODES);
     }
+    if (reducedMotion && resolvedInputMode === 'demo') drawDemoFrame(0, true);
   }
 
   function pointForEvent(event) {
@@ -240,12 +228,15 @@
   }
 
   function addParticle(point, kind = 'dot') {
-    if (particles.length > 70) particles.splice(0, particles.length - 70);
+    if (particles.length >= 70) particles.splice(0, particles.length - 69);
+    if (AUTHORED_PARTICLE_KEYS.has(kind)) {
+      particles.push(createAuthoredParticle(point, kind, getColors()));
+      return;
+    }
     if (kind === 'solar-sparks') {
       const fairyDustParticle = createGunsFairyDustParticle(point.x, point.y);
       fairyDustParticle.kind = kind;
-      const colors = getColors();
-      fairyDustParticle.color = colors[Math.floor(Math.random() * colors.length)] || '#D61C59';
+      fairyDustParticle.color = FALLBACK_COLORS[Math.floor(Math.random() * FALLBACK_COLORS.length)];
       particles.push(fairyDustParticle);
       return;
     }
@@ -269,51 +260,48 @@
       particles.push(emojiParticle);
       return;
     }
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 0.2 + Math.random() * 0.8;
-    particles.push({
-      x: point.x,
-      y: point.y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      size: 1.5 + Math.random() * 3.5,
-      life: 1,
-      decay: 0.018 + Math.random() * 0.028,
-      rotation: angle,
-      kind
-    });
   }
 
   function handlePointerMove(event) {
-    if (!isRunning) return;
+    if (!isRunning || reducedMotion || document.visibilityState !== 'visible') return;
     const point = pointForEvent(event);
-    if (!point) return;
-    const previous = history[history.length - 1];
+    if (!point) {
+      if (pointer) pointer.active = false;
+      return;
+    }
     pointer = point;
     history.push(point);
     if (history.length > 28) history.shift();
-    const movedEnough = !previous || Math.hypot(point.x - previous.x, point.y - previous.y) > 1.5;
-    if (PARTICLE_TRAIL_KEYS.has(resolvedKey) && (movedEnough || ['pixel-wake', 'glass-shards', 'ember-ash', 'gold-fleck'].includes(resolvedKey))) {
+    emitAtPoint(point);
+    startLoop();
+  }
+
+  function emitAtPoint(point) {
+    if (!PARTICLE_TRAIL_KEYS.has(resolvedKey)) return;
+    const spacing = resolvedKey === 'void-lensing' ? 24 : 8;
+    if (lastEmission && (point.time - lastEmission.time < 28
+      || Math.hypot(point.x - lastEmission.x, point.y - lastEmission.y) < spacing)) return;
+    addParticle(point, resolvedKey);
+    if (['glass-shards', 'ember-ash', 'gold-fleck', 'pixel-wake', 'orbit-dust'].includes(resolvedKey)) {
       addParticle(point, resolvedKey);
-      if (point.speed > 1.5 && resolvedKey !== 'solar-sparks') addParticle(point, resolvedKey);
     }
-    if (reducedMotion) drawFrame(0, true);
-    else startLoop();
+    lastEmission = point;
   }
 
   function startLoop() {
-    if (!frame && isRunning && !reducedMotion) frame = requestAnimationFrame(animate);
+    if (!frame && isRunning && !reducedMotion && document.visibilityState === 'visible') {
+      lastTime = 0;
+      frame = requestAnimationFrame(animate);
+    }
   }
 
   function demoPoint(timestamp) {
     const cycleDuration = 4600;
     const normalized = ((timestamp % cycleDuration) + cycleDuration) / cycleDuration;
     const phase = normalized * Math.PI * 2;
-    const travel = (1 - Math.cos(phase)) / 2;
-    const eased = travel * travel * (3 - 2 * travel);
     return {
-      x: width * (0.12 + eased * 0.76),
-      y: height * (0.76 - eased * 0.52 + Math.sin(phase * 2) * 0.035),
+      x: width * (0.5 + Math.sin(phase) * 0.3),
+      y: height * (0.52 + Math.sin(phase * 2) * 0.17),
       speed: 1.1 + Math.abs(Math.sin(phase)) * 0.8,
       time: timestamp,
       active: true
@@ -322,67 +310,62 @@
 
   function updateDemoPoint(timestamp) {
     const point = demoPoint(timestamp);
-    const previous = history[history.length - 1];
     pointer = point;
     history.push(point);
     if (history.length > 28) history.shift();
-    const movedEnough = !previous || Math.hypot(point.x - previous.x, point.y - previous.y) > 1.5;
-    if (PARTICLE_TRAIL_KEYS.has(resolvedKey) && (movedEnough || ['pixel-wake', 'glass-shards', 'ember-ash', 'gold-fleck'].includes(resolvedKey))) {
-      if (Math.floor(timestamp / 90) !== demoCycle) {
-        demoCycle = Math.floor(timestamp / 90);
-        addParticle(point, resolvedKey);
-      }
-    }
+    emitAtPoint(point);
   }
 
   function drawDemoFrame(timestamp, staticFrame = false) {
     if (!context || !resolvedKey) return;
-    updateDemoPoint(staticFrame ? 0 : timestamp);
+    if (staticFrame) {
+      particles = [];
+      history = [];
+      lastEmission = null;
+      for (let sample = 0; sample < 9; sample++) {
+        updateDemoPoint(1300 + sample * 65);
+        drawFrame(3, true);
+      }
+      return;
+    }
+    updateDemoPoint(timestamp);
     drawFrame(staticFrame ? 0 : 1, staticFrame);
   }
 
   function animate(timestamp) {
     frame = 0;
-    if (!isRunning) return;
+    if (!isRunning || reducedMotion || document.visibilityState !== 'visible') return;
     const delta = Math.min(40, Math.max(0, timestamp - (lastTime || timestamp)));
     lastTime = timestamp;
     if (resolvedInputMode === 'demo') updateDemoPoint(timestamp);
+    else if (pointer && timestamp - pointer.time > 1400) {
+      pointer = null;
+      history = [];
+      particles = [];
+      lastEmission = null;
+    }
     drawFrame(delta / 16.67, false);
-    if (resolvedInputMode === 'demo' || CONTINUOUS_TRAIL_KEYS.has(resolvedKey) || history.length || particles.length || pointer) frame = requestAnimationFrame(animate);
+    if (resolvedInputMode === 'demo' || history.length || particles.length || pointer) frame = requestAnimationFrame(animate);
   }
 
   function clear() {
     context?.clearRect(0, 0, width, height);
   }
 
-  function drawPath(points, color, lineWidth, alpha = 1, offsetX = 0, offsetY = 0) {
-    if (!context || points.length < 2) return;
-    context.save();
-    context.globalAlpha = alpha;
-    context.strokeStyle = color;
-    context.lineWidth = lineWidth;
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-    context.beginPath();
-    points.forEach((point, index) => {
-      const x = point.x + offsetX;
-      const y = point.y + offsetY;
-      if (index === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
-    });
-    context.stroke();
-    context.restore();
-  }
-
   function drawParticles(multiplier = 1) {
     if (!context) return;
     const colors = getColors();
     particles = particles.filter(particle => {
+      if (AUTHORED_PARTICLE_KEYS.has(particle.kind)) {
+        if (!advanceAuthoredParticle(particle, multiplier)) return false;
+        drawAuthoredParticle(context, particle);
+        return true;
+      }
       if (particle.kind === 'solar-sparks') {
         advanceGunsFairyDustParticle(particle, multiplier);
         if (particle.lifeSpan <= 0) return false;
         context.save();
-        context.globalAlpha = particle.scale;
+        context.globalAlpha = Math.min(1, particle.scale * 2);
         context.fillStyle = particle.color || colors[0];
         context.font = '21px serif';
         context.textAlign = 'center';
@@ -400,8 +383,8 @@
         const dimension = particle.baseDimension || GUNS_BUBBLE_BASE_DIMENSION;
         const scale = particle.scale;
         context.save();
-        context.fillStyle = '#E6F1F7';
-        context.strokeStyle = '#3A92C5';
+        context.fillStyle = '#00D5FF';
+        context.strokeStyle = '#0066FF';
         context.beginPath();
         context.arc(particle.x - dimension / 2 * scale, particle.y - dimension / 2, dimension * scale, 0, Math.PI * 2);
         context.stroke();
@@ -428,44 +411,8 @@
         context.restore();
         return true;
       }
-      particle.x += particle.vx * multiplier;
-      particle.y += particle.vy * multiplier;
-      particle.vy += 0.008 * multiplier;
-      particle.life -= particle.decay * multiplier;
-      if (particle.life <= 0) return false;
-      const color = colors[Math.abs(Math.floor(particle.x + particle.y)) % colors.length];
-      context.save();
-      context.globalAlpha = particle.life * 0.8;
-      context.fillStyle = color;
-      context.strokeStyle = color;
-      context.translate(particle.x, particle.y);
-      context.rotate(particle.rotation);
-      if (particle.kind === 'glass-shards' || particle.kind === 'gold-fleck') {
-        context.beginPath();
-        context.moveTo(0, -particle.size);
-        context.lineTo(particle.size * 0.75, particle.size * 0.65);
-        context.lineTo(-particle.size * 0.65, particle.size * 0.5);
-        context.closePath();
-        context.stroke();
-      } else {
-        context.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
-      }
-      context.restore();
-      return true;
+      return false;
     });
-  }
-
-  function drawFollowingDot(staticFrame = false) {
-    if (!context || !pointer) return;
-    if (staticFrame) followingDot = createGunsFollowingDot(pointer);
-    else advanceGunsFollowingDot(followingDot, pointer);
-    context.save();
-    context.fillStyle = '#323232A6';
-    context.beginPath();
-    context.arc(followingDot.x, followingDot.y, GUNS_FOLLOWING_DOT_RADIUS, 0, Math.PI * 2);
-    context.fill();
-    context.closePath();
-    context.restore();
   }
 
   function drawTextFlag(staticFrame = false) {
@@ -477,7 +424,7 @@
       textFlagPhase = advanceGunsTextFlag(textFlagNodes, pointer, textFlagPhase, { gap: GUNS_TEXT_FLAG_GAP });
     }
     context.save();
-    context.fillStyle = getColors()[0] || '#FFFFFF';
+    context.fillStyle = '#FF00BB';
     context.font = '12px monospace';
     context.textBaseline = 'alphabetic';
     textFlagNodes.slice().reverse().forEach(node => context.fillText(node.letter, node.x, node.y));
@@ -494,52 +441,6 @@
     const sprite = springyEmojiSprite;
     springyEmojiNodes.forEach(node => {
       context.drawImage(sprite.canvas, node.x - sprite.width / 2, node.y - sprite.height / 2, sprite.width, sprite.height);
-    });
-  }
-
-  function ensureTrailingImage() {
-    if (requestedCursorSrc === cursorSrc) return;
-    requestedCursorSrc = cursorSrc || '';
-    trailingImage = null;
-    if (!requestedCursorSrc || typeof Image === 'undefined') return;
-    const image = new Image();
-    image.decoding = 'async';
-    image.src = requestedCursorSrc;
-    trailingImage = image;
-  }
-
-  function drawGunsTrailingCursor() {
-    if (!context || !pointer) return;
-    ensureTrailingImage();
-    if (trailingKey !== resolvedKey) {
-      trailingNodes = [];
-      trailingKey = resolvedKey;
-    }
-    if (!trailingNodes.length) {
-      trailingNodes = createGunsTrailingCursorNodes(pointer, GUNS_TRAILING_CURSOR_PARTICLES);
-    }
-    advanceGunsTrailingCursorNodes(trailingNodes, pointer, GUNS_TRAILING_CURSOR_RATE);
-    const image = trailingImage?.complete && (trailingImage.naturalWidth || trailingImage.width)
-      ? trailingImage
-      : null;
-    const colors = getColors();
-    trailingNodes.forEach((node, index) => {
-      context.save();
-      if (image && context.drawImage) {
-        // The upstream trailingCursor draws each custom cursor image at the
-        // node's top-left without an opacity falloff.
-        context.drawImage(image, node.x, node.y);
-      } else {
-        // A .cur may not expose a drawable Image in every browser. Keep the
-        // algorithm and provide a small code-owned fallback instead of
-        // copying the upstream package's embedded bitmap.
-        context.globalAlpha = 0.12 + (1 - index / trailingNodes.length) * 0.24;
-        context.fillStyle = colors[index % colors.length] || '#B6A1D8';
-        context.beginPath();
-        context.arc(node.x, node.y, Math.max(1.5, 4 - index * 0.16), 0, Math.PI * 2);
-        context.fill();
-      }
-      context.restore();
     });
   }
 
@@ -570,11 +471,11 @@
 
     const nodes = plasmaNodes;
     context.save();
-    context.globalCompositeOperation = 'lighter';
+    context.globalCompositeOperation = 'source-over';
 
     nodes.forEach((node, index) => {
       const gradient = context.createRadialGradient(node.x, node.y, 0, node.x, node.y, 54);
-      const color = index % 2 ? '#00FFFF' : '#824DFF';
+      const color = index % 2 ? '#00DFFF' : '#8800FF';
       gradient.addColorStop(0, `${color}8C`);
       gradient.addColorStop(0.45, `${color}3D`);
       gradient.addColorStop(1, `${color}00`);
@@ -603,8 +504,8 @@
           particle.hot = plasmaNoise(index, 35, tick) > 0.64;
         }
       }
-      const color = particle.hot ? '#7CFFFA' : '#7A4DFF';
-      const alpha = particle.hot ? 0.84 : 0.38 + plasmaNoise(index, 21) * 0.32;
+      const color = particle.hot ? '#00FFFF' : '#9900FF';
+      const alpha = particle.hot ? 1 : 0.8 + plasmaNoise(index, 21) * 0.2;
       context.globalAlpha = alpha;
       context.fillStyle = color;
       context.shadowColor = color;
@@ -614,7 +515,7 @@
       context.fill();
       if (particle.hot) {
         context.globalAlpha = 0.95;
-        context.fillStyle = '#FFFFFF';
+        context.fillStyle = '#00FFFF';
         context.beginPath();
         context.arc(particle.x, particle.y, particle.size * 0.35, 0, Math.PI * 2);
         context.fill();
@@ -632,7 +533,7 @@
         if (distance >= 170) return;
         const tick = Math.floor(time / 180);
         context.globalAlpha = (1 - distance / 170) * 0.24;
-        context.strokeStyle = index % 2 ? 'rgba(120,255,255,.9)' : 'rgba(160,100,255,.9)';
+        context.strokeStyle = index % 2 ? '#00FFFF' : '#AA00FF';
         context.beginPath();
         context.moveTo(node.x, node.y);
         const controlX = (node.x + other.x) / 2 + (plasmaNoise(index * 7 + otherIndex, 41, tick) - 0.5) * 32;
@@ -649,41 +550,17 @@
     if (!context) return;
     clear();
     if (!pointer || !resolvedKey) return;
-    const points = history.slice();
-    const colors = getColors();
-    const head = points[points.length - 1];
-    const tail = points.slice(-18);
 
-    if (resolvedKey === 'plasma-swarm') drawPlasmaSwarm(multiplier, staticFrame);
-    else if (resolvedKey === 'signal-trace') drawPath(tail, colors[0], 1.5, 0.82);
-    else if (resolvedKey === 'pixel-wake') drawParticles(multiplier);
-    else if (resolvedKey === 'chroma-ribbon') {
-      drawPath(tail, colors[0], 1.3, 0.7, -1, 0);
-      drawPath(tail, colors[1] || colors[0], 1.2, 0.7, 0, 1);
-      drawPath(tail, colors[2] || colors[0], 1.1, 0.7, 1, 0);
-    } else if (resolvedKey === 'glass-shards') { drawParticles(multiplier); drawPath(tail.slice(-8), colors[1] || colors[0], 0.8, 0.35); }
-    else if (resolvedKey === 'ember-ash') { drawParticles(multiplier); drawPath(tail.slice(-10), '#F5A45D', 0.8, 0.24); }
-    else if (resolvedKey === 'comet-thread') drawPath(tail, '#EAF2FF', 2.2, 0.54);
-    else if (resolvedKey === 'ink-drops') { drawPath(tail.slice(-6), '#6D5A78', 0.7, 0.4); context.fillStyle = '#BBA7C6'; context.globalAlpha = 0.5; context.beginPath(); context.arc(head.x, head.y, 2.5, 0, Math.PI * 2); context.fill(); }
-    else if (resolvedKey === 'orbit-dust') { drawPath(tail.slice(-8), colors[0], 0.7, 0.3); const radius = 5 + 5 * Math.sin((head.time || 0) / 220); context.fillStyle = colors[1] || colors[0]; context.globalAlpha = 0.8; context.fillRect(head.x + Math.cos(head.time / 180) * radius, head.y + Math.sin(head.time / 180) * radius, 2, 2); }
-    else if (resolvedKey === 'static-echo') { drawPath(tail.slice(-10), colors[0], 1, 0.28, -3, 0); drawPath(tail.slice(-8), '#FF8FCA', 1, 0.28, 3, 1); }
-    else if (resolvedKey === 'rain-trace') { drawPath(tail.slice(-7), colors[0], 0.8, 0.35); context.strokeStyle = colors[1] || colors[0]; context.globalAlpha = 0.6; context.lineWidth = 1; tail.slice(-5).forEach(point => { context.beginPath(); context.moveTo(point.x, point.y); context.lineTo(point.x, point.y + 7); context.stroke(); }); }
-    else if (resolvedKey === 'gold-fleck') { drawParticles(multiplier); drawPath(tail.slice(-5), '#E4BC68', 0.8, 0.38); }
-    else if (resolvedKey === 'ghost-tail') drawGunsTrailingCursor();
-    else if (resolvedKey === 'color-memory') { tail.forEach((point, index) => drawPath(tail.slice(Math.max(0, index - 1), index + 1), colors[index % colors.length], 2, 0.7)); }
-    else if (resolvedKey === 'marker-stroke') drawPath(tail, '#E7D4C4', 4.5, 0.42);
+    if (AUTHORED_PARTICLE_KEYS.has(resolvedKey)) drawParticles(multiplier);
+    else if (resolvedKey === 'plasma-swarm') drawPlasmaSwarm(multiplier, staticFrame);
     else if (resolvedKey === 'solar-sparks') drawParticles(multiplier);
     else if (resolvedKey === 'bubble-wake' || resolvedKey === 'character-bloom' || resolvedKey === 'emoji-bloom') drawParticles(multiplier);
-    else if (resolvedKey === 'following-dot') drawFollowingDot(staticFrame);
     else if (resolvedKey === 'text-flag') drawTextFlag(staticFrame);
     else if (resolvedKey === 'springy-emoji') drawSpringyEmoji(staticFrame, multiplier);
-    else if (resolvedKey === 'void-lensing') {
-      drawPath(tail, '#9C7BFF', 1.5, 0.3, -1, 0);
-      context.save(); context.globalAlpha = 0.7; context.strokeStyle = '#66E8FF'; context.lineWidth = 1; context.beginPath(); context.arc(head.x, head.y, 7, 0, Math.PI * 2); context.stroke(); context.restore();
-    }
+
 
     if (staticFrame) return;
-    history = history.filter(point => (head.time - point.time) < 520);
+    history = history.filter(point => (performance.now() - point.time) < 520);
     if (history.length === 0 && particles.length === 0 && !CONTINUOUS_TRAIL_KEYS.has(resolvedKey)) pointer = null;
   }
 

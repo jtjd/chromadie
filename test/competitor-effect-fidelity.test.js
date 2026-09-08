@@ -216,13 +216,13 @@ test('the live-source ports remain explicit in the renderers and font registry',
   assert.match(motions, /getGunsShuffleTrackOffset/);
   assert.match(motions, /actualBoundingBoxLeft/);
   assert.match(motions, /actualBoundingBoxAscent/);
-  assert.match(cursor, /advanceGunsTrailingCursorNodes/);
+  // Consolidated line/follower effects now resolve to authored particles.
+  assert.match(cursor, /getCursorTrailRendererKey/);
   assert.match(cursor, /advanceGunsFairyDustParticle/);
-  assert.match(cursor, /GUNS_TRAILING_CURSOR_PARTICLES/);
+  assert.match(cursor, /drawAuthoredParticle/);
   assert.match(cursor, /advanceGunsBubbleParticle/);
   assert.match(cursor, /advanceGunsCharacterParticle/);
   assert.match(cursor, /advanceGunsEmojiParticle/);
-  assert.match(cursor, /advanceGunsFollowingDot/);
   assert.match(cursor, /advanceGunsSpringyEmojiNodes/);
   assert.match(cursor, /advanceGunsTextFlag/);
   assert.match(avatar, /getGunsParallaxRotation/);
