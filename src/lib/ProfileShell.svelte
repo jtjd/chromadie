@@ -237,6 +237,7 @@
     };
     profilePageElement?.addEventListener('scroll', updateProfileScrollState, { passive: true });
     return () => {
+      loadRequestId += 1;
       document.removeEventListener('visibilitychange', refreshOnReturn);
       window.removeEventListener('pageshow', refreshOnReturn);
       profilePageElement?.removeEventListener('scroll', updateProfileScrollState);
@@ -250,6 +251,8 @@
     const currentUsername = $profile?.username || $authUser?.user_metadata?.username || '';
     const context = await loadProfileContext({
       supabaseClient: supabase,
+      // Reuse account hydration on mount; return-to-tab refresh still reads fresh identity.
+      profileRecord: targetProfile ? null : $profile,
       isAuthenticated: $isAuthenticated,
       sessionUserId: $session?.user?.id,
       currentUsername,

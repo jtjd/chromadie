@@ -43,7 +43,7 @@
         <strong>18 <em>/ 31</em></strong>
       </div>
       <div class="homepage-collection__slots" aria-label="18 of 31 example conditions found">
-        {#each collectionSlots as slot}
+        {#each collectionSlots as slot (slot)}
           <span class:found={slot < 18} aria-hidden="true"></span>
         {/each}
       </div>

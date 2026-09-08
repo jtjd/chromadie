@@ -1123,7 +1123,7 @@ try {
     await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'Customize tab workspace and persistent preview');
     await page.waitFor(`document.querySelector('.profile-studio-shell__publish')`, 'Studio publish control');
     const customizeTabs = await page.evaluate(`[...document.querySelectorAll('[role="tablist"][aria-label="Customize profile"] [role="tab"]')].map(tab => tab.textContent.trim())`);
-    assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Links', 'Layout']), `Customize tabs did not expose the integrated Links tab in order: ${JSON.stringify(customizeTabs)}.`);
+    assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Content', 'Links', 'Layout']), `Customize tabs did not expose the integrated Content and Links tabs in order: ${JSON.stringify(customizeTabs)}.`);
     await page.waitFor(`document.querySelector('#customize-effects')`, 'visual effects inside Appearance');
     await page.click('#profile-customize-tab-media', 'Media customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media')`, 'visible Media editor');
@@ -1930,7 +1930,7 @@ try {
       [1280, 720], [1366, 768], [1440, 900], [1920, 1080]
     ];
     const measurements = [];
-    const customizeTabs = ['appearance', 'media', 'links', 'layout'];
+    const customizeTabs = ['appearance', 'media', 'content', 'links', 'layout'];
 
     for (const [width, height] of viewports) {
       await page.setViewport(width, height);
@@ -2029,7 +2029,7 @@ try {
           };
         })()`);
         assert(state.contained && !state.overflow.length, `Dashboard overflows at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
-        assert(state.tabs.length === 4 && state.tabs.every(tabRect => tabRect && tabRect.left >= -1 && tabRect.right <= width + 1), `Customize tabs escape the viewport at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        assert(state.tabs.length === customizeTabs.length && state.tabs.every(tabRect => tabRect && tabRect.left >= -1 && tabRect.right <= width + 1), `Customize tabs escape the viewport at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert((state.activePanel?.width || 0) > 0, `Customize panel has no width at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert(!state.previewOverlap, `Live preview overlaps the editor at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         if (tab === 'appearance' && width === 524) {
@@ -2181,7 +2181,7 @@ try {
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 4 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
+    assert(mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 5 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
     assert(mobileEditor.pageContained && (mobileEditor.actions?.right || 0) <= 415, `Mobile editor or actions escape the 414px composition: ${JSON.stringify(mobileEditor)}.`);
     await capture('10-mobile-editor-414');
 
@@ -2195,7 +2195,7 @@ try {
         labels: tabs.map(tab => tab.textContent.trim())
       };
     })()`);
-    assert(['relative', 'sticky'].includes(stickyTabs.position) && stickyTabs.labels.join('|') === 'Appearance|Media|Links|Layout', `Mobile customize tabs are missing or using invalid layout positioning: ${JSON.stringify(stickyTabs)}.`);
+    assert(['relative', 'sticky'].includes(stickyTabs.position) && stickyTabs.labels.join('|') === 'Appearance|Media|Content|Links|Layout', `Mobile customize tabs are missing or using invalid layout positioning: ${JSON.stringify(stickyTabs)}.`);
 
     const destinationWidths = [320, 600, 768];
     const destinations = ['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'account'];
@@ -2278,8 +2278,13 @@ try {
         const pageElement = document.querySelector('.progression-page');
         const shell = document.querySelector('.progression-page__shell');
         const mainSurface = document.querySelector('.profile-progression-surface--page');
+        const tabs = document.querySelector('.progression-page__tabs');
+        const tabsBox = tabs?.getBoundingClientRect();
+        const boundedTabScroller = tabs && getComputedStyle(tabs).overflowX === 'auto'
+          && tabsBox.left >= 0 && tabsBox.right <= innerWidth;
         const overflow = [...document.querySelectorAll('.progression-page, .progression-page *')]
           .map(element => ({ element, box: element.getBoundingClientRect() }))
+          .filter(({ element }) => !(boundedTabScroller && element.parentElement === tabs))
           .filter(({ box }) => box.width > 0 && (box.left < -1 || box.right > innerWidth + 1))
           .slice(0, 8)
           .map(({ element, box }) => ({ selector: element.className || element.tagName, left: Math.round(box.left), right: Math.round(box.right) }));
@@ -2296,6 +2301,19 @@ try {
       assert(state.path === '/progression' && state.headerCount === 1, `Progression did not settle into one shared route header at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.page && state.shell && state.mainSurface, `Progression full-page journey did not render at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.contained && !state.overflow.length, `Progression escapes its viewport at ${width}px: ${JSON.stringify(state)}.`);
+      const reachableTabs = await page.evaluate(`(() => {
+        const tabs = document.querySelector('.progression-page__tabs');
+        const links = [...tabs.querySelectorAll('a')];
+        const reachable = links.map(link => {
+          link.focus();
+          link.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          const box = link.getBoundingClientRect();
+          return document.activeElement === link && box.left >= -1 && box.right <= innerWidth + 1;
+        });
+        tabs.scrollLeft = 0;
+        return links.length === 4 && reachable.every(Boolean);
+      })()`);
+      assert(reachableTabs, `Progress record tabs are not keyboard-reachable at ${width}px.`);
       measurements.push({ width, height, ...state });
     }
 
@@ -2369,7 +2387,7 @@ try {
       assert(state.shell && state.shell.width >= Math.min(width - 16, 900), `Leaderboard shell is still constrained at ${width}px: ${JSON.stringify(state)}.`);
       const resultSurface = state.list || state.empty;
       assert(resultSurface && resultSurface.left >= state.shell.left - 1 && resultSurface.right <= state.shell.right + 1, `Leaderboard results surface escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
-      assert(state.tabs.length === 2 && state.tabs.some(tab => tab.label === 'This month' && tab.active), `Leaderboard period tabs are not reduced to Today and This month at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.tabs.map(tab => tab.label).join('|') === 'This month|Today|Rivals' && state.tabs.some(tab => tab.label === 'This month' && tab.active), `Authenticated Leaderboard tabs are incorrect at ${width}px: ${JSON.stringify(state)}.`);
       assert(!state.outOfShell.length, `Leaderboard controls escape its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.items.every(item => item.box && item.box.left >= state.shell.left - 1 && item.box.right <= state.shell.right + 1), `Leaderboard row wrapper escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.entries.every(entry => entry && entry.left >= state.shell.left - 1 && entry.right <= state.shell.right + 1), `Leaderboard entry escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
@@ -2624,6 +2642,38 @@ try {
       activePublicSheets: state.sheets.filter(href => /ProfileShell-|ProfileReferenceCard-|ProfileFullBleedLayout-|ProfilePortfolioLayout-/.test(href)),
       studioPreviewCss: studioPreviewCss.map(request => ({ url: request.url, status: request.status }))
     };
+  });
+  await step('signed-out visitor navigation preserves public profile boundaries', async () => {
+    await page.evaluate(`(() => {
+      for (const key of Object.keys(localStorage)) {
+        try {
+          const value = JSON.parse(localStorage.getItem(key));
+          if (value?.access_token && value?.user?.id) localStorage.removeItem(key);
+        } catch { /* Ignore unrelated local preferences. */ }
+      }
+    })()`);
+    await page.navigate(appUrl + '/', 'signed-out homepage');
+    await page.waitFor('document.querySelector(".homepage-reference .roll-page")', 'visitor homepage');
+    const requestStart = page.requestLog.length;
+    for (const [width, height] of [[1366, 768], [430, 932], [390, 844]]) {
+      await page.setViewport(width, height);
+      await page.navigate(appUrl + '/' + canonicalUsername, 'canonical visitor profile');
+      await page.waitFor('document.querySelector(".profile-shell-page[aria-busy=false] [data-profile-layout-content], .profile-shell-page[aria-busy=false] [data-profile-reference-card]")', 'loaded visitor profile');
+      const state = await page.evaluate(`({
+        ownerControls: Boolean(document.querySelector('.profile-owner-header, .profile-owner-controls, .profile-studio-shell')),
+        contained: document.documentElement.scrollWidth <= innerWidth + 1,
+        username: document.body.textContent.includes(${JSON.stringify(canonicalUsername)})
+      })`);
+      assert(!state.ownerControls && state.contained && state.username, 'Visitor profile leaked owner controls or failed to render: ' + JSON.stringify(state));
+    }
+    const ownerRequests = page.requestLog.slice(requestStart).filter(request => /\/rpc\/get_my_|\/rest\/v1\/(profiles|profile_configurations|user_achievements)(?:\?|$)/.test(request.url));
+    assert(!ownerRequests.length, 'Signed-out visitor requested owner data: ' + JSON.stringify(ownerRequests));
+    // This compatibility URL intentionally redirects before navigate() could
+    // observe its requested pathname; wait for the canonical destination.
+    await page.command('Page.navigate', { url: appUrl + '/u/' + canonicalUsername });
+    await page.waitFor(`location.pathname === '/' + ${JSON.stringify(canonicalUsername)} && document.querySelector('.profile-shell-page[aria-busy="false"]')`, 'canonicalized compatibility profile');
+    await capture('visitor-profile-mobile');
+    return { viewports: [1366, 430, 390], ownerRequests: ownerRequests.length };
   });
 } catch (error) {
   failure = error;

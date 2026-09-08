@@ -55,9 +55,10 @@ test('homepage, application, and auth routes share one footer chrome', async () 
   assert.match(auth, /SiteFooter/);
   assert.match(footer, /data-site-chrome="footer"/);
   assert.match(footer, /width: min\(1160px, calc\(100% - 48px\)\)/);
-  assert.match(footer, /padding: 28px 0 36px/);
+  assert.match(footer, /padding: 30px 0 38px/);
   assert.match(footer, /@media \(max-width: 780px\)/);
-  assert.doesNotMatch(homepage, /homepage-footer/);
+  assert.match(homepage, /<SiteFooter \{isAuthenticated\} variant="home" \/>/);
+  assert.match(homepage, /homepage-footer/);
   assert.doesNotMatch(app, /site-footer-inner/);
   assert.doesNotMatch(auth, /auth-page__footer/);
 });

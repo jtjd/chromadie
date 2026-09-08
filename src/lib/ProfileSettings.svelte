@@ -171,11 +171,23 @@
     if (!settingsLoadAccounts.size) return;
     settingsLoadAccounts.clear();
     requestId += 1;
+    context = null;
+    studioDraft = null;
+    studioIdentityDraft = null;
+    dashboardSaving = false;
   }
 
   function ensureSettingsLoaded(nextAccountKey) {
     if (settingsLoadAccounts.has(nextAccountKey)) return;
+    // A -> B -> A must hydrate A again, not reuse B's authoring state.
+    settingsLoadAccounts.clear();
     settingsLoadAccounts.add(nextAccountKey);
+    if (context?.profileId !== nextAccountKey) {
+      context = null;
+      studioDraft = null;
+      studioIdentityDraft = null;
+      dashboardSaving = false;
+    }
     void loadSettings(nextAccountKey);
   }
 
@@ -248,6 +260,7 @@
     window.addEventListener('beforeunload', beforeUnload);
     window.addEventListener('chromadie:navigation-request', navigationGuard);
     return () => {
+      requestId += 1;
       window.removeEventListener('hashchange', restoreLocation);
       window.removeEventListener('popstate', restoreLocation);
       window.removeEventListener('beforeunload', beforeUnload);
@@ -490,12 +503,15 @@
     const editorDraft = getDashboardDraft();
     const identityDraft = getDashboardIdentity();
     const v2Draft = buildConfigurationV2(editorDraft);
+    const mutationRequestId = requestId;
+    const mutationAccountId = $session?.user?.id;
     const publishResponse = await supabase.rpc('publish_profile_studio_v2', {
       p_draft: v2Draft,
       p_display_name: accountUsername || null,
       p_bio: identityDraft?.bio ?? context?.targetProfile?.bio ?? null,
       p_expected_updated_at: context.profileConfig?.updatedAt || null
     });
+    if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
     if (isFailedResponse(publishResponse)) {
       dashboardSaving = false;
       dashboardStatus = '';
@@ -533,10 +549,13 @@
     dashboardStatus = 'Resetting profile changes…';
     const publishedConfig = toEditorProfileConfig(context?.profileConfig?.published);
     const v2Draft = buildConfigurationV2(publishedConfig, context?.profileConfig?.v2Published);
+    const mutationRequestId = requestId;
+    const mutationAccountId = $session?.user?.id;
     const response = await supabase.rpc('save_profile_configuration_v2', {
       p_draft: v2Draft,
       p_expected_updated_at: context.profileConfig?.updatedAt || null
     });
+    if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
     if (isFailedResponse(response)) {
       dashboardSaving = false;
       dashboardStatus = '';
@@ -605,6 +624,7 @@
     const nextRequestId = ++requestId;
     fullContextPromise = loadProfileContext({
       supabaseClient: supabase,
+      profileRecord: force ? null : $profile,
       isAuthenticated: $isAuthenticated,
       sessionUserId: $session?.user?.id,
       currentUsername: accountUsername
@@ -623,10 +643,11 @@
       fullContextLoaded = nextContext.configurationUnavailable !== true;
       return context;
     }).catch(loadError => {
+      if (nextRequestId !== requestId) return context;
       context = { ...context, dataWarning: loadError instanceof Error ? loadError.message : 'Additional profile details are temporarily unavailable.' };
       return context;
     }).finally(() => {
-      fullContextPromise = null;
+      if (nextRequestId === requestId) fullContextPromise = null;
     });
     return fullContextPromise;
   }

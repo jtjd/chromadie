@@ -222,6 +222,7 @@ export async function loadProfileStudioContext({
  */
 export async function loadProfileContext({
   supabaseClient = null,
+  profileRecord = null,
   isAuthenticated = false,
   sessionUserId = null,
   currentUsername = '',
@@ -250,7 +251,9 @@ export async function loadProfileContext({
   let profileId = lookupId;
   let profileResponse;
   if (viewingOwnProfile) {
-    profileResponse = await supabaseClient.rpc('get_my_profile');
+    profileResponse = profileRecord?.id === sessionUserId && sessionUserId
+      ? { data: profileRecord, error: null }
+      : await supabaseClient.rpc('get_my_profile');
   } else {
     profileResponse = await loadPublicProfile(supabaseClient, {
       username: lookupUsername,

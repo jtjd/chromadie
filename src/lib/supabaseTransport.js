@@ -131,6 +131,7 @@ export function createUnavailableSupabaseTransport(message) {
       signOut: result,
       signUp: result,
       signInWithPassword: result,
+      signInWithOAuth: result,
       resetPasswordForEmail: result,
       updateUser: result
     },

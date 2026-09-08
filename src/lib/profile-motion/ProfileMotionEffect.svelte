@@ -98,6 +98,8 @@
   afterUpdate(syncController);
 
   onDestroy(() => {
+    mounted = false;
+    motionEffectsLoadVersion += 1;
     controller?.destroy();
     controller = null;
   });

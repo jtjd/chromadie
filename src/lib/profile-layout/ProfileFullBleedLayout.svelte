@@ -457,6 +457,24 @@
     .profile-full-bleed--sleek .profile-full-bleed__roll { top: 1.05rem; right: 1rem; width: min(47%, 12rem); }
   }
 
+  @media (max-width: 36rem) {
+    :global(.profile-full-bleed__boundary--full-bleed),
+    :global(.profile-full-bleed__boundary--sleek) {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .profile-full-bleed { padding-inline: .75rem; }
+    .profile-full-bleed__avatar-shell { margin-bottom: .55rem; }
+    .profile-full-bleed__name { font-size: clamp(1.45rem, 7vw, 1.9rem); }
+    .profile-full-bleed__bio { max-width: 22rem; font-size: clamp(.76rem, 4vw, 1rem); }
+    .profile-full-bleed__links {
+      column-gap: .2rem;
+      row-gap: .3rem;
+      margin-top: 1rem;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .profile-full-bleed--entry-fade,
     .profile-full-bleed--entry-focus,
@@ -464,5 +482,7 @@
     .profile-full-bleed--entry-unfold { animation: none; }
 
     .profile-full-bleed__links a { transition: none; }
+    .profile-full-bleed__links a:hover,
+    .profile-full-bleed__links a:focus-visible { transform: none; }
   }
 </style>

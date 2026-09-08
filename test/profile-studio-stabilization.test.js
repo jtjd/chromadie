@@ -121,7 +121,8 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(nameCanvas, /function updateHostVisibility/);
   assert.match(nameCanvas, /function getLogicalHostSize/);
   assert.match(nameCanvas, /renderer\.resize\([\s\S]*size\.width/);
-  assert.match(nameCanvas, /updateVisibility\(entry\.contentRect\.width > 0 && entry\.contentRect\.height > 0\)/);
+  assert.match(nameCanvas, /hasArea = entry\.contentRect\.width > 0 && entry\.contentRect\.height > 0;\s+updateVisibility\(\)/);
+  assert.match(nameCanvas, /visible = inViewport && hasArea && document\.visibilityState === 'visible'/);
   assert.match(await read('src/lib/ShopItemPreview.svelte'), /item\?\.slot === 'name_motion' \? 'animated'/);
   assert.match(richMedia, /uploadProfileMediaToR2/);
   assert.match(richMedia, /deleteProfileMediaAsset/);

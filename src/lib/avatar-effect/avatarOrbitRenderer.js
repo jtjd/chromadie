@@ -419,7 +419,8 @@ export function createAvatarOrbitController({ host, backCanvas, frontCanvas, eff
 
   let key = effectKey === 'bat-orbit' ? 'bat-orbit' : 'butterfly-orbit';
   let active = enabled === true;
-  let visible = true;
+  let inViewport = true;
+  let visible = document.visibilityState === 'visible';
   let reduced = false;
   let destroyed = false;
   let frame = 0;
@@ -493,7 +494,7 @@ export function createAvatarOrbitController({ host, backCanvas, frontCanvas, eff
     draw(reduced || !active ? 0 : performance.now());
   };
   const visibilityChange = () => {
-    visible = document.visibilityState === 'visible';
+    visible = inViewport && document.visibilityState === 'visible';
     if (!visible) {
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
@@ -523,7 +524,8 @@ export function createAvatarOrbitController({ host, backCanvas, frontCanvas, eff
   }
   if (typeof IntersectionObserver === 'function') {
     intersectionObserver = new IntersectionObserver(entries => {
-      visible = entries.some(entry => entry.isIntersecting && entry.intersectionRatio > 0);
+      inViewport = entries.some(entry => entry.isIntersecting && entry.intersectionRatio > 0);
+      visible = inViewport && document.visibilityState === 'visible';
       if (!visible) {
         if (frame) cancelAnimationFrame(frame);
         frame = 0;

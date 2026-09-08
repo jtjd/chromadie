@@ -78,6 +78,9 @@ try {
         bestRollIdentity: document.querySelector('.homepage-best-roll__identity-name')?.textContent?.trim() || '',
         bestRollConditionCount: document.querySelectorAll('.homepage-best-roll__condition').length,
         profileSpecimenCount: document.querySelectorAll('[data-homepage-profile-specimen], .homepage-profile-demo, .homepage-profile-stage').length,
+        profileSceneCount: document.querySelectorAll('.profile-example__controls button').length,
+        homeFooter: Boolean(document.querySelector('.site-footer--home .site-footer__home-grid')),
+        homeFooterDisplay: getComputedStyle(document.querySelector('.site-footer--home')).display,
         sceneryCount: document.querySelectorAll('.homepage-background, .homepage-atmosphere').length,
         finalClaimCount: document.querySelectorAll('#claim, .homepage-claim__field').length,
         directionalGlyph: /[‹›↗→↓]/.test(root?.textContent || ''),
@@ -88,6 +91,7 @@ try {
     assert(state.rollButtonCount === 1 && state.rollButtonLabel === 'Roll today’s color', `Primary action drifted: ${JSON.stringify(state)}.`);
     assert(state.title === 'Roll today’s color.' && state.accountPrompt.includes('to start your profile history.'), `First-visit explanation drifted: ${JSON.stringify(state)}.`);
     assert(state.bestRollCount === 1 && state.bestRollTitle === 'Today’s top roll', `Best-roll invitation drifted: ${JSON.stringify(state)}.`);
+    assert(state.profileSceneCount === 3 && state.homeFooter && state.homeFooterDisplay === 'grid', `Homepage product showcase/footer drifted: ${JSON.stringify(state)}.`);
     assert(state.profileSpecimenCount === 0 && state.sceneryCount === 0 && state.finalClaimCount === 0, `Retired homepage marketing returned: ${JSON.stringify(state)}.`);
     assert(!state.headerLabels.includes('Roll') && !state.headerLabels.includes('Claim handle'), `Competing controls returned: ${JSON.stringify(state)}.`);
   });
@@ -120,6 +124,7 @@ try {
         game: rect(game),
         scoring: rect(document.querySelector('.homepage-collection')),
         nextSection: rect(document.querySelector('.profile-example')),
+        start: rect(document.querySelector('.homepage-start')),
         board: rect(document.querySelector('.homepage-community'))
       };
     })()`);
@@ -127,7 +132,9 @@ try {
     assert(state.grid && state.grid.left >= -1 && state.grid.right <= width + 1, `${width}x${height} roll grid escapes: ${JSON.stringify(state)}.`);
     assert(Math.abs((state.grid.left + state.grid.right) / 2 - width / 2) <= 1, `${width}x${height} roll grid is not centered: ${JSON.stringify(state)}.`);
     assert(state.action && state.action.left >= -1 && state.action.right <= width + 1, `${width}x${height} roll action escapes: ${JSON.stringify(state)}.`);
-    assert(state.scoring && state.board, `${width}x${height} explanatory content is missing: ${JSON.stringify(state)}.`);
+    // The community section intentionally disappears when the bounded feed is empty.
+    assert(state.scoring && state.nextSection && state.start, `${width}x${height} supporting content is missing: ${JSON.stringify(state)}.`);
+    if (state.board) assert(state.board.left >= -1 && state.board.right <= width + 1, `${width}x${height} community content escapes the viewport.`);
     if (width < 1000) assert(state.columns.trim().split(' ').length === 1, `${width}x${height} roll grid did not stack: ${JSON.stringify(state)}.`);
     else {
       assert(state.nextSection?.top >= height - 1, `${width}x${height} next section bleeds into the hero: ${JSON.stringify(state)}.`);

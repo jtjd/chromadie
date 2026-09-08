@@ -164,7 +164,7 @@
         <h2 id="homepage-community-title" class="homepage-section-heading">See who’s rolling.</h2>
         <p class="homepage-section-sub">
           {communityMode === 'today'
-            ? 'Players from today’s top rolls. Open their profiles to see how differently the same daily ritual can look.'
+            ? 'Players from today’s top rolls.'
             : 'Recent public profiles from the community. Open one to see its layout, links, effects, and latest color.'}
         </p>
       </div>

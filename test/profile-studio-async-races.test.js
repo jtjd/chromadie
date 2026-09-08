@@ -1,0 +1,54 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
+
+const source = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+// Exercise the actual component mutation handlers with a deferred RPC.
+const handlers = source.slice(source.indexOf('  async function publishDashboard()'),
+  source.indexOf('  async function loadSettings('));
+
+for (const handler of ['publishDashboard', 'resetDashboard']) {
+  for (const nextAccount of ['b', null]) {
+    test(`${handler} ignores a response after ${nextAccount ? 'account switch' : 'logout'}`, async () => {
+      let resolve;
+      let writes = 0;
+      const state = {
+        requestId: 1, $session: { user: { id: 'a' } },
+        context: { profileId: 'a', targetProfile: {}, profileConfig: {} },
+        dashboardSaving: false, dashboardDirty: true,
+        configurationWriteAvailable: true, dashboardError: '', dashboardStatus: '',
+        accountUsername: 'alice', getDashboardEditor: () => null,
+        getDashboardDraft: () => ({}), getDashboardIdentity: () => ({}),
+        buildConfigurationV2: () => ({}), toEditorProfileConfig: value => value,
+        supabase: { rpc: () => new Promise(done => { resolve = done; }) },
+        isFailedResponse: () => false,
+        profile: { update: () => { writes++; } },
+        applyDashboardConfiguration: () => { writes++; }
+      };
+      vm.createContext(state);
+      vm.runInContext(handlers, state);
+      const pending = vm.runInContext(`${handler}()`, state);
+      state.requestId++;
+      state.$session = nextAccount ? { user: { id: nextAccount } } : null;
+      const nextContext = { profileId: nextAccount, targetProfile: {}, profileConfig: {} };
+      state.context = nextContext;
+      resolve({ data: { success: true, identity: { bio: 'old account bio' } } });
+      await pending;
+      assert.equal(writes, 0);
+      assert.equal(state.context, nextContext);
+    });
+  }
+}
+
+test('A to B to A reloads the active account instead of retaining a visited-account set', () => {
+  const fn = source.slice(source.indexOf('  function ensureSettingsLoaded('), source.indexOf('  onMount('));
+  const calls = [];
+  const state = { settingsLoadAccounts: new Set(), context: null,
+    studioDraft: null, studioIdentityDraft: null, dashboardSaving: false,
+    loadSettings: id => calls.push(id) };
+  vm.createContext(state);
+  vm.runInContext(fn, state);
+  vm.runInContext("ensureSettingsLoaded('a'); ensureSettingsLoaded('a'); ensureSettingsLoaded('b'); ensureSettingsLoaded('a');", state);
+  assert.deepEqual(calls, ['a', 'b', 'a']);
+});

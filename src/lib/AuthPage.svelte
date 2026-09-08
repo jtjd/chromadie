@@ -4,9 +4,8 @@
   import Auth from './Auth.svelte';
   import SiteFooter from './SiteFooter.svelte';
   import SiteModeHeader from './SiteModeHeader.svelte';
-  import { accountState, authEvent, authInitialized, authUser, isAuthenticated, profile, profileLoading, session } from './stores';
+  import { accountState, authEvent, authInitialized, isAuthenticated, profileLoading, session } from './stores';
   import { buildAppUrl, getSafeNextUrl } from './authUrls.js';
-  import { getCanonicalProfilePath } from './routeContract.js';
 
   export let initialTab = 'login';
   export let initialUsername = '';
@@ -14,19 +13,19 @@
 
   let redirected = false;
 
-  function getFallbackProfileUrl() {
-    const username = $profile?.username || $authUser?.user_metadata?.username;
-    const path = getCanonicalProfilePath(username) || '/';
-    return buildAppUrl(path);
+  function getFallbackHomeUrl() {
+    return buildAppUrl('/');
   }
 
   function getRedirectUrl() {
-    return getSafeNextUrl(next, getFallbackProfileUrl());
+    // Explicit handoffs (for example, Profile Studio) stay intact. A normal
+    // sign-in or signup starts at the homepage so the user sees the product.
+    return getSafeNextUrl(next, getFallbackHomeUrl());
   }
 
   function navigateFromAuth(event) {
     const view = event.detail?.view;
-    window.location.assign(view === 'leaderboard' ? '/leaderboard' : '/');
+    window.location.assign(view === 'leaderboard' ? '/leaderboard' : view === 'pricing' ? '/pricing' : '/');
   }
 
   function openAuthRoute(event) {
@@ -73,114 +72,72 @@
   <meta name="description" content={initialTab === 'signup' ? 'Create a ChromaDie account and keep building your public color identity.' : 'Sign in to keep your ChromaDie profile, rolls, and cosmetics in sync.'} />
 </svelte:head>
 
-<main class="auth-page site-atmosphere-page" aria-labelledby="auth-page-title">
+<main class="auth-page site-atmosphere-page" aria-labelledby="auth-dialog-title">
   <div class="auth-page__content">
-    <SiteModeHeader
-      activeView="home"
-      accountState={$accountState}
-      isAuthenticated={$isAuthenticated}
-      isHomeMode={true}
-      isHomepageStyle={true}
-      on:navigate={navigateFromAuth}
-      on:login={openAuthRoute}
-      on:claim={() => openAuthRoute({ detail: { mode: 'signup' } })}
-    />
+    <div class="auth-page__chrome-header" aria-label="ChromaDie navigation">
+      <SiteModeHeader
+        activeView="home"
+        accountState={$accountState}
+        isAuthenticated={$isAuthenticated}
+        isHomeMode={true}
+        isHomepageStyle={true}
+        showClaim={false}
+        on:navigate={navigateFromAuth}
+        on:login={openAuthRoute}
+        on:claim={() => openAuthRoute({ detail: { mode: 'signup' } })}
+      />
+    </div>
 
     <div class="auth-page__layout">
-      <section class="auth-page__intro" aria-labelledby="auth-page-title">
-        <p class="auth-page__kicker">{initialTab === 'signup' ? 'Claim your identity' : 'Return to your profile'}</p>
-        <h1 id="auth-page-title">
-          {#if initialTab === 'signup'}
-            Make the page <span>yours.</span>
-          {:else}
-            Keep your color <span>story.</span>
-          {/if}
-        </h1>
-        <p>
-          {initialTab === 'signup'
-            ? 'Claim a public identity that grows with every daily color roll.'
-            : 'Keep your rolls, history, cosmetics, and profile customization connected wherever you sign in.'}
-        </p>
-        <div class="auth-page__promise" aria-label="Account benefits">
-          <span>Daily color history</span>
-          <span>Public profile identity</span>
-          <span>Progress across devices</span>
-        </div>
-      </section>
-
       <section class="auth-page__stage" aria-label={initialTab === 'signup' ? 'Create account' : 'Sign in'}>
-        <div class="auth-page__form">
-          <Auth
-            standalone={true}
-            initialTab={initialTab}
-            initialUsername={initialUsername}
-            {next}
-          />
-        </div>
+        <Auth
+          standalone={true}
+          initialTab={initialTab}
+          initialUsername={initialUsername}
+          {next}
+        />
       </section>
     </div>
 
-    <SiteFooter isAuthenticated={$isAuthenticated} />
+    <div class="auth-page__chrome-footer">
+      <SiteFooter isAuthenticated={$isAuthenticated} />
+    </div>
   </div>
 </main>
 
 <style>
   .auth-page {
+    --auth-page-canvas: #0b0b0d;
     --home-canvas: var(--bg, #0e0e10);
-    --home-deep: var(--surface, #161619);
-    --home-raised: var(--surface-2, #1e1e22);
-    --home-line: var(--border, rgba(255, 255, 255, 0.09));
-    --home-ink: var(--text, #f5f5f6);
-    --home-ink-muted: var(--text-muted, #8d8c92);
-    --home-ink-faint: var(--text-faint, #59585e);
-    --home-accent: var(--white, #ffffff);
-    --home-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --home-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
-    --home-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    position: relative;
     min-height: 100svh;
     overflow: hidden;
     isolation: isolate;
-    background-color: var(--home-canvas);
-    background-image: none;
-    color: var(--home-ink);
-    font-family: var(--home-font);
+    background: var(--auth-page-canvas);
+    color: var(--text, #f5f5f6);
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
-  .auth-page::before { position: fixed; z-index: -1; inset: 0; content: ''; pointer-events: none; background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, .025), transparent 58%); }
-  .auth-page__content { position: relative; z-index: 1; min-height: 100svh; }
-  .auth-page__layout { width: min(calc(100% - 48px), 1160px); margin-inline: auto; }
-  .auth-page__layout { display: grid; min-height: calc(100svh - 8rem); grid-template-columns: minmax(0, 1fr) minmax(22rem, 31rem); align-items: center; gap: clamp(2.5rem, 8vw, 8rem); padding-block: clamp(3rem, 8vh, 7rem); }
-  .auth-page__intro { max-width: 40rem; }
-  .auth-page__kicker { margin: 0; color: var(--home-ink-faint); font: 500 0.68rem / 1 var(--home-mono); letter-spacing: 0.13em; text-transform: uppercase; }
-  .auth-page__intro h1 { max-width: 38rem; margin: 0.9rem 0 0; color: var(--home-ink); font: 600 clamp(3.1rem, min(6vw, 8.4vh), 5.5rem) / 0.9 var(--home-display); letter-spacing: -0.055em; }
-  .auth-page__intro h1 :global(span) { color: color-mix(in srgb, var(--home-accent) 62%, #f2f0eb); text-shadow: 0 0 2.2rem color-mix(in srgb, var(--home-accent) 24%, transparent); }
-  .auth-page__intro > p:not(.auth-page__kicker) { max-width: 31rem; margin: 1.5rem 0 0; color: var(--home-ink-muted); font-size: clamp(1rem, 1.5vw, 1.06rem); line-height: 1.6; }
-  .auth-page__promise { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
-  .auth-page__promise span { padding: 0.55rem 0.7rem; border: 1px solid var(--home-line); border-radius: 9px; color: var(--home-ink-muted); font: 500 0.72rem / 1 var(--home-font); }
-  .auth-page__stage { position: relative; width: 100%; overflow: hidden; border: 1px solid var(--home-line); border-radius: 18px; background: var(--home-raised); box-shadow: 0 1.9rem 5rem rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-  .auth-page__form { width: 100%; padding: clamp(0.85rem, 2vw, 1.25rem); }
-  :global(.auth-page .auth-container) { max-width: none; padding: clamp(1.35rem, 3vw, 2.1rem); border-color: var(--home-line); border-radius: 18px; background: var(--home-raised); box-shadow: none; }
-  :global(.auth-page .auth-title) { margin: 0.35rem 0 0; color: var(--home-ink); font: 600 clamp(1.65rem, 3vw, 2.35rem) / 1 var(--home-display); letter-spacing: -0.045em; }
-  :global(.auth-page .auth-brand) { color: var(--home-ink-faint); font-family: var(--home-display); }
-  :global(.auth-page .auth-kicker) { color: var(--home-accent); font-family: var(--home-font); }
-  :global(.auth-page .auth-description), :global(.auth-page .field-hint), :global(.auth-page .auth-footnote) { color: var(--home-ink-muted); }
-  :global(.auth-page .auth-header) { position: static; }
-  :global(.auth-page .tabs a) { display: inline-flex; align-items: center; justify-content: center; color: inherit; text-decoration: none; }
-  @media (max-width: 52rem) {
-    .auth-page__layout { grid-template-columns: 1fr; gap: 2.25rem; padding-block: 3rem; }
-    .auth-page__intro h1 { max-width: 30rem; font-size: clamp(2.8rem, 11vw, 4.6rem); }
-    .auth-page__form { max-width: 34rem; margin-inline: auto; }
+
+  .auth-page__content { display: flex; min-height: 100svh; flex-direction: column; }
+  .auth-page__chrome-header { flex: 0 0 auto; }
+  .auth-page__layout { display: grid; flex: 1 1 auto; min-height: 0; place-items: center; padding: 2rem 1rem 3.5rem; }
+  .auth-page__stage { display: grid; width: min(100%, 23rem); place-items: center; }
+
+  /* Auth is a focused task. Keep the shared header mounted for route
+     consistency while reducing it to the quiet brand mark used on this page. */
+  :global(.auth-page .site-mode-header) { height: 4.25rem; }
+  :global(.auth-page .site-mode-header__inner) { width: min(1080px, calc(100% - 2rem)); justify-content: flex-start; }
+  :global(.auth-page .site-mode-header__nav), :global(.auth-page .site-mode-header__right) { display: none; }
+  :global(.auth-page .site-mode-header .site-mode-header__mobile-menu) { display: none !important; }
+  :global(.auth-page .site-mode-header__brand-logo) { width: 3.6rem; }
+  :global(.auth-page .auth-container) { border-color: rgba(255, 255, 255, 0.09) !important; background: #141416 !important; box-shadow: 0 1.75rem 4.5rem rgba(0, 0, 0, 0.36) !important; }
+  .auth-page__chrome-footer { display: none; }
+
+  @media (max-width: 30rem) {
+    .auth-page__layout { padding: 1rem 0.75rem 2rem; }
+    :global(.auth-page .site-mode-header) { height: 3.75rem; }
+    :global(.auth-page .site-mode-header__inner) { width: calc(100% - 1.5rem); }
   }
-  @media (max-width: 48rem) {
-    .auth-page { background-attachment: scroll; }
-  }
-  @media (max-width: 35rem) {
-    .auth-page__layout { width: min(calc(100% - 2rem), 1160px); }
-    .auth-page__layout { padding-block: 2.4rem; }
-    .auth-page__intro h1 { font-size: clamp(2.55rem, 15vw, 4rem); }
-    .auth-page__promise { display: grid; grid-template-columns: 1fr; }
-    .auth-page__promise span { width: fit-content; }
-  }
+
   @media (prefers-reduced-motion: reduce) {
     .auth-page *, .auth-page *::before, .auth-page *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
   }

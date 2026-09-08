@@ -1,8 +1,8 @@
 <script>
+  import { onMount, tick } from 'svelte';
   import { supabase } from './supabase';
   import { getAuthCallbackUrl, getResetPasswordUrl } from './authUrls';
-  import { isProtectedUsername, isUsernameShapeValid } from './usernamePolicy.js';
-  import { onMount } from 'svelte';
+  import { isProtectedUsername, isUsernameShapeValid, normalizeUsernameKey } from './usernamePolicy.js';
 
   export let onClose = () => {};
   export let standalone = false;
@@ -11,43 +11,28 @@
   export let next = '';
 
   let tab = initialTab === 'signup' ? 'signup' : 'login'; // 'login', 'signup', or 'forgot'
+  let signupStep = 1;
   let email = '';
   let password = '';
-  let username = initialUsername;
+  let username = initialUsername || '';
+  let termsAccepted = false;
+  let updatesOptIn = false;
+  let showPassword = false;
   let error = '';
   let notice = '';
   let loading = false;
 
+  let usernameCheckState = 'idle'; // idle, checking, available, unavailable, error
+  let usernameCheckMessage = '';
+  let usernameCheckKey = '';
+  let usernameCheckRequestId = 0;
+  let usernameCheckTimer = null;
+
   let turnstileWidgetId = null;
   let captchaToken = '';
   let turnstileState = 'loading';
+  let turnstilePoll = null;
   const siteKey = import.meta.env.VITE_CLOUDFLARE_SITE_KEY;
-  const MODE_COPY = {
-    login: {
-      kicker: 'Welcome back',
-      title: 'Sign in',
-      description: 'Keep your rolls, leaderboard history, and cosmetics synced across devices.',
-      highlights: ['Keeps your progress', 'Tracks leaderboard runs', 'Unlocks cosmetics'],
-      primary: 'Sign in',
-      helper: 'Use the email address linked to your account.'
-    },
-    signup: {
-      kicker: 'New account',
-      title: 'Create your account',
-      description: 'Save your progress, recover your account later, and unlock the full ChromaDie experience.',
-      highlights: ['Email confirmation', 'Password recovery', 'Cross-device progress'],
-      primary: 'Create account',
-      helper: 'Usernames are public and can use letters, numbers, and underscores.'
-    },
-    forgot: {
-      kicker: 'Account recovery',
-      title: 'Reset your password',
-      description: 'We’ll send a reset link if the account exists.',
-      highlights: ['Secure reset link', 'No data lost', 'Returns you to sign in'],
-      primary: 'Send reset link',
-      helper: 'Use the email address tied to the account you want to recover.'
-    }
-  };
 
   function isLocalDevelopment() {
     const localIntegrationTest = import.meta.env?.VITE_LOCAL_INTEGRATION_TEST === 'true';
@@ -56,9 +41,21 @@
   }
 
   function setMode(nextTab) {
-    tab = nextTab;
+    const previousTab = tab;
+    tab = nextTab === 'signup' ? 'signup' : nextTab === 'forgot' ? 'forgot' : 'login';
+    if (tab === 'signup') signupStep = 1;
+    showPassword = false;
     error = '';
     notice = '';
+    if (previousTab !== tab) {
+      removeTurnstile();
+      if (!isLocalDevelopment() && turnstileState === 'ready') {
+        void tick().then(() => {
+          if (tab !== 'signup' || signupStep === 3) renderTurnstile();
+        });
+      }
+    }
+    if (tab === 'signup') scheduleUsernameCheck(0);
   }
 
   function getAuthPath(nextTab) {
@@ -91,33 +88,173 @@
     return fallback;
   }
 
-  onMount(() => {
-    if (isLocalDevelopment()) {
-      turnstileState = 'ready';
+  function clearMessages() {
+    error = '';
+    notice = '';
+  }
+
+  function scheduleUsernameCheck(delay = 360) {
+    if (usernameCheckTimer !== null) clearTimeout(usernameCheckTimer);
+    const requested = username.trim();
+    const requestKey = normalizeUsernameKey(requested);
+    usernameCheckRequestId += 1;
+
+    if (!requested) {
+      usernameCheckState = 'idle';
+      usernameCheckMessage = '';
+      usernameCheckKey = '';
       return;
     }
 
-    if (!siteKey) {
-      error = 'Authentication is not configured.';
+    if (!isUsernameShapeValid(requested)) {
+      usernameCheckState = 'unavailable';
+      usernameCheckMessage = 'Use 1–20 letters, numbers, or underscores.';
+      usernameCheckKey = requestKey;
       return;
     }
 
-    let attempts = 0;
-    const checkTurnstile = setInterval(() => {
-      attempts += 1;
-      if (window.turnstile) {
-        clearInterval(checkTurnstile);
-        renderTurnstile();
-      } else if (attempts >= 50) {
-        clearInterval(checkTurnstile);
-        turnstileState = 'error';
-        error = 'The security check could not load. Check your connection or content blocker, then retry.';
+    if (isProtectedUsername(requested)) {
+      usernameCheckState = 'unavailable';
+      usernameCheckMessage = 'That username is reserved.';
+      usernameCheckKey = requestKey;
+      return;
+    }
+
+    usernameCheckState = 'checking';
+    usernameCheckMessage = 'Checking availability…';
+    usernameCheckKey = requestKey;
+    usernameCheckTimer = setTimeout(() => {
+      usernameCheckTimer = null;
+      void checkUsernameAvailability(requested);
+    }, delay);
+  }
+
+  async function checkUsernameAvailability(value = username) {
+    const requested = String(value || '').trim();
+    const requestKey = normalizeUsernameKey(requested);
+    const requestId = ++usernameCheckRequestId;
+
+    if (!isUsernameShapeValid(requested)) {
+      if (requestId === usernameCheckRequestId) {
+        usernameCheckState = requested ? 'unavailable' : 'idle';
+        usernameCheckMessage = requested ? 'Use 1–20 letters, numbers, or underscores.' : '';
+        usernameCheckKey = requestKey;
       }
-    }, 200);
-    return () => clearInterval(checkTurnstile);
-  });
+      return false;
+    }
+
+    if (isProtectedUsername(requested)) {
+      if (requestId === usernameCheckRequestId) {
+        usernameCheckState = 'unavailable';
+        usernameCheckMessage = 'That username is reserved.';
+        usernameCheckKey = requestKey;
+      }
+      return false;
+    }
+
+    usernameCheckState = 'checking';
+    usernameCheckMessage = 'Checking availability…';
+    usernameCheckKey = requestKey;
+
+    try {
+      const [allowedResult, availableResult] = await Promise.all([
+        supabase.rpc('is_username_allowed', { p_username: requested }),
+        supabase.rpc('is_username_available', { p_username: requested })
+      ]);
+
+      if (requestId !== usernameCheckRequestId) return false;
+
+      const allowed = allowedResult?.data;
+      const available = availableResult?.data;
+      if (allowedResult?.error || availableResult?.error) {
+        usernameCheckState = 'error';
+        usernameCheckMessage = 'We could not check that name. Try again.';
+        return false;
+      }
+
+      const isAvailable = allowed === true && available === true;
+      usernameCheckState = isAvailable ? 'available' : 'unavailable';
+      usernameCheckMessage = isAvailable ? 'Username available' : 'That username is not available.';
+      return isAvailable;
+    } catch {
+      if (requestId !== usernameCheckRequestId) return false;
+      usernameCheckState = 'error';
+      usernameCheckMessage = 'We could not check that name. Try again.';
+      return false;
+    }
+  }
+
+  async function focusField(selector) {
+    await tick();
+    const field = document.querySelector(selector);
+    if (field instanceof HTMLElement) field.focus();
+  }
+
+  async function handleUsernameContinue() {
+    if (loading) return;
+    clearMessages();
+    const requested = username.trim();
+    if (!isUsernameShapeValid(requested)) {
+      error = 'Username must be 1-20 characters and use only letters, numbers, or underscores.';
+      return;
+    }
+
+    loading = true;
+    username = requested;
+    const available = usernameCheckState === 'available'
+      && usernameCheckKey === normalizeUsernameKey(requested)
+      ? true
+      : await checkUsernameAvailability(requested);
+    loading = false;
+
+    if (!available) {
+      error = usernameCheckState === 'error'
+        ? 'We could not check that name. Try again.'
+        : 'That username is not available. Please choose another one.';
+      return;
+    }
+
+    signupStep = 2;
+    await focusField('#email-input');
+  }
+
+  async function handleEmailContinue() {
+    if (loading) return;
+    clearMessages();
+    const requestedEmail = email.trim();
+    if (!requestedEmail || !requestedEmail.includes('@')) {
+      error = 'Enter a valid email address to continue.';
+      return;
+    }
+
+    email = requestedEmail;
+    signupStep = 3;
+    await tick();
+    if (!isLocalDevelopment() && turnstileState === 'ready') renderTurnstile();
+    await focusField('#password-input');
+  }
+
+  function getCaptchaToken() {
+    return captchaToken || null;
+  }
+
+  function resetCaptcha() {
+    if (turnstileWidgetId !== null && window.turnstile) {
+      window.turnstile.reset(turnstileWidgetId);
+    }
+    captchaToken = '';
+  }
+
+  function removeTurnstile() {
+    if (turnstileWidgetId !== null && typeof window !== 'undefined' && window.turnstile) {
+      window.turnstile.remove(turnstileWidgetId);
+    }
+    turnstileWidgetId = null;
+    captchaToken = '';
+  }
 
   function renderTurnstile() {
+    if (turnstileWidgetId !== null) return;
     if (window.turnstile && document.getElementById('turnstile-container') && siteKey) {
       captchaToken = '';
       turnstileWidgetId = window.turnstile.render('#turnstile-container', {
@@ -153,22 +290,94 @@
     renderTurnstile();
   }
 
-  function getCaptchaToken() {
-    return captchaToken || null;
-  }
+  async function handleProvider(provider) {
+    if (loading) return;
+    loading = true;
+    clearMessages();
 
-  function resetCaptcha() {
-    if (turnstileWidgetId !== null && window.turnstile) {
-      window.turnstile.reset(turnstileWidgetId);
+    if (typeof supabase?.auth?.signInWithOAuth !== 'function') {
+      error = 'Social sign-in is not configured yet.';
+      loading = false;
+      return;
     }
-    captchaToken = '';
+
+    const { data, error: providerError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: getAuthCallbackUrl(next) }
+    });
+
+    if (providerError) {
+      error = getFriendlyAuthError(providerError, `Could not continue with ${provider}.`);
+      loading = false;
+      return;
+    }
+
+    // GoTrue normally redirects itself. Keeping this fallback supports the
+    // transport's non-redirect test mode and older auth-js releases.
+    if (data?.url && typeof window !== 'undefined') window.location.assign(data.url);
+    loading = false;
   }
 
   async function handleAuth() {
+    if (loading) return;
     loading = true;
-    error = '';
-    notice = '';
+    clearMessages();
     const localDevelopment = isLocalDevelopment();
+
+    if (tab === 'signup') {
+      const requestedUsername = username.trim();
+      const requestedEmail = email.trim();
+      if (!requestedUsername || !requestedEmail || !password) {
+        error = 'Please fill out the remaining fields.';
+        loading = false;
+        return;
+      }
+      if (!isUsernameShapeValid(requestedUsername)) {
+      error = 'Username must be 1-20 characters and use only letters, numbers, or underscores.';
+        loading = false;
+        return;
+      }
+      if (!requestedEmail.includes('@')) {
+        error = 'Enter a valid email address.';
+        loading = false;
+        return;
+      }
+      if (password.length < 8) {
+        error = 'Password must be at least 8 characters long.';
+        loading = false;
+        return;
+      }
+      if (!termsAccepted) {
+        error = 'Please agree to the Terms and Privacy Policy to continue.';
+        loading = false;
+        return;
+      }
+
+      const available = await checkUsernameAvailability(requestedUsername);
+      if (!available) {
+        error = usernameCheckState === 'error'
+          ? 'We could not check that name. Try again.'
+          : 'That username is not available. Please choose another one.';
+        loading = false;
+        return;
+      }
+      username = requestedUsername;
+      email = requestedEmail;
+    } else if (tab === 'forgot') {
+      email = email.trim();
+      if (!email) {
+        error = 'Please enter the email address on your account.';
+        loading = false;
+        return;
+      }
+    } else {
+      email = email.trim();
+      if (!email.includes('@')) {
+        error = 'Use the email address linked to your account.';
+        loading = false;
+        return;
+      }
+    }
 
     if (!localDevelopment && !siteKey) {
       error = 'Authentication is not configured.';
@@ -176,76 +385,38 @@
       return;
     }
 
-    const captchaToken = localDevelopment ? null : getCaptchaToken();
-    if (!localDevelopment && !captchaToken) {
+    const token = localDevelopment ? null : getCaptchaToken();
+    if (!localDevelopment && !token) {
       error = 'Please complete the security check.';
       loading = false;
       return;
     }
 
     if (tab === 'signup') {
-      if (!username || !email || !password) {
-        error = 'Please fill out the username, email, and password.';
-        loading = false;
-        return;
-      }
-      const requestedUsername = username.trim();
-      if (!isUsernameShapeValid(requestedUsername)) {
-        error = 'Username must be 1-20 characters and use only letters, numbers, or underscores.';
-        loading = false;
-        return;
-      }
-
-      const { data: usernameAllowed, error: moderationError } = await supabase.rpc('is_username_allowed', {
-        p_username: requestedUsername
-      });
-
-      const { data: usernameAvailable, error: availabilityError } = await supabase.rpc('is_username_available', {
-        p_username: requestedUsername
-      });
-      if (
-        isProtectedUsername(requestedUsername)
-        || moderationError
-        || usernameAllowed === false
-        || availabilityError
-        || usernameAvailable === false
-      ) {
-        error = 'That username is not available. Please choose another one.';
-        loading = false;
-        resetCaptcha();
-        return;
-      }
-
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: getAuthCallbackUrl(next),
-          data: { username: requestedUsername, display_name: requestedUsername },
-          ...(captchaToken ? { captchaToken } : {})
+          data: {
+            username,
+            display_name: username,
+            updates_opt_in: updatesOptIn
+          },
+          ...(token ? { captchaToken: token } : {})
         }
       });
 
       if (signUpError) {
         error = getFriendlyAuthError(signUpError, 'Could not create your account.');
         resetCaptcha();
-      } else {
-        if (data.session) {
-          // onAuthStateChange will handle the modal close
-        } else {
-          notice = 'Check your email for a confirmation link, then come back to sign in.';
-        }
+      } else if (!data.session) {
+        notice = 'Check your email for a confirmation link, then come back to sign in.';
       }
     } else if (tab === 'forgot') {
-      if (!email) {
-        error = 'Please enter the email address on your account.';
-        loading = false;
-        return;
-      }
-
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: getResetPasswordUrl(next),
-        ...(captchaToken ? { captchaToken } : {})
+        ...(token ? { captchaToken: token } : {})
       });
 
       if (resetError) {
@@ -255,466 +426,386 @@
         notice = 'If that account exists, we sent a reset link to your inbox.';
       }
     } else {
-      if (!email.includes('@')) {
-        error = 'Use the email address linked to your account.';
-        loading = false;
-        return;
-      }
-
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-        options: captchaToken ? { captchaToken } : {}
+        email,
+        password,
+        options: token ? { captchaToken: token } : {}
       });
 
       if (signInError) {
         error = getFriendlyAuthError(signInError, 'Could not sign you in.');
         resetCaptcha();
       }
-      // If successful, onAuthStateChange fires and the route shell handles the redirect.
+      // A successful sign-in is redirected by the route shell's auth event.
     }
+
     loading = false;
   }
 
-  $: mode = MODE_COPY[tab] || MODE_COPY.login;
+  async function handleSubmit() {
+    if (tab === 'signup' && signupStep === 1) return handleUsernameContinue();
+    if (tab === 'signup' && signupStep === 2) return handleEmailContinue();
+    return handleAuth();
+  }
+
+  async function goToSignupStep(step) {
+    clearMessages();
+    const nextStep = Math.min(3, Math.max(1, step));
+    if (nextStep !== signupStep && nextStep !== 3) removeTurnstile();
+    signupStep = nextStep;
+    if (signupStep === 3) {
+      await tick();
+      if (!isLocalDevelopment() && turnstileState === 'ready') renderTurnstile();
+    }
+    await focusField(signupStep === 1 ? '#username-input' : signupStep === 2 ? '#email-input' : '#password-input');
+  }
+
+  onMount(() => {
+    if (tab === 'signup') scheduleUsernameCheck(0);
+
+    if (isLocalDevelopment()) {
+      turnstileState = 'ready';
+      return () => {
+        if (usernameCheckTimer !== null) clearTimeout(usernameCheckTimer);
+      };
+    }
+
+    if (!siteKey) {
+      turnstileState = 'error';
+      return () => {
+        if (usernameCheckTimer !== null) clearTimeout(usernameCheckTimer);
+      };
+    }
+
+    let attempts = 0;
+    turnstilePoll = setInterval(() => {
+      attempts += 1;
+      if (window.turnstile) {
+        clearInterval(turnstilePoll);
+        turnstilePoll = null;
+        turnstileState = 'ready';
+        renderTurnstile();
+      } else if (attempts >= 50) {
+        clearInterval(turnstilePoll);
+        turnstilePoll = null;
+        turnstileState = 'error';
+        error = 'The security check could not load. Check your connection or content blocker, then retry.';
+      }
+    }, 200);
+
+    return () => {
+      if (turnstilePoll !== null) clearInterval(turnstilePoll);
+      if (usernameCheckTimer !== null) clearTimeout(usernameCheckTimer);
+      if (turnstileWidgetId !== null && window.turnstile) window.turnstile.remove(turnstileWidgetId);
+    };
+  });
+
+  $: title = tab === 'login'
+    ? 'Log in to your account'
+    : tab === 'forgot'
+      ? 'Reset your password'
+      : signupStep === 3 ? 'Finish your signup' : 'Create your account';
+  $: description = tab === 'login'
+    ? 'Pick up where your color story left off.'
+    : tab === 'forgot'
+      ? 'We’ll send a reset link if the account exists.'
+      : signupStep === 1
+        ? 'Start with the name people will use to find your page.'
+        : signupStep === 2
+          ? 'Add an email so your page and daily rolls stay yours.'
+          : 'Protect your page, then you’re ready to roll.';
 </script>
 
 <svelte:head>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
-<div class="auth-container glass-panel">
+<div class="auth-container" class:auth-container--modal={!standalone}>
+  <div class="auth-mark" aria-hidden="true">
+    <img src="/brand/am-mark-v1.webp" alt="" width="48" height="40" decoding="async" />
+  </div>
+
   <div class="auth-header">
     <div class="auth-heading-group">
-      <p class="auth-brand">ChromaDie</p>
-      <p class="auth-kicker">{mode.kicker}</p>
-      <h1 id="auth-dialog-title" class="auth-title">{mode.title}</h1>
-      <p id="auth-dialog-desc" class="auth-description">
-        {mode.description}
-      </p>
+      <h1 id="auth-dialog-title" class="auth-title">{title}</h1>
+      <p id="auth-dialog-desc" class="auth-description">{description}</p>
     </div>
     {#if !standalone}
-      <button type="button" class="close-auth-btn" aria-label="Close authentication dialog" on:click={onClose}>
-        ✕
-      </button>
+      <button type="button" class="close-auth-btn" aria-label="Close authentication dialog" on:click={onClose}>×</button>
     {/if}
   </div>
 
-  <div class="tabs">
-    {#if standalone}
-      <a href={getAuthPath('login')} class:active={tab === 'login'} aria-current={tab === 'login' ? 'page' : undefined}>Sign in</a>
-      <a href={getAuthPath('signup')} class:active={tab === 'signup'} aria-current={tab === 'signup' ? 'page' : undefined}>Create account</a>
-    {:else}
-      <button type="button" class={tab === 'login' ? 'active' : ''} on:click={() => setMode('login')}>Sign in</button>
-      <button type="button" class={tab === 'signup' ? 'active' : ''} on:click={() => setMode('signup')}>Create account</button>
-    {/if}
-  </div>
+  {#if !standalone}
+    <div class="tabs" role="tablist" aria-label="Account access">
+      <button type="button" class:active={tab === 'login'} on:click={() => setMode('login')}>Sign in</button>
+      <button type="button" class:active={tab === 'signup'} on:click={() => setMode('signup')}>Create account</button>
+    </div>
+  {/if}
 
-  <form on:submit|preventDefault={handleAuth}>
-    {#if tab === 'signup'}
+  <form on:submit|preventDefault={handleSubmit}>
+    {#if tab === 'signup' && signupStep === 1}
       <label class="field-group" for="username-input">
         <span class="field-label">Username</span>
-        <input id="username-input" type="text" class="input-field" bind:value={username} placeholder="Your username" autocomplete="nickname" spellcheck="false" minlength="1" maxlength="20" required />
-        <span class="field-hint">{mode.helper}</span>
+        <div class="input-shell" class:input-shell--status={usernameCheckState === 'available'}>
+          <span class="input-prefix" aria-hidden="true">chm.lol/</span>
+          <input id="username-input" type="text" class="input-field input-field--prefixed" bind:value={username} on:input={() => { clearMessages(); scheduleUsernameCheck(); }} placeholder="yourname" autocomplete="nickname" spellcheck="false" minlength="1" maxlength="20" required />
+        </div>
+        {#if usernameCheckState !== 'idle'}
+          <span class:field-status--available={usernameCheckState === 'available'} class:field-status--error={usernameCheckState === 'unavailable' || usernameCheckState === 'error'} class="field-status" role="status" aria-live="polite">
+            {usernameCheckMessage}
+          </span>
+        {:else}
+        <span class="field-hint">Letters, numbers, and underscores. 1-20 characters.</span>
+        {/if}
       </label>
-    {/if}
-    <label class="field-group" for="email-input">
-      <span class="field-label">Email</span>
-      <input id="email-input" type="email" class="input-field" bind:value={email} placeholder="you@example.com" autocomplete="username" required />
-      <span class="field-hint">{tab === 'forgot' ? mode.helper : 'We use this for sign in, confirmations, and password resets.'}</span>
-    </label>
 
-    {#if tab !== 'forgot'}
+      {#if error}<p class="auth-message auth-message--error" role="alert" aria-live="polite">{error}</p>{/if}
+      <button type="submit" class="auth-submit" disabled={loading || usernameCheckState === 'checking'}>
+        {loading || usernameCheckState === 'checking' ? 'Checking…' : 'Continue'}
+      </button>
+    {:else if tab === 'signup' && signupStep === 2}
+      <button type="button" class="back-link" on:click={() => goToSignupStep(1)}>← Back</button>
+      <div class="auth-summary">
+        <div>
+          <span>Username</span>
+          <strong>chm.lol/{username}</strong>
+        </div>
+        <button type="button" on:click={() => goToSignupStep(1)}>Edit</button>
+      </div>
+
+      <label class="field-group" for="email-input">
+        <span class="field-label">Email</span>
+        <input id="email-input" type="email" class="input-field" bind:value={email} placeholder="you@example.com" autocomplete="email" required />
+      </label>
+
+      {#if error}<p class="auth-message auth-message--error" role="alert" aria-live="polite">{error}</p>{/if}
+      <button type="submit" class="auth-submit" disabled={loading}>Continue</button>
+    {:else if tab === 'signup' && signupStep === 3}
+      <button type="button" class="back-link" on:click={() => goToSignupStep(2)}>← Back</button>
+      <div class="auth-summary">
+        <div>
+          <span>Email address</span>
+          <strong>{email}</strong>
+        </div>
+        <button type="button" on:click={() => goToSignupStep(2)}>Edit</button>
+      </div>
+      <div class="auth-summary">
+        <div>
+          <span>Username</span>
+          <strong>chm.lol/{username}</strong>
+        </div>
+        <button type="button" on:click={() => goToSignupStep(1)}>Edit</button>
+      </div>
+
       <label class="field-group" for="password-input">
         <span class="field-label">Password</span>
-        <input id="password-input" type="password" class="input-field" bind:value={password} placeholder="Your password" autocomplete={tab === 'login' ? 'current-password' : 'new-password'} minlength="8" required />
-        <span class="field-hint">{tab === 'signup' ? 'Use at least 8 characters.' : 'Enter the password tied to your account.'}</span>
+        <div class="input-shell">
+          <input id="password-input" type={showPassword ? 'text' : 'password'} class="input-field input-field--password" bind:value={password} placeholder="Create a password" autocomplete="new-password" minlength="8" required />
+          <button type="button" class="password-toggle" on:click={() => showPassword = !showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? 'Hide' : 'Show'}</button>
+        </div>
+        <span class="field-hint">Use at least 8 characters.</span>
       </label>
-    {/if}
 
-    {#if tab === 'signup'}
-      <p class="privacy-link-note">
-        Read the <a href="/privacy">Privacy Policy</a> before creating an account.
-      </p>
-    {/if}
+      <label class="check-row" for="terms-accepted">
+        <input id="terms-accepted" type="checkbox" bind:checked={termsAccepted} />
+        <span>I agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</span>
+      </label>
+      <label class="check-row" for="updates-opt-in">
+        <input id="updates-opt-in" type="checkbox" bind:checked={updatesOptIn} />
+        <span>I agree to receive occasional updates from ChromaDie.</span>
+      </label>
 
-    <div class="security-check">
-      <span class="field-label">Security check</span>
-      <div id="turnstile-container"></div>
-      {#if isLocalDevelopment()}
-        <span class="field-hint" role="status">Disabled for local development.</span>
-      {:else if turnstileState === 'loading'}
-        <span class="field-hint" role="status">Loading security check…</span>
-      {:else if turnstileState === 'error'}
-        <button type="button" class="link-btn" on:click={retryTurnstile}>Retry security check</button>
+      {#if !isLocalDevelopment()}
+        <div class="security-check" class:security-check--error={turnstileState === 'error'}>
+          <span class="field-label">Security check</span>
+          <div id="turnstile-container"></div>
+          {#if turnstileState === 'loading'}<span class="field-hint" role="status">Loading security check…</span>{:else if turnstileState === 'error'}<button type="button" class="link-btn" on:click={retryTurnstile}>Retry security check</button>{/if}
+        </div>
       {/if}
-    </div>
 
-    {#if notice}
-      <p class="notice" role="status" aria-live="polite">{notice}</p>
-    {/if}
+      {#if notice}<p class="auth-message auth-message--notice" role="status" aria-live="polite">{notice}</p>{/if}
+      {#if error}<p class="auth-message auth-message--error" role="alert" aria-live="polite">{error}</p>{/if}
+      <button type="submit" class="auth-submit" disabled={loading}>{loading ? 'Creating…' : 'Create account'}</button>
+    {:else if tab === 'login'}
+      <label class="field-group" for="email-input">
+        <span class="field-label">Email</span>
+        <input id="email-input" type="email" class="input-field" bind:value={email} placeholder="you@example.com" autocomplete="username" required />
+      </label>
+      <label class="field-group" for="password-input">
+        <span class="field-label">Password</span>
+        <div class="input-shell">
+          <input id="password-input" type={showPassword ? 'text' : 'password'} class="input-field input-field--password" bind:value={password} placeholder="Your password" autocomplete="current-password" required />
+          <button type="button" class="password-toggle" on:click={() => showPassword = !showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? 'Hide' : 'Show'}</button>
+        </div>
+      </label>
 
-    {#if error}
-      <p class="error" role="alert" aria-live="polite">{error}</p>
-    {/if}
-
-    {#if tab === 'login'}
-      <button type="button" class="link-btn" on:click={() => setMode('forgot')}>
-        Forgot password?
-      </button>
-    {:else if tab === 'forgot'}
-      <button type="button" class="link-btn" on:click={() => setMode('login')}>
-        Back to sign in
-      </button>
-    {/if}
-
-    <button type="submit" class="btn btn-primary auth-submit" disabled={loading}>
-      {loading ? 'Working...' : mode.primary}
-    </button>
-
-    <p class="auth-footnote">
-      {#if tab === 'signup'}
-        {#if isLocalDevelopment()}
-          Local accounts are activated immediately for testing.
-        {:else}
-          A confirmation email will be sent before your account is fully active.
-        {/if}
-      {:else if tab === 'forgot'}
-        Reset links expire, so use the newest email you receive.
-      {:else}
-        Guests can still play immediately if you want to come back later.
+      {#if !isLocalDevelopment()}
+        <div class="security-check" class:security-check--error={turnstileState === 'error'}>
+          <span class="field-label">Security check</span>
+          <div id="turnstile-container"></div>
+          {#if turnstileState === 'loading'}<span class="field-hint" role="status">Loading security check…</span>{:else if turnstileState === 'error'}<button type="button" class="link-btn" on:click={retryTurnstile}>Retry security check</button>{/if}
+        </div>
       {/if}
-    </p>
+
+      {#if error}<p class="auth-message auth-message--error" role="alert" aria-live="polite">{error}</p>{/if}
+      {#if notice}<p class="auth-message auth-message--notice" role="status" aria-live="polite">{notice}</p>{/if}
+      <button type="button" class="forgot-link" on:click={() => setMode('forgot')}>Forgot password?</button>
+      <button type="submit" class="auth-submit" disabled={loading}>{loading ? 'Signing in…' : 'Log in'}</button>
+
+      <div class="auth-divider" aria-hidden="true"><span></span><strong>OR</strong><span></span></div>
+      <div class="provider-list" aria-label="Social sign-in options">
+        <button type="button" class="provider-button" on:click={() => handleProvider('google')} disabled={loading}>
+          <span class="provider-icon provider-icon--google" aria-hidden="true">G</span> Continue with Google
+        </button>
+        <button type="button" class="provider-button" on:click={() => handleProvider('discord')} disabled={loading}>
+          <span class="provider-icon provider-icon--discord" aria-hidden="true">●</span> Continue with Discord
+        </button>
+      </div>
+      <p class="auth-footnote">Guests can play immediately and come back when you’re ready.</p>
+    {:else}
+      <label class="field-group" for="email-input">
+        <span class="field-label">Email</span>
+        <input id="email-input" type="email" class="input-field" bind:value={email} placeholder="you@example.com" autocomplete="email" required />
+      </label>
+      {#if !isLocalDevelopment()}
+        <div class="security-check" class:security-check--error={turnstileState === 'error'}>
+          <span class="field-label">Security check</span>
+          <div id="turnstile-container"></div>
+          {#if turnstileState === 'loading'}<span class="field-hint" role="status">Loading security check…</span>{:else if turnstileState === 'error'}<button type="button" class="link-btn" on:click={retryTurnstile}>Retry security check</button>{/if}
+        </div>
+      {/if}
+      {#if error}<p class="auth-message auth-message--error" role="alert" aria-live="polite">{error}</p>{/if}
+      {#if notice}<p class="auth-message auth-message--notice" role="status" aria-live="polite">{notice}</p>{/if}
+      <button type="submit" class="auth-submit" disabled={loading}>{loading ? 'Sending…' : 'Send reset link'}</button>
+      <button type="button" class="back-link back-link--centered" on:click={() => setMode('login')}>Back to sign in</button>
+    {/if}
   </form>
+
+  {#if standalone}
+    <nav class="auth-switch" aria-label="Account access">
+      {#if tab === 'login'}
+        <span>New here?</span>
+        <a href={getAuthPath('signup')}>Create an account</a>
+      {:else if tab === 'signup'}
+        <span>Already have an account?</span>
+        <a href={getAuthPath('login')}>Sign in</a>
+      {:else}
+        <a href={getAuthPath('login')}>Back to sign in</a>
+      {/if}
+    </nav>
+  {/if}
 </div>
 
 <style>
   .auth-container {
-    width: 100%;
-    max-width: 480px;
-    padding: clamp(1.6rem, 4vw, 2.75rem);
+    --auth-canvas: #0b0b0d;
+    --auth-panel: #151517;
+    --auth-panel-soft: #101012;
+    --auth-line: rgba(255, 255, 255, 0.1);
+    --auth-line-soft: rgba(255, 255, 255, 0.07);
+    --auth-ink: #f3f3f5;
+    --auth-muted: #929198;
+    --auth-faint: #66656d;
+    --auth-accent: #ffffff;
+    --auth-accent-bright: #ffffff;
+    width: min(100%, 23rem);
+    padding: 1.45rem 1.35rem 1.3rem;
     position: relative;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-gutter: stable;
-    border-color: var(--color-line-subtle);
-    background: var(--surface-panel);
-    box-shadow: var(--shadow-float);
-  }
-  .auth-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1.35rem;
-    padding: 0.9rem 0.95rem 0.85rem;
-    background: rgba(255,255,255,.035);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: var(--radius-sm);
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-  .auth-heading-group {
-    min-width: 0;
-  }
-  .auth-kicker {
-    margin: 0 0 0.35rem 0;
-    color: var(--color-accent-bright);
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    font-size: 0.72rem;
-    font-weight: 700;
-  }
-  .auth-brand {
-    margin: 0 0 0.45rem 0;
-    color: rgba(255,255,255,0.68);
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    font-size: 0.68rem;
-    font-weight: 700;
-  }
-  .auth-description {
-    margin: 0.15rem 0 0 0;
-    color: var(--text-muted);
-    line-height: 1.55;
-    font-size: 0.96rem;
-    max-width: 34ch;
-  }
-  .auth-title {
-    margin: 0.35rem 0 0;
-    color: var(--color-ink-strong);
-    font: 650 clamp(1.65rem, 3vw, 2.35rem) / 1 var(--font-display);
-    letter-spacing: -0.045em;
-  }
-  .field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    margin-bottom: 0.95rem;
-  }
-  .field-label {
-    color: rgba(255,255,255,0.86);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-  }
-  .close-auth-btn {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-line-subtle);
-    background: transparent;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    line-height: 1;
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
-  }
-  .close-auth-btn:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: var(--card-border-hover);
-    transform: translateY(-1px);
-  }
-  .tabs {
-    display: flex;
-    margin-bottom: 1rem;
-    background: rgba(255,255,255,.035);
-    border-radius: var(--radius-sm);
-    padding: 0.2rem;
-    border: 1px solid rgba(255,255,255,0.07);
-    box-shadow: none;
-  }
-  .tabs button {
-    flex: 1;
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    padding: 0.7rem 0.9rem;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.92rem;
-    transition: all 0.2s;
-    min-height: 42px;
-  }
-  .tabs button.active {
-    color: var(--color-ink-strong);
-    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-    box-shadow: inset 0 -2px 0 var(--color-accent);
-  }
-  .tabs a {
-    flex: 1;
-    color: var(--text-muted);
-    padding: 0.7rem 0.9rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.92rem;
-    min-height: 42px;
-    text-align: center;
-  }
-  .tabs a.active {
-    color: var(--color-ink-strong);
-    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-    box-shadow: inset 0 -2px 0 var(--color-accent);
-  }
-  .field-hint {
-    color: var(--text-muted);
-    font-size: 0.79rem;
-    line-height: 1.45;
-  }
-  .input-field {
-    width: 100%;
-    min-height: 48px;
-    padding: 0.9rem 1rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-line-subtle);
-    background: var(--surface-inset);
-    color: var(--text-main);
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    outline: none;
-    margin-bottom: 0;
-    appearance: none;
-    -webkit-appearance: none;
-  }
-  .input-field::placeholder {
-    color: rgba(118, 123, 140, 0.8);
-  }
-  .input-field:focus {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 16%, transparent);
-    background: var(--surface-panel-soft);
-  }
-  .input-field:-webkit-autofill,
-  .input-field:-webkit-autofill:hover,
-  .input-field:-webkit-autofill:focus,
-  .input-field:-webkit-autofill:active {
-    -webkit-text-fill-color: var(--text-main);
-    caret-color: var(--text-main);
-    box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.04) inset;
-    border: 1px solid rgba(255,255,255,0.08);
-    background-color: rgba(255,255,255,0.04);
-    transition: background-color 9999s ease-out, color 9999s ease-out;
-  }
-  .security-check {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    margin: 0.35rem 0 1rem;
-  }
-  .privacy-link-note {
-    margin: 0.15rem 0 0.75rem;
-    color: var(--text-muted);
-    font-size: 0.84rem;
-    line-height: 1.5;
-  }
-  .privacy-link-note a {
-    color: #fff;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  #turnstile-container {
-    min-height: 92px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.75rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-line-subtle);
-    background: var(--surface-panel-soft);
     overflow: hidden;
-  }
-  .auth-submit {
-    width: 100%;
-    margin-top: 0.5rem;
-    min-height: 50px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: var(--color-ink-strong);
-    color: #08080a;
-    font-family: var(--font-display-stack);
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    box-shadow: none;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-  }
-  .auth-submit:hover:not(:disabled) {
-    transform: translateY(-1px);
-    background: var(--color-accent);
-    box-shadow: none;
-    filter: brightness(1.02);
-  }
-  .auth-submit:disabled {
-    opacity: 0.6;
-    cursor: wait;
-  }
-  .error {
-    color: #fecaca;
-    font-size: 0.9rem;
-    margin: 0.75rem 0 0.25rem 0;
-    text-align: left;
-    line-height: 1.5;
-    padding: 0.75rem 0.9rem;
-    border-radius: 12px;
-    border: 1px solid rgba(248, 113, 113, 0.25);
-    background: rgba(248, 113, 113, 0.08);
-  }
-  .notice {
-    color: #d1fae5;
-    font-size: 0.92rem;
-    margin: 0.75rem 0 0.25rem 0;
-    text-align: left;
-    line-height: 1.5;
-    padding: 0.75rem 0.9rem;
-    border-radius: 12px;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    background: rgba(16, 185, 129, 0.08);
-  }
-  .link-btn {
-    width: 100%;
-    margin: 0.25rem 0 0.7rem;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: var(--color-accent-bright);
-    cursor: pointer;
-    font-size: 0.92rem;
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-    text-align: center;
-  }
-  .auth-footnote {
-    margin: 0.9rem 0 0 0;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    line-height: 1.5;
-    text-align: center;
+    border: 1px solid var(--auth-line-soft);
+    border-radius: 18px;
+    background: var(--auth-panel);
+    color: var(--auth-ink);
+    box-shadow: 0 1.75rem 4.5rem rgba(0, 0, 0, 0.36);
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
 
-  @media (max-width: 600px) {
-    .auth-container {
-      padding: 1.1rem;
-      max-height: 100%;
-    }
-    .auth-header {
-      position: static;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-      top: auto;
-      padding: 0.8rem 0.85rem 0.75rem;
-      background: rgba(255,255,255,.025);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 18px;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-    .auth-brand {
-      font-size: 0.64rem;
-      letter-spacing: 0.16em;
-      margin-bottom: 0.3rem;
-    }
-    .auth-kicker {
-      font-size: 0.68rem;
-      letter-spacing: 0.14em;
-      margin-bottom: 0.25rem;
-    }
-    .auth-description {
-      font-size: 0.92rem;
-      max-width: none;
-    }
-    .tabs {
-      margin-bottom: 1.25rem;
-      border-radius: 16px;
-    }
-    .tabs button {
-      min-height: 42px;
-      border-radius: 12px;
-    }
-    .tabs a {
-      min-height: 42px;
-      border-radius: 12px;
-    }
-    .input-field {
-      min-height: 46px;
-    }
-    .link-btn {
-      min-height: 40px;
-    }
-    .field-label {
-      font-size: 0.75rem;
-    }
-    .field-hint,
-    .auth-footnote {
-      font-size: 0.76rem;
-    }
-    .auth-submit {
-      min-height: 48px;
-    }
+  .auth-mark { display: block; width: 2.75rem; height: 2.25rem; margin-bottom: 1rem; background: transparent; }
+  .auth-mark img { width: 2.4rem; height: auto; opacity: 0.88; }
+  .auth-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.05rem; }
+  .auth-heading-group { min-width: 0; }
+  .auth-title { margin: 0; color: var(--auth-ink); font: 650 1.45rem / 1.08 'Manrope Variable', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.035em; }
+  .auth-description { max-width: 32ch; margin: 0.5rem 0 0; color: var(--auth-muted); font-size: 0.78rem; line-height: 1.45; }
+  .close-auth-btn { flex: 0 0 auto; width: 2rem; height: 2rem; border: 1px solid var(--auth-line-soft); border-radius: 0.55rem; background: transparent; color: var(--auth-muted); cursor: pointer; font-size: 1.2rem; line-height: 1; }
+  .close-auth-btn:hover, .close-auth-btn:focus-visible { border-color: var(--auth-line); color: var(--auth-ink); }
+
+  .auth-switch { display: flex; align-items: center; justify-content: center; gap: 0.3rem; margin: 1rem 0 0; color: var(--auth-muted); font-size: 0.72rem; }
+  .auth-switch a, .back-link, .forgot-link, .link-btn { color: var(--auth-accent-bright); text-decoration: underline; text-underline-offset: 0.18em; }
+  .auth-switch a:hover, .back-link:hover, .forgot-link:hover, .link-btn:hover { color: var(--auth-ink); }
+
+  .tabs { display: flex; gap: 0.2rem; margin: 0 0 1.15rem; padding: 0.2rem; border: 1px solid var(--auth-line-soft); border-radius: 0.65rem; background: var(--auth-panel-soft); }
+  .tabs button { flex: 1; min-height: 2.35rem; border: 0; border-radius: 0.45rem; background: transparent; color: var(--auth-muted); cursor: pointer; font: 600 0.76rem / 1 'Inter', sans-serif; }
+  .tabs button.active { background: rgba(255, 255, 255, 0.12); color: var(--auth-ink); }
+
+  form { display: grid; gap: 0; }
+  .field-group { display: grid; gap: 0.38rem; margin: 0 0 0.9rem; }
+  .field-label { color: rgba(243, 243, 245, 0.84); font-size: 0.72rem; font-weight: 650; }
+  .field-hint, .field-status { color: var(--auth-muted); font-size: 0.68rem; line-height: 1.4; }
+  .field-status { display: inline-flex; align-items: center; gap: 0.3rem; }
+  .field-status::before { content: '•'; color: currentColor; }
+  .field-status--available { color: #71d6a5; }
+  .field-status--error { color: #ef8a99; }
+
+  .input-shell { display: flex; min-width: 0; align-items: center; border: 1px solid var(--auth-line-soft); border-radius: 0.65rem; background: var(--auth-canvas); transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+  .input-shell:focus-within { border-color: var(--auth-accent); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12); }
+  .input-shell--status { border-color: rgba(113, 214, 165, 0.42); }
+  .input-prefix { flex: 0 0 auto; padding-left: 0.78rem; color: var(--auth-muted); font-size: 0.76rem; }
+  .input-field { width: 100%; min-width: 0; min-height: 2.65rem; padding: 0.7rem 0.78rem; border: 1px solid var(--auth-line-soft); border-radius: 0.65rem; outline: 0; background: var(--auth-canvas); color: var(--auth-ink); font: 400 0.8rem / 1.2 'Inter', sans-serif; transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+  .input-shell .input-field { border: 0; background: transparent; box-shadow: none; }
+  .input-field--prefixed { padding-left: 0.3rem; }
+  .input-field--password { padding-right: 0.2rem; }
+  .input-field::placeholder { color: #5e5d65; }
+  .input-field:focus { border-color: var(--auth-accent); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12); }
+  .input-field:focus-visible { outline: 0; }
+  .input-shell .input-field:focus { box-shadow: none; }
+  .input-field:-webkit-autofill { -webkit-text-fill-color: var(--auth-ink); box-shadow: 0 0 0 1000px var(--auth-canvas) inset; }
+  .password-toggle { flex: 0 0 auto; margin-right: 0.58rem; border: 0; background: transparent; color: var(--auth-muted); cursor: pointer; font-size: 0.66rem; }
+  .password-toggle:hover, .password-toggle:focus-visible { color: var(--auth-ink); }
+
+  .auth-summary { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin: 0 0 0.85rem; padding: 0.68rem 0; border-block: 1px solid var(--auth-line-soft); }
+  .auth-summary + .auth-summary { margin-top: -0.85rem; border-top: 0; }
+  .auth-summary div { display: grid; gap: 0.18rem; min-width: 0; }
+  .auth-summary span { color: var(--auth-muted); font-size: 0.64rem; }
+  .auth-summary strong { overflow: hidden; color: var(--auth-ink); font-size: 0.76rem; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+  .auth-summary button { border: 0; background: transparent; color: var(--auth-accent-bright); cursor: pointer; font-size: 0.68rem; text-decoration: underline; text-underline-offset: 0.18em; }
+  .back-link, .forgot-link, .link-btn { width: fit-content; padding: 0; border: 0; background: transparent; cursor: pointer; font: 500 0.7rem / 1.4 'Inter', sans-serif; }
+  .back-link { margin: 0 0 0.75rem; text-decoration: none; }
+  .back-link--centered { justify-self: center; margin: 0.95rem 0 0; }
+  .forgot-link { justify-self: end; margin: -0.22rem 0 0.78rem; }
+
+  .check-row { display: grid; grid-template-columns: 1rem minmax(0, 1fr); align-items: start; gap: 0.55rem; margin: 0 0 0.65rem; color: var(--auth-muted); font-size: 0.68rem; line-height: 1.4; }
+  .check-row input { width: 0.95rem; height: 0.95rem; margin: 0.06rem 0 0; accent-color: var(--auth-accent); }
+  .check-row a { color: var(--auth-ink); text-decoration: underline; text-underline-offset: 0.15em; }
+
+  .security-check { display: grid; gap: 0.36rem; margin: 0.2rem 0 0.75rem; }
+  .security-check--error .field-label { color: #ef8a99; }
+  #turnstile-container { display: grid; min-height: 4.6rem; place-items: center; overflow: hidden; border: 1px solid var(--auth-line-soft); border-radius: 0.6rem; background: var(--auth-panel-soft); }
+
+  .auth-submit { width: 100%; min-height: 2.7rem; margin-top: 0.15rem; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 0.65rem; background: var(--auth-accent); color: #0b0b0d; cursor: pointer; font: 650 0.78rem / 1 'Manrope Variable', sans-serif; transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease; }
+  .auth-submit:hover:not(:disabled) { background: #e9e9ec; box-shadow: 0 0.65rem 1.5rem rgba(255, 255, 255, 0.1); transform: translateY(-1px); }
+  .auth-submit:disabled { cursor: wait; opacity: 0.55; }
+  .auth-message { margin: 0 0 0.75rem; padding-left: 0.65rem; border-left: 2px solid currentColor; font-size: 0.7rem; line-height: 1.45; }
+  .auth-message--error { color: #ef8a99; }
+  .auth-message--notice { color: #71d6a5; }
+
+  .auth-divider { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.8rem; color: var(--auth-faint); font-size: 0.6rem; }
+  .auth-divider span { flex: 1; height: 1px; background: var(--auth-line-soft); }
+  .auth-divider strong { font-weight: 600; }
+  .provider-list { display: grid; gap: 0.5rem; }
+  .provider-button { display: flex; min-height: 2.45rem; align-items: center; justify-content: center; gap: 0.55rem; border: 1px solid var(--auth-line-soft); border-radius: 0.62rem; background: var(--auth-panel-soft); color: var(--auth-ink); cursor: pointer; font: 500 0.72rem / 1 'Inter', sans-serif; transition: border-color 0.18s ease, background 0.18s ease; }
+  .provider-button:hover:not(:disabled), .provider-button:focus-visible { border-color: var(--auth-line); background: #1a1a1d; }
+  .provider-button:disabled { cursor: wait; opacity: 0.55; }
+  .provider-icon { display: inline-grid; width: 1rem; height: 1rem; place-items: center; font-size: 0.78rem; font-weight: 750; }
+  .provider-icon--google { color: var(--auth-ink); }
+  .provider-icon--discord { color: var(--auth-muted); font-size: 0.66rem; }
+  .auth-footnote { margin: 0.95rem 0 0; color: var(--auth-muted); font-size: 0.66rem; line-height: 1.45; text-align: center; }
+
+  @media (max-width: 26rem) {
+    .auth-container { padding-inline: 1rem; border-radius: 15px; }
+    .auth-title { font-size: 1.32rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-container *, .auth-container *::before, .auth-container *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
   }
 </style>

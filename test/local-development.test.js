@@ -12,7 +12,7 @@ test('local auth bypass is restricted to localhost development', () => {
   assert.match(auth, /import\.meta\.env\.DEV/);
   assert.match(auth, /localhost/);
   assert.match(auth, /127\.0\.0\.1/);
-  assert.match(auth, /captchaToken \? \{ captchaToken \}/);
+  assert.match(auth, /captchaToken: token/);
   assert.match(config, /enable_confirmations = false/);
   assert.match(readme, /Local auth bypasses Turnstile and disables email\s+confirmation/);
 });

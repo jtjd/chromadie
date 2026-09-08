@@ -20,7 +20,7 @@ test('signed-out chrome hides inaccessible Customize actions', () => {
   assert.ok(header.includes('class="site-mode-header__claim-link"'));
   assert.ok(header.includes('>Claim handle</a>'));
   assert.ok(footer.includes('{#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}'));
-  assert.match(homepage, /<SiteFooter \{isAuthenticated\} \/>/);
+  assert.match(homepage, /<SiteFooter \{isAuthenticated\} variant="home" \/>/);
 });
 
 test('signed-out Profile Studio entry resolves through the current auth route', () => {

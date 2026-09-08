@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { startVite, startChromium, findAvailablePort, terminateProcess, loadLocalEnvironment, assertLocalSupabaseUrl } from './cdp-harness.mjs';
 
@@ -100,12 +100,12 @@ try {
   await page.waitFor('document.querySelector(".homepage-best-roll [role=alert] button")', 'public board error retry');
   await page.evaluate(`window.homepageTest.boardError=false`);
   await page.click('.homepage-best-roll [role=alert] button','retry public board');
-  await page.waitFor('document.querySelector(".homepage-community--empty")', 'compact empty community');
+  await page.waitFor('!document.querySelector(".homepage-community") && !document.querySelector(".homepage-best-roll [role=alert]")', 'empty community remains absent after retry');
   await page.evaluate(`window.homepageTest.boardRows=[{username:'PublicPlayer',display_name:'Public Player',hex_code:'#5EBAE3',score:38697,rarity:'Uncommon',identity:'Balanced Vivid Azure',rank:1,contributors:[]}]`);
   await page.evaluate(`window.homepageTest.stores.session.set(null);window.homepageTest.stores.profile.set(null);window.homepageTest.stores.profileReady.set(false)`);
   await page.waitFor('document.querySelector(".homepage-best-roll__identity-name")?.textContent.includes("Public")', 'populated public spotlight');
   await page.screenshot(join(evidenceDir,'populated-preroll.png'));
-  assert.equal(await page.evaluate('Boolean(document.querySelector(".homepage-community--empty"))'),false);
+  await page.waitFor('document.querySelector(".homepage-community .homepage-player")', 'populated community player');
   console.log('PASS public feed failure/retry, compact empty state, and populated spotlight');
 
   await page.evaluate('document.querySelector(".profile-example").scrollIntoView({block:"center"})');
@@ -121,6 +121,16 @@ try {
   await page.setViewport(720,450);
   assert.equal(await page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'),true);
   console.log('PASS profile example desktop/mobile and 200% equivalent layout');
+} catch (error) {
+  if (chromium?.page) {
+    await writeFile(join(evidenceDir, 'failure.json'), JSON.stringify({
+      message: error.message,
+      page: await chromium.page.evaluate('({path: location.pathname, text: document.body.innerText.slice(0, 4000)})').catch(() => null),
+      console: chromium.page.consoleLog,
+      requests: chromium.page.requestLog
+    }, null, 2));
+  }
+  throw error;
 } finally {
   await chromium?.page?.close();
   await terminateProcess(chromium?.child,'Chromium');

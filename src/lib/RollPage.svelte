@@ -18,6 +18,7 @@
   export let bestRollRows = [];
   export let bestRollLoading = true;
   export let bestRollError = '';
+  const unknownSlots = Array.from({ length: 6 }, (_, index) => index);
   let gameRef = null;
   let rollEvent = createRollPageContext();
   $: account = deriveRollAccountPresentation($accountState, $session, $profile);
@@ -127,7 +128,16 @@
       {:else}
         <p class="roll-page__eyebrow">A NEW COLOR, EVERY DAY</p>
         {#if homepage}
-          <div class="roll-page__unknown" aria-hidden="true">{homepage && rollContext.phase === 'rolling' ? (rollContext.revealHex || '#??????') : '#??????'}</div>
+          <div class="roll-page__unknown" class:roll-page__unknown--revealing={homepage && rollContext.phase === 'rolling'} aria-hidden="true" data-unknown="#??????">
+            {#if homepage && rollContext.phase === 'rolling'}
+              {rollContext.revealHex || '#??????'}
+            {:else}
+              <span class="roll-page__unknown-hash">#</span>
+              {#each unknownSlots as slot (slot)}
+                <span class="roll-page__unknown-mark" style={`--unknown-delay:${slot * 160}ms`}>?</span>
+              {/each}
+            {/if}
+          </div>
           <h1 id="roll-page-title">Roll today’s color.</h1>
           <p class="roll-page__description">A daily color game. Roll, collect, and customize your profile.</p>
         {:else}
@@ -936,6 +946,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .roll-page.roll-page--homepage-preroll .roll-page__unknown-mark { animation: none; }
     .roll-page::before { position: absolute; }
     .roll-page :global(.game-container--dedicated .roll-stage--results) { animation: none; }
     .roll-page :global(.game-container--dedicated .roll-tile__surface) { transform: none; }
@@ -983,11 +994,45 @@
   .roll-page.roll-page--homepage-preroll .roll-page__eyebrow::before { display: none; }
 
   .roll-page.roll-page--homepage-preroll .roll-page__unknown {
+    display: inline-flex;
+    align-items: baseline;
     margin-top: 0;
     color: #c8c7cc;
     font: 800 clamp(3.4rem, 6vw, 4.5rem) / .86 var(--site-display, 'Manrope', sans-serif);
     letter-spacing: .02em;
     text-shadow: none;
+  }
+
+  .roll-page.roll-page--homepage-preroll .roll-page__unknown-hash,
+  .roll-page.roll-page--homepage-preroll .roll-page__unknown-mark {
+    display: inline-block;
+  }
+
+  .roll-page.roll-page--homepage-preroll .roll-page__unknown-mark {
+    animation: roll-page-unknown-mark 8.4s ease-in-out infinite;
+    animation-delay: var(--unknown-delay, 0ms);
+    will-change: color, transform, text-shadow;
+  }
+
+  @keyframes roll-page-unknown-mark {
+    0%, 68%, 100% {
+      color: #c8c7cc;
+      opacity: .88;
+      text-shadow: none;
+      transform: translateY(0);
+    }
+    76% {
+      color: #b8a9ff;
+      opacity: 1;
+      text-shadow: 0 0 18px rgba(184, 169, 255, .3);
+      transform: translateY(-.05em);
+    }
+    84% {
+      color: #a9e8ff;
+      opacity: 1;
+      text-shadow: 0 0 20px rgba(169, 232, 255, .26);
+      transform: translateY(0);
+    }
   }
 
   .roll-page.roll-page--homepage-preroll .roll-page__context h1 {

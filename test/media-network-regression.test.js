@@ -34,7 +34,10 @@ test('playable homepage network budget is bounded and avoids profile hydration',
   assert.match(home, /import RollPage from '.\/RollPage\.svelte'/);
   assert.match(home, /<RollPage/);
   assert.doesNotMatch(home, /ProfileShell|loadProfileContext|setInterval|HomepageProfileDemo|HomepageShowcase|homepageFixtures/);
-  assert.equal((community.match(/supabase\.rpc\('get_public_discovery',/g) || []).length, 1);
+  // One bounded owner lookup and one conditional community fallback, never full profiles.
+  assert.equal((community.match(/supabase\.rpc\('get_public_discovery',/g) || []).length, 2);
+  assert.match(community, /if \(todayRows.length\) \{[\s\S]*?return;[\s\S]*?const fallbackResult/);
+  assert.match(community, /p_limit: COMMUNITY_FALLBACK_LIMIT/);
   assert.equal((community.match(/supabase\.rpc\('get_public_discovery_spotlight'/g) || []).length, 1);
   assert.match(smoke, /discoveryCount <= 1/);
   assert.match(smoke, /profileHydrationCount === 0/);

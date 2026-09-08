@@ -474,8 +474,14 @@ try {
     await chromium.page.clickText('Sign up', { description: 'homepage account creation navigation' });
     await chromium.page.waitFor("location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('#username-input') && !document.querySelector('.auth-modal-overlay')", 'standalone signup page');
     await chromium.page.setInputValue('#username-input', canonicalUsername, ['input', 'change']);
+    await chromium.page.waitFor("document.querySelector('.field-status--available')?.textContent?.includes('Username available')", 'signup username availability check', 30000);
+    await chromium.page.click('.auth-submit', 'signup username continue control');
+    await chromium.page.waitFor("document.querySelector('#email-input') && document.querySelector('.auth-summary')", 'signup email step');
     await chromium.page.setInputValue('#email-input', accountEmail, ['input', 'change']);
+    await chromium.page.click('.auth-submit', 'signup email continue control');
+    await chromium.page.waitFor("document.querySelector('#password-input') && document.querySelector('#terms-accepted')", 'signup password step');
     await chromium.page.setInputValue('#password-input', accountPassword, ['input', 'change']);
+    await chromium.page.click('#terms-accepted', 'signup terms control');
     await chromium.page.click('.auth-submit', 'signup submit control');
     await chromium.page.waitFor("location.pathname === '/' && document.querySelector('.homepage-reference .roll-page') && !document.querySelector('.auth-page')", 'authenticated session after signup', 30000);
 
@@ -707,6 +713,10 @@ try {
   failure = error;
   results.status = 'failed';
   results.failure = { message: error.message };
+  if (chromium?.page) {
+    results.failure.page = await chromium.page.evaluate(`({ path: location.pathname, text: document.body.innerText.slice(0, 4000) })`).catch(() => null);
+    results.requests = chromium.page.requestLog;
+  }
   console.error(`[progression-smoke] FAIL ${error.message}`);
 } finally {
   try {

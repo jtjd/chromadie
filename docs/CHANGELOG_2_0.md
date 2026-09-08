@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-08 — Product-led homepage showcase
+
+- Added three animated, product-native profile scenes using the real public
+  renderer and deterministic local showcase fixtures.
+- Added manual scene controls, color rails, reduced-motion support, and
+  offscreen/hidden-document animation pausing.
+- Replaced the homepage's compact footer with an organized Play, Build,
+  Explore, and About navigation footer while preserving shared route footers.
+- Added a slow lavender-to-cyan question-mark shimmer to the unknown hero color,
+  with a reduced-motion fallback.
+
 ## 2026-09-07 — Clearer homepage sections and language
 
 - Moved the profile example directly below the playable roll.
@@ -4399,3 +4410,38 @@ direct route behavior.
   authoritative reload succeeds, with a keyboard-accessible retry action.
 - Added regression coverage for transient, permission, malformed, and
   full-context refresh failures so they cannot reach a publish overwrite path.
+
+## Auth flow cleanup — 2026-09-08 (unreleased)
+
+- Reworked standalone signup into username, email, and password steps with
+  live server-backed availability feedback and editable summaries.
+- Kept account consent, Supabase authentication, OAuth login, Turnstile, and
+  the restricted local-development bypass intact while removing the old
+  presentation clutter and step indicators.
+- Put the sign-in/create-account switch below the primary action and return
+  completed auth to the homepage by default while preserving safe `next`
+  handoffs.
+# Main stabilization — 2026-09-08 (unreleased)
+
+- Fixed homepage each keys, username pattern parsing, and line-clamp diagnostics.
+- Restored omitted mobile profile sizing and reduced-motion hover handling.
+- Added atomic new-profile configuration initialization and safe missing-row
+  backfill, with transactional new/existing-account regression checks.
+- Added npm aliases for the existing homepage browser harnesses.
+- Stabilization is complete locally; see the September 8 validation below.
+
+## 2026-09-08 — Stabilization follow-through (unreleased)
+
+- Reuse authenticated owner identity on profile mounts and lazy Studio detail loads.
+- Reject stale Studio publish/reset responses after account changes or logout;
+  rehydrate accounts revisited within the same mounted Studio.
+- Invalidate destroyed profile/motion loads and preserve offscreen animation
+  suspension across resize and visibility events.
+- Correct browser harness expectations for Content, Rivals, and scrollable
+  Progression tabs; add visitor boundary and failure-diagnostic coverage.
+- Final validation passes 545 tests, zero Svelte diagnostics, all required
+  frontend/local database gates, homepage/account/Progression browser checks,
+  and 18-step development and production-build Studio checks. Media mutation
+  was excluded from the Studio runs. Nothing deployed; Cloudflare release
+  values and normal migration rollout remain external actions.
+- See [measured results and evidence](MAIN_STABILIZATION_REPORT.md).

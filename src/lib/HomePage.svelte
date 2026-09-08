@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import './homepage/homepage-reference.css';
   import './homepage/homepage-refinement.css';
+  import './homepage/homepage-footer.css';
   import { ACCOUNT_STATES } from './authState.js';
   import SiteFooter from './SiteFooter.svelte';
   import RollPage from './RollPage.svelte';
@@ -68,7 +69,7 @@
       <HomepageCommunity {isAuthenticated} {username} refreshKey={discoveryRefresh} on:leaderboard={handleLeaderboard} />
       <HomepageStart {isAuthenticated} {accountState} on:retry={forwardAction} />
       <HomepageQuestions />
-      <SiteFooter {isAuthenticated} />
+      <SiteFooter {isAuthenticated} variant="home" />
     </div>
   </main>
 </div>

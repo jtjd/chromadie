@@ -34,6 +34,7 @@ test('the homepage leads from the real roll to profiles, collection, discovery, 
   assert.match(home, /showAcquisitionActions=\{true\}/);
   assert.match(home, /homepage-reference--roll-first/);
   assert.match(home, /homepageDiscovery/);
+  assert.match(home, /<SiteFooter \{isAuthenticated\} variant="home" \/>/);
   assert.doesNotMatch(home, /HomepageHero|HomepageProfileDemo|HomepageShowcase|HomepageBestRoll|HomepageClaim|HOMEPAGE_FIXTURES|LazyAtmosphereLayer|homepage-background/);
   assert.equal((home.match(/<HomepageCommunity\b/g) || []).length, 1);
 });
@@ -41,6 +42,10 @@ test('the homepage leads from the real roll to profiles, collection, discovery, 
 test('the first viewport states the game plainly and has one authoritative roll action', () => {
   assert.match(rollPage, /A NEW COLOR, EVERY DAY/);
   assert.match(rollPage, /#\?\?\?\?\?\?/);
+  assert.match(rollPage, /const unknownSlots = Array\.from\(\{ length: 6/);
+  assert.match(rollPage, /roll-page__unknown-mark/);
+  assert.match(rollPage, /animation: roll-page-unknown-mark 8\.4s ease-in-out infinite/);
+  assert.match(rollPage, /prefers-reduced-motion: reduce[\s\S]*roll-page__unknown-mark \{ animation: none; \}/);
   assert.doesNotMatch(rollPage, /One color per day\. One roll\. What will yours be\?/);
   assert.doesNotMatch(rollPage, /Open progression/);
   assert.match(rollPage, /HomepageBestRoll/);
@@ -105,8 +110,8 @@ test('account actions are contextual before and after the guest roll', () => {
 
 test('the lower homepage uses canonical examples and direct copy with authentic discovery', () => {
   assert.match(loop, /getBadgeMeta/);
-  assert.match(loop, /aria-label="Example color condition collection"/);
-  assert.match(loop, /aria-label="Example achievement"/);
+  assert.match(loop, /aria-label="Example high-rarity conditions found in rolls"/);
+  assert.match(loop, /aria-label="Example cosmetic reward unlocked from progression"/);
   assert.match(scoring, /What makes a color score higher/);
   assert.match(scoring, /href="\/how-to-play"/);
   assert.match(community, /Players from today’s top rolls/);
@@ -118,6 +123,8 @@ test('the lower homepage uses canonical examples and direct copy with authentic 
   assert.match(board, /View full leaderboard/);
   assert.match(board, /LeaderboardEntry/);
   assert.match(footer, /href="\/privacy"/);
+  assert.match(footer, /site-footer--home/);
+  assert.match(footer, /site-footer__home-grid/);
 });
 
 test('the profile preview is an example, with account actions kept in the closing section', async () => {
@@ -127,6 +134,10 @@ test('the profile preview is an example, with account actions kept in the closin
   assert.doesNotMatch(player, />Open profile|homepage-player__open/);
   assert.match(player, /aria-label=\{`Open \$\{name\}’s profile`\}/);
   assert.match(preview, /<figure aria-label="Profile customization preview">/);
+  assert.match(preview, /const scenes = \[/);
+  assert.match(preview, /homepage\/fixtures\/sleek-background\.png/);
+  assert.match(preview, /profile-example__controls/);
+  assert.match(preview, /prefers-reduced-motion: reduce/);
   assert.doesNotMatch(preview, /<figcaption/);
   assert.doesNotMatch(preview, /profileHref|profile-example__link|Open Tjz|Explore Tjz|chm\.lol\/tjz/);
   const sections = ['<RollPage', '<HomepageProfileExample', '<HomepageCollection', '<HomepageCommunity', '<HomepageStart', '<HomepageQuestions', '<SiteFooter'];
@@ -134,7 +145,10 @@ test('the profile preview is an example, with account actions kept in the closin
   assert.ok(positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1])));
   assert.match(start, /accountState === ACCOUNT_STATES\.SIGNED_OUT && !isAuthenticated/);
   assert.match(start, /ACCOUNT_STATES\.PROFILE_ERROR/);
-  assert.match(start, /href="\/signup\?next=%2Fprofile%2Fsettings"/);
+  assert.match(start, /signupHref = `\/signup\?next=%2Fprofile%2Fsettings/);
+  assert.match(start, /encodeURIComponent\(normalizedUsername\)/);
+  assert.match(start, /pattern=\{'\[A-Za-z0-9_\]\{1,20\}'\}/);
+  assert.match(start, /window.location.href = signupHref/);
   assert.match(start, /href="\/profile\/settings"/);
   assert.doesNotMatch(preview + start + loop + scoring + community, /your story|journey|daily ritual/i);
   assert.doesNotMatch(preview + start + loop + scoring + community + rollPage, /[↗→↓]/);

@@ -49,7 +49,7 @@
             autocapitalize="none"
             spellcheck="false"
             maxlength="20"
-            pattern="[A-Za-z0-9_]{1,20}"
+            pattern={'[A-Za-z0-9_]{1,20}'}
             placeholder="yourname"
             aria-label="Choose your profile name"
             aria-invalid={!usernameIsValid}

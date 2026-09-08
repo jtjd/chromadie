@@ -1,5 +1,25 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-08 — Show the product through live profile scenes
+
+The landing page now demonstrates the product with three deterministic local
+profile fixtures rendered by the real public profile component. A single
+browser-like canvas crossfades between the Sleek, snowy, and full-bleed
+expressions, with scene controls and a color rail that make the profile itself
+the image. The scene loop pauses offscreen, pauses when the document is hidden,
+and is disabled for reduced-motion users. No account, discovery, or profile
+RPC data is used by the fixtures.
+
+The homepage footer gets its own organized four-column navigation treatment;
+the shared application footer remains unchanged on other routes. This follows
+the reference pattern of showing the product in context and giving the page a
+clear information architecture without introducing another equal-weight card
+grid.
+
+The homepage preroll keeps the unknown color readable while adding a slow,
+staggered lavender-to-cyan shimmer across the question marks. The effect is
+CSS-only, stops at the real hex reveal, and is disabled by `prefers-reduced-motion`.
+
 ## 2026-09-07 — Direct homepage copy and product examples
 
 The homepage moves from the playable roll to the existing profile example,
@@ -6938,3 +6958,49 @@ account, social, progression, and read-only surfaces remain available. A
 successful authoritative load clears the unavailable state. This keeps public
 profile visual degradation separate from owner authoring and prevents a failed
 read from turning `p_expected_updated_at = NULL` into an overwrite path.
+# Main stabilization: atomic profile configuration initialization — 2026-09-07
+
+Configuration creation now follows profile creation in the same database
+transaction, including existing missing-profile recovery. A forward migration
+backfills only missing configurations using canonical V1/V2 defaults and never
+overwrites author drafts, published state, expression, or history. This removes
+the accidental dependency on the legacy configuration read without adding a
+frontend fallback or changing the narrow Studio bootstrap. Trigger execution
+is not granted to API roles; public projections and owner RPC grants remain
+unchanged. Local regression tests reproduce the original failure and verify
+first save and migration idempotence. Deployment is still pending.
+
+## 2026-09-08 — Stabilization request and lifecycle boundaries
+
+Owner profile mounts may reuse only a hydrated identity whose ID matches the
+current session. Public projections remain bounded RPCs; return-to-tab reads
+still refresh authoritative identity/configuration because another tab can
+change publishing or privacy. Cold owner context loses one redundant request
+(10 to 9); Studio keeps its one-RPC bootstrap and lazy detail/preview loading.
+No broad hydration RPC, additional cache invalidation system, speculative
+index, font removal, budget increase, or editor split was justified.
+
+Pending Studio responses must match both the active load generation and account.
+Returning A→B→A must hydrate A again. Destroyed profile/motion components
+invalidate pending work. Animation visibility combines intersection, positive
+size, and document visibility; resize/tab events cannot override offscreen state.
+
+Browser geometry checks must account for intentional bounded scrollers while
+proving keyboard access to their contents. Studio Content and Leaderboard Rivals
+are established product behavior, so stale harness counts are corrected rather
+than removing those surfaces.
+
+## 2026-09-08 — Keep account access username-first and focused
+
+Standalone account access now moves through a compact username, email, and
+password sequence. Username availability is checked through the existing
+server RPCs before the account request, while terms acceptance, optional
+updates consent, and the final Supabase signup call remain in the last step.
+The sign-in handoff sits beneath the primary action so the account task keeps
+one clear next step on every screen.
+
+Successful sign-in and signup return to the homepage by default. A bounded,
+same-origin `next` value still preserves explicit handoffs such as Profile
+Studio. Turnstile remains required for non-local login, signup, and password
+reset submissions, and the local localhost bypass remains limited to Vite
+development and the existing integration-test environment.

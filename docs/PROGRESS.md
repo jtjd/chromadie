@@ -1,5 +1,61 @@
 # Chromadie 2.0 Progress
 
+## Homepage product showcase and footer — 2026-09-08
+
+- Added a live product gallery to the existing profile section. Three local,
+  fictional fixtures use the real profile renderer, portrait/background assets,
+  color rails, browser chrome, scene controls, and smooth crossfades.
+- Paused the scene loop when it leaves the viewport or the document is hidden;
+  `prefers-reduced-motion` disables the automatic loop and transitions.
+- Added a homepage-only multi-column footer with Play, Build, Explore, and
+  About groups plus a clear profile CTA. Other route footers still use the
+  compact shared treatment.
+- Added a restrained staggered color sweep to the preroll question marks;
+  reduced-motion users keep a static unknown value.
+- Added source and browser assertions for the three scenes and organized
+  footer. No account, discovery, roll authority, or profile data boundaries
+  changed.
+
+## Main stabilization — 2026-09-08 (complete locally, unreleased)
+
+- Started from `8784bff`; preserved the current homepage specimen and layout.
+- Phase 0 passes ESLint, Svelte check (0 errors/warnings), 534 tests, build,
+  responsive build, enforced performance budgets, and CSP.
+- Reproduced new-account Studio failure locally: hydration succeeds but the
+  V2 configuration read fails because only the legacy reader initialized it.
+- Added a forward configuration-creation trigger and missing-row-only backfill.
+  New account first save, existing account backfill, migration rerun, and
+  preservation of existing configuration pass transactional local tests.
+- Fresh reset, schema lint, database security, insights, username drift,
+  progression DB, owner surfaces DB, and 5,000-sample scoring parity pass.
+- September 8 continuation: verified the existing fixes with repository ESLint,
+  zero Svelte diagnostics, 544 tests, build, responsive build, CSP, dependency
+  audit (zero vulnerabilities), certification, links, balance/catalog drift,
+  and all local DB gates. Logs: `/tmp/chromadie-stabilization-validation`.
+- Measured cold owner context at 10 → 9 requests by reusing account identity;
+  Studio bootstrap remains exactly one configuration RPC. Existing shared
+  achievement caching and authoritative refresh behavior remain intact.
+- Added account-switch/logout mutation guards, A→B→A Studio hydration,
+  stale teardown protection, and avatar/name visibility lifecycle regressions.
+- Homepage and homepage-account browser checks pass. Progression passes all
+  eight steps, including Content, Rivals, new account roll, and reduced motion.
+  Evidence: `/tmp/chromadie-progression-smoke-COxkak/evidence.json`.
+- Real signup → hydrated Studio → configuration publish passes in dev and
+  production-build local browser runs. The broader harness exposed outdated
+  four-tab Studio and two-tab Leaderboard assertions, plus a false overflow
+  report for the bounded Progression tab scroller; expectations now match
+  Content/Rivals and additionally verify keyboard reachability.
+- Added failure-state/request capture for transient Chromium network-change
+  failures and explicit signed-out visitor canonical/compatibility coverage.
+- Final validation: 545/545 tests, zero Svelte diagnostics, all required
+  frontend and local database gates pass. Homepage, account, Progression,
+  development Studio (18 steps), and production-build Studio (18 steps) pass.
+  Media-upload mutation was excluded explicitly from the Studio runs.
+- Cloudflare release preflight remains correctly blocked by missing API token,
+  account ID, and Pages project. Nothing deployed; production requires the
+  forward migration through the normal release process.
+- Measurements and evidence: [Main stabilization report](MAIN_STABILIZATION_REPORT.md).
+
 ## Homepage presentation and direct copy — 2026-09-07
 
 - Kept the playable hero and moved the real profile preview directly below it.
@@ -5582,3 +5638,15 @@ reads return no synthetic editable draft, preserve a prior snapshot only as a
 read-only display, disable publish/reset and configuration editors, and expose
 a retry path. Full-context refreshes use the same invariant and cannot replace
 an authoritative configuration with failed-read defaults.
+
+## Auth flow cleanup — 2026-09-08 (unreleased)
+
+- Replaced the dense standalone auth presentation with a compact staged flow:
+  username availability, email, then password and account consent.
+- Preserved the existing username policy, server availability RPCs, Supabase
+  auth calls, OAuth login buttons, Turnstile enforcement, and local-only bypass.
+- Moved the account-switch link below each primary action and gave each signup
+  step its own concise copy, with editable username and email summaries.
+- Successful auth now lands on the homepage unless a bounded same-origin `next`
+  handoff was provided; the progression browser smoke follows all three signup
+  steps and checks the required terms control.

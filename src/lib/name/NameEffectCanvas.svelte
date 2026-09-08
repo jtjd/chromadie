@@ -48,6 +48,8 @@
   let renderer;
   let mounted = false;
   let visible = true;
+  let inViewport = true;
+  let hasArea = true;
   let reducedMotion = false;
   let rendererReady = false;
   let fontReady = false;
@@ -195,15 +197,16 @@
     }
   }
 
-  function updateVisibility(nextVisible) {
-    visible = nextVisible;
+  function updateVisibility() {
+    visible = inViewport && hasArea && document.visibilityState === 'visible';
     syncAnimationLoop();
   }
 
   function updateHostVisibility() {
     if (!host) return;
     const rect = host.getBoundingClientRect?.() || {};
-    updateVisibility(Boolean(rect.width > 0 && rect.height > 0));
+    hasArea = Boolean(rect.width > 0 && rect.height > 0);
+    updateVisibility();
   }
 
   function updateReducedMotion(nextValue) {
@@ -279,7 +282,10 @@
     if (typeof IntersectionObserver === 'function') {
       intersectionObserver = new IntersectionObserver(entries => {
         const entry = entries[0];
-        if (entry) updateVisibility(entry.isIntersecting && entry.intersectionRatio > 0);
+        if (entry) {
+          inViewport = entry.isIntersecting && entry.intersectionRatio > 0;
+          updateVisibility();
+        }
       }, { threshold: 0.01 });
       intersectionObserver.observe(host);
     }
@@ -288,7 +294,8 @@
       resizeObserver = new ResizeObserver(entries => {
         const entry = entries[0];
         if (!entry || !renderer) return;
-        updateVisibility(entry.contentRect.width > 0 && entry.contentRect.height > 0);
+        hasArea = entry.contentRect.width > 0 && entry.contentRect.height > 0;
+        updateVisibility();
         applyResize(entry.contentRect);
       });
       resizeObserver.observe(host);
@@ -296,6 +303,7 @@
       applyResize();
     }
     updateHostVisibility();
+    document.addEventListener('visibilitychange', updateVisibility);
     host?.addEventListener?.('pointermove', handlePointerMove, { passive: true });
     host?.addEventListener?.('pointerleave', handlePointerLeave, { passive: true });
 
@@ -329,6 +337,7 @@
       stopAnimation = null;
       intersectionObserver?.disconnect();
       resizeObserver?.disconnect();
+      document.removeEventListener('visibilitychange', updateVisibility);
       removeMediaListener?.();
       removeFontListener?.();
       fontRequestId += 1;
