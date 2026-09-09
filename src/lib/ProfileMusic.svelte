@@ -250,7 +250,7 @@
   .profile-music__load { padding: .55rem .75rem; border: 1px solid rgba(230,238,255,.2); border-radius: 999px; background: transparent; color: rgba(241,246,255,.84); font: 600 .68rem/1 var(--font-mono-stack); cursor: pointer; }
   .profile-music__load:hover { border-color: var(--music-accent, var(--color-accent-cyan)); color: var(--color-ink-strong); }
   .profile-music--audio { min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
-  .profile-music--audio.profile-music--floating { position: fixed; z-index: 6; left: 14px; top: 14px; bottom: auto; pointer-events: none; }
+  .profile-music--audio.profile-music--floating { position: fixed; z-index: 6; left: 14px; top: auto; bottom: max(14px, env(safe-area-inset-bottom)); pointer-events: none; }
   .profile-music--audio.profile-music--inline { display: block; width: 100%; }
   .profile-music--audio > :global(.profile-audio-control), .profile-music--audio > button, .profile-music--audio > span { pointer-events: auto; }
   .profile-music--audio > audio { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
