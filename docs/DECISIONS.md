@@ -1,5 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-08 — Materials remain authoritative inside name motions
+
+Materials now paint an isolated, reusable surface before motion transforms
+them. Fuzzy displaces those pixels at device resolution; Scramble and Magnetic
+Type use measured glyph advances. Neon Particle and Raster Signal retain their
+plain-name reference behavior and consume the selected finish when a material
+is equipped. Color motions animate the palette without replacing its texture.
+Soft Halo keeps its fixed halo and semantic fill; the other seven finishes use
+distinct vivid palettes, facets, weave, tube edges, satin, incisions, phosphor
+rows and drafting grids. No catalog IDs, ownership or backend grants change.
+
+Surfaces are weakly owned and bounded; text, font readiness/revision, metrics,
+color, material and DPR changes invalidate them. Shared opacity respects the
+motion caller, Still paints once, and empty text clears old pixels. Name fitting
+reserves the component's outer bleed for effects. Array's missing font URL
+extension is corrected using Fontshare's own CSS endpoint. No migration is needed.
+
 ## 2026-09-08 — Customize trails follow the real pointer
 
 The full-page Studio environment now uses window pointer input, matching public

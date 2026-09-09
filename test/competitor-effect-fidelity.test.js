@@ -214,8 +214,8 @@ test('the live-source ports remain explicit in the renderers and font registry',
 
   assert.match(motions, /getGunsFuzzyRowOffset/);
   assert.match(motions, /getGunsShuffleTrackOffset/);
-  assert.match(motions, /actualBoundingBoxLeft/);
-  assert.match(motions, /actualBoundingBoxAscent/);
+  assert.match(motions, /getPaintedTextSurface\(ctx, model, drawBase\)/);
+  assert.match(motions, /getNameGlyphLayout\(ctx, model\)/);
   // Consolidated line/follower effects now resolve to authored particles.
   assert.match(cursor, /getCursorTrailRendererKey/);
   assert.match(cursor, /advanceGunsFairyDustParticle/);

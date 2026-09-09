@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-08 — Vivid name materials that compose with motion
+
+- Reworked Raised Glass, Carbon Vein, Afterglow, Soft Black, Quarry Mark,
+  Cathode Bloom and Draftline into distinct, saturated finishes; retained Soft Halo.
+- Fixed motions discarding materials, opacity overrides, duplicate Still
+  painting, stale font/material buffers and incorrect proportional glyph spacing.
+- Made Fuzzy gentler on small/thin fonts, fixed the Array font URL, and reserved
+  name padding for effects so long names fit their content area.
+- Reduced motion shows a complete, stable material; clearing a name clears its
+  previous visual. Existing cosmetic IDs and saved choices remain compatible.
+
 ## 2026-09-08 — Pointer-driven Customize trails
 
 - Fixed the full-page Customize trail moving on its own: it now follows your

@@ -264,6 +264,8 @@
     if (!renderer || !host) return;
     const size = getLogicalHostSize(measured);
     syncSemanticMetrics();
+    // Bleed belongs to glows/displacement, not to the glyph fitting width.
+    renderer.setOptions({ contentWidth: size.width });
     renderer.resize({
       width: size.width + CANVAS_BLEED_X * 2,
       height: size.height + CANVAS_BLEED_Y * 2

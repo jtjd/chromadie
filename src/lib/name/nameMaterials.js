@@ -28,25 +28,25 @@ export const NAME_MATERIALS = Object.freeze({
 
   // Curated composable materials. The colors are intentionally code-owned
   // and bounded; the renderer derives daily-color variants from todayColor.
-  'glass-emboss': composableMaterial('glass-emboss', 'glass-emboss', ['#dae8ff', '#7da0dc', '#f6fbff'], {
+  'glass-emboss': composableMaterial('glass-emboss', 'glass-emboss', ['#00DDFF', '#6500FF', '#FF00BB'], {
     label: 'Raised Glass', collection: 'Prism', rarity: 'Epic'
   }),
-  'carbon-cut': composableMaterial('carbon-cut', 'carbon-cut', ['#aab3c0', '#2b3038', '#e2e8f0'], {
+  'carbon-cut': composableMaterial('carbon-cut', 'carbon-cut', ['#CC00FF', '#210A38', '#7300C9'], {
     label: 'Carbon Vein', collection: 'Nocturne', rarity: 'Rare'
   }),
-  'neon-tube': composableMaterial('neon-tube', 'neon-tube', ['#f7eaf2', '#ffffff', '#d84b8e'], {
+  'neon-tube': composableMaterial('neon-tube', 'neon-tube', ['#FF00B8', '#FF66E0', '#460030'], {
     label: 'Afterglow', collection: 'Signal', rarity: 'Epic', usesDailyColor: true
   }),
-  'velvet-ink': composableMaterial('velvet-ink', 'velvet-ink', ['#5b2b43', '#ffb4d2', '#8d4669'], {
+  'velvet-ink': composableMaterial('velvet-ink', 'velvet-ink', ['#FF0062', '#650026', '#FF39AA'], {
     label: 'Soft Black', collection: 'Ember', rarity: 'Rare'
   }),
-  'engraved-stone': composableMaterial('engraved-stone', 'engraved-stone', ['#9aa1aa', '#353a40', '#e2e6eb'], {
+  'engraved-stone': composableMaterial('engraved-stone', 'engraved-stone', ['#FFAE00', '#692000', '#FFEA00'], {
     label: 'Quarry Mark', collection: 'Nocturne', rarity: 'Rare'
   }),
-  'crt-phosphor': composableMaterial('crt-phosphor', 'crt-phosphor', ['#9df5c3', '#5cff9a', '#043b17'], {
+  'crt-phosphor': composableMaterial('crt-phosphor', 'crt-phosphor', ['#39FF00', '#00FF88', '#06451C'], {
     label: 'Cathode Bloom', collection: 'Static Bloom', rarity: 'Epic'
   }),
-  'blueprint-ink': composableMaterial('blueprint-ink', 'blueprint-ink', ['#7ec7ff', '#d8efff', '#6eb1e3'], {
+  'blueprint-ink': composableMaterial('blueprint-ink', 'blueprint-ink', ['#0077FF', '#00E5FF', '#003697'], {
     label: 'Draftline', collection: 'Signal', rarity: 'Rare'
   }),
   'halo-edge': composableMaterial('halo-edge', 'halo-edge', ['#f7fbff'], {

@@ -96,7 +96,7 @@ export function drawText(ctx, model, fillStyle = WHITE, alpha = 1, offsetX = 0, 
   if (!ctx?.fillText || !text) return;
   ctx.save?.();
   setTextContext(ctx, model);
-  ctx.globalAlpha = clamp(alpha);
+  ctx.globalAlpha = (Number.isFinite(ctx.globalAlpha) ? ctx.globalAlpha : 1) * clamp(alpha);
   ctx.fillStyle = fillStyle;
   ctx.fillText(text, model.metrics.x + offsetX, model.metrics.y + offsetY);
   ctx.restore?.();
@@ -106,7 +106,7 @@ export function strokeText(ctx, model, strokeStyle = WHITE, lineWidth = 1, alpha
   if (!ctx?.strokeText || !text) return;
   ctx.save?.();
   setTextContext(ctx, model);
-  ctx.globalAlpha = clamp(alpha);
+  ctx.globalAlpha = (Number.isFinite(ctx.globalAlpha) ? ctx.globalAlpha : 1) * clamp(alpha);
   ctx.strokeStyle = strokeStyle;
   ctx.lineWidth = Math.max(0.25, lineWidth);
   ctx.strokeText(text, model.metrics.x + offsetX, model.metrics.y + offsetY);

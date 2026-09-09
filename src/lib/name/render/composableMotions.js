@@ -13,6 +13,7 @@ import {
   strokeText,
   withTextMask
 } from './primitives.js';
+import { getPaintedTextSurface, getNameGlyphLayout, drawSurfaceGlyph } from './textSurface.js';
 import {
   GUNS_FUZZY_BASE_INTENSITY,
   getGunsFuzzyRowOffset,
@@ -109,6 +110,18 @@ function drawSpectrumFlow(ctx, model) {
   drawText(ctx, model, gradient);
 }
 
+function withMotionPalette(model, colors) {
+  const phase = model.progress * colors.length;
+  const palette = model.material.colors.map((original, index) => {
+    const position = phase + index;
+    const color = mixColors(colors[Math.floor(position) % colors.length], colors[(Math.floor(position) + 1) % colors.length], fract(position));
+    // Preserve dark recesses and light facets when a motion changes the hue.
+    const channels = original.replace('#', '').match(/../g)?.map(channel => Number.parseInt(channel, 16)) || [255];
+    return mixColors('#000000', color, Math.max(...channels) / 255);
+  });
+  return { ...model, baseColor: palette[0], material: { ...model.material, colors: palette } };
+}
+
 function drawMaskedRect(ctx, model, left, top, width, height, fillStyle, alpha = 1) {
   if (!ctx?.fillRect) return;
   withTextMask(ctx, model, target => {
@@ -200,7 +213,6 @@ function drawParticleTrail(ctx, model, count = 32) {
 
 const REFERENCE_TEXT_MASKS = new WeakMap();
 const RASTER_SIGNAL_BUFFERS = new WeakMap();
-const GUNS_FUZZY_BUFFERS = new WeakMap();
 
 function createReferenceCanvas(ctx, width, height) {
   const ownerDocument = ctx?.canvas?.ownerDocument
@@ -221,147 +233,52 @@ function createReferenceCanvas(ctx, width, height) {
   return null;
 }
 
-function getGunsFuzzyBuffer(ctx, model) {
-  if (!ctx || (typeof ctx !== 'object' && typeof ctx !== 'function')) return null;
-  const key = [
-    model.displayText,
-    model.font.key,
-    model.metrics.fontSize,
-    model.baseColor
-  ].join('|');
-  const cached = GUNS_FUZZY_BUFFERS.get(ctx);
-  if (cached?.key === key) return cached;
-
-  // The live component first waits for document.fonts.ready, measures the
-  // actual glyph bounds, and paints one compact source canvas. Recreate that
-  // buffer here so the row displacement below operates on glyph pixels rather
-  // than redrawing a centered text string for every scanline.
-  const sourceCanvas = createReferenceCanvas(ctx, 1, 1);
-  const sourceContext = sourceCanvas?.getContext?.('2d');
-  if (!sourceCanvas || !sourceContext?.measureText || !sourceContext.fillText) return null;
-
-  setTextContext(sourceContext, model);
-  sourceContext.textAlign = 'left';
-  sourceContext.textBaseline = 'alphabetic';
-  let measured;
-  try {
-    measured = sourceContext.measureText(model.displayText);
-  } catch {
-    return null;
-  }
-  const actualLeft = Number.isFinite(measured?.actualBoundingBoxLeft) ? measured.actualBoundingBoxLeft : 0;
-  const actualRight = Number.isFinite(measured?.actualBoundingBoxRight) ? measured.actualBoundingBoxRight : model.metrics.width;
-  const actualAscent = Number.isFinite(measured?.actualBoundingBoxAscent)
-    ? measured.actualBoundingBoxAscent
-    : model.metrics.fontSize * 0.78;
-  const actualDescent = Number.isFinite(measured?.actualBoundingBoxDescent)
-    ? measured.actualBoundingBoxDescent
-    : model.metrics.fontSize * 0.22;
-  const textWidth = Math.max(1, Math.ceil(actualLeft + actualRight));
-  const textHeight = Math.max(1, Math.ceil(actualAscent + actualDescent));
-  const width = textWidth + 10;
-  sourceCanvas.width = width;
-  sourceCanvas.height = textHeight;
-  sourceContext.font = `${model.font.style} ${model.font.weight} ${model.metrics.fontSize}px "${model.font.family}", ${model.font.fallback}`;
-  sourceContext.textAlign = 'left';
-  sourceContext.textBaseline = 'alphabetic';
-  sourceContext.fillStyle = model.baseColor || '#FFFFFF';
-  sourceContext.fillText(model.displayText, 5 - actualLeft, actualAscent);
-
-  const state = Object.freeze({ key, canvas: sourceCanvas, width, height: textHeight });
-  GUNS_FUZZY_BUFFERS.set(ctx, state);
-  return state;
-}
-
 function drawGunsFuzzyMotion(ctx, model, drawBase) {
-  const buffer = getGunsFuzzyBuffer(ctx, model);
+  if (model.staticFrame || model.reducedMotion) {
+    drawBase(ctx, model);
+    return;
+  }
+  const buffer = getPaintedTextSurface(ctx, model, drawBase);
   if (!buffer?.canvas || typeof ctx?.drawImage !== 'function') {
     drawBase(ctx, model);
     return;
   }
-
-  const left = model.metrics.x - buffer.width / 2;
-  const top = model.metrics.y - buffer.height / 2;
-  const staticFrame = model.staticFrame || model.reducedMotion;
+  // Displace the finished material, including glow and texture, at native DPR.
+  // Seed each row by time so repeated rendering of a frame is deterministic.
+  const tick = Math.floor(model.time / (1000 / 60));
   ctx.save?.();
-  ctx.globalAlpha = 1;
   for (let row = 0; row < buffer.height; row += 1) {
-    const randomValue = staticFrame ? 0.5 : Math.random();
-    const offset = getGunsFuzzyRowOffset(randomValue, GUNS_FUZZY_BASE_INTENSITY);
-    ctx.drawImage(buffer.canvas, 0, row, buffer.width, 1, left + offset, top + row, buffer.width, 1);
+    const randomValue = seededNoise(model.seed, tick * 257 + row * 31);
+    const strength = Math.min(1, model.metrics.fontSize / 44) * (model.font.weight < 500 ? 0.65 : 1);
+    const offset = Math.round(getGunsFuzzyRowOffset(randomValue, GUNS_FUZZY_BASE_INTENSITY) * strength * buffer.ratio) / buffer.ratio;
+    const rowHeight = Math.min(1, buffer.height - row);
+    ctx.drawImage(buffer.canvas, 0, row * buffer.ratio, buffer.canvas.width, rowHeight * buffer.ratio,
+      buffer.left + offset, row, buffer.width, rowHeight);
   }
   ctx.restore?.();
-}
-
-function getGunsShuffleGlyphLayout(ctx, model) {
-  const characters = Array.from(model.displayText || '');
-  if (!characters.length) return null;
-  const fallbackWidth = model.metrics.width / characters.length;
-  ctx.save?.();
-  setTextContext(ctx, model);
-  const widths = characters.map(character => {
-    const measuredWidth = (() => {
-      try {
-        return Number(ctx.measureText?.(character)?.width) || fallbackWidth;
-      } catch {
-        return fallbackWidth;
-      }
-    })();
-    // The source wrapper widens each measured SplitText character by
-    // floor((fontSize - 20) / 2), leaving the same little breathing room in
-    // the sliding clip window.
-    return Math.max(1, measuredWidth + Math.floor((model.metrics.fontSize - 20) / 2));
-  });
-  ctx.restore?.();
-  const totalWidth = widths.reduce((total, width) => total + width, 0);
-  let left = model.metrics.x - totalWidth / 2;
-  const centers = widths.map(width => {
-    const center = left + width / 2;
-    left += width;
-    return center;
-  });
-  return { characters, widths, centers };
 }
 
 function drawGunsShuffleMotion(ctx, model, drawBase) {
-  if (!ctx?.fillText || model.staticFrame || model.reducedMotion) {
+  if (model.staticFrame || model.reducedMotion) {
     drawBase(ctx, model);
     return;
   }
-  const layout = getGunsShuffleGlyphLayout(ctx, model);
-  if (!layout) {
-    drawBase(ctx, model);
-    return;
-  }
-  const cycleDuration = getGunsShuffleCycleDuration(layout.characters.length);
+  const buffer = getPaintedTextSurface(ctx, model, drawBase);
+  const glyphs = getNameGlyphLayout(ctx, model);
+  if (!buffer || !glyphs.length) { drawBase(ctx, model); return; }
+  const cycleDuration = getGunsShuffleCycleDuration(glyphs.length);
   const elapsed = ((Number(model.time) || 0) % cycleDuration + cycleDuration) % cycleDuration;
-  ctx.save?.();
-  setTextContext(ctx, model);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = model.baseColor || '#FFFFFF';
-  layout.characters.forEach((character, index) => {
-    const offset = getGunsShuffleTrackOffset(
-      index,
-      elapsed,
-      layout.widths[index],
-      layout.characters.length
-    );
+  glyphs.forEach((glyph, index) => {
+    const offset = getGunsShuffleTrackOffset(index, elapsed, glyph.width, glyphs.length);
     ctx.save?.();
-    if (ctx.beginPath && ctx.rect && ctx.clip) {
-      ctx.beginPath();
-      ctx.rect(
-        layout.centers[index] - layout.widths[index] / 2,
-        0,
-        layout.widths[index],
-        model.height
-      );
-      ctx.clip();
-    }
-    ctx.fillText(character, layout.centers[index] + offset, model.metrics.y);
+    ctx.beginPath?.();
+    const left = index === 0 ? buffer.left : glyph.left;
+    const right = index === glyphs.length - 1 ? buffer.left + buffer.width : glyph.left + glyph.width;
+    ctx.rect?.(left, 0, right - left, model.height);
+    ctx.clip?.();
+    drawSurfaceGlyph(ctx, buffer, glyph, offset, 0, index === 0, index === glyphs.length - 1);
     ctx.restore?.();
   });
-  ctx.restore?.();
 }
 
 function getReferenceTextMask(ctx, model) {
@@ -558,38 +475,27 @@ function drawKineticEcho(ctx, model, drawBase) {
   drawBase(ctx, model);
 }
 
-function drawMagneticType(ctx, model) {
-  if (!ctx?.fillText) return;
-  const characters = Array.from(model.displayText || '');
-  if (!characters.length) return;
-  const { metrics } = model;
-  const characterWidth = metrics.width / Math.max(1, characters.length);
-  const pointer = model.pointer && Number.isFinite(model.pointer.x) && Number.isFinite(model.pointer.y)
-    ? model.pointer
-    : null;
+function drawMagneticType(ctx, model, drawBase) {
+  if (model.staticFrame || model.reducedMotion || !model.pointer) {
+    drawBase(ctx, model);
+    return;
+  }
+  const surface = getPaintedTextSurface(ctx, model, drawBase);
+  const glyphs = getNameGlyphLayout(ctx, model);
+  if (!surface || !glyphs.length) { drawBase(ctx, model); return; }
   const time = Number.isFinite(model.time) ? model.time : 0;
-
-  ctx.save?.();
-  setTextContext(ctx, model);
-  ctx.fillStyle = getReadableMotionColor(model.todayColor);
-  ctx.shadowColor = rgba(model.todayColor, 0.42);
-  ctx.shadowBlur = 3;
-  characters.forEach((character, index) => {
-    const homeX = metrics.x - metrics.width / 2 + characterWidth * (index + 0.5);
-    const homeY = metrics.y;
-    const dx = pointer ? homeX - pointer.x : 0;
-    const dy = pointer ? homeY - pointer.y : 0;
+  glyphs.forEach((glyph, index) => {
+    const dx = glyph.center - model.pointer.x;
+    const dy = model.metrics.y - model.pointer.y;
     const distance = Math.hypot(dx, dy);
-    const influence = pointer && distance < 130 ? 1 - distance / 130 : 0;
+    const influence = distance < 130 ? 1 - distance / 130 : 0;
     const directionX = distance > 0.001 ? dx / distance : 0;
     const directionY = distance > 0.001 ? dy / distance : 0;
     const breathing = 0.86 + Math.sin(time * 0.002 + index * 0.7) * 0.14;
     const offsetX = directionX * influence * 20 * breathing;
     const offsetY = directionY * influence * 13 * breathing;
-    ctx.globalAlpha = 0.82 + influence * 0.18;
-    ctx.fillText(character, homeX + offsetX, homeY + offsetY);
+    drawSurfaceGlyph(ctx, surface, glyph, offsetX, offsetY, index === 0, index === glyphs.length - 1);
   });
-  ctx.restore?.();
 }
 
 function drawNeonParticleName(ctx, model, drawBase) {
@@ -684,7 +590,8 @@ function drawNeonParticleName(ctx, model, drawBase) {
   // The clean white face is the dominant layer in the supplied reference.
   ctx.save?.();
   ctx.globalAlpha = 0.94;
-  ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
+  if (model.material.key === 'plain') ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
+  else drawBase(ctx, model);
   ctx.globalAlpha = 0.17;
   ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
   ctx.restore?.();
@@ -792,9 +699,10 @@ function drawRasterSignal(ctx, model, drawBase) {
   const { metrics } = model;
   const time = Number.isFinite(model.time) ? model.time : 0;
   const rowHeight = Math.max(1.5, metrics.fontSize * 0.025);
-  const textTop = metrics.y - metrics.fontSize * 0.47;
-  const textBottom = metrics.y + metrics.fontSize * 0.47;
-  const rows = Math.min(96, Math.max(8, Math.ceil((textBottom - textTop) / rowHeight)));
+  const materialSurface = model.material.key === 'plain' ? null : getPaintedTextSurface(ctx, model, drawBase);
+  const textTop = materialSurface ? 0 : metrics.y - metrics.fontSize * 0.47;
+  const textBottom = materialSurface ? model.height : metrics.y + metrics.fontSize * 0.47;
+  const rows = Math.min(256, Math.max(8, Math.ceil((textBottom - textTop) / rowHeight)));
   const buffers = getRasterSignalBuffers(ctx, model);
   const visualScale = Math.min(1, Math.max(0.42, metrics.fontSize / 111));
 
@@ -802,10 +710,11 @@ function drawRasterSignal(ctx, model, drawBase) {
   // white glyph rows, so a vivid material cannot collapse it into Neon's
   // colored energy fill.
   ctx.save?.();
-  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalCompositeOperation = materialSurface ? 'source-over' : 'lighter';
   ctx.globalAlpha = 0.12;
   ctx.filter = `blur(${Math.max(1.25, 3 * visualScale)}px)`;
-  if (buffers?.sourceCanvas) ctx.drawImage?.(buffers.sourceCanvas, 0, 0, model.width, model.height);
+  if (materialSurface) ctx.drawImage(materialSurface.canvas, materialSurface.left, 0, materialSurface.width, materialSurface.height);
+  else if (buffers?.sourceCanvas) ctx.drawImage?.(buffers.sourceCanvas, 0, 0, model.width, model.height);
   else drawText(ctx, model, MOTION_TEXT_LIGHT, 1);
   ctx.filter = 'none';
   ctx.globalAlpha = 1;
@@ -820,7 +729,10 @@ function drawRasterSignal(ctx, model, drawBase) {
     const height = Math.min(rowHeight + 0.4, textBottom - top);
     if (height <= 0) continue;
     ctx.globalAlpha = 0.82 + Math.sin(time * 0.0027 + index * 0.43) * 0.1;
-    if (buffers?.sourceCanvas && ctx.drawImage) {
+    if (materialSurface) {
+      ctx.drawImage(materialSurface.canvas, 0, top * materialSurface.ratio, materialSurface.canvas.width, height * materialSurface.ratio,
+        materialSurface.left + offset, top, materialSurface.width, height);
+    } else if (buffers?.sourceCanvas && ctx.drawImage) {
       ctx.drawImage(buffers.sourceCanvas, 0, top, model.width, height, offset, top, model.width, height);
     } else {
       ctx.save?.();
@@ -889,6 +801,11 @@ export function drawComposableMotion(ctx, model, drawBase) {
   const { progress, metrics } = model;
   const phase = progress * Math.PI * 2;
 
+  if ((model.staticFrame || model.reducedMotion) && !['haunt-rainbow', 'haunt-gradient', 'spectrum-flow'].includes(model.motion.key)) {
+    drawBase(ctx, model);
+    return true;
+  }
+
   switch (model.motion.key) {
     case 'haunt-glow': {
       const pulse = 0.65 + Math.sin(phase * 1.5 - 0.8) * 0.18;
@@ -920,19 +837,21 @@ export function drawComposableMotion(ctx, model, drawBase) {
       return true;
     }
     case 'typewriter-name': {
+      const glyphs = getNameGlyphLayout(ctx, model);
       const reveal = 0.42;
       const hold = 0.82;
       const count = progress < reveal
-        ? Math.floor((progress / reveal) * model.displayText.length)
+        ? Math.floor((progress / reveal) * glyphs.length)
         : progress < hold
-          ? model.displayText.length
-          : Math.max(0, model.displayText.length - Math.floor(((progress - hold) / (1 - hold)) * model.displayText.length));
-      const shown = model.displayText.slice(0, count);
-      const visibleWidth = metrics.width * (count / Math.max(1, model.displayText.length));
+          ? glyphs.length
+          : Math.max(0, glyphs.length - Math.floor(((progress - hold) / (1 - hold)) * glyphs.length));
+      const shown = glyphs.slice(0, count).map(glyph => glyph.character).join('');
+      const visibleWidth = glyphs[count - 1]?.advance || 0;
       const nextModel = cloneTextModel(model, shown, {
         ...metrics,
-        x: metrics.x - (metrics.width - visibleWidth) / 2,
-        width: visibleWidth
+        x: (glyphs[0]?.left ?? metrics.x) + visibleWidth / 2,
+        width: visibleWidth,
+        rawWidth: visibleWidth
       });
       drawBase(ctx, nextModel);
       if (ctx.fillRect && progress < hold && Math.floor(progress * 18) % 2 === 0) {
@@ -947,6 +866,10 @@ export function drawComposableMotion(ctx, model, drawBase) {
       drawBase(ctx, model);
       return true;
     case 'haunt-rainbow':
+      if (model.material.key !== 'plain') {
+        drawBase(ctx, withMotionPalette(model, ['#FF0055', '#FFCC00', '#00FF88', '#00BBFF', '#9900FF']));
+        return true;
+      }
       drawBase(ctx, model);
       drawPrismSlices(ctx, model,
         ['#FF2458', '#FF9D00', '#FFE600', '#39FF88', '#00D9FF', '#7357FF', '#FF2458'],
@@ -960,6 +883,10 @@ export function drawComposableMotion(ctx, model, drawBase) {
         0.42);
       return true;
     case 'haunt-gradient':
+      if (model.material.key !== 'plain') {
+        drawBase(ctx, withMotionPalette(model, ['#FF0077', '#8800FF', '#00DDFF']));
+        return true;
+      }
       drawBase(ctx, model);
       drawColorFill(ctx, model, ['#FF2E78', '#8C4DFF', '#2DD4FF'], -0.42 + Math.sin(phase) * 0.24, 0.94);
       drawLiquidHighlight(ctx, model, progress, phase);
@@ -1050,7 +977,7 @@ export function drawComposableMotion(ctx, model, drawBase) {
       drawKineticEcho(ctx, model, drawBase);
       return true;
     case 'magnetic-type':
-      drawMagneticType(ctx, model);
+      drawMagneticType(ctx, model, drawBase);
       return true;
     case 'neon-particle':
       drawNeonParticleName(ctx, model, drawBase);
@@ -1059,6 +986,10 @@ export function drawComposableMotion(ctx, model, drawBase) {
       drawRasterSignal(ctx, model, drawBase);
       return true;
     case 'spectrum-flow':
+      if (model.material.key !== 'plain') {
+        drawBase(ctx, withMotionPalette(model, ['#FF0000', '#FF8800', '#FFFF00', '#00FF00', '#00DDFF', '#5500FF', '#FF00DD']));
+        return true;
+      }
       drawSpectrumFlow(ctx, model);
       return true;
     default:

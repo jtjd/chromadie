@@ -1,100 +1,127 @@
-import {
-  createLinearGradient,
-  drawText,
-  mixColors,
-  rgba,
-  strokeText,
-  withTextMask
-} from './primitives.js';
+import { createLinearGradient, drawText, mixColors, rgba, strokeText, withTextMask } from './primitives.js';
 
+// Material lighting is anchored to the glyph box, never to motion progress.
+// A motion may supply a moving palette while the finish retains its structure.
 export function drawComposableMaterial(ctx, model) {
-  const { material, metrics, progress, todayColor, baseColor } = model;
-  const [first = '#F7FBFF', second = '#CDD2FF', third = '#FFFFFF'] = material.colors;
+  const { material, metrics, baseColor, todayColor } = model;
+  const [first, second = first, third = first] = material.colors;
+  const size = metrics.fontSize;
+  const left = metrics.x - metrics.rawWidth / 2;
+  const top = metrics.y - size * 0.52;
+  const gradient = colors => createLinearGradient(ctx, colors, 0, top, 0, top + size, first);
+  const rim = Math.max(0.55, Math.min(1.25, size * 0.024));
+  const depth = Math.max(0.7, Math.min(2.5, size * 0.055));
+  const texture = draw => withTextMask(ctx, model, target => {
+    target.shadowBlur = 0;
+    target.shadowOffsetX = 0;
+    target.shadowOffsetY = 0;
+    draw(target);
+  });
 
   switch (material.key) {
     case 'plain':
-      drawText(ctx, model, baseColor || mixColors(first, todayColor, 0.12));
+      drawText(ctx, model, baseColor || first);
       return;
     case 'glass-emboss':
-      drawText(ctx, model, 'rgba(218,232,255,.14)');
-      strokeText(ctx, model, rgba(second, 0.82), Math.max(0.8, metrics.fontSize * 0.035));
-      ctx.save?.();
-      ctx.shadowColor = rgba(second, 0.42);
-      ctx.shadowBlur = metrics.fontSize * 0.32;
-      strokeText(ctx, model, rgba(third, 0.35), Math.max(0.5, metrics.fontSize * 0.02), 1, 0, -1);
-      ctx.restore?.();
+      strokeText(ctx, model, second, rim * 2, 1, depth, depth);
+      drawText(ctx, model, gradient([first, second, third, first]));
+      texture(target => {
+        target.fillStyle = rgba('#FFFFFF', 0.36);
+        target.beginPath?.();
+        target.moveTo?.(left, top);
+        target.lineTo?.(left + metrics.rawWidth * 0.75, top);
+        target.lineTo?.(left + metrics.rawWidth * 0.3, top + size * 0.52);
+        target.lineTo?.(left, top + size * 0.72);
+        target.closePath?.();
+        target.fill?.();
+      });
+      strokeText(ctx, model, rgba(first, 0.92), rim);
       return;
     case 'carbon-cut':
-      ctx.save?.();
-      ctx.shadowColor = 'rgba(0,0,0,.82)';
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 3;
-      drawText(ctx, model, second);
-      ctx.restore?.();
-      strokeText(ctx, model, first, Math.max(0.8, metrics.fontSize * 0.04));
+      strokeText(ctx, model, third, rim * 2, 1, depth, depth);
+      drawText(ctx, model, gradient([third, second, second, first]));
+      texture(target => {
+        target.strokeStyle = rgba(first, 0.48);
+        target.lineWidth = Math.max(0.55, size * 0.018);
+        const step = Math.max(4, size * 0.16);
+        target.beginPath?.();
+        for (let x = left - size; x < left + metrics.rawWidth + size; x += step) {
+          target.moveTo?.(x, top);
+          target.lineTo?.(x + size, top + size);
+        }
+        target.stroke?.();
+      });
+      strokeText(ctx, model, first, rim);
       return;
     case 'neon-tube':
       ctx.save?.();
-      ctx.shadowColor = rgba(todayColor, 0.78);
-      ctx.shadowBlur = metrics.fontSize * 0.58;
-      strokeText(ctx, model, first, Math.max(1, metrics.fontSize * 0.045));
+      ctx.shadowColor = first;
+      ctx.shadowBlur = Math.min(16, size * 0.32);
+      strokeText(ctx, model, first, rim * 3);
       ctx.restore?.();
-      strokeText(ctx, model, '#FFFFFF', Math.max(0.6, metrics.fontSize * 0.025));
+      drawText(ctx, model, rgba(third, 0.9));
+      strokeText(ctx, model, first, rim * 1.8);
+      strokeText(ctx, model, second, Math.max(0.55, rim * 0.65));
       return;
-    case 'velvet-ink': {
-      drawText(ctx, model, first);
-      // Keep the intentionally dark velvet fill legible without turning it
-      // into a bright solid. The warm rim also reads at compact card scale.
-      strokeText(ctx, model, rgba(second, 0.68), Math.max(0.7, metrics.fontSize * 0.026));
-      const highlight = createLinearGradient(ctx, ['rgba(255,180,210,0)', 'rgba(255,180,210,.52)', 'rgba(255,180,210,0)'], 0, 0, metrics.width * 0.35, 0, 'rgba(255,180,210,.3)');
-      withTextMask(ctx, model, target => {
-        target.fillStyle = highlight;
-        const left = (progress * 1.5 - 0.25) * model.width;
-        target.fillRect?.(left, 0, Math.max(1, model.width * 0.24), model.height);
+    case 'velvet-ink':
+      strokeText(ctx, model, second, rim * 2, 1, 0, depth);
+      drawText(ctx, model, gradient([second, first, third, first, second]));
+      texture(target => {
+        target.fillStyle = rgba(first, 0.28);
+        for (let y = top; y < top + size; y += Math.max(2, size * 0.075)) {
+          target.fillRect?.(left, y, metrics.rawWidth, 0.65);
+        }
       });
+      strokeText(ctx, model, rgba(third, 0.8), rim * 0.7);
       return;
-    }
     case 'engraved-stone':
-      ctx.save?.();
-      ctx.shadowColor = rgba(third, 0.2);
-      ctx.shadowOffsetY = -1;
-      drawText(ctx, model, first);
-      ctx.restore?.();
-      strokeText(ctx, model, rgba(third, 0.55), Math.max(0.55, metrics.fontSize * 0.022), 1, -1, -1);
-      ctx.save?.();
-      ctx.shadowColor = 'rgba(0,0,0,.82)';
-      ctx.shadowOffsetY = 2;
-      strokeText(ctx, model, second, Math.max(0.7, metrics.fontSize * 0.03));
-      ctx.restore?.();
-      return;
-    case 'crt-phosphor':
-      ctx.save?.();
-      ctx.shadowColor = rgba(second, 0.8);
-      ctx.shadowBlur = metrics.fontSize * 0.3;
-      drawText(ctx, model, first);
-      ctx.restore?.();
-      withTextMask(ctx, model, target => {
-        target.fillStyle = 'rgba(0,0,0,.3)';
-        for (let y = 0; y < model.height; y += 3) target.fillRect?.(0, y, model.width, 1);
-      });
-      return;
-    case 'blueprint-ink':
-      drawText(ctx, model, first);
-      strokeText(ctx, model, second, Math.max(0.5, metrics.fontSize * 0.024));
-      withTextMask(ctx, model, target => {
-        target.globalAlpha = 0.45;
-        target.strokeStyle = material.colors[2] || '#6EB1E3';
-        target.lineWidth = 0.7;
+      // A warm mineral face with a hard carved lip and angular incisions.
+      strokeText(ctx, model, third, rim * 2, 1, -depth, -depth);
+      strokeText(ctx, model, second, rim * 2, 1, depth, depth);
+      drawText(ctx, model, gradient([third, first, first, second]));
+      texture(target => {
+        target.strokeStyle = rgba(second, 0.7);
+        target.lineWidth = Math.max(0.6, size * 0.025);
         target.beginPath?.();
-        target.moveTo?.(metrics.x - metrics.width / 2, metrics.y + 4);
-        target.lineTo?.(metrics.x + metrics.width / 2, metrics.y + 4);
+        for (let x = left; x < left + metrics.rawWidth; x += Math.max(9, size * 0.65)) {
+          target.moveTo?.(x, top + size * 0.2);
+          target.lineTo?.(x + size * 0.19, top + size * 0.47);
+          target.lineTo?.(x + size * 0.05, top + size * 0.8);
+        }
         target.stroke?.();
       });
       return;
+    case 'crt-phosphor':
+      ctx.save?.();
+      ctx.shadowColor = second;
+      ctx.shadowBlur = Math.min(10, size * 0.18);
+      drawText(ctx, model, first);
+      ctx.restore?.();
+      texture(target => {
+        target.fillStyle = rgba(third, 0.75);
+        const step = Math.max(3, size * 0.12);
+        for (let y = top; y < top + size; y += step) target.fillRect?.(left, y, metrics.rawWidth, Math.max(0.7, step * 0.28));
+      });
+      return;
+    case 'blueprint-ink':
+      drawText(ctx, model, mixColors(first, third, 0.3));
+      texture(target => {
+        target.strokeStyle = rgba(second, 0.78);
+        target.lineWidth = Math.max(0.5, size * 0.013);
+        const step = Math.max(4, size * 0.18);
+        target.beginPath?.();
+        for (let x = left; x < left + metrics.rawWidth; x += step) {
+          target.moveTo?.(x, top); target.lineTo?.(x, top + size);
+        }
+        for (let y = top; y < top + size; y += step) {
+          target.moveTo?.(left, y); target.lineTo?.(left + metrics.rawWidth, y);
+        }
+        target.stroke?.();
+      });
+      strokeText(ctx, model, second, rim);
+      return;
     case 'halo-edge':
-      // The inspected profile applies one fixed 16.5px username glow using
-      // the profile's effects color. Keep the same bounded halo while the
-      // name fill remains the semantic base color.
+      // Retain Soft Halo's approved fill and fixed glow.
       ctx.save?.();
       ctx.shadowColor = rgba(first, 0.86);
       ctx.shadowBlur = 16.5;
@@ -102,6 +129,6 @@ export function drawComposableMaterial(ctx, model) {
       ctx.restore?.();
       return;
     default:
-      drawText(ctx, model, mixColors('#F7FBFF', todayColor, 0.1));
+      drawText(ctx, model, baseColor || todayColor);
   }
 }

@@ -1,5 +1,24 @@
 # Chromadie 2.0 Progress
 
+## Name materials and motion composition — 2026-09-08
+
+- Rebuilt seven weak materials with distinct saturated finishes while retaining
+  Soft Halo. Existing catalog IDs, inventories and saved loadouts remain valid.
+- Fixed Fuzzy, Scramble, Magnetic Type, Neon Particle, Raster Signal and color
+  motions losing the selected material; added reusable isolated paint surfaces.
+- Corrected inherited opacity, duplicate Still paint, proportional/grapheme
+  spacing, stale font caches, Array's broken URL, long-name bleed fitting and
+  empty-name clearing. Fuzzy displacement adapts to font size and weight.
+- Browser matrix: 7,488 animated/reduced frame cases across 13 fonts, nine
+  materials, 16 motions and two sizes pass. Repeated-frame determinism,
+  material edit/restore, long-name resize, Magnetic pointer movement and mounted
+  mobile reduced-motion cases also pass. Reviewed desktop, motion-combination
+  and mobile screenshots under `/tmp/chromadie-name-materials/`.
+- All 557 tests and required build, Svelte check, ESLint, links, CSP,
+  performance, username, balance, catalog, scoring and DB-security checks pass.
+  Svelte has zero errors/warnings; enforced performance budgets pass with the
+  existing aggregate catalog advisory. No schema migration. Not deployed.
+
 ## Customize cursor input correction — 2026-09-08
 
 - Changed the full-page Studio environment from automatic demo input to real

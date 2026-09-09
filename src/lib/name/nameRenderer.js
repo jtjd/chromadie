@@ -4,6 +4,7 @@ import { getNameMaterial } from './nameMaterials.js';
 import { getNameMotion } from './nameMotions.js';
 import { hasComposableNameInput, resolveNameLoadout } from './nameCatalog.js';
 import { getCodeOwnedNameRenderers } from './nameComposableRenderer.js';
+import { getPaintedTextSurface } from './render/textSurface.js';
 
 export const NAME_MAX_RENDER_LENGTH = DISPLAY_NAME_MAX_LENGTH;
 export const NAME_RENDER_CONTEXTS = Object.freeze({ card: 'card', profile: 'profile' });
@@ -116,14 +117,14 @@ function getCanvasSize(options, compact) {
   };
 }
 
-function getTextMetrics(text, font, width, height, compact, requestedFontSize = 0, inline = false) {
+function getTextMetrics(text, font, width, height, compact, requestedFontSize = 0, inline = false, contentWidth = width) {
   // NameEffectCanvas is also used inline beside badges and handles. A fixed
   // padding value would consume most of the width of a short name such as
   // "Tjz" and force the renderer down to a tiny fallback size. Keep the
   // breathing room for full-width swatches, but make it proportional for
   // intrinsic inline names.
   const horizontalPadding = inline ? 0 : Math.min(compact ? 8 : 14, width * 0.1);
-  const availableWidth = Math.max(1, width - horizontalPadding * 2);
+  const availableWidth = Math.max(1, Math.min(finite(contentWidth, width), width - horizontalPadding * 2));
   const maxFontSize = compact ? Math.min(28, height * 0.72) : Math.min(54, height * 0.72);
   const semanticFontSize = finite(requestedFontSize, 0);
   let fontSize = Math.max(compact ? 10 : 12, semanticFontSize > 0 ? semanticFontSize : maxFontSize);
@@ -196,7 +197,7 @@ export function getNameFrameModel(options = {}) {
   const font = getNameFont(definition.font);
   const material = getNameMaterial(definition.material);
   const displayText = definition.smallCaps ? text.toUpperCase() : text;
-  const metrics = getTextMetrics(displayText, font, width, height, compact, options.fontSize, options.inline === true);
+  const metrics = getTextMetrics(displayText, font, width, height, compact, options.fontSize, options.inline === true, options.contentWidth);
   const seed = hashString(`${rendererKey}:${text}:${todayColor}:${recentColors.join(',')}`);
 
   return Object.freeze({
@@ -267,7 +268,7 @@ function drawText(ctx, model, fillStyle, alpha = 1, offsetX = 0, offsetY = 0) {
   ctx.restore();
 }
 
-function drawMaterial(ctx, model) {
+function paintMaterial(ctx, model) {
   const { material, todayColor, baseColor } = model;
   const colors = material.colors;
 
@@ -278,6 +279,13 @@ function drawMaterial(ctx, model) {
     return;
   }
   drawText(ctx, model, material.key === 'plain' ? baseColor : mixColors(colors[0] || '#F7FBFF', todayColor, material.usesDailyColor ? 0.12 : 0));
+}
+
+function drawMaterial(ctx, model) {
+  if (!getCodeOwnedNameRenderers().material) { paintMaterial(ctx, model); return; }
+  const surface = getPaintedTextSurface(ctx, model, paintMaterial);
+  if (surface) ctx.drawImage(surface.canvas, surface.left, 0, surface.width, surface.height);
+  else paintMaterial(ctx, model);
 }
 
 function drawMotion(ctx, model) {
@@ -292,16 +300,15 @@ function drawMotion(ctx, model) {
 }
 
 export function drawNameFrame(ctx, model) {
-  if (!ctx || !model || !model.displayText) return;
+  if (!ctx || !model) return;
   ctx.clearRect(0, 0, model.width, model.height);
+  if (!model.displayText) return;
   ctx.save();
   if (model.metrics.scaleX < 1) {
     ctx.translate(model.metrics.x, model.metrics.y);
     ctx.scale(model.metrics.scaleX, 1);
     ctx.translate(-model.metrics.x, -model.metrics.y);
   }
-  const composableMotion = model.motion.composable && model.motion.key !== 'none';
-  if (!composableMotion) drawMaterial(ctx, model);
   drawMotion(ctx, model);
   ctx.restore();
 }
@@ -370,7 +377,7 @@ export function createNameCanvasRenderer(canvas, options = {}) {
 
   function draw(time = 0) {
     if (destroyed) return null;
-    const frame = measureCanvasFrame(context, getNameFrameModel({ ...config, width, height, time }));
+    const frame = { ...measureCanvasFrame(context, getNameFrameModel({ ...config, width, height, time })), pixelRatio: dpr };
     drawNameFrame(context, frame);
     lastFrameModel = frame;
     return frame;

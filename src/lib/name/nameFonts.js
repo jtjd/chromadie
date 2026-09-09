@@ -299,6 +299,11 @@ const NAME_FONT_ASSET_LOADERS = Object.freeze({
 
 export const NAME_FONT_ASSET_KEYS = Object.freeze(Object.keys(NAME_FONT_ASSET_LOADERS));
 const nameFontAssetPromises = new Map();
+const readyFontKeys = new Set();
+
+export function getNameFontRevision(fontKey) {
+  return readyFontKeys.has(canonicalFontKey(fontKey)) ? 1 : 0;
+}
 
 function canonicalFontKey(fontKey) {
   if (typeof fontKey !== 'string') return DEFAULT_NAME_FONT_KEY;
@@ -349,7 +354,10 @@ export function loadNameFontAsset(fontKey) {
     nameFontAssetPromises.set(key, Promise.resolve()
       .then(loader)
       .then(() => true)
-      .catch(() => false));
+      .catch(() => {
+        nameFontAssetPromises.delete(key);
+        return false;
+      }));
   }
   return nameFontAssetPromises.get(key);
 }
@@ -372,8 +380,12 @@ export function requestNameFontLoad(fontKey, pixelSize = 24, text = 'Chromadie')
   return assetPromise.then(assetLoaded => {
     if (!assetLoaded) return false;
     return document.fonts.load(descriptor, String(text || 'Chromadie'))
-      .then(() => typeof document.fonts.check !== 'function'
-        || document.fonts.check(descriptor, String(text || 'Chromadie')));
+      .then(() => {
+        const ready = typeof document.fonts.check !== 'function'
+          || document.fonts.check(descriptor, String(text || 'Chromadie'));
+        if (ready) readyFontKeys.add(canonicalFontKey(fontKey));
+        return ready;
+      });
   })
     .catch(() => false);
 }
