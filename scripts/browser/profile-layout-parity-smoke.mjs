@@ -93,10 +93,10 @@ try {
       for (const variant of ['normal', 'long', 'empty', 'hidden']) {
         await page.evaluate(`window.showLayout(${JSON.stringify(layout)},${JSON.stringify(variant)})`);
         await page.waitFor(`document.querySelector('[data-profile-layout-content="${layout}"]')`, 'layout renderer');
+        await page.waitFor('document.querySelector("[data-name-font-ready=true]")', 'name font');
         if (layout === 'sleek' && variant !== 'hidden') {
           await page.waitFor(`(() => { const card=document.querySelector('[data-profile-layout-content="sleek"]'); return card && getComputedStyle(card).getPropertyValue('--profile-sleek-name-offset').trim() !== ''; })()`, 'Sleek name alignment');
         }
-        await page.waitFor('document.querySelector("[data-name-font-ready=true]")', 'name font');
         const m = await page.evaluate('window.layoutMeasurements()');
         assert.equal(m.overflow, false, `${width}/${layout}/${variant}: overflow ${JSON.stringify(m)}`);
         if (m.initial) {
@@ -118,6 +118,9 @@ try {
         } else {
           if (layout === 'framed' && m.avatar && m.identityCopy) {
             assert.ok(Math.abs((m.identityCopy.y + m.identityCopy.height / 2) - (m.avatar.y + m.avatar.height / 2)) < 1, 'Modern identity is vertically centered beside avatar');
+            assert.ok(Math.abs(m.identityCopy.x - m.avatar.right - 14) < 1, 'Modern identity keeps the reference avatar gap');
+            assert.ok(m.avatar.width >= 88, 'Modern keeps the reference avatar scale');
+            if (m.links) assert.ok(m.links.x < m.card.x + m.card.width / 2, 'Modern links stay on the lower-left rail');
           }
         }
         if (layout !== 'sleek' && m.summary) {

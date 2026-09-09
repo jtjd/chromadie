@@ -271,7 +271,7 @@ test('link size and glow settings reach every active profile link renderer', asy
   assert.doesNotMatch(fullBleed, /\.profile-full-bleed__links a \{[^}]*box-shadow:/);
   assert.match(fullBleed, /drop-shadow\(0 0/);
   assert.doesNotMatch(card, /\.profile-reference-card--framed \.profile-reference-card__links a \{[^}]*box-shadow:/);
-  assert.match(card, /\.profile-reference-card--framed \.profile-reference-card__links a img[\s\S]*width: calc\(1\.75rem \* var\(--profile-reference-link-scale, 1\)\)/);
+  assert.match(card, /\.profile-reference-card--framed \.profile-reference-card__links a img[\s\S]*width: calc\(2\.1875rem \* var\(--profile-reference-link-scale, 1\)\)/);
   assert.match(card, /\.profile-reference-card--framed \.profile-reference-card__links a img[\s\S]*drop-shadow\(0 0 calc\(\.55rem \* var\(--profile-reference-link-glow, 0\)\)/);
   assert.match(card, /\.profile-reference-card--framed \.profile-reference-card__links a img[\s\S]*drop-shadow\(0 0 calc\(1\.15rem \* var\(--profile-reference-link-glow, 0\)\)/);
   assert.match(card, /a\.profile-reference-card__link--icon[\s\S]*background: transparent !important[\s\S]*box-shadow: none !important[\s\S]*overflow: visible !important/);

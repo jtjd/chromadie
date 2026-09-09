@@ -338,10 +338,10 @@
      the card, matching the public layout's second-surface rhythm. */
   .profile-reference-card--framed {
     display: grid;
-    gap: .9rem;
+    gap: 0;
     min-height: 0;
     overflow: hidden;
-    padding: 1.65rem 1.65rem 1.25rem;
+    padding: 1.625rem;
     border-color: color-mix(in srgb, #ffffff 30%, transparent);
     border-radius: var(--profile-border-radius, 1.25rem);
     background: var(--profile-surface-fill, rgba(10,10,12,.58));
@@ -352,14 +352,14 @@
   .profile-reference-card--framed .profile-reference-card__opening {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: .75rem;
+    gap: 0;
     min-width: 0;
   }
 
   .profile-reference-card--framed .profile-reference-card__identity {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 1rem;
+    column-gap: .875rem;
     align-items: center;
     min-width: 0;
     text-align: left;
@@ -371,6 +371,7 @@
     grid-row: 1;
     min-width: 0;
     flex-direction: column;
+    gap: .1875rem;
     align-self: center;
     justify-content: center;
     text-align: left;
@@ -411,13 +412,14 @@
 
   .profile-reference-card--framed .profile-reference-card__bio {
     max-width: 34rem;
-    margin: .32rem 0 0;
+    margin: 0;
     font-size: clamp(.78rem, 1.3vw, .95rem);
     font-family: var(--profile-reference-name-typeface, 'Inter', sans-serif);
   }
 
   .profile-reference-card--framed .profile-reference-card__secondary,
   .profile-reference-card--framed .profile-reference-card__meta {
+    margin: 0;
     font-family: var(--profile-reference-name-typeface, 'Inter', sans-serif);
     text-align: left;
   }
@@ -427,17 +429,17 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: .45rem;
-    margin-top: .15rem;
-    padding-top: .85rem;
-    border-top: 1px solid color-mix(in srgb, var(--profile-reference-accent) 20%, rgba(255,255,255,.1));
+    gap: .5625rem;
+    margin: 1.875rem 0 .8125rem;
+    padding: 0 .9375rem;
+    border-top: 0;
   }
 
   .profile-reference-card--framed .profile-reference-card__links a {
     display: grid;
-    width: calc(2.35rem * var(--profile-reference-link-scale, 1));
-    min-height: 2.35rem;
-    height: calc(2.35rem * var(--profile-reference-link-scale, 1));
+    width: calc(2.2rem * var(--profile-reference-link-scale, 1));
+    min-height: calc(2.2rem * var(--profile-reference-link-scale, 1));
+    height: calc(2.2rem * var(--profile-reference-link-scale, 1));
     padding: 0;
     place-items: center;
     border-color: transparent;
@@ -447,8 +449,8 @@
 
   .profile-reference-card--framed .profile-reference-card__links a img {
     display: block;
-    width: calc(1.75rem * var(--profile-reference-link-scale, 1));
-    height: calc(1.75rem * var(--profile-reference-link-scale, 1));
+    width: calc(2.1875rem * var(--profile-reference-link-scale, 1));
+    height: calc(2.1875rem * var(--profile-reference-link-scale, 1));
     object-fit: contain;
     /* Keep the glow on the icon alpha itself. The anchor stays transparent so
        framed links do not read as glowing empty buttons. */
@@ -752,7 +754,7 @@
     .profile-reference-card--homepage:not(.profile-reference-card--framed) .profile-reference-card__avatar-shell { width: 90px; height: 90px; }
     .profile-reference-card--homepage .profile-reference-card__name { font-size: 1.75rem; }
     .profile-reference-card--framed {
-      padding-inline: 1.15rem;
+      padding-inline: 1.625rem;
     }
     .profile-reference-card--profile:not(.profile-reference-card--framed) .profile-reference-card__banner,
     .profile-reference-card--studio:not(.profile-reference-card--framed) .profile-reference-card__banner {

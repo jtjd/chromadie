@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-09 — Modern profile reference parity
+
+- Matched Modern's public and Studio card structure to the supplied
+  `guns.lol/ssagee` reference: a 120px avatar, 14px identity gap, tight copy
+  stack, and left-aligned icon rail.
+- Kept the Chromadie daily-color widget in a separate balanced row and updated
+  the layout editor thumbnail to preview the same geometry.
+
 ## 2026-09-09 — Centered Profile Studio preview
 
 - Centered the live profile specimen in the desktop Studio preview.

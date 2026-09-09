@@ -1,5 +1,14 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-09 — Modern follows the supplied guns.lol reference geometry
+
+Modern follows the public structure at [guns.lol/ssagee](https://guns.lol/ssagee):
+the profile card keeps a wide bounded surface, a 120px circular avatar, a
+14px gap to the identity copy, a 3px copy rhythm, and a left-aligned icon
+rail below the identity. The daily color remains a distinct centered row so
+Chromadie's core identity feature is not hidden or mixed into the social rail.
+The same renderer and the layout editor thumbnail expose this composition.
+
 ## 2026-09-09 — Studio preview is a centered canvas
 
 The Profile Studio preview keeps only the rendered profile specimen. Its

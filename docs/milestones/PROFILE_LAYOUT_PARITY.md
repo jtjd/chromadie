@@ -37,3 +37,11 @@ bio and link left edge with the username, moves location metadata to the
 upper-right, and tightens card spacing. Modern's complete identity copy is
 vertically centered beside its avatar. The focused browser smoke passes all 60
 layout/viewport/content cases after these changes.
+
+## Modern reference follow-up
+
+Modern now follows the supplied [guns.lol/ssagee](https://guns.lol/ssagee)
+geometry: a wide card, 120px avatar, 14px avatar-to-copy gap, tight identity
+stack, and a lower-left icon rail. Chromadie's daily color stays in a separate
+centered row. The layout editor thumbnail uses the same horizontal identity
+composition.

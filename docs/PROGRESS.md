@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Modern reference parity — 2026-09-09
+
+- Matched Modern's card spacing and identity row to the supplied
+  `guns.lol/ssagee` reference: 120px avatar, 14px horizontal gap, 3px copy
+  rhythm, and a left-aligned 35px icon rail.
+- Kept the daily color as a centered row with its own spacing and updated the
+  layout editor's Modern thumbnail.
+- Focused renderer coverage checks the avatar gap, identity centering, scale,
+  and lower-left link rail across desktop and mobile cases.
+
 ## Profile Studio preview composition — 2026-09-09
 
 - Removed the nonfunctional live-preview label, divider and desktop/mobile
