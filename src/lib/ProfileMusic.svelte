@@ -28,7 +28,6 @@
   let spotifyActive = false;
   let entryActivated = false;
   let activeTrackIndex = 0;
-  let currentTime = 0;
   let duration = 0;
   let mediaError = '';
   let lastTrackSetKey = '';
@@ -43,7 +42,6 @@
   $: activeTrack = tracks[activeTrackIndex] || tracks[0] || null;
   $: activeTrackSrc = activeTrack ? getProfileMediaUrl(activeTrack.media_reference) : audioSrc;
   $: hasAudio = Boolean(activeTrackSrc);
-  $: trackCount = tracks.length || (audioSrc ? 1 : 0);
   $: entryRequired = Boolean(hasAudio && playlist.autoplay && !entryActivated && !deferMedia);
   $: showAudioControls = playlist.controls !== false;
   $: trackSetKey = audioSrc + '|' + tracks.map(track => (track.asset_id || track.path) + ':' + track.order).join('|');
@@ -56,8 +54,6 @@
   $: trimEndSeconds = configuredTrimEndSeconds > trimStartSeconds
     ? configuredTrimEndSeconds
     : naturalDuration;
-  $: displayDuration = Math.max(0, trimEndSeconds - trimStartSeconds);
-  $: displayCurrentTime = Math.min(displayDuration || Number.MAX_SAFE_INTEGER, Math.max(0, currentTime - trimStartSeconds));
   $: showVisualFixture = !hasAudio && !spotifyEmbedSrc && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
   $: if (audioElement) audioElement.volume = Number(volume);
 
@@ -65,7 +61,6 @@
     if (nextKey === lastTrackSetKey) return;
     lastTrackSetKey = nextKey;
     activeTrackIndex = 0;
-    currentTime = 0;
     duration = 0;
     isPlaying = false;
   }
@@ -106,7 +101,6 @@
   function setTrack(nextIndex) {
     if (!tracks.length) return;
     activeTrackIndex = (nextIndex + tracks.length) % tracks.length;
-    currentTime = 0;
     duration = 0;
     isPlaying = false;
     mediaError = '';
@@ -127,10 +121,6 @@
   function previousTrack() {
     setTrack(activeTrackIndex - 1);
     if (entryActivated) requestAnimationFrame(() => void playAudio());
-  }
-
-  function toggleShuffle() {
-    shuffleEnabled = !shuffleEnabled;
   }
 
   function handleTrackEnded() {
@@ -157,20 +147,12 @@
     }
   }
 
-  function handleTimeUpdate(event) {
-    currentTime = Number(event.currentTarget.currentTime) || 0;
+  function handleTimeUpdate() {
     enforceTrimEnd();
   }
 
   function handleDurationChange(event) {
     duration = Number(event.currentTarget.duration) || Number(activeTrack?.duration_ms || 0) / 1000;
-  }
-
-  function handleSeek(event) {
-    if (!audioElement) return;
-    const requestedTime = Math.max(0, Number(event.detail) || 0);
-    audioElement.currentTime = trimStartSeconds + requestedTime;
-    currentTime = audioElement.currentTime;
   }
 
   function handleMediaKey(event) {
@@ -199,36 +181,8 @@
 {#if hasAudio}
   <div class:profile-music--reduced-motion={reducedMotion} class:profile-music--compact={compact} class:profile-music--inline={placement === 'inline'} class:profile-music--floating={placement !== 'inline'} class="profile-music profile-music--audio" data-music-state="audio" aria-label="Profile audio" role="region">
     <button type="button" class="profile-music__keyboard-target" aria-label="Profile audio keyboard controls" on:click={toggleAudio} on:keydown={handleMediaKey}></button>
-    {#if entryRequired}
-      <button type="button" class="profile-music__entry" on:click={activateAudio} aria-label="Enter profile and start audio">
-        <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
-        <span class="profile-music__entry-copy"><strong>Enter profile</strong><small>Start the selected audio</small></span>
-        <span aria-hidden="true">→</span>
-      </button>
-    {:else if showAudioControls}
-      <ProfileAudioControls
-        placement={placement === 'inline' ? 'inline' : 'floating'}
-        accent={safeColor}
-        {isPlaying}
-        {volume}
-        currentTime={displayCurrentTime}
-        duration={displayDuration}
-        trackLabel={activeTrack?.label || 'Profile audio'}
-        trackIndex={activeTrackIndex}
-        {trackCount}
-        shuffle={shuffleEnabled}
-        on:toggle={toggleAudio}
-        on:volumechange={(event) => updateVolume(event.detail)}
-        on:seek={handleSeek}
-        on:previous={previousTrack}
-        on:next={nextTrack}
-        on:shuffle={toggleShuffle}
-      />
-    {:else}
-      <div class="profile-music__disabled-controls">
-        <strong>{activeTrack?.label || 'Profile audio'}</strong>
-        <span>Audio controls are disabled</span>
-      </div>
+    {#if showAudioControls || entryRequired}
+      <ProfileAudioControls {isPlaying} {volume} on:toggle={toggleAudio} on:volumechange={(event) => updateVolume(event.detail)} />
     {/if}
     {#if mediaError}<span class="profile-music__error" role="status">{mediaError}</span>{/if}
     {#key activeTrackSrc}
@@ -291,26 +245,17 @@
 <style>
   .profile-music { display: flex; align-items: center; gap: .75rem; min-height: 4.375rem; padding: .75rem 1rem; border: 1px solid rgba(230,238,255,.14); border-radius: 1rem; background: rgba(255,255,255,.055); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 1.5rem 3rem rgba(0,0,0,.18); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
   .profile-music:focus-visible { outline: 2px solid var(--music-accent, var(--color-accent-cyan)); outline-offset: 3px; }
-  .profile-music--reduced-motion .profile-music__entry { transition: none; }
   .profile-music--spotify { display: block; min-height: 0; padding: 0; overflow: hidden; }
   .profile-music--spotify iframe { display: block; width: 100%; height: 152px; border: 0; }
   .profile-music__load { padding: .55rem .75rem; border: 1px solid rgba(230,238,255,.2); border-radius: 999px; background: transparent; color: rgba(241,246,255,.84); font: 600 .68rem/1 var(--font-mono-stack); cursor: pointer; }
   .profile-music__load:hover { border-color: var(--music-accent, var(--color-accent-cyan)); color: var(--color-ink-strong); }
   .profile-music--audio { min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
-  .profile-music--audio.profile-music--floating { position: fixed; z-index: 6; left: clamp(1rem, 3vw, 2rem); bottom: max(1rem, env(safe-area-inset-bottom)); pointer-events: none; }
+  .profile-music--audio.profile-music--floating { position: fixed; z-index: 6; left: 14px; top: 14px; bottom: auto; pointer-events: none; }
   .profile-music--audio.profile-music--inline { display: block; width: 100%; }
   .profile-music--audio > :global(.profile-audio-control), .profile-music--audio > button, .profile-music--audio > span { pointer-events: auto; }
   .profile-music--audio > audio { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
   .profile-music__keyboard-target { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; border: 0; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
-  .profile-music__entry { display: flex; align-items: center; gap: .7rem; min-height: 3.25rem; padding: .45rem .7rem; border: 1px solid color-mix(in srgb, var(--music-accent, #8B7CF6) 54%, transparent); border-radius: 999px; background: rgba(9,11,20,.88); color: var(--color-ink-strong); cursor: pointer; pointer-events: auto; }
-  .profile-music__entry:hover { background: rgba(20,23,38,.95); }
-  .profile-music__entry-copy { display: grid; gap: .15rem; text-align: left; }
-  .profile-music__entry-copy strong { font-size: .78rem; }
-  .profile-music__entry-copy small, .profile-music__error { color: rgba(220,230,248,.62); font: 600 .62rem/1.1 var(--font-mono-stack); }
   .profile-music__error { max-width: 14rem; color: #ffb2bf; pointer-events: auto; }
-  .profile-music__disabled-controls { display: grid; gap: .25rem; padding: .85rem 1rem; border: 1px solid rgba(230,238,255,.14); border-radius: .8rem; background: rgba(255,255,255,.04); }
-  .profile-music__disabled-controls strong { overflow: hidden; color: var(--color-ink-strong); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-music__disabled-controls span { color: rgba(220,230,248,.62); font: 600 .62rem/1.1 var(--font-mono-stack); }
   .profile-music__mark { display: grid; place-items: center; flex: 0 0 2.5rem; width: 2.5rem; height: 2.5rem; border-radius: .7rem; background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.58), var(--music-accent) 58%, rgba(0,0,0,.48)); box-shadow: 0 0 1.35rem color-mix(in srgb, var(--music-accent) 42%, transparent); }
   .profile-music__mark::after { content: ''; width: .38rem; height: .38rem; border-radius: 50%; background: rgba(255,255,255,.72); }
   .profile-music__copy { display: grid; flex: 1; min-width: 0; gap: .2rem; }
@@ -327,6 +272,5 @@
   .profile-music--compact .profile-music__copy strong { font-size: .72rem; }
   .profile-music__open { flex: 0 0 auto; padding: .38rem .55rem; border: 1px solid rgba(230,238,255,.2); border-radius: 999px; color: rgba(241,246,255,.84); font: 600 .58rem/1 var(--font-mono-stack); text-decoration: none; }
   .profile-music__open:hover, .profile-music__open:focus-visible { border-color: var(--music-accent, var(--color-accent-cyan)); color: var(--color-ink-strong); }
-  @media (max-width: 36rem) { .profile-music { min-height: 0; padding-inline: .35rem; } .profile-music--audio.profile-music--floating { left: .65rem; right: .65rem; } }
-  @media (prefers-reduced-motion: reduce) { .profile-music__entry, .profile-music__load { transition: none; } }
+  @media (max-width: 36rem) { .profile-music { min-height: 0; padding-inline: .35rem; } .profile-music--audio.profile-music--floating { left:14px; right:auto; } }
 </style>

@@ -40,11 +40,11 @@ test('portfolio pages and audio controls retain the bounded profile contracts', 
   assert.match(continuation, /data-profile-portfolio-page="content"/);
   assert.match(continuation, /data-profile-portfolio-page="media"/);
   assert.match(continuation, /data-profile-portfolio-page="story"/);
-  assert.match(continuation, /placement="inline"/);
+  assert.match(continuation, /placement="floating"/);
   assert.match(music, /on:timeupdate=\{handleTimeUpdate\}/);
-  assert.match(music, /on:seek=\{handleSeek\}/);
-  assert.match(controls, /profile-audio-control__progress/);
-  assert.match(controls, /profile-audio-control__volume-button/);
-  assert.match(controls, /dispatch\('previous'\)/);
-  assert.match(controls, /dispatch\('next'\)/);
+
+  assert.doesNotMatch(controls, /profile-audio-control__progress/);
+  assert.match(controls, /profile-audio-control__volume/);
+  assert.match(controls, /dispatch\('toggle'\)/);
+
 });

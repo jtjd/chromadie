@@ -64,17 +64,20 @@
 </script>
 
 <div class="profile-portfolio-continuation" style={`--profile-portfolio-continuation-accent:${safeAccent};`} data-profile-portfolio-continuation data-profile-username={username}>
+  {#if hasProfileMusic && (audioSrc || richAudioPlaylist.tracks.length)}
+    <ProfileMusic {audioSrc} audioPlaylist={richAudioPlaylist} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
+  {/if}
   {#if hasProfileContent}
-    <section class="profile-portfolio-page profile-portfolio-page--content" data-profile-portfolio-page="content" aria-labelledby="profile-portfolio-content-title">
+    <section class="profile-portfolio-page profile-portfolio-page--content" data-profile-portfolio-page="content" aria-label="About">
       <div class="profile-portfolio-page__inner">
-        <p class="profile-portfolio-page__eyebrow">About</p>
-        <h2 id="profile-portfolio-content-title" class="profile-portfolio-page__title">A little more context</h2>
+
+
         <ProfileContent content={profileContent} onEntryClick={onEntryClick} />
       </div>
     </section>
   {/if}
 
-  {#if hasProfileMusic || visibleWidgets.length}
+  {#if visibleWidgets.length || (hasProfileMusic && !audioSrc && !richAudioPlaylist.tracks.length)}
     <section class="profile-portfolio-page profile-portfolio-page--media" data-profile-portfolio-page="media" aria-labelledby="profile-portfolio-media-title">
       <div class="profile-portfolio-page__inner profile-portfolio-page__inner--media">
         <p class="profile-portfolio-page__eyebrow">Media</p>
@@ -82,7 +85,7 @@
         <div class="profile-portfolio-page__media-stack">
           {#if hasProfileMusic}
             <ProfileMusic
-              placement="inline"
+              placement="floating"
               bestRoll={latestRoll || displayBestRoll}
               accentColor={profileControlAccent}
               colorEffectsEnabled={colorEffectsEnabled}

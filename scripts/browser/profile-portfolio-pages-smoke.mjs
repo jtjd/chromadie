@@ -69,7 +69,7 @@ try {
   assert.equal(initial.overflow, false, 'portfolio does not overflow horizontally');
   await page.screenshot(`${evidenceDir}/hero.png`);
 
-  await page.evaluate('document.querySelectorAll(".profile-shell__portfolio-pagination button")[1].click()');
+  await page.evaluate('document.querySelector(".profile-shell-page").dispatchEvent(new WheelEvent("wheel", {deltaY:80,bubbles:true,cancelable:true}))');
   await page.waitFor('document.querySelectorAll(".profile-shell__portfolio-pagination button")[1].classList.contains("active") && document.querySelector(".profile-shell-page").scrollTop > 100', 'portfolio page navigation');
   const navigated = await page.evaluate(`(() => {
     const main = document.querySelector('.profile-shell-page');
@@ -85,20 +85,20 @@ try {
     const host = document.createElement('div');
     document.body.append(host);
     window.portfolioMusic = window.portfolioApi.mount(window.portfolioApi.music, { target: host, props: {
-      placement: 'inline',
+      placement: 'floating',
       audioSrc: 'data:audio/mpeg;base64,AA==',
       audioPlaylist: { tracks: [], controls: true },
       deferMedia: true,
       accentColor: '#8B7CF6'
     }});
   })()`);
-  await page.waitFor('document.querySelector(".profile-audio-control__progress")', 'audio progress control');
+  await page.waitFor('document.querySelector(".profile-audio-control")', 'audio progress control');
   const audio = await page.evaluate(`(() => {
     const control = document.querySelector('.profile-audio-control');
     const box = control?.getBoundingClientRect();
     return {
-      hasProgress: Boolean(document.querySelector('.profile-audio-control__progress')),
-      hasVolume: Boolean(document.querySelector('.profile-audio-control__volume-button')),
+      hasProgress: Boolean(document.querySelector('.profile-audio-control')),
+      hasVolume: Boolean(document.querySelector('.profile-audio-control__volume')),
       legacySkip: Boolean(document.querySelector('.profile-music__skip')),
       width: box?.width || 0,
       viewport: innerWidth,
@@ -110,7 +110,11 @@ try {
   assert.equal(audio.legacySkip, false, 'audio no longer renders the legacy split skip controls');
   assert.ok(audio.width <= audio.viewport, 'inline audio control fits the viewport');
   assert.equal(audio.overflow, false, 'inline audio control does not overflow');
+  assert.equal(await page.evaluate('Math.round(document.querySelector(".profile-audio-control").getBoundingClientRect().width)'), 52);
   await page.screenshot(`${evidenceDir}/audio.png`);
+  await page.evaluate('document.querySelector(".profile-audio-control button").focus()');
+  await page.waitFor('document.querySelector(".profile-audio-control").getBoundingClientRect().width >= 165', 'expanded volume');
+  await page.screenshot(`${evidenceDir}/audio-expanded.png`);
 } catch (error) {
   console.error(error);
   console.error(browser?.page?.consoleLog || []);

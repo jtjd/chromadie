@@ -1,5 +1,14 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-09 — Reference audio and page scrolling correction
+
+Replaced the oversized player with a profile-colored top-left sound icon,
+click play/pause, and hover/focus volume expansion. Background audio no longer
+creates an empty Media page. Portfolio wheel gestures advance one page, with
+momentum suppression and normal access to content taller than the viewport.
+Removed the invented About introduction. Focused validation only, per request.
+
+
 Document user-visible redesign changes by milestone.
 
 ## 2026-09-09 — Portfolio pages and profile audio controls

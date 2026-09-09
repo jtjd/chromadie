@@ -223,7 +223,8 @@
     let closestIndex = 0;
     let closestDistance = Number.POSITIVE_INFINITY;
     for (const [index, page] of pages.entries()) {
-      const distance = Math.abs(page.getBoundingClientRect().top - focusLine);
+      const box = page.getBoundingClientRect();
+      const distance = focusLine < box.top ? box.top - focusLine : focusLine > box.bottom ? focusLine - box.bottom : 0;
       if (distance < closestDistance) {
         closestDistance = distance;
         closestIndex = index;
@@ -264,6 +265,29 @@
       profileMoreActive = profilePageElement.scrollTop >= moreTop - profilePageElement.clientHeight * 0.45;
       updatePortfolioPageState();
     };
+    let wheelLockedUntil = 0;
+    let lastWheelAt = 0;
+    const handlePageWheel = event => {
+      if (profilePresentationLayoutVariant !== 'portfolio' || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      const now = performance.now();
+      const continuedGesture = now - lastWheelAt < 180;
+      lastWheelAt = now;
+      event.preventDefault();
+      if (now < wheelLockedUntil || continuedGesture) return;
+      const pages = [...profilePageElement.querySelectorAll('[data-profile-portfolio-page]')];
+      const direction = Math.sign(event.deltaY);
+      const current = pages[activePortfolioPage];
+      if (!current) return;
+      const box = current.getBoundingClientRect();
+      const viewport = profilePageElement.getBoundingClientRect();
+      if ((direction > 0 && box.bottom > viewport.bottom + 2) || (direction < 0 && box.top < viewport.top - 2)) {
+        profilePageElement.scrollBy({top:direction * profilePageElement.clientHeight * .8, behavior:prefersReducedMotion ? 'auto' : 'smooth'});
+      } else {
+        scrollToPortfolioPage(Math.max(0, Math.min(pages.length - 1, activePortfolioPage + direction)));
+      }
+      wheelLockedUntil = now + 650;
+    };
+    profilePageElement?.addEventListener('wheel', handlePageWheel, { passive:false });
     profilePageElement?.addEventListener('scroll', updateProfileScrollState, { passive: true });
     requestAnimationFrame(updateProfileScrollState);
     return () => {
@@ -271,6 +295,7 @@
       document.removeEventListener('visibilitychange', refreshOnReturn);
       window.removeEventListener('pageshow', refreshOnReturn);
       profilePageElement?.removeEventListener('scroll', updateProfileScrollState);
+      profilePageElement?.removeEventListener('wheel', handlePageWheel);
       motionQuery?.removeEventListener?.('change', syncMotionPreference);
     };
   });
@@ -493,7 +518,7 @@
   $: renderProfileMore = profileRenderSnapshot?.visibility?.renderProfileMore === true;
   $: portfolioPages = getProfilePortfolioPages({
     hasProfileContent,
-    hasProfileMusic,
+    hasProfileMusic: hasProfileMusic && !audioSrc && !richAudioPlaylist.tracks.length,
     widgetCount: profileWidgets.length,
     hasProfileStory
   });
@@ -511,7 +536,7 @@
   $: profileMotionKey = profileRenderSnapshot?.cosmetics?.profileMotionKey || '';
   $: profileMotionTarget = getProfileLayoutMotionTarget(profilePresentationLayoutVariant);
   $: profileCardStyle = profileRenderSnapshot?.surface?.style || '';
-  $: profilePageStyle = `${profileShellStyle};${profileRenderSnapshot?.styles?.page || ''}`;
+  $: profilePageStyle = `${profileShellStyle};${profileRenderSnapshot?.styles?.page || ''};--profile-text:${appearance.colors.text}`;
 
 </script>
 

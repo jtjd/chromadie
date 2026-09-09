@@ -1,5 +1,14 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-09 — Reference audio and page scrolling correction
+
+Replaced the oversized player with a profile-colored top-left sound icon,
+click play/pause, and hover/focus volume expansion. Background audio no longer
+creates an empty Media page. Portfolio wheel gestures advance one page, with
+momentum suppression and normal access to content taller than the viewport.
+Removed the invented About introduction. Focused validation only, per request.
+
+
 ## 2026-09-09 — Portfolio profiles use bounded full viewport pages
 
 The Portfolio layout now treats the profile as a sequence of full viewport
