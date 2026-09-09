@@ -1,5 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-09 — Portfolio profiles use bounded full viewport pages
+
+The Portfolio layout now treats the profile as a sequence of full viewport
+sections, following the page behavior at [guns.lol/tom](https://guns.lol/tom).
+The hero remains the first section; About, Media, and Story sections are
+derived from the sanitized render-model visibility flags. Fixed dots and
+scroll-snap keep the page sequence discoverable without adding navigation for
+empty sections. The existing structured content, widgets, story modules, and
+profile media renderers remain the data authorities.
+
+Profile audio uses one accessible control surface in both its floating public
+placement and Portfolio's inline Media page. Progress and seeking account for
+bounded trim windows, while shuffle, track changes, mute, volume, and reduced
+motion remain client presentation behavior around the existing media contract.
+No schema, storage ownership, autoplay authority, or profile URL changes are
+needed.
+
 ## 2026-09-09 — Modern follows the supplied guns.lol reference geometry
 
 Modern follows the public structure at [guns.lol/ssagee](https://guns.lol/ssagee):

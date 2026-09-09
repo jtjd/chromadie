@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Portfolio pages and audio controls — 2026-09-09
+
+- Added full viewport Portfolio sections for the hero, visible About content,
+  visible Media integrations, and visible color story, with fixed pagination
+  dots and scroll-snap navigation derived from the render model.
+- Kept section rendering on the existing bounded ProfileContent,
+  ProfileWidgets, ProfileMusic, story, collection, and timeline components.
+- Replaced the old split audio/emoji controls with a responsive styled player
+  that exposes progress, time, transport, shuffle, mute, and volume controls.
+- Focused unit tests, Svelte check, ESLint, diff checks, and the Portfolio
+  browser smoke pass. The full test suite was not run during this iteration by
+  request; no schema migration is involved.
+
 ## Modern reference parity — 2026-09-09
 
 - Matched Modern's card spacing and identity row to the supplied

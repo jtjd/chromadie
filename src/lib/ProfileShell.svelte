@@ -14,6 +14,8 @@
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
   import ProfilePortfolioLayout from './profile-layout/ProfilePortfolioLayout.svelte';
+  import ProfilePortfolioContinuation from './profile-layout/ProfilePortfolioContinuation.svelte';
+  import { getProfilePortfolioPages } from './profile-layout/profilePortfolioPages.js';
   import ProfileMusic from './ProfileMusic.svelte';
   import ProfileWidgets from './ProfileWidgets.svelte';
   import ProfileContent from './ProfileContent.svelte';
@@ -64,6 +66,7 @@
   let loadError = '';
   let loadRequestId = 0;
   let activeProfileKey = null;
+  let activePortfolioPage = 0;
   let trackedProfileViewKey = null;
   let followLoading = false;
   let refreshing = false;
@@ -205,6 +208,30 @@
 
   afterUpdate(syncProfileData);
 
+  function updatePortfolioPageState() {
+    if (!profilePageElement || profilePresentationLayoutVariant !== 'portfolio') {
+      activePortfolioPage = 0;
+      return;
+    }
+    const pages = [...profilePageElement.querySelectorAll('[data-profile-portfolio-page]')];
+    if (!pages.length) {
+      activePortfolioPage = 0;
+      return;
+    }
+    const viewport = profilePageElement.getBoundingClientRect();
+    const focusLine = viewport.top + viewport.height * 0.45;
+    let closestIndex = 0;
+    let closestDistance = Number.POSITIVE_INFINITY;
+    for (const [index, page] of pages.entries()) {
+      const distance = Math.abs(page.getBoundingClientRect().top - focusLine);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    }
+    activePortfolioPage = closestIndex;
+  }
+
   onMount(() => {
     void ensureProfileReferenceCard();
     const motionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -230,12 +257,15 @@
       const more = document.getElementById('profile-more');
       if (!profilePageElement || !more) {
         profileMoreActive = false;
+        updatePortfolioPageState();
         return;
       }
       const moreTop = getProfileOffsetTop(more);
       profileMoreActive = profilePageElement.scrollTop >= moreTop - profilePageElement.clientHeight * 0.45;
+      updatePortfolioPageState();
     };
     profilePageElement?.addEventListener('scroll', updateProfileScrollState, { passive: true });
+    requestAnimationFrame(updateProfileScrollState);
     return () => {
       loadRequestId += 1;
       document.removeEventListener('visibilitychange', refreshOnReturn);
@@ -310,7 +340,25 @@
     });
   }
 
+  function scrollToPortfolioPage(index) {
+    if (!profilePageElement || profilePresentationLayoutVariant !== 'portfolio') return;
+    const page = profilePageElement.querySelectorAll('[data-profile-portfolio-page]')[index];
+    if (!page) return;
+    activePortfolioPage = index;
+    const top = page.getBoundingClientRect().top
+      - profilePageElement.getBoundingClientRect().top
+      + profilePageElement.scrollTop;
+    profilePageElement.scrollTo({
+      top,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth'
+    });
+  }
+
   function scrollToProfileMore() {
+    if (profilePresentationLayoutVariant === 'portfolio') {
+      scrollToPortfolioPage(1);
+      return;
+    }
     profileMoreActive = true;
     const more = document.getElementById('profile-more');
     if (!profilePageElement || !more) return;
@@ -323,6 +371,10 @@
   }
 
   function scrollToProfileHero() {
+    if (profilePresentationLayoutVariant === 'portfolio') {
+      scrollToPortfolioPage(0);
+      return;
+    }
     profileMoreActive = false;
     profilePageElement?.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -439,6 +491,12 @@
   $: hasProfileStory = profileRenderSnapshot?.modules?.hasProfileStory === true;
   $: hasProfileMore = profileRenderSnapshot?.visibility?.hasProfileMore === true;
   $: renderProfileMore = profileRenderSnapshot?.visibility?.renderProfileMore === true;
+  $: portfolioPages = getProfilePortfolioPages({
+    hasProfileContent,
+    hasProfileMusic,
+    widgetCount: profileWidgets.length,
+    hasProfileStory
+  });
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
   $: pinnedAchievements = profileRenderSnapshot?.identity?.badges || [];
   $: recentScores = profileRenderSnapshot?.story?.recentScores || [];
@@ -461,10 +519,25 @@
   {#if renderEnvironment}
     <ProfileEnvironmentLayer snapshot={profileRenderSnapshot} mode={previewMode ? 'preview' : 'public'} reducedMotion={prefersReducedMotion} />
   {/if}
+  {#if profilePresentationLayoutVariant === 'portfolio' && portfolioPages.length > 1}
+    <nav class="profile-shell__portfolio-pagination" aria-label="Portfolio pages">
+      {#each portfolioPages as page, index (page.key)}
+        <button
+          type="button"
+          class:active={activePortfolioPage === index}
+          aria-label={`Go to ${page.label} page`}
+          aria-current={activePortfolioPage === index ? 'page' : undefined}
+          on:click={() => scrollToPortfolioPage(index)}
+        >
+          <span aria-hidden="true"></span>
+        </button>
+      {/each}
+    </nav>
+  {/if}
   {#if !loading && targetProfile}
     <div class="profile-shell__composition">
     <div class="profile-shell__approved-canvas">
-      <div class="profile-shell__approved-main">
+      <div class="profile-shell__approved-main" data-profile-portfolio-page="hero">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity">
           <ProfileMotionEffect
             motionKey={profileMotionTarget === 'none' ? '' : profileMotionKey}
@@ -589,6 +662,44 @@
           </button>
         {/if}
         <div class="profile-shell__continuation-column">
+        {#if profilePresentationLayoutVariant === 'portfolio'}
+          <ProfilePortfolioContinuation
+            username={username}
+            profileContent={profileContent}
+            hasProfileContent={hasProfileContent}
+            hasProfileMusic={hasProfileMusic}
+            profileWidgets={profileWidgets}
+            latestRoll={latestRoll}
+            displayBestRoll={displayBestRoll}
+            profileControlAccent={profileControlAccent}
+            colorEffectsEnabled={colorEffectsEnabled}
+            audioSrc={audioSrc}
+            richAudioPlaylist={richAudioPlaylist}
+            hasSpotifyWidget={hasSpotifyWidget}
+            spotifyType={effectiveProfileConfig.spotify_type}
+            spotifyId={effectiveProfileConfig.spotify_id}
+            visualFixture={visualFixture}
+            previewMode={previewMode}
+            prefersReducedMotion={prefersReducedMotion}
+            profileFeatureFlags={profileFeatureFlags}
+            rank={rank}
+            rankState={rankState}
+            progressionProofSnapshot={progressionProofSnapshot}
+            progressionProofCount={progressionProofCount}
+            progressionProofRolls={progressionProofRolls}
+            isOwnProfile={isOwnProfile}
+            storyModules={storyModules}
+            renderProfile={renderProfile}
+            storyUnlocks={storyUnlocks}
+            hasProfileStory={hasProfileStory}
+            pinnedAchievements={pinnedAchievements}
+            collectionItems={collectionItems}
+            recentScores={recentScores}
+            timelineEvents={timelineEvents}
+            totalPublicRolls={targetScores.length}
+            onEntryClick={recordProfileClick}
+          />
+        {:else}
         {#if hasProfileStory}
           <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>
             <FeaturedCollection
@@ -757,6 +868,7 @@
           </div>
         </section>
       {/if}
+        {/if}
         </div>
     </div>
     {/if}
@@ -956,6 +1068,54 @@
     justify-content: center;
   }
 
+  .profile-shell__portfolio-pagination {
+    position: fixed;
+    z-index: 5;
+    top: 50%;
+    right: clamp(.7rem, 2.2vw, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: .62rem;
+    margin: 0;
+    padding: .35rem;
+    transform: translateY(-50%);
+  }
+
+  .profile-shell__portfolio-pagination button {
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .profile-shell__portfolio-pagination button span {
+    display: block;
+    width: .42rem;
+    height: .42rem;
+    border: 1px solid color-mix(in srgb, var(--profile-control-accent) 56%, var(--color-ink-muted));
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--profile-control-accent) 24%, transparent);
+    opacity: .72;
+    transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, opacity 160ms ease;
+  }
+
+  .profile-shell__portfolio-pagination button:hover span,
+  .profile-shell__portfolio-pagination button:focus-visible span,
+  .profile-shell__portfolio-pagination button.active span {
+    border-color: var(--profile-control-accent);
+    background: var(--profile-control-accent);
+    opacity: 1;
+  }
+
+  .profile-shell__portfolio-pagination button.active span { transform: scale(1.45); }
+  .profile-shell__portfolio-pagination button:focus-visible { outline: 2px solid var(--profile-control-accent); outline-offset: 2px; }
+
   .profile-shell__more-cue {
     position: absolute;
     left: 50%;
@@ -1134,15 +1294,17 @@
   .profile-shell-page--framed .profile-shell__approved-main { justify-content: center; }
 
   .profile-shell-page--portfolio {
-    height: auto;
+    height: 100dvh;
     min-height: 100dvh;
-    scroll-snap-type: none;
+    scroll-snap-type: y mandatory;
+    scroll-padding-block: 0;
   }
 
-  .profile-shell-page--portfolio .profile-shell__approved-canvas { min-height: 0; }
-  .profile-shell-page--portfolio .profile-shell__approved-main { height: auto; min-height: 100dvh; }
-  .profile-shell-page--portfolio .profile-shell__more { min-height: 0; align-items: stretch; justify-content: flex-start; padding-top: clamp(2rem, 8vh, 5rem); }
-  .profile-shell-page--portfolio .profile-shell__continuation-column { width: min(100%, 72rem); }
+  .profile-shell-page--portfolio .profile-shell__approved-canvas { display: contents; min-height: 0; }
+  .profile-shell-page--portfolio .profile-shell__approved-main { height: 100dvh; min-height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; }
+  .profile-shell-page--portfolio .profile-shell__more { display: block; min-height: 0; padding: 0; scroll-snap-align: none; scroll-snap-stop: normal; }
+  .profile-shell-page--portfolio .profile-shell__continuation-column { display: contents; width: 100%; }
+  .profile-shell-page--portfolio .profile-shell__more-back { display: none; }
 
   .profile-shell-page--compact .profile-shell__more { min-height: 0; justify-content: flex-start; padding: 2.5rem 0 4rem; }
   .profile-shell-page--compact .profile-shell__more-back { display: none; }
@@ -1159,6 +1321,7 @@
     .profile-shell-page--sleek .profile-shell__opening.profile-shell__approved-opening,
     .profile-shell-page--framed .profile-shell__opening.profile-shell__approved-opening,
     .profile-shell-page--portfolio .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 100%); }
+    .profile-shell__portfolio-pagination { right: .35rem; }
   }
 
   /* A compact card is allowed to grow with its links and roll state on a

@@ -45,3 +45,21 @@ geometry: a wide card, 120px avatar, 14px avatar-to-copy gap, tight identity
 stack, and a lower-left icon rail. Chromadie's daily color stays in a separate
 centered row. The layout editor thumbnail uses the same horizontal identity
 composition.
+
+## Portfolio pages and audio follow-up
+
+Portfolio now follows the multi-page profile behavior at [guns.lol/tom](https://guns.lol/tom):
+the hero, visible About, Media, and Story regions occupy their own full
+viewport sections, use scroll-snap, and expose fixed pagination dots. The page
+list is derived from the same render-model visibility flags as the sections,
+so empty pages cannot be selected. Public and preview rendering share this
+composition.
+
+Profile audio now uses one responsive control surface in floating and inline
+placements. It includes progress and trim-aware seeking, track transport,
+shuffle, mute, volume, and timing, with no emoji-only controls. The existing
+structured media and autoplay-entry boundaries remain unchanged.
+
+Focused unit tests, Svelte check, ESLint, diff checks, and the Portfolio page
+browser smoke pass. The full suite was intentionally deferred while this
+iteration remains in progress.

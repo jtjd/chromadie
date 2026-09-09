@@ -19,28 +19,63 @@
   export let deferMedia = false;
   export let reducedMotion = false;
   export let compact = false;
+  export let placement = 'floating';
 
   let audioElement;
   let isPlaying = false;
   let volume = 0.75;
+  let shuffleEnabled = false;
   let spotifyActive = false;
   let entryActivated = false;
   let activeTrackIndex = 0;
+  let currentTime = 0;
+  let duration = 0;
   let mediaError = '';
+  let lastTrackSetKey = '';
+  let lastPlaylistSettingsKey = '';
 
   $: safeColor = colorEffectsEnabled
     ? normalizeHexColor(bestRoll?.hex_code, accentColor)
-    : '#5D6A73';
+    : normalizeHexColor(accentColor, '#8B7CF6');
   $: spotifyEmbedSrc = getSpotifyEmbedUrl(spotifyType, spotifyId);
   $: playlist = normalizeRichAudioPlaylist(audioPlaylist || {});
   $: tracks = playlist.tracks;
   $: activeTrack = tracks[activeTrackIndex] || tracks[0] || null;
   $: activeTrackSrc = activeTrack ? getProfileMediaUrl(activeTrack.media_reference) : audioSrc;
   $: hasAudio = Boolean(activeTrackSrc);
+  $: trackCount = tracks.length || (audioSrc ? 1 : 0);
   $: entryRequired = Boolean(hasAudio && playlist.autoplay && !entryActivated && !deferMedia);
   $: showAudioControls = playlist.controls !== false;
+  $: trackSetKey = audioSrc + '|' + tracks.map(track => (track.asset_id || track.path) + ':' + track.order).join('|');
+  $: playlistSettingsKey = playlist.volume + ':' + playlist.shuffle + ':' + playlist.loop + ':' + playlist.autoplay + ':' + playlist.controls;
+  $: syncTrackState(trackSetKey);
+  $: syncPlaylistSettings(playlistSettingsKey);
+  $: trimStartSeconds = Number(activeTrack?.trim_start_ms || 0) / 1000;
+  $: configuredTrimEndSeconds = Number(activeTrack?.trim_end_ms || 0) / 1000;
+  $: naturalDuration = duration || Number(activeTrack?.duration_ms || 0) / 1000;
+  $: trimEndSeconds = configuredTrimEndSeconds > trimStartSeconds
+    ? configuredTrimEndSeconds
+    : naturalDuration;
+  $: displayDuration = Math.max(0, trimEndSeconds - trimStartSeconds);
+  $: displayCurrentTime = Math.min(displayDuration || Number.MAX_SAFE_INTEGER, Math.max(0, currentTime - trimStartSeconds));
   $: showVisualFixture = !hasAudio && !spotifyEmbedSrc && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
   $: if (audioElement) audioElement.volume = Number(volume);
+
+  function syncTrackState(nextKey) {
+    if (nextKey === lastTrackSetKey) return;
+    lastTrackSetKey = nextKey;
+    activeTrackIndex = 0;
+    currentTime = 0;
+    duration = 0;
+    isPlaying = false;
+  }
+
+  function syncPlaylistSettings(nextKey) {
+    if (nextKey === lastPlaylistSettingsKey) return;
+    lastPlaylistSettingsKey = nextKey;
+    volume = playlist.volume;
+    shuffleEnabled = playlist.shuffle;
+  }
 
   function activateAudio() {
     entryActivated = true;
@@ -71,15 +106,20 @@
   function setTrack(nextIndex) {
     if (!tracks.length) return;
     activeTrackIndex = (nextIndex + tracks.length) % tracks.length;
+    currentTime = 0;
+    duration = 0;
     isPlaying = false;
     mediaError = '';
   }
 
   function nextTrack() {
     if (!tracks.length) return;
-    const nextIndex = playlist.shuffle
-      ? Math.floor(Math.random() * tracks.length)
-      : activeTrackIndex + 1;
+    let nextIndex = activeTrackIndex + 1;
+    if (shuffleEnabled && tracks.length > 1) {
+      do {
+        nextIndex = Math.floor(Math.random() * tracks.length);
+      } while (nextIndex === activeTrackIndex);
+    }
     setTrack(nextIndex);
     if (entryActivated || !playlist.autoplay) requestAnimationFrame(() => void playAudio());
   }
@@ -89,26 +129,48 @@
     if (entryActivated) requestAnimationFrame(() => void playAudio());
   }
 
+  function toggleShuffle() {
+    shuffleEnabled = !shuffleEnabled;
+  }
+
   function handleTrackEnded() {
     if (!tracks.length) return;
-    if (activeTrackIndex < tracks.length - 1 || playlist.shuffle) nextTrack();
-    else if (playlist.loop) {
-      if (audioElement) audioElement.currentTime = Number(activeTrack?.trim_start_ms || 0) / 1000;
+    if (activeTrackIndex < tracks.length - 1 || shuffleEnabled) {
+      nextTrack();
+    } else if (playlist.loop) {
+      if (audioElement) audioElement.currentTime = trimStartSeconds;
       void playAudio();
     }
   }
 
   function applyTrimStart() {
-    const startSeconds = Number(activeTrack?.trim_start_ms || 0) / 1000;
-    if (audioElement && startSeconds > 0 && audioElement.currentTime < startSeconds) audioElement.currentTime = startSeconds;
+    if (audioElement && trimStartSeconds > 0 && audioElement.currentTime < trimStartSeconds) {
+      audioElement.currentTime = trimStartSeconds;
+    }
+    duration = Number(audioElement?.duration) || Number(activeTrack?.duration_ms || 0) / 1000;
   }
 
   function enforceTrimEnd() {
-    const endSeconds = Number(activeTrack?.trim_end_ms || 0) / 1000;
-    if (audioElement && endSeconds > 0 && audioElement.currentTime >= endSeconds) {
+    if (audioElement && trimEndSeconds > trimStartSeconds && audioElement.currentTime >= trimEndSeconds) {
       audioElement.pause();
       handleTrackEnded();
     }
+  }
+
+  function handleTimeUpdate(event) {
+    currentTime = Number(event.currentTarget.currentTime) || 0;
+    enforceTrimEnd();
+  }
+
+  function handleDurationChange(event) {
+    duration = Number(event.currentTarget.duration) || Number(activeTrack?.duration_ms || 0) / 1000;
+  }
+
+  function handleSeek(event) {
+    if (!audioElement) return;
+    const requestedTime = Math.max(0, Number(event.detail) || 0);
+    audioElement.currentTime = trimStartSeconds + requestedTime;
+    currentTime = audioElement.currentTime;
   }
 
   function handleMediaKey(event) {
@@ -125,7 +187,7 @@
   }
 
   function updateVolume(nextVolume) {
-    volume = Number(nextVolume);
+    volume = Math.min(1, Math.max(0, Number(nextVolume) || 0));
     if (audioElement) audioElement.volume = volume;
   }
 
@@ -135,7 +197,7 @@
 </script>
 
 {#if hasAudio}
-  <div class:profile-music--reduced-motion={reducedMotion} class:profile-music--compact={compact} class="profile-music profile-music--audio" data-music-state="audio" aria-label="Profile audio" role="region">
+  <div class:profile-music--reduced-motion={reducedMotion} class:profile-music--compact={compact} class:profile-music--inline={placement === 'inline'} class:profile-music--floating={placement !== 'inline'} class="profile-music profile-music--audio" data-music-state="audio" aria-label="Profile audio" role="region">
     <button type="button" class="profile-music__keyboard-target" aria-label="Profile audio keyboard controls" on:click={toggleAudio} on:keydown={handleMediaKey}></button>
     {#if entryRequired}
       <button type="button" class="profile-music__entry" on:click={activateAudio} aria-label="Enter profile and start audio">
@@ -144,13 +206,29 @@
         <span aria-hidden="true">→</span>
       </button>
     {:else if showAudioControls}
-      <ProfileAudioControls accent={safeColor} {isPlaying} {volume} on:toggle={toggleAudio} on:volumechange={(event) => updateVolume(event.detail)} />
-      <button type="button" class="profile-music__skip" aria-label={volume > 0 ? 'Mute profile audio' : 'Unmute profile audio'} on:click={() => updateVolume(volume > 0 ? 0 : 0.75)}>{volume > 0 ? '🔊' : '🔇'}</button>
-      {#if tracks.length > 1}
-        <button type="button" class="profile-music__skip" aria-label="Previous track" on:click={previousTrack}>‹</button>
-        <button type="button" class="profile-music__skip" aria-label="Next track" on:click={nextTrack}>›</button>
-      {/if}
-      <span class="profile-music__track-label">{activeTrack?.label || 'Profile audio'}</span>
+      <ProfileAudioControls
+        placement={placement === 'inline' ? 'inline' : 'floating'}
+        accent={safeColor}
+        {isPlaying}
+        {volume}
+        currentTime={displayCurrentTime}
+        duration={displayDuration}
+        trackLabel={activeTrack?.label || 'Profile audio'}
+        trackIndex={activeTrackIndex}
+        {trackCount}
+        shuffle={shuffleEnabled}
+        on:toggle={toggleAudio}
+        on:volumechange={(event) => updateVolume(event.detail)}
+        on:seek={handleSeek}
+        on:previous={previousTrack}
+        on:next={nextTrack}
+        on:shuffle={toggleShuffle}
+      />
+    {:else}
+      <div class="profile-music__disabled-controls">
+        <strong>{activeTrack?.label || 'Profile audio'}</strong>
+        <span>Audio controls are disabled</span>
+      </div>
     {/if}
     {#if mediaError}<span class="profile-music__error" role="status">{mediaError}</span>{/if}
     {#key activeTrackSrc}
@@ -164,7 +242,8 @@
         controls={false}
         aria-label={activeTrack?.label || 'Profile audio'}
         on:loadedmetadata={applyTrimStart}
-        on:timeupdate={enforceTrimEnd}
+        on:durationchange={handleDurationChange}
+        on:timeupdate={handleTimeUpdate}
         on:play={() => isPlaying = true}
         on:pause={() => isPlaying = false}
         on:ended={handleTrackEnded}
@@ -215,10 +294,11 @@
   .profile-music--reduced-motion .profile-music__entry { transition: none; }
   .profile-music--spotify { display: block; min-height: 0; padding: 0; overflow: hidden; }
   .profile-music--spotify iframe { display: block; width: 100%; height: 152px; border: 0; }
-  .profile-music__load, .profile-music__skip { padding: .55rem .75rem; border: 1px solid rgba(230,238,255,.2); border-radius: 999px; background: transparent; color: rgba(241,246,255,.84); font: 600 .68rem/1 var(--font-mono-stack); cursor: pointer; }
-  .profile-music__skip { padding-inline: .6rem; font-size: 1.1rem; line-height: .8; }
-  .profile-music__load:hover, .profile-music__skip:hover { border-color: var(--music-accent, var(--color-accent-cyan)); color: var(--color-ink-strong); }
-  .profile-music--audio { position: fixed; z-index: 6; left: clamp(1rem, 3vw, 2rem); bottom: max(1rem, env(safe-area-inset-bottom)); min-height: 0; padding: .5rem 0; border: 0; background: transparent; box-shadow: none; pointer-events: none; }
+  .profile-music__load { padding: .55rem .75rem; border: 1px solid rgba(230,238,255,.2); border-radius: 999px; background: transparent; color: rgba(241,246,255,.84); font: 600 .68rem/1 var(--font-mono-stack); cursor: pointer; }
+  .profile-music__load:hover { border-color: var(--music-accent, var(--color-accent-cyan)); color: var(--color-ink-strong); }
+  .profile-music--audio { min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
+  .profile-music--audio.profile-music--floating { position: fixed; z-index: 6; left: clamp(1rem, 3vw, 2rem); bottom: max(1rem, env(safe-area-inset-bottom)); pointer-events: none; }
+  .profile-music--audio.profile-music--inline { display: block; width: 100%; }
   .profile-music--audio > :global(.profile-audio-control), .profile-music--audio > button, .profile-music--audio > span { pointer-events: auto; }
   .profile-music--audio > audio { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
   .profile-music__keyboard-target { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; border: 0; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
@@ -226,9 +306,11 @@
   .profile-music__entry:hover { background: rgba(20,23,38,.95); }
   .profile-music__entry-copy { display: grid; gap: .15rem; text-align: left; }
   .profile-music__entry-copy strong { font-size: .78rem; }
-  .profile-music__entry-copy small, .profile-music__error, .profile-music__track-label { color: rgba(220,230,248,.62); font: 600 .62rem/1.1 var(--font-mono-stack); }
-  .profile-music__track-label { max-width: 11rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: auto; }
+  .profile-music__entry-copy small, .profile-music__error { color: rgba(220,230,248,.62); font: 600 .62rem/1.1 var(--font-mono-stack); }
   .profile-music__error { max-width: 14rem; color: #ffb2bf; pointer-events: auto; }
+  .profile-music__disabled-controls { display: grid; gap: .25rem; padding: .85rem 1rem; border: 1px solid rgba(230,238,255,.14); border-radius: .8rem; background: rgba(255,255,255,.04); }
+  .profile-music__disabled-controls strong { overflow: hidden; color: var(--color-ink-strong); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-music__disabled-controls span { color: rgba(220,230,248,.62); font: 600 .62rem/1.1 var(--font-mono-stack); }
   .profile-music__mark { display: grid; place-items: center; flex: 0 0 2.5rem; width: 2.5rem; height: 2.5rem; border-radius: .7rem; background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.58), var(--music-accent) 58%, rgba(0,0,0,.48)); box-shadow: 0 0 1.35rem color-mix(in srgb, var(--music-accent) 42%, transparent); }
   .profile-music__mark::after { content: ''; width: .38rem; height: .38rem; border-radius: 50%; background: rgba(255,255,255,.72); }
   .profile-music__copy { display: grid; flex: 1; min-width: 0; gap: .2rem; }
@@ -243,10 +325,8 @@
   .profile-music--compact .profile-music__copy { gap: .1rem; }
   .profile-music--compact .profile-music__copy span { font-size: .52rem; }
   .profile-music--compact .profile-music__copy strong { font-size: .72rem; }
-  .profile-music--compact .profile-music__status,
-  .profile-music--compact .profile-music__track-label { font-size: .56rem; }
   .profile-music__open { flex: 0 0 auto; padding: .38rem .55rem; border: 1px solid rgba(230,238,255,.2); border-radius: 999px; color: rgba(241,246,255,.84); font: 600 .58rem/1 var(--font-mono-stack); text-decoration: none; }
   .profile-music__open:hover, .profile-music__open:focus-visible { border-color: var(--music-accent, var(--color-accent-cyan)); color: var(--color-ink-strong); }
-  @media (max-width: 36rem) { .profile-music { min-height: 0; padding-inline: .35rem; } .profile-music--audio { left: .65rem; right: .65rem; } .profile-music__track-label { max-width: 7rem; } }
-  @media (prefers-reduced-motion: reduce) { .profile-music__entry, .profile-music__load, .profile-music__skip { transition: none; } }
+  @media (max-width: 36rem) { .profile-music { min-height: 0; padding-inline: .35rem; } .profile-music--audio.profile-music--floating { left: .65rem; right: .65rem; } }
+  @media (prefers-reduced-motion: reduce) { .profile-music__entry, .profile-music__load { transition: none; } }
 </style>

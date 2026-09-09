@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-09 — Portfolio pages and profile audio controls
+
+- Portfolio profiles now move through full viewport hero, About, Media, and
+  Story pages only when those sections have visible content, with fixed page
+  dots and scroll-snap navigation.
+- Added the same page composition to the real profile shell and its preview
+  path so navigation never points to an empty section.
+- Replaced the split audio buttons and emoji volume control with one styled
+  player containing progress, timing, transport, shuffle, mute, and volume
+  controls. Audio remains finite, structured profile media.
+- No schema or media ownership changes.
+
 ## 2026-09-09 — Modern profile reference parity
 
 - Matched Modern's public and Studio card structure to the supplied
