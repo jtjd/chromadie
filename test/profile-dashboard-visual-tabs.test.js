@@ -126,7 +126,8 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(settings, /loadProfileStudioContext/);
   assert.match(settings, /loadCustomizeComponents/);
   assert.match(header, /profile-studio-header__customize-tabs/);
-  assert.match(preview, /profile-studio-preview__devices/);
+  assert.doesNotMatch(preview, /profile-studio-preview__devices|Desktop|Mobile|Preview device/);
+  assert.match(preview, /profile-studio-preview \{ position: relative; display: grid; align-items: center;/);
   assert.doesNotMatch(preview, /Unlock more with Chromadie Plus/);
   assert.match(preview, /ProfileReferenceCard/);
   assert.match(preview, /inputSurface="container"/);

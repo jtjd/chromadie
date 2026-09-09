@@ -1,5 +1,6 @@
 <script>
   import AvatarEffect from '../avatar-effect/AvatarEffect.svelte';
+  import ProfileAvatarFallback from '../ProfileAvatarFallback.svelte';
   import NameEffectCanvas from '../name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from '../profile-border/ProfileBorderEffect.svelte';
   import ProfileRollSummary from '../ProfileRollSummary.svelte';
@@ -97,7 +98,7 @@
             {#if activeAvatarSource}
               <img class="profile-portfolio__avatar" src={activeAvatarSource} alt={`${safeDisplayName} avatar`} loading="eager" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
             {:else}
-              <span class="profile-portfolio__avatar-fallback" aria-hidden="true">{safeInitial}</span>
+              <ProfileAvatarFallback initial={safeInitial} className="profile-portfolio__avatar-fallback" />
             {/if}
           </AvatarEffect>
         </div>
@@ -179,6 +180,7 @@
 
   .profile-portfolio {
     display: grid;
+    box-sizing: border-box;
     width: min(100%, 72rem);
     min-width: 0;
     margin: 0 auto;
@@ -219,15 +221,13 @@
   }
 
   :global(.profile-portfolio__avatar-effect) { display: grid; width: 100%; height: 100%; place-items: center; }
-  .profile-portfolio__avatar,
-  .profile-portfolio__avatar-fallback { display: grid; width: 100%; height: 100%; place-items: center; border-radius: 50%; }
+  .profile-portfolio__avatar { display: grid; width: 100%; height: 100%; place-items: center; border-radius: 50%; }
   .profile-portfolio__avatar { object-fit: cover; }
-  .profile-portfolio__avatar-fallback { background: rgba(8,9,12,.72); color: var(--profile-highlight, #f8f8f8); font: 600 clamp(3rem, 7vw, 5rem) / 1 'Clash Display', sans-serif; }
 
   .profile-portfolio__copy { min-width: 0; }
   .profile-portfolio__name { display: block; margin: 0; color: var(--profile-username, #fff); font: 600 clamp(2rem, 5vw, 4rem) / 1 'Clash Display', sans-serif; letter-spacing: -.045em; overflow-wrap: anywhere; }
   :global(.profile-portfolio .name-effect-canvas) { display: block; width: 100%; min-width: 0; }
-  :global(.profile-portfolio .name-effect-canvas__semantic.profile-portfolio__name) { display: block; width: 100%; }
+  :global(.profile-portfolio .name-effect-canvas__semantic.profile-portfolio__name) { display: block; width: 100%; overflow-wrap: anywhere; }
   .profile-portfolio__bio { max-width: 42rem; margin: .7rem 0 0; color: var(--profile-description, rgba(248,248,248,.8)); font: 500 clamp(.85rem, 1.3vw, 1.1rem) / 1.5 'Inter', sans-serif; overflow-wrap: anywhere; }
   .profile-portfolio__bio--typewriter { font-family: var(--font-mono-stack, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; }
   .profile-portfolio__metadata { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: .35rem .7rem; margin-top: 1rem; color: var(--profile-secondary-text, rgba(248,248,248,.6)); font: 500 .72rem / 1.3 'Inter', sans-serif; letter-spacing: .06em; }

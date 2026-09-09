@@ -19,15 +19,17 @@ test('Studio preview is a bounded reference card, not a public-profile renderer'
   assert.match(settings, /import\('\.\/ProfileStudioPreview\.svelte'\)/);
   assert.doesNotMatch(settings, /ProfileShell\.svelte|PreviewDockComponent|previewComponent/);
 
-  for (const anatomy of ['profile-reference-card__avatar', 'profile-reference-card__name', 'profile-reference-card__bio', 'profile-reference-card__links', 'profile-reference-card__roll']) {
+  for (const anatomy of ['profile-reference-card__avatar', 'profile-reference-card__identity-copy', 'profile-reference-card__name', 'profile-reference-card__bio', 'profile-reference-card__links', 'profile-reference-card__roll']) {
     assert.match(card, new RegExp(anatomy));
   }
   assert.match(card, /border-radius: var\(--profile-border-radius, 20px\)/);
   assert.match(card, /backdrop-filter: blur\(var\(--profile-surface-blur, 30px\)\) saturate\(160%\)/);
   assert.match(card, /profile-reference-card--studio[\s\S]*border: 1px solid rgba\(255,255,255,\.11\)/);
+  assert.match(card, /profile-reference-card--framed \.profile-reference-card__identity-copy[\s\S]*align-self: center;/);
+  assert.match(card, /profile-reference-card--framed \.profile-reference-card__avatar-shell[\s\S]*grid-row: 1;/);
   assert.doesNotMatch(card, /profile-reference-card__head|headerValue/);
-  assert.match(preview, /profile-studio-preview__header[\s\S]*width: min\(52rem, 100%\)/);
-  assert.match(preview, /@media \(min-width: 1101px\)[\s\S]*padding-top: 5\.1rem/);
+  assert.match(preview, /profile-studio-preview \{ position: relative; display: grid; align-items: center;/);
+  assert.doesNotMatch(preview, /profile-studio-preview__header|profile-studio-preview__footer|Desktop|Mobile/);
 });
 
 test('Studio keeps the reference card while homepage stays a roll-first surface', async () => {

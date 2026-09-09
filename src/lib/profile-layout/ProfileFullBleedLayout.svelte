@@ -1,5 +1,7 @@
 <script>
+  import { afterUpdate, onMount } from 'svelte';
   import AvatarEffect from '../avatar-effect/AvatarEffect.svelte';
+  import ProfileAvatarFallback from '../ProfileAvatarFallback.svelte';
   import NameEffectCanvas from '../name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from '../profile-border/ProfileBorderEffect.svelte';
   import ProfileRollSummary from '../ProfileRollSummary.svelte';
@@ -39,6 +41,12 @@
 
   let failedAvatarSource = '';
   let failedBannerSource = '';
+  let profileElement;
+  let avatarShellElement;
+  let identityCopyElement;
+  let nameOffsetFrame = 0;
+  let nameResizeObserver;
+  let nameOffsetTimers = [];
 
   $: safeDisplayName = String(displayName || 'Unknown Player').trim().slice(0, 80) || 'Unknown Player';
   $: safeInitial = safeDisplayName.slice(0, 1).toUpperCase() || '✦';
@@ -66,6 +74,68 @@
   function linkIconSource(link) {
     return `/link-icons/${link.definition.icon}.svg`;
   }
+
+  function resolveSleekElements() {
+    if (!profileElement?.isConnected && typeof document !== 'undefined') {
+      profileElement = document.querySelector('.profile-full-bleed');
+    }
+    if (!profileElement) return;
+    identityCopyElement = profileElement.querySelector('.profile-full-bleed__identity-copy');
+    avatarShellElement = profileElement.querySelector('.profile-full-bleed__avatar-shell');
+  }
+
+  function updateSleekNameOffset() {
+    resolveSleekElements();
+    if (!identityCopyElement) return;
+    if (layoutVariant !== 'sleek') {
+      identityCopyElement.style.removeProperty('--profile-sleek-name-offset');
+      profileElement?.style.removeProperty('--profile-sleek-name-offset');
+      return;
+    }
+    const nameElement = identityCopyElement.querySelector('.name-effect-canvas, .profile-full-bleed__name');
+    const avatarBox = avatarShellElement?.getBoundingClientRect?.();
+    const copyBox = identityCopyElement.getBoundingClientRect?.();
+    const nameWidth = nameElement?.getBoundingClientRect?.().width || 0;
+    if (!avatarBox || !copyBox || !nameWidth) {
+      return;
+    }
+    const offset = avatarBox.left + avatarBox.width / 2 - (copyBox.left + nameWidth / 2);
+    identityCopyElement.style.setProperty('--profile-sleek-name-offset', `${offset}px`);
+    profileElement?.style.setProperty('--profile-sleek-name-offset', `${offset}px`);
+  }
+
+  function scheduleSleekNameOffset() {
+    if (nameOffsetFrame || typeof requestAnimationFrame !== 'function') return;
+    nameOffsetFrame = requestAnimationFrame(() => {
+      nameOffsetFrame = 0;
+      updateSleekNameOffset();
+    });
+  }
+
+  onMount(() => {
+    resolveSleekElements();
+    if (typeof ResizeObserver === 'function') {
+      nameResizeObserver = new ResizeObserver(scheduleSleekNameOffset);
+      const nameElement = identityCopyElement?.querySelector('.name-effect-canvas, .profile-full-bleed__name');
+      [profileElement, avatarShellElement, identityCopyElement, nameElement].filter(Boolean).forEach(element => nameResizeObserver.observe(element));
+    }
+    document.fonts?.addEventListener?.('loadingdone', scheduleSleekNameOffset);
+    scheduleSleekNameOffset();
+    nameOffsetTimers = [0, 100].map(delay => setTimeout(scheduleSleekNameOffset, delay));
+
+    return () => {
+      if (nameOffsetFrame) cancelAnimationFrame(nameOffsetFrame);
+      nameOffsetTimers.forEach(timer => clearTimeout(timer));
+      nameOffsetTimers = [];
+      nameResizeObserver?.disconnect();
+      document.fonts?.removeEventListener?.('loadingdone', scheduleSleekNameOffset);
+    };
+  });
+
+  afterUpdate(() => {
+    resolveSleekElements();
+    scheduleSleekNameOffset();
+  });
 </script>
 
 <ProfileBorderEffect
@@ -75,6 +145,7 @@
   animated={true}
 >
   <section
+    bind:this={profileElement}
     class={`profile-full-bleed profile-full-bleed--${layoutVariant} profile-full-bleed--entry-${safeEntryAnimation} ${rollHex ? 'profile-full-bleed--has-roll' : 'profile-full-bleed--no-roll'} ${showAvatar ? 'profile-full-bleed--has-avatar' : 'profile-full-bleed--no-avatar'} ${activeBannerSource && layoutVariant === 'sleek' ? 'profile-full-bleed--has-banner' : 'profile-full-bleed--no-banner'}`}
     style={`${surfaceStyle || ''};--profile-full-bleed-accent:${safeAccent};--profile-full-bleed-link-scale:${safeLinkScale};--profile-full-bleed-link-glow:${safeLinkGlow};`}
     aria-label={`${safeDisplayName} profile`}
@@ -86,7 +157,7 @@
       </div>
     {/if}
     {#if showAvatar}
-      <div class="profile-full-bleed__avatar-shell">
+      <div bind:this={avatarShellElement} class="profile-full-bleed__avatar-shell">
         <AvatarEffect
           effectKey={avatarEffectKey}
           accentColor={safeAccent}
@@ -109,40 +180,42 @@
               on:error={() => failedAvatarSource = avatarSrc}
             />
           {:else}
-            <span class="profile-full-bleed__avatar-fallback" aria-hidden="true">{safeInitial}</span>
+            <ProfileAvatarFallback initial={safeInitial} className="profile-full-bleed__avatar-fallback" />
           {/if}
         </AvatarEffect>
       </div>
     {/if}
 
-    {#if nameLoadout}
-      <NameEffectCanvas
-        text={safeDisplayName}
-        loadout={nameLoadout}
-        todayColor={nameTodayColor}
-        baseColor={nameBaseColor}
-        recentColors={nameRecentColors}
-        context="profile"
-        mode="animated"
-        semanticTag={headingTag === 'h2' ? 'h2' : 'h1'}
-        semanticClass="profile-full-bleed__name"
-      />
-    {:else}
-      <svelte:element this={headingTag === 'h2' ? 'h2' : 'h1'} class="profile-full-bleed__name">{safeDisplayName}</svelte:element>
-    {/if}
+    <div bind:this={identityCopyElement} class="profile-full-bleed__identity-copy">
+      {#if nameLoadout}
+        <NameEffectCanvas
+          text={safeDisplayName}
+          loadout={nameLoadout}
+          todayColor={nameTodayColor}
+          baseColor={nameBaseColor}
+          recentColors={nameRecentColors}
+          context="profile"
+          mode="animated"
+          semanticTag={headingTag === 'h2' ? 'h2' : 'h1'}
+          semanticClass="profile-full-bleed__name"
+        />
+      {:else}
+        <svelte:element this={headingTag === 'h2' ? 'h2' : 'h1'} class="profile-full-bleed__name">{safeDisplayName}</svelte:element>
+      {/if}
 
-    {#if bio}
-      <p class={`profile-full-bleed__bio profile-full-bleed__bio--${safeDescriptionMode}`}>{bio}</p>
-    {/if}
+      {#if bio}
+        <p class={`profile-full-bleed__bio profile-full-bleed__bio--${safeDescriptionMode}`}>{bio}</p>
+      {/if}
 
-    {#if metadata.length}
-      <div class="profile-full-bleed__metadata" aria-label="Profile details">
-        {#each metadata as item, index (item)}
-          {#if index}<span aria-hidden="true">·</span>{/if}
-          <span>{item}</span>
-        {/each}
-      </div>
-    {/if}
+      {#if metadata.length}
+        <div class="profile-full-bleed__metadata" aria-label="Profile details">
+          {#each metadata as item, index (item)}
+            {#if index}<span aria-hidden="true">·</span>{/if}
+            <span>{item}</span>
+          {/each}
+        </div>
+      {/if}
+    </div>
 
     {#if rollHex}
       <div class="profile-full-bleed__roll" data-profile-roll-slot="summary">
@@ -209,11 +282,21 @@
 
   .profile-full-bleed {
     display: grid;
+    box-sizing: border-box;
     width: min(100%, 56rem);
     min-width: 0;
     margin: 0 auto;
     place-items: center;
     color: var(--profile-text, #f8f8f8);
+    text-align: center;
+  }
+
+  .profile-full-bleed__identity-copy {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
   }
 
@@ -236,14 +319,16 @@
   .profile-full-bleed--sleek .profile-full-bleed__links { margin-top: .85rem; }
 
   .profile-full-bleed--sleek {
+    --profile-sleek-avatar-size: clamp(6rem, 11vw, 7.5rem);
+    --profile-sleek-inline-padding: 2rem;
     position: relative;
     display: grid;
     width: min(100%, 40rem);
-    min-height: 16.875rem;
+    min-height: 15rem;
     box-sizing: border-box;
     align-content: start;
     justify-items: start;
-    padding: 6.4rem 2rem 1.65rem;
+    padding: 6rem 2rem 1rem;
     border: 1px solid color-mix(in srgb, var(--profile-border-color, #ffffff) calc(var(--profile-border-opacity, .18) * 100%), transparent);
     border-radius: var(--profile-border-radius, 3.125rem);
     background: var(--profile-surface-fill, rgba(25,25,25,.49));
@@ -266,21 +351,66 @@
     top: 0;
     left: 2rem;
     z-index: 2;
-    width: clamp(6rem, 11vw, 7.5rem);
-    height: clamp(6rem, 11vw, 7.5rem);
+    width: var(--profile-sleek-avatar-size);
+    height: var(--profile-sleek-avatar-size);
     margin: 0;
     transform: translateY(-48%);
   }
 
-  .profile-full-bleed--sleek .profile-full-bleed__name { max-width: min(100%, 24rem); text-align: left; }
-  .profile-full-bleed--sleek .profile-full-bleed__bio { max-width: 29rem; margin-left: 0; text-align: left; }
+  .profile-full-bleed--sleek .profile-full-bleed__identity-copy {
+    width: min(100%, 29rem);
+    align-items: flex-start;
+    justify-self: start;
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .profile-full-bleed--sleek .profile-full-bleed__name {
+    width: fit-content;
+    max-width: min(100%, calc(var(--profile-sleek-avatar-size) + var(--profile-sleek-inline-padding) + var(--profile-sleek-inline-padding)));
+    margin-left: var(--profile-sleek-name-offset, 0px);
+    text-align: center;
+  }
+  .profile-full-bleed--sleek .profile-full-bleed__bio {
+    width: calc(100% - var(--profile-sleek-name-offset, 0px));
+    max-width: 29rem;
+    margin-left: var(--profile-sleek-name-offset, 0px);
+    margin-right: 0;
+    text-align: left;
+  }
   .profile-full-bleed--sleek.profile-full-bleed--no-roll .profile-full-bleed__name,
-  .profile-full-bleed--sleek.profile-full-bleed--no-roll .profile-full-bleed__bio { max-width: 34rem; }
+  .profile-full-bleed--sleek.profile-full-bleed--no-roll .profile-full-bleed__bio { max-width: 100%; }
   .profile-full-bleed--sleek.profile-full-bleed--no-avatar.profile-full-bleed--no-banner { padding-top: 2rem; }
   .profile-full-bleed--sleek.profile-full-bleed--no-avatar.profile-full-bleed--has-banner { padding-top: 8.2rem; }
-  .profile-full-bleed--sleek .profile-full-bleed__metadata { justify-content: flex-start; margin-top: .75rem; text-align: left; }
-  .profile-full-bleed--sleek .profile-full-bleed__roll { position: absolute; top: 1.2rem; right: 1.4rem; width: min(42%, 14rem); }
-  .profile-full-bleed--sleek .profile-full-bleed__links { justify-content: flex-start; margin-top: 1rem; }
+  .profile-full-bleed--sleek .profile-full-bleed__metadata {
+    position: absolute;
+    top: 1.35rem;
+    right: 2rem;
+    max-width: calc(100% - 4rem);
+    justify-content: flex-end;
+    margin-top: 0;
+    text-align: right;
+  }
+  .profile-full-bleed--sleek.profile-full-bleed--has-roll { padding-top: 1.2rem; }
+  .profile-full-bleed--sleek.profile-full-bleed--has-roll::before {
+    content: '';
+    grid-area: 1 / 1;
+    min-height: 4.5rem;
+  }
+  .profile-full-bleed--sleek .profile-full-bleed__roll {
+    grid-area: 1 / 1;
+    justify-self: end;
+    position: relative;
+    width: min(48%, 14rem);
+    margin: 0 0 1rem;
+  }
+  .profile-full-bleed--sleek.profile-full-bleed--has-roll .profile-full-bleed__roll { margin-top: 1.9rem; }
+  .profile-full-bleed--sleek .profile-full-bleed__links {
+    justify-content: flex-start;
+    justify-self: start;
+    margin: 1rem 0 0 var(--profile-sleek-name-offset, 0px);
+    max-width: calc(100% - var(--profile-sleek-name-offset, 0px));
+  }
 
   .profile-full-bleed__roll {
     width: min(100%, 26rem);
@@ -306,8 +436,7 @@
     place-items: center;
   }
 
-  .profile-full-bleed__avatar,
-  .profile-full-bleed__avatar-fallback {
+  .profile-full-bleed__avatar {
     display: grid;
     width: 100%;
     height: 100%;
@@ -316,11 +445,6 @@
   }
 
   .profile-full-bleed__avatar { object-fit: cover; }
-  .profile-full-bleed__avatar-fallback {
-    background: rgba(8, 9, 12, .72);
-    color: var(--profile-highlight, #f8f8f8);
-    font: 600 clamp(3rem, 7vw, 4.8rem) / 1 'Clash Display', sans-serif;
-  }
 
   .profile-full-bleed__name,
   :global(.profile-full-bleed .profile-full-bleed__name) {
@@ -342,6 +466,23 @@
   :global(.profile-full-bleed .name-effect-canvas__semantic.profile-full-bleed__name) {
     display: block;
     width: 100%;
+  }
+
+  /* Give Sleek's name the avatar's width so its glyphs stay centered on the
+     avatar while the bio and links retain the shared left edge. */
+  :global(.profile-full-bleed--sleek .name-effect-canvas) {
+    width: fit-content;
+    max-width: min(100%, calc(var(--profile-sleek-avatar-size) + var(--profile-sleek-inline-padding) + var(--profile-sleek-inline-padding)));
+    margin-left: var(--profile-sleek-name-offset, 0px);
+    align-self: flex-start;
+    text-align: center;
+  }
+
+  :global(.profile-full-bleed--sleek .name-effect-canvas__semantic.profile-full-bleed__name) {
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+    text-align: center;
   }
 
   .profile-full-bleed__bio {
@@ -449,12 +590,14 @@
 
   @media (max-width: 680px) {
     .profile-full-bleed--sleek {
-      min-height: 18rem;
-      padding: 6.2rem 1.35rem 1.45rem;
+      --profile-sleek-inline-padding: 1.35rem;
+      min-height: 0;
+      padding: 5.8rem 1.35rem 1rem;
     }
 
     .profile-full-bleed--sleek .profile-full-bleed__avatar-shell { left: 1.35rem; }
-    .profile-full-bleed--sleek .profile-full-bleed__roll { top: 1.05rem; right: 1rem; width: min(47%, 12rem); }
+    .profile-full-bleed--sleek .profile-full-bleed__roll { width: min(48%, 12rem); }
+    .profile-full-bleed--sleek .profile-full-bleed__metadata { right: 1.35rem; max-width: calc(100% - 2.7rem); }
   }
 
   @media (max-width: 36rem) {
@@ -465,6 +608,7 @@
     }
 
     .profile-full-bleed { padding-inline: .75rem; }
+    .profile-full-bleed--sleek { padding-inline: 1.35rem; }
     .profile-full-bleed__avatar-shell { margin-bottom: .55rem; }
     .profile-full-bleed__name { font-size: clamp(1.45rem, 7vw, 1.9rem); }
     .profile-full-bleed__bio { max-width: 22rem; font-size: clamp(.76rem, 4vw, 1rem); }

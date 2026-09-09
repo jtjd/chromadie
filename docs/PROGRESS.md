@@ -1,5 +1,27 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio preview composition — 2026-09-09
+
+- Removed the nonfunctional live-preview label, divider and desktop/mobile
+  switch from Profile Studio.
+- Centered the live profile specimen vertically in the desktop preview column;
+  narrow viewports keep normal responsive flow.
+- Removed the unused Profile Studio device state and event wiring while keeping
+  shared profile renderer responsiveness intact.
+
+## Profile layout parity — 2026-09-09
+
+- Shared rendering now fixes Sleek's animated-name/link alignment, proportional
+  initial avatars, centered daily-color content, Modern name placement, and
+  mobile Portfolio containment. Homepage geometry overrides are removed.
+- Browser coverage exercises all five layouts at 1440, 390 and 320 pixels with
+  regular/long names, empty content and hidden avatars. Screenshot evidence is
+  under `/tmp/chromadie-layout-parity/`; homepage scenes are checked separately.
+- Required build, Svelte check, ESLint, 557 tests, links, CSP, performance,
+  username, balance, catalog, scoring parity and DB-security checks pass.
+  Existing aggregate asset catalog advisories remain; enforced budgets pass.
+- No migration or deployment. See `milestones/PROFILE_LAYOUT_PARITY.md`.
+
 ## Name materials and motion composition — 2026-09-08
 
 - Rebuilt seven weak materials with distinct saturated finishes while retaining
@@ -5696,6 +5718,18 @@ reads return no synthetic editable draft, preserve a prior snapshot only as a
 read-only display, disable publish/reset and configuration editors, and expose
 a retry path. Full-context refreshes use the same invariant and cannot replace
 an authoritative configuration with failed-read defaults.
+
+## Profile identity alignment follow-up — 2026-09-09
+
+Sleek now centers its username on the overlapping avatar, keeps the bio and
+link rail on the username's left edge, and moves location metadata to the
+upper-right. Modern's avatar and identity copy now share a vertically
+centered row. The same shared renderers drive public profiles, Profile Studio,
+and the homepage showcase.
+
+Focused browser geometry coverage passes all 60 layout, viewport, and content
+cases, including Sleek's avatar/name relationship, metadata placement, and
+Modern's vertical alignment.
 
 ## Auth flow cleanup — 2026-09-08 (unreleased)
 

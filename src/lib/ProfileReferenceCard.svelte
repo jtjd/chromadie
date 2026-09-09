@@ -2,6 +2,7 @@
   import { normalizeHexColor } from './utils.js';
   import { PROFILE_IDENTITY_DESCRIPTION_MODES, PROFILE_IDENTITY_ENTRY_ANIMATIONS } from './profileIdentityPresentation.js';
   import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
+  import ProfileAvatarFallback from './ProfileAvatarFallback.svelte';
   import { getAvatarEffectDefinition } from './avatar-effect/avatarEffects.js';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
@@ -116,30 +117,32 @@
               {#if activeAvatarSource}
                 <img class="profile-reference-card__avatar" src={activeAvatarSource} alt={`${safeDisplayName} avatar`} loading="eager" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
               {:else}
-                <span class="profile-reference-card__avatar-fallback" aria-hidden="true">{safeInitial}</span>
+                <ProfileAvatarFallback initial={safeInitial} className="profile-reference-card__avatar-fallback" />
               {/if}
             </AvatarEffect>
           </div>
         {/if}
 
-        {#if nameLoadout}
-          <NameEffectCanvas
-            text={safeDisplayName}
-            loadout={nameLoadout}
-            todayColor={safeNameTodayColor}
-            baseColor={safeNameBaseColor}
-            recentColors={nameRecentColors}
-            context="profile"
-            mode="animated"
-            semanticTag="h2"
-            semanticClass="profile-reference-card__name"
-          />
-        {:else}
-          <h2 class="profile-reference-card__name">{safeDisplayName}</h2>
-        {/if}
-        {#if bio}<p class={`profile-reference-card__bio profile-reference-card__bio--${safeDescriptionMode}`}>{bio}</p>{/if}
-        {#if secondaryLine}<p class="profile-reference-card__secondary">{secondaryLine}</p>{/if}
-        {#if meta}<div class="profile-reference-card__meta">{meta}</div>{/if}
+        <div class="profile-reference-card__identity-copy">
+          {#if nameLoadout}
+            <NameEffectCanvas
+              text={safeDisplayName}
+              loadout={nameLoadout}
+              todayColor={safeNameTodayColor}
+              baseColor={safeNameBaseColor}
+              recentColors={nameRecentColors}
+              context="profile"
+              mode="animated"
+              semanticTag="h2"
+              semanticClass="profile-reference-card__name"
+            />
+          {:else}
+            <h2 class="profile-reference-card__name">{safeDisplayName}</h2>
+          {/if}
+          {#if bio}<p class={`profile-reference-card__bio profile-reference-card__bio--${safeDescriptionMode}`}>{bio}</p>{/if}
+          {#if secondaryLine}<p class="profile-reference-card__secondary">{secondaryLine}</p>{/if}
+          {#if meta}<div class="profile-reference-card__meta">{meta}</div>{/if}
+        </div>
 
         {#if audioAvailable && !framedLayout}
           <div class="profile-reference-card__audio" aria-label={audioLabel}>
@@ -272,6 +275,16 @@
     text-align: center;
   }
 
+  .profile-reference-card--profile:not(.profile-reference-card--framed) .profile-reference-card__identity-copy,
+  .profile-reference-card--studio:not(.profile-reference-card--framed) .profile-reference-card__identity-copy {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
   .profile-reference-card--profile:not(.profile-reference-card--framed) .profile-reference-card__avatar-shell,
   .profile-reference-card--studio:not(.profile-reference-card--framed) .profile-reference-card__avatar-shell {
     margin: 0 auto 1rem;
@@ -346,17 +359,27 @@
   .profile-reference-card--framed .profile-reference-card__identity {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto;
     column-gap: 1rem;
     align-items: center;
     min-width: 0;
     text-align: left;
   }
 
+  .profile-reference-card--framed .profile-reference-card__identity-copy {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    flex-direction: column;
+    align-self: center;
+    justify-content: center;
+    text-align: left;
+  }
+
   .profile-reference-card--framed .profile-reference-card__avatar-shell {
     position: static;
     grid-column: 1;
-    grid-row: 1 / span 4;
+    grid-row: 1;
     width: clamp(5.5rem, 11vw, 7.5rem);
     height: clamp(5.5rem, 11vw, 7.5rem);
     margin: 0;
@@ -368,8 +391,6 @@
   }
 
   .profile-reference-card--framed .profile-reference-card__name {
-    grid-column: 2;
-    grid-row: 1;
     max-width: 100%;
     font-size: clamp(1.55rem, 3vw, 2.1rem);
   }
@@ -378,6 +399,7 @@
     display: inline-block;
     width: fit-content;
     max-width: 100%;
+    align-self: flex-start;
     text-align: left;
   }
 
@@ -388,8 +410,6 @@
   }
 
   .profile-reference-card--framed .profile-reference-card__bio {
-    grid-column: 2;
-    grid-row: 2;
     max-width: 34rem;
     margin: .32rem 0 0;
     font-size: clamp(.78rem, 1.3vw, .95rem);
@@ -398,17 +418,10 @@
 
   .profile-reference-card--framed .profile-reference-card__secondary,
   .profile-reference-card--framed .profile-reference-card__meta {
-    grid-column: 2;
     font-family: var(--profile-reference-name-typeface, 'Inter', sans-serif);
     text-align: left;
   }
-
-  .profile-reference-card--framed .profile-reference-card__secondary { grid-row: 3; }
-  .profile-reference-card--framed .profile-reference-card__meta { grid-row: 4; }
-  .profile-reference-card--framed.profile-reference-card--no-avatar .profile-reference-card__name,
-  .profile-reference-card--framed.profile-reference-card--no-avatar .profile-reference-card__bio,
-  .profile-reference-card--framed.profile-reference-card--no-avatar .profile-reference-card__secondary,
-  .profile-reference-card--framed.profile-reference-card--no-avatar .profile-reference-card__meta { grid-column: 1 / -1; }
+  .profile-reference-card--framed.profile-reference-card--no-avatar .profile-reference-card__identity-copy { grid-column: 1 / -1; }
 
   .profile-reference-card--framed .profile-reference-card__links {
     display: flex;
@@ -543,8 +556,7 @@
     margin: 24px auto 15px;
   }
 
-  .profile-reference-card__avatar,
-  .profile-reference-card__avatar-fallback {
+  .profile-reference-card__avatar {
     display: grid;
     width: 100%;
     height: 100%;
@@ -553,7 +565,6 @@
   }
 
   .profile-reference-card__avatar { object-fit: cover; }
-  .profile-reference-card__avatar-fallback { position: relative; z-index: 2; color: rgba(248,248,248,.78); font: 600 1.7rem/1 'Clash Display', sans-serif; }
   :global(.profile-reference-card__avatar-effect) { display: grid; width: 100%; height: 100%; place-items: center; }
 
   :global(.profile-reference-card__border) { width: 100%; min-width: 0; }
@@ -588,6 +599,19 @@
 
   :global(.profile-reference-card .name-effect-canvas) { display: block; width: 100%; min-width: 0; }
   :global(.profile-reference-card .name-effect-canvas__semantic.profile-reference-card__name) { display: block; width: 100%; }
+
+  :global(.profile-reference-card--framed .name-effect-canvas) {
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+  }
+  :global(.profile-reference-card--framed .name-effect-canvas__semantic.profile-reference-card__name) {
+    width: auto;
+    text-align: left;
+  }
+  :global(.profile-reference-card--framed.profile-reference-card--no-avatar .name-effect-canvas) {
+    grid-column: 1 / -1;
+  }
 
   .profile-reference-card--homepage .profile-reference-card__name { font-size: 1.95rem; }
 
@@ -669,7 +693,7 @@
     text-align: left;
   }
 
-  .profile-reference-card__roll--summary :global(.profile-roll-summary) { margin: 0; }
+  .profile-reference-card__roll--summary :global(.profile-roll-summary) { margin: 0 auto; }
 
   .profile-reference-card--profile .profile-reference-card__name {
     text-wrap: balance;

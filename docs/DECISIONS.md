@@ -1,5 +1,26 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-09 — Studio preview is a centered canvas
+
+The Profile Studio preview keeps only the rendered profile specimen. Its
+auxiliary live-preview label, divider, and inactive desktop/mobile switch are
+removed. On desktop the specimen is centered in the sticky preview viewport;
+on narrow screens the preview returns to normal document flow and the profile
+renderer remains responsive. The underlying public and Studio layout renderers
+continue to own mobile behavior.
+
+## 2026-09-09 — Shared layout geometry and initial avatars
+
+Homepage examples retain the same card geometry as public and Studio renderers;
+marketing containers no longer override Sleek's border, shadow or frame width.
+Sleek follows the supplied screenshot's left identity edge. Animated names use
+an intrinsic-width host, and links remove centering margins. Its upper-right
+daily color occupies a real grid row so wrapped content reserves height.
+Other layouts center the daily-color content rather than an oversized empty box.
+All five layouts use one proportional large-initial avatar component. Modern's
+animated name explicitly occupies the identity grid's text column, and mobile
+Portfolio names wrap safely. No schema, saved layout IDs or authority changes.
+
 ## 2026-09-08 — Materials remain authoritative inside name motions
 
 Materials now paint an isolated, reusable surface before motion transforms
@@ -7054,3 +7075,13 @@ same-origin `next` value still preserves explicit handoffs such as Profile
 Studio. Turnstile remains required for non-local login, signup, and password
 reset submissions, and the local localhost bypass remains limited to Vite
 development and the existing integration-test environment.
+
+## 2026-09-09 — Keep Sleek identity edges balanced around its avatar
+
+Sleek centers its username on the overlapping avatar while keeping the bio and
+links on the username's left edge. Its location metadata occupies the upper
+right, with the daily-color widget below it when both are present. Modern keeps
+the avatar and identity copy in one two-column row and centers the complete
+copy block vertically against the avatar. Shared identity-copy wrappers keep
+these relationships identical in public profiles, Studio, and the homepage
+renderer.

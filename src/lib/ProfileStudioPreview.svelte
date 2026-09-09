@@ -1,5 +1,4 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileReferenceCard from './ProfileReferenceCard.svelte';
   import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
@@ -10,10 +9,6 @@
   export let previewRenderSnapshot = null;
   export let activeSection = 'customize';
   export let activeCustomizeTab = 'appearance';
-  export let previewDevice = 'desktop';
-  export let isMobileViewport = false;
-
-  const dispatch = createEventDispatcher();
   let previewStage;
 
   $: previewReady = Boolean(previewRenderSnapshot?.profile);
@@ -71,37 +66,21 @@
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   }
 
-  function togglePreview() {
-    dispatch('toggle');
-  }
-
-  function setPreviewDevice(device) {
-    if (device === 'desktop' || device === 'mobile') dispatch('devicechange', device);
-  }
 </script>
 
 <div class="profile-studio-preview" data-preview-tab={activeCustomizeTab} data-preview-section={activeSection} data-preview-layout={layoutVariant} data-preview-roll-widget={showRoll ? 'visible' : 'hidden'}>
-  <header class="profile-studio-preview__header">
-    <div class="profile-studio-preview__label"><i></i><span>Live public-profile preview</span></div>
-    {#if isMobileViewport}
-      <button class="profile-studio-preview__close" type="button" aria-label="Close live preview" on:click={togglePreview}>×</button>
-    {/if}
-  </header>
-
   {#if previewReady}
-    <div class="profile-studio-preview__canvas" class:profile-studio-preview__canvas--mobile={previewDevice === 'mobile'}>
-      <div class="profile-studio-preview__viewport" data-preview-device={previewDevice}>
+    <div class="profile-studio-preview__canvas">
+      <div class="profile-studio-preview__viewport">
         <div
           bind:this={previewStage}
           class={'profile-studio-preview__stage' + (profileWideNameFontEnabled ? ' profile-studio-preview__stage--profile-wide-name-font' : '')}
           style={previewTypographyStyle}
-          data-preview-device={previewDevice}
         >
           <ProfileMotionEffect
             motionKey={motionKey}
             inputSurface="container"
             surfaceElement={previewStage}
-            disabled={previewDevice === 'mobile'}
             className="profile-studio-preview__motion"
           >
             {#key layoutVariant}
@@ -182,7 +161,7 @@
                 rollLabel="Daily roll"
                 presentation="studio"
                 {layoutVariant}
-                ariaLabel="Live public-profile preview card"
+                ariaLabel="Profile preview card"
               />
             {/if}
             {/key}
@@ -194,31 +173,15 @@
     <div class="profile-studio-preview__loading" role="status" aria-live="polite"><span aria-hidden="true">✦</span> Preparing your live canvas…</div>
   {/if}
 
-  <footer class="profile-studio-preview__footer">
-    <div class="profile-studio-preview__devices" role="group" aria-label="Preview device">
-      <button type="button" class:active={previewDevice === 'desktop'} aria-pressed={previewDevice === 'desktop'} on:click={() => setPreviewDevice('desktop')}>Desktop</button>
-      <button type="button" class:active={previewDevice === 'mobile'} aria-pressed={previewDevice === 'mobile'} on:click={() => setPreviewDevice('mobile')}>Mobile</button>
-    </div>
-  </footer>
 </div>
 
 <style>
-  .profile-studio-preview { position: relative; display: grid; align-content: start; width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 100%; overflow: visible; }
-  .profile-studio-preview__header { position: relative; z-index: 0; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: min(52rem, 100%); min-height: 2rem; margin: 0 auto 17px; }
-  .profile-studio-preview__label { display: inline-flex; align-items: center; gap: 8px; color: var(--studio-atmosphere-muted, #f4f4f4); font: 500 .63rem/1 'Inter', sans-serif; letter-spacing: .1em; text-transform: uppercase; mix-blend-mode: difference; }
-  .profile-studio-preview__label i { width: 6px; height: 6px; border-radius: 50%; background: var(--studio-accent, var(--white, #ffffff)); box-shadow: 0 0 8px var(--studio-accent-glow, rgba(255,255,255,.16)); }
-  .profile-studio-preview__close { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--studio-atmosphere-line, rgba(255,255,255,.72)); border-radius: .4rem; background: transparent; color: var(--studio-atmosphere-muted, #f4f4f4); font-size: 1.1rem; cursor: pointer; mix-blend-mode: difference; }
-  .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-atmosphere-ink, #ffffff); color: var(--studio-atmosphere-ink, #ffffff); }
-  .profile-studio-preview__canvas { position: relative; z-index: 1; display: grid; width: 100%; min-width: 0; place-items: start center; overflow: visible; }
+  .profile-studio-preview { position: relative; display: grid; align-items: center; width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 100%; overflow: visible; }
+  .profile-studio-preview__canvas { position: relative; z-index: 1; display: grid; width: 100%; height: 100%; min-width: 0; min-height: 0; place-items: center; overflow: visible; }
   .profile-studio-preview__viewport { width: min(52rem, 100%); min-width: 0; }
   .profile-studio-preview__stage { width: 100%; min-width: 0; overflow: visible; }
   .profile-studio-preview__loading { position: relative; z-index: 1; display: grid; min-height: 22rem; place-items: center; gap: .55rem; color: var(--studio-atmosphere-muted, #f4f4f4); font: 400 .8rem/1.45 'Inter', sans-serif; text-align: center; mix-blend-mode: difference; }
   .profile-studio-preview__loading span { color: var(--studio-accent, var(--white, #ffffff)); font-size: 1.2rem; }
-  .profile-studio-preview__footer { position: relative; z-index: 2; display: flex; align-items: center; justify-content: flex-end; gap: .7rem; width: min(52rem, 100%); min-height: 2.8rem; margin: 15px auto 0; padding-top: 12px; border-top: 1px solid var(--studio-atmosphere-line, rgba(255,255,255,.72)); color: var(--studio-atmosphere-muted, #f4f4f4); font: 400 .6rem/1 'Inter', sans-serif; mix-blend-mode: difference; }
-  .profile-studio-preview__devices { display: inline-flex; align-items: center; gap: .2rem; }
-  .profile-studio-preview__devices button { min-height: 1.8rem; padding: .25rem .45rem; border: 0; border-radius: .3rem; background: transparent; color: var(--studio-atmosphere-muted, #f4f4f4); font: 500 .6rem/1 'Inter', sans-serif; cursor: pointer; }
-  .profile-studio-preview__devices button.active { background: rgba(255,255,255,.08); color: var(--studio-atmosphere-ink, #ffffff); }
-  .profile-studio-preview__devices button:hover, .profile-studio-preview__devices button:focus-visible { color: var(--studio-atmosphere-ink, #ffffff); }
 
   /* Match the public renderer's explicit typography scope while keeping the
      Studio chrome in its own Inter-based type system. */
@@ -228,24 +191,17 @@
   }
 
   @media (max-width: 1100px) {
-    .profile-studio-preview { height: auto; }
+    .profile-studio-preview { height: auto; align-items: start; }
+    .profile-studio-preview__canvas { height: auto; padding-top: 1.5rem; }
   }
 
   @media (min-width: 1101px) {
-    .profile-studio-preview { display: flex; flex-direction: column; padding-top: 5.1rem; }
-    /* Framed avatars intentionally cross the card's top edge. Keep the live
-       label after the specimen in document flow so that overlap can never
-       hide part of the label. */
-    .profile-studio-preview__canvas { order: 1; }
-    .profile-studio-preview__header { order: 2; min-height: 1.25rem; margin: 1rem auto 0; }
-    .profile-studio-preview__footer { order: 3; margin-top: .6rem; }
+    .profile-studio-preview__canvas { padding: 0; }
   }
 
   @media (max-width: 700px) {
-    .profile-studio-preview__header { margin-bottom: 11px; }
     .profile-studio-preview__canvas { padding: .5rem 0 1rem; }
     .profile-studio-preview__viewport { width: min(52rem, 100%); }
-    .profile-studio-preview__footer { margin-top: 0; }
   }
 
   @media (prefers-reduced-motion: reduce) {

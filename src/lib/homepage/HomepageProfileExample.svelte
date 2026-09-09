@@ -80,7 +80,7 @@
     },
     {
       id: 'full-bleed',
-      label: 'Full-bleed layout',
+      label: 'Simplistic layout',
       title: 'Let the page move with you.',
       description: 'Your history, links, and latest color live on one shareable canvas.',
       address: 'chm.lol/meilin',
@@ -402,19 +402,6 @@
   }
 
   .profile-example__swatches .profile-example__swatch--active { height: 48px; opacity: 1; }
-
-  .profile-example__canvas :global(.profile-full-bleed__boundary) {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* The cosmetic border is already the authored frame. Suppress the sleek
-     layout's base border/shadow here so the marketing specimen does not read
-     as a card nested inside another card. */
-  .profile-example__canvas :global(.profile-full-bleed--sleek) {
-    border-color: transparent;
-    box-shadow: none;
-  }
 
   @keyframes profile-example-frame-in {
     from { opacity: 0; transform: translateY(12px) scale(.985); }

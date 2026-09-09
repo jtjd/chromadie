@@ -2,6 +2,26 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-09-09 — Centered Profile Studio preview
+
+- Centered the live profile specimen in the desktop Studio preview.
+- Removed the redundant preview label, divider, and inactive desktop/mobile
+  controls so the profile remains the sole visual focus.
+- Centered Sleek's username on the overlapping avatar, kept the bio and links
+  on the username's left edge, moved location metadata to the upper-right,
+  tightened card spacing, and vertically centered Modern's identity copy beside
+  its avatar in public profiles, Studio, and homepage previews.
+
+## 2026-09-09 — Profile layout consistency
+
+- Fixed Sleek's animated name and links drifting away from the left identity
+  edge; the same correction appears in public profiles, Studio and the homepage.
+- Standardized large initial-letter avatars across all five layouts.
+- Balanced daily-color placement and prevented wrapped widgets from overlapping
+  Sleek's identity; tightened mobile spacing and corrected Portfolio overflow.
+- Corrected Modern's animated-name grid placement and removed homepage-only card
+  overrides. The homepage now uses the existing Simplistic layout label.
+
 ## 2026-09-08 — Vivid name materials that compose with motion
 
 - Reworked Raised Glass, Carbon Vein, Afterglow, Soft Black, Quarry Mark,

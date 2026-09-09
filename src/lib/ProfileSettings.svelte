@@ -100,7 +100,6 @@
   let studioIdentityDraft = null;
   let cosmeticPreviewLoadout = null;
   let previewOpen = false;
-  let previewDevice = 'desktop';
   let sectionComponents = {};
   let sectionLoading = false;
   const sectionLoadPromises = new SvelteMap();
@@ -157,7 +156,6 @@
     studioIdentityDraft,
     cosmeticPreviewLoadout,
     fallbackColor: FALLBACK_PROFILE_COLOR,
-    previewDevice,
     featureFlags,
     previewScores: context?.targetScores || [],
     previewTimelineEvents: context?.timelineEvents || [],
@@ -319,10 +317,6 @@
     if (!customizePreviewAvailable) return;
     previewOpen = !previewOpen;
     if (previewOpen) void loadPreviewComponent();
-  }
-
-  function setPreviewDevice(device) {
-    if (device === 'desktop' || device === 'mobile') previewDevice = device;
   }
 
   function handleSectionDirty(event) {
@@ -902,10 +896,6 @@
         previewRenderSnapshot={previewRenderSnapshot}
         {activeSection}
         {activeCustomizeTab}
-        {previewDevice}
-        {isMobileViewport}
-        on:toggle={togglePreview}
-        on:devicechange={event => setPreviewDevice(event.detail)}
       />
     {:else if previewError}
       <div class="profile-settings-page__preview-state" role="alert">{previewError}</div>

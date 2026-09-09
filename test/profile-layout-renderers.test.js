@@ -330,7 +330,7 @@ test('layout renderer composes every published layout through bounded presentati
   assert.doesNotMatch(fullBleed, /role="tab"|presenceLabel|daily color profile/);
   assert.doesNotMatch(preview, /@container profile-preview \(max-width: 31rem\)/);
   assert.match(preview, /profile-studio-preview__viewport[\s\S]*width: min\(52rem, 100%\)/);
-  assert.match(preview, /profile-studio-preview__footer/);
+  assert.doesNotMatch(preview, /profile-studio-preview__footer|profile-studio-preview__devices|Desktop|Mobile/);
   assert.doesNotMatch(preview, /device-sample/);
   assert.match(shell, /profile-shell__continuation-column/);
   assert.match(shell, /data-profile-continuation="content"[\s\S]*data-profile-continuation="media"/);

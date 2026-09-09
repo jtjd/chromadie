@@ -39,8 +39,10 @@
   .profile-roll-summary {
     display: grid;
     gap: .45rem;
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     min-width: 0;
+    margin-inline: auto;
     box-sizing: border-box;
     color: var(--profile-text, inherit);
     font-family: inherit;

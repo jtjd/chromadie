@@ -589,8 +589,6 @@ async function capturePublishedLayouts() {
     await page.clickText('Preview', { description: 'open mobile reference preview' });
   }
   await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card')`, 'mobile reference card');
-  await page.click('.profile-studio-preview__devices button:nth-child(2)', 'mobile reference-card device');
-  await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-reference-card')`, 'mobile reference-card canvas');
   const mobileState = await page.evaluate(`(() => {
     const preview = document.querySelector('.profile-studio-preview');
     const card = preview?.querySelector('.profile-reference-card');
@@ -1860,9 +1858,7 @@ try {
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {
     await page.setViewport(390, 844);
-    await page.waitFor(`document.querySelector('.profile-studio-preview__devices button:nth-child(2)')`, 'live preview device controls');
-    await page.click('.profile-studio-preview__devices button:nth-child(2)', 'mobile live preview device');
-    await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-reference-card')`, 'bounded mobile live preview');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card')`, 'bounded mobile live preview');
     const mobilePreview = await page.evaluate(`(() => {
       const canvas = document.querySelector('.profile-studio-preview__canvas');
       const phone = canvas?.querySelector('.profile-studio-preview__viewport');
@@ -1879,7 +1875,7 @@ try {
         .slice(0, 5)
         .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
       return {
-        device: canvas?.classList.contains('profile-studio-preview__canvas--mobile') ? 'mobile' : 'desktop',
+        device: 'responsive',
         viewport: innerWidth,
         phone: phoneRect,
         card: rect(card),
@@ -1891,7 +1887,6 @@ try {
         phoneClientWidth: phone?.clientWidth || 0
       };
     })()`);
-    assert(mobilePreview.device === 'mobile', `Mobile live preview did not activate: ${JSON.stringify(mobilePreview)}.`);
     assert((mobilePreview.phone?.width || 0) <= (mobilePreview.viewport || 0) - 20 && (mobilePreview.card?.width || 0) > 200, `Mobile live preview is not a bounded phone canvas: ${JSON.stringify(mobilePreview)}.`);
     assert(!mobilePreview.overflow.length && mobilePreview.phoneScrollWidth <= mobilePreview.phoneClientWidth + 1 && mobilePreview.nameScrollWidth <= mobilePreview.nameClientWidth + 1, `Mobile live preview has horizontal content overflow: ${JSON.stringify(mobilePreview)}.`);
     await page.waitFor(`document.querySelector('.profile-studio-shell__menu-trigger')`, 'Profile Studio More menu');
@@ -1919,8 +1914,8 @@ try {
   await step('responsive dashboard geometry fits phone, tablet, and narrow desktop widths', async () => {
     await page.pressKey('Escape');
     await page.setViewport(390, 844);
-    if (await page.evaluate('Boolean(document.querySelector(".profile-studio-preview__close"))')) {
-      await page.click('.profile-studio-preview__close', 'close preview before responsive geometry audit');
+    if (await page.evaluate('Boolean(document.querySelector(".profile-studio-preview"))')) {
+      await page.click('.profile-studio-shell__mobile-tools button', 'close preview before responsive geometry audit');
       await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview for responsive geometry audit');
     }
 
@@ -1937,8 +1932,6 @@ try {
       await page.setViewport(width, height);
       await page.waitFor(`document.querySelector('.studio-customize') && document.querySelector('.profile-studio-header__customize-tabs')`, `Customize at ${width}px`);
       if (width > 1024) {
-        await page.waitFor('document.querySelector(".profile-studio-preview__devices button")', `narrow-desktop preview at ${width}px`);
-        await page.click('.profile-studio-preview__devices button:first-child', `desktop preview mode at ${width}px`);
       }
       for (const tab of customizeTabs) {
         await page.click(`#profile-customize-tab-${tab}`, `${tab} tab at ${width}px`);
@@ -2081,7 +2074,7 @@ try {
     await page.setViewport(600, 844);
     await page.waitFor(`matchMedia('(max-width: 64rem)').matches && document.querySelector('.profile-studio-shell__mobile-tools button')`, 'tablet mobile viewport state');
     if (await page.evaluate('Boolean(document.querySelector(".profile-studio-preview"))')) {
-      await page.click('.profile-studio-preview__close', 'close preview before tablet preview drawer audit');
+      await page.click('.profile-studio-shell__mobile-tools button', 'close preview before tablet preview drawer audit');
       await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview before tablet preview drawer audit');
     }
     await page.click('#profile-customize-tab-appearance', 'Appearance before preview drawer audit');
@@ -2120,7 +2113,7 @@ try {
       };
     })()`);
     assert(tabletPreview.contained && tabletPreview.pageContained, `Tablet live preview escapes its responsive document bounds: ${JSON.stringify(tabletPreview)}.`);
-    await page.click('.profile-studio-preview__close', 'close tablet live preview');
+    await page.click('.profile-studio-shell__mobile-tools button', 'close tablet live preview');
     await page.waitFor('!document.querySelector("#profile-studio-preview")', 'closed tablet live preview');
 
     await page.setViewport(414, 896);
@@ -2150,7 +2143,7 @@ try {
     // semantic text itself must remain contained.
     assert(phonePreview.contained && phonePreview.pageContained && ['block', 'flex', 'grid'].includes(phonePreview.card?.display) && phonePreview.card.clientWidth >= 200 && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 40 && (!phonePreview.copy || phonePreview.copy.textScrollWidth <= phonePreview.copy.textClientWidth + 1), `Phone live preview is not a readable bounded surface: ${JSON.stringify(phonePreview)}.`);
     await capture('09-mobile-preview-414');
-    await page.click('.profile-studio-preview__close', 'close phone preview drawer');
+    await page.click('.profile-studio-shell__mobile-tools button', 'close phone preview drawer');
     await page.waitFor('!document.querySelector("#profile-studio-preview")', 'closed phone live preview');
 
     await page.evaluate(`document.querySelector('#customize-identity')?.scrollIntoView({ block: 'start' })`);

@@ -18,7 +18,7 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(studio, /ProfileCustomizePage/);
   assert.match(studio, /ProfilePremiumPage/);
   assert.match(studio, /id: 'links'/);
-  assert.match(preview, /Live public-profile preview/);
+  assert.doesNotMatch(preview, /Live public-profile preview|Desktop|Mobile|Preview device/);
   assert.match(settings, /previewOpen/);
   assert.match(settings, /togglePreview/);
   assert.match(settings, /showPreview=\{showDashboardPreview\}/);
@@ -80,7 +80,7 @@ test('Profile Studio header uses the centered homepage shell geometry', async ()
   assert.match(shell, /@media \(max-width: 700px\) \{[\s\S]*\.profile-studio-shell__header-inner \{ width: calc\(100% - 30px\); \}/);
 });
 
-test('Profile Studio chrome adapts to the atmosphere and keeps the preview label below the specimen', async () => {
+test('Profile Studio preview centers the specimen without auxiliary chrome', async () => {
   const [shell, header, preview] = await Promise.all([
     readFile(new URL('../src/lib/ProfileStudioShell.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileStudioHeader.svelte', import.meta.url), 'utf8'),
@@ -93,14 +93,10 @@ test('Profile Studio chrome adapts to the atmosphere and keeps the preview label
   assert.match(shell, /\.profile-studio-shell \{[\s\S]*overflow-x: clip;/);
   assert.doesNotMatch(shell, /\.profile-studio-shell \{[\s\S]*isolation: isolate;/);
   assert.doesNotMatch(shell, /\.profile-studio-shell__workspace \{ position: relative; z-index: 1;/);
-  assert.match(preview, /\.profile-studio-preview \{ position: relative; display: grid;/);
-  assert.match(preview, /\.profile-studio-preview__header \{ position: relative; z-index: 0;/);
-  assert.match(preview, /\.profile-studio-preview__canvas \{ position: relative; z-index: 1;/);
-  assert.match(preview, /\.profile-studio-preview__footer \{ position: relative; z-index: 2;/);
-  assert.match(preview, /@media \(min-width: 1101px\) \{[\s\S]*\.profile-studio-preview \{ display: flex; flex-direction: column;/);
-  assert.match(preview, /\.profile-studio-preview__canvas \{ order: 1; \}/);
-  assert.match(preview, /\.profile-studio-preview__header \{ order: 2; min-height: 1\.25rem;/);
-  assert.match(preview, /\.profile-studio-preview__footer \{ order: 3; margin-top: \.6rem;/);
+  assert.match(preview, /\.profile-studio-preview \{ position: relative; display: grid; align-items: center;/);
+  assert.match(preview, /\.profile-studio-preview__canvas \{ position: relative; z-index: 1; display: grid;[\s\S]*place-items: center;/);
+  assert.doesNotMatch(preview, /profile-studio-preview__header|profile-studio-preview__footer|profile-studio-preview__devices|devicechange/);
+  assert.match(preview, /@media \(max-width: 1100px\) \{[\s\S]*\.profile-studio-preview \{ height: auto; align-items: start; \}/);
 });
 
 test('Profile Studio scopes the homepage companion palette without legacy theme aliases', async () => {

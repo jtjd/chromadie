@@ -56,6 +56,7 @@ test('Simplistic uses one purpose-built identity composition in public and Studi
 
   assert.match(layout, /data-profile-layout-content=\{layoutVariant\}/);
   assert.match(layout, /profile-full-bleed__avatar/);
+  assert.match(layout, /profile-full-bleed__identity-copy/);
   assert.match(layout, /profile-full-bleed__bio/);
   assert.match(layout, /profile-full-bleed__links/);
   assert.match(layout, /\/link-icons\//);
@@ -92,6 +93,8 @@ test('Simplistic matches the reference identity scale and exposes bounded link s
   assert.match(layout, /width: calc\(2\.4rem \* var\(--profile-full-bleed-link-scale, 1\)\);/);
   assert.match(layout, /width: calc\(2\.2rem \* var\(--profile-full-bleed-link-scale, 1\)\);/);
   assert.match(layout, /--profile-full-bleed-link-glow/);
+  assert.match(layout, /profile-full-bleed--sleek \.profile-full-bleed__identity-copy[\s\S]*align-items: flex-start;/);
+  assert.match(layout, /profile-full-bleed--sleek \.profile-full-bleed__bio[\s\S]*text-align: left;/);
   assert.doesNotMatch(layout, /\.profile-full-bleed__links a \{[^}]*box-shadow:/);
   assert.match(layout, /rgba\(255,255,255/);
   assert.match(layout, /column-gap: \.2rem;/);
