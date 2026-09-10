@@ -86,7 +86,7 @@ test('reroll lock is a short duplicate-click guard and expires deterministically
   const storage = createStorage();
   const key = getRerollLockKey();
   setRerollLock(storage, 1000);
-  assert.equal(storage.getItem(key), '11000');
+  assert.equal(JSON.parse(storage.getItem(key)).expiresAt, 11000);
   assert.equal(hasActiveRerollLock(storage, 5000), true);
   assert.equal(hasActiveRerollLock(storage, 11000), false);
   assert.equal(storage.getItem(key), null);
@@ -115,4 +115,16 @@ test('the dedicated Roll page is the only interactive roll surface', async () =>
   assert.match(rollPage, /<Game/);
   assert.doesNotMatch(profileShell, /profileRollComponent|todayColorComponent|roll_die\s*\(/);
   assert.doesNotMatch(game, /calculate_roll_v2|Math\.random\(\)|purchase\s*\(/);
+});
+
+test('stale reroll cleanup cannot remove a newer lock or another account lock', () => {
+  const storage = createStorage();
+  const older = setRerollLock(storage, 1000, 'a');
+  const newer = setRerollLock(storage, 1000, 'a');
+  setRerollLock(storage, 1000, 'b');
+  clearRerollLock(storage, older);
+  assert.equal(hasActiveRerollLock(storage, 2000, 'a'), true);
+  clearRerollLock(storage, newer);
+  assert.equal(hasActiveRerollLock(storage, 2000, 'a'), false);
+  assert.equal(hasActiveRerollLock(storage, 2000, 'b'), true);
 });

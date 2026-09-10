@@ -15,7 +15,7 @@
   import { getPercentileTier } from './rollPresentation.js';
   import { getRarityPresentation } from './rarityPresentation.js';
   import { getRank } from './ranks.js';
-  import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
+  import { clearRerollLock, hasActiveRerollLock, requestRoll, requestRollPercentile, setRerollLock } from './rollService.js';
   import { getAppOrigin } from './authUrls';
   import { trackProductEvent } from './productAnalytics.js';
   import { buildRollShareCardCanvas, canvasToPngBlob } from './rollShareExport.js';
@@ -85,7 +85,9 @@
   let imageOpener = null;
   let guestProgressRestored = false;
   let rerollRequestInFlight = false;
+  let rerollLocked = false;
   let initialStateKey = null;
+  let initialStateDate = getTodayString();
   let initialStateRequestId = 0;
   let rollRequestId = 0;
 
@@ -141,19 +143,13 @@
   }
 
   function tickCountdown() {
+      rerollLocked = hasActiveRerollLock(undefined, Date.now(), $session?.user?.id || '');
       const diff = getTomorrowMidnightUTC().getTime() - Date.now();
-      if (diff <= 0) {
-          clearInterval(countdownInterval);
-          phase = 'preroll';
-          badges = [];
-          traits = [];
-          identity = '';
-          rollContributors = [];
-          displayScore = 0;
-          scanProgress = 0;
-          percentileDisplay = null;
-          dispatchRollState();
-          return;
+      // A fresh tomorrow is always in the future. Compare the hydrated day
+      // instead, including after a background tab resumes past midnight.
+      if (initialStateDate !== getTodayString() && !loading) {
+          initialStateKey = null;
+          void syncInitialState();
       }
       const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
       const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
@@ -162,6 +158,8 @@
   }
 
   async function shareResultsText() {
+      const shareRequestId = rollRequestId;
+      const shareAccountId = $session?.user?.id || null;
       const shareHex = normalizeHexColor(displayColor);
       const senderUsername = $profile?.username || $authUser?.user_metadata?.username || null;
       let shareUrl = getAppOrigin();
@@ -173,6 +171,8 @@
             senderUsername
           })
         : { success: false };
+
+      if (shareRequestId !== rollRequestId || shareAccountId !== ($session?.user?.id || null)) return;
 
       if (challengeLink.success && challengeLink.shareUrl) {
           shareUrl = new URL(challengeLink.shareUrl, getAppOrigin()).toString();
@@ -197,10 +197,11 @@
 
       try {
           await navigator.clipboard.writeText(shareString);
+          if (shareRequestId !== rollRequestId || shareAccountId !== ($session?.user?.id || null)) return;
           copied = true;
           setTimeout(() => copied = false, 2000);
       } catch {
-          console.error("Clipboard copy failed");
+          addToast('Could not copy the result. Please try again.', 'error');
       }
   }
 
@@ -311,6 +312,9 @@
       scanProgress = 100;
       return canonical;
     };
+
+    if (!requestIsCurrent()) return null;
+    if (reducedMotion) return finalize();
 
     displayColor = '#222';
     displayHex = getRevealHexCharacters(canonical.hex, 0);
@@ -437,6 +441,10 @@
     newMilestones = [];
     cotwHit = false;
     guestProgressRestored = false;
+    copied = false;
+    imageCopied = false;
+    showImageModal = false;
+    imagePreviewUrl = '';
   }
 
   async function loadAuthenticatedRollState(userId, requestId) {
@@ -444,7 +452,9 @@
 
     const { data: dbRoll, error: dailyRollError } = await supabase.rpc('get_my_daily_roll');
 
-    if (requestId !== initialStateRequestId) return;
+    if (requestId !== initialStateRequestId || userId !== $session?.user?.id) return;
+
+    if (dailyRollError) error = dailyRollError.message || 'Today’s roll could not be loaded.';
 
     if (dbRoll) {
       phase = 'results';
@@ -458,8 +468,8 @@
           cotwHit = true;
       }
 
-      const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: dbRoll.score });
-      if (requestId !== initialStateRequestId) return;
+      const percData = await requestRollPercentile(supabase, dbRoll.score);
+      if (requestId !== initialStateRequestId || userId !== $session?.user?.id) return;
       if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
     } else {
       phase = 'preroll';
@@ -500,7 +510,7 @@
               cotwHit = true;
           }
 
-          const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: rollData.score });
+          const percData = await requestRollPercentile(supabase, rollData.score);
           if (requestId !== initialStateRequestId) return;
           if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
           dispatchRollState();
@@ -531,6 +541,7 @@
     if (nextKey === initialStateKey) return;
 
     initialStateKey = nextKey;
+    initialStateDate = getTodayString();
     rollRequestId += 1;
     const requestId = ++initialStateRequestId;
     rerollRequestInFlight = false;
@@ -539,11 +550,19 @@
     dispatchRollState();
     loading = true;
 
-    if (getRollAccountMode($session) === 'authenticated') {
-      guestProgressActive.set(false);
-      await loadAuthenticatedRollState($session.user.id, requestId);
-    } else {
-      await loadGuestRollState(requestId);
+    try {
+      if (getRollAccountMode($session) === 'authenticated') {
+        guestProgressActive.set(false);
+        await loadAuthenticatedRollState($session.user.id, requestId);
+      } else {
+        await loadGuestRollState(requestId);
+      }
+    } catch (loadError) {
+      if (requestId === initialStateRequestId) {
+        error = loadError?.message || 'Today’s roll could not be loaded. Please try again.';
+      }
+    } finally {
+      if (requestId === initialStateRequestId) loading = false;
     }
   }
 
@@ -563,8 +582,9 @@
   }
 
   async function generateShareImage() {
+    const shareRequestId = rollRequestId;
     const exportCanvas = await buildShareCardCanvas();
-    if (!exportCanvas) return;
+    if (!exportCanvas || shareRequestId !== rollRequestId) return;
 
     imagePreviewUrl = exportCanvas.toDataURL('image/png');
     imageCopied = false;
@@ -625,14 +645,19 @@
       isReroll,
       userId: $session?.user?.id || null,
       rerollShards: $rerollShards,
-      rerollLocked: hasActiveRerollLock()
+      rerollLocked: hasActiveRerollLock(undefined, Date.now(), $session?.user?.id || '')
     })) {
       return;
     }
 
+    const previousResult = isReroll ? {
+      score, rarity, badges, traits, identity, rollContributors, displayHex,
+      displayColor, displayScore, percentileDisplay, milestoneGranted, newMilestones, cotwHit
+    } : null;
     loading = true;
     const requestId = ++rollRequestId;
     const requestUserId = $session?.user?.id || null;
+    const requestDate = getTodayString();
     rerollRequestInFlight = isReroll;
     error = null;
     phase = 'rolling';
@@ -652,14 +677,12 @@
     cotwHit = false;
     dispatchRollState();
 
-    if (isReroll) {
-      setRerollLock();
-    }
+    const rerollLockHandle = isReroll ? setRerollLock(undefined, Date.now(), requestUserId) : null;
 
     const requestIsCurrent = () => requestId === rollRequestId
       && requestUserId === ($session?.user?.id || null);
     const abandonStaleRequest = () => {
-      if (isReroll) clearRerollLock();
+      if (rerollLockHandle) clearRerollLock(undefined, rerollLockHandle);
     };
 
     const { data, error: rpcError } = await requestRoll(supabase, isReroll);
@@ -671,21 +694,31 @@
 
     if (rpcError || !data || !data.success) {
       error = rpcError?.message || "An error occurred while rolling. Please try again.";
-      phase = 'preroll';
+      if (previousResult) {
+        ({ score, rarity, badges, traits, identity, rollContributors, displayHex,
+          displayColor, displayScore, percentileDisplay, milestoneGranted, newMilestones, cotwHit } = previousResult);
+        phase = 'results';
+      } else phase = 'preroll';
       loading = false;
       rerollRequestInFlight = false;
       if (isReroll) {
-        clearRerollLock();
+        if (rerollLockHandle) clearRerollLock(undefined, rerollLockHandle);
       }
       dispatchRollState();
       return;
+    }
+
+    // Guest results must survive navigation during the presentation timeline.
+    if (!requestUserId) {
+      saveGuestRoll(createCanonicalRollData(data, requestDate));
+      guestProgressActive.set(true);
     }
 
     // The server has already returned the authoritative result. The staged
     // reveal below only explains that result to the player; it never chooses,
     // scores, or mutates the roll.
     const canonical = await presentRollResult(data, requestIsCurrent);
-    if (!canonical) {
+    if (!canonical || !requestIsCurrent()) {
       abandonStaleRequest();
       return;
     }
@@ -696,7 +729,7 @@
     const finalBadges = sortBadgesDescending(canonical.badges);
     badges = finalBadges;
 
-    if (finalBadges.some(badgeId => getBadgeMeta(badgeId).points >= 1000000)) {
+    if (!prefersReducedMotion() && finalBadges.some(badgeId => getBadgeMeta(badgeId).points >= 1000000)) {
       document.querySelector('.container')?.classList.add('flash-jackpot', 'shake-screen');
       setTimeout(() => document.querySelector('.container')?.classList.remove('flash-jackpot', 'shake-screen'), 500);
     }
@@ -729,7 +762,7 @@
     // timeline. Mount the final card atomically so the dedicated context and
     // result card settle on the same value.
 
-    const rollData = createCanonicalRollData(data, getTodayString(), finalBadges);
+    const rollData = createCanonicalRollData(data, requestDate, finalBadges);
 
     trackProductEvent('roll_completed', {
       surface,
@@ -752,7 +785,7 @@
       guestProgressActive.set(true);
     } else {
       const hadLaunchBadge = $profile?.equipped_badges?.includes('launch_edition');
-      await Promise.all([
+      const refreshResults = await Promise.allSettled([
         refreshProfileState(requestUserId),
         fetchInventoryState(requestUserId),
         fetchWalletBalance(requestUserId)
@@ -760,6 +793,9 @@
       if (!requestIsCurrent()) {
         abandonStaleRequest();
         return;
+      }
+      if (refreshResults.some(result => result.status === 'rejected') || (refreshResults[0].status === 'fulfilled' && !refreshResults[0].value)) {
+        addToast('Your roll was saved, but account details could not refresh. Reload to update them.', 'error');
       }
       if (!hadLaunchBadge && $profile?.equipped_badges?.includes('launch_edition')) {
         addToast('Launch Edition badge unlocked!', 'success');
@@ -769,7 +805,7 @@
     dispatchRollState();
     rerollRequestInFlight = false;
     if (isReroll) {
-      clearRerollLock();
+      if (rerollLockHandle) clearRerollLock(undefined, rerollLockHandle);
     }
     loading = false;
   }
@@ -796,6 +832,7 @@
     countdownInterval = setInterval(tickCountdown, 1000);
     window.addEventListener('storage', handleGuestStorageChange);
 
+    if (dedicated) return;
     const { data: cotwData } = await supabase.from('meta').select('value').eq('key', 'cotw_target').single();
     if (cotwData?.value) {
         const [r, g, b] = cotwData.value.split(',');
@@ -808,6 +845,7 @@
   }
 
   onDestroy(() => {
+    initialStateRequestId += 1;
     rollRequestId += 1;
     cancelScoreCountUp();
     clearInterval(countdownInterval);
@@ -854,7 +892,7 @@
   style={dedicated && rarity ? `--roll-rarity: ${getRarityPresentation(rarity || 'Common').color};` : ''}
 >
   {#if error}
-    <p class="auth-error">{error}</p>
+    <p class="auth-error" role="alert">{error}</p>
   {/if}
 
   {#if phase === 'preroll'}
@@ -1020,6 +1058,18 @@
         </div>
       {/if}
 
+      {#if dedicated}
+        <div class="post-score-actions" aria-label="Additional roll actions">
+          {#if !showAcquisitionActions}
+            <button type="button" class="chroma-btn result-action" on:click={shareResultsText}>{copied ? 'Copied' : 'Share result'}</button>
+          {/if}
+          <button type="button" class="chroma-btn result-action" on:click={generateShareImage}>View image</button>
+          {#if $isAuthenticated && $rerollShards > 0}
+            <button type="button" class="reroll-btn result-action result-action--reroll" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}>Reroll · {$rerollShards} left</button>
+          {/if}
+        </div>
+      {/if}
+
       {#if cotwHit}
         <div class="cotw-success-banner">
           Color of the Week hit — +50,000 EP added to your wallet. Your leaderboard score is unchanged.
@@ -1047,7 +1097,7 @@
           </button>
 
           {#if $isAuthenticated && $rerollShards > 0}
-            <button class="reroll-btn result-action result-action--reroll" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || hasActiveRerollLock() || !$authInitialized}>
+            <button class="reroll-btn result-action result-action--reroll" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}>
               Reroll · {$rerollShards} left
             </button>
           {/if}

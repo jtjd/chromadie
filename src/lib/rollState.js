@@ -17,7 +17,7 @@ export function canInitiateRoll({
   rerollShards = 0,
   rerollLocked = false
 } = {}) {
-  if (!authInitialized) return false
+  if (!authInitialized || loading || rerollRequestInFlight) return false
   if (!isReroll) return true
 
   return Boolean(

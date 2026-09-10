@@ -291,7 +291,7 @@
   }
 
   .roll-page__context h1 span {
-    color: var(--roll-context-accent);
+    color: color-mix(in srgb, var(--roll-context-accent) 40%, var(--roll-text));
   }
 
   .roll-page__description {
@@ -361,7 +361,7 @@
   }
 
   .roll-page__proof-label {
-    color: var(--roll-context-accent);
+    color: color-mix(in srgb, var(--roll-context-accent) 40%, var(--roll-text));
     font: 700 .62rem/1 var(--site-font, 'Inter', sans-serif);
     letter-spacing: .12em;
   }

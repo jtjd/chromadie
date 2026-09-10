@@ -28,6 +28,7 @@ export function createScoreCountUpController({ windowRef = null, now = () => Dat
     onProgress = value => value
   }) {
     cancel();
+    if (!isCurrent()) return Promise.resolve(false);
     const browserWindow = getWindow();
     const safeTarget = Math.max(0, Number(targetScore) || 0);
     if (reducedMotion || typeof browserWindow?.requestAnimationFrame !== 'function') {

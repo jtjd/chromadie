@@ -108,8 +108,9 @@ function expandInventoryRows(rows) {
 }
 
 export async function fetchWalletBalance(expectedUserId = null) {
-    const { data } = await supabase.rpc('get_wallet_balance')
-    if (data !== null && (!expectedUserId || get(session)?.user?.id === expectedUserId)) {
+    const { data, error } = await supabase.rpc('get_wallet_balance')
+    if (error) throw error
+    if (data != null && (!expectedUserId || get(session)?.user?.id === expectedUserId)) {
         walletBalance.set(data)
     }
 }
@@ -134,11 +135,13 @@ export async function fetchProfileEntitlements(expectedUserId = null) {
 export async function fetchInventoryState(userId, expectedUserId = userId) {
     if (!userId) return []
 
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from('inventory')
         .select('item_key, quantity')
         .eq('user_id', userId)
 
+    if (error) throw error
+    if (!Array.isArray(data)) throw new Error('Inventory could not be refreshed.')
     const items = expandInventoryRows(data)
     if (!expectedUserId || get(session)?.user?.id === expectedUserId) {
         userInventory.set(items)

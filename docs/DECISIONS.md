@@ -7225,3 +7225,16 @@ published framed profile. The existing card and environment renderers retain
 its identity, links, media, typography, colors, and cosmetics. The snapshot is
 lazy-loaded without account hydration or schema changes. Desktop and phone
 browser coverage checks identity, public media, links, and overflow.
+
+
+## 2026-09-10 — Rolling game reliability audit
+
+Keep rolling mutations server-authoritative while treating reveal and optional
+account/ranking reads as recoverable presentation. Confirmed guest results persist
+before animation; reroll failures retain the last confirmed color. Modern roll
+surfaces expose existing shard and share actions. Account-scoped lock ownership
+prevents stale cleanup, and UTC rollover reloads the daily state. No schema changes.
+See `milestones/ROLLING_GAME_RELIABILITY_AUDIT.md` for scope and evidence.
+
+Post-roll wallet/inventory read errors preserve the last confirmed account state
+and propagate to the existing refresh warning instead of appearing as empty data.

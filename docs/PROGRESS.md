@@ -5893,3 +5893,16 @@ published framed profile. The existing card and environment renderers retain
 its identity, links, media, typography, colors, and cosmetics. The snapshot is
 lazy-loaded without account hydration or schema changes. Desktop and phone
 browser coverage checks identity, public media, links, and overflow.
+
+
+## 2026-09-10 — Rolling game reliability audit
+
+Audited both modern rolling entry points and repaired daily rollover, duplicate
+submissions, interrupted guest persistence, hydration/refresh failures, unavailable
+reroll controls, stale lock cleanup, and share/reveal races. Removed an unused
+request, shortened reduced-motion work, and corrected dark-color text contrast.
+Focused production-handler regressions and browser failure scenarios accompany
+the changes; validation is recorded in the rolling-game audit milestone.
+
+Post-roll wallet/inventory read errors preserve the last confirmed account state
+and propagate to the existing refresh warning instead of appearing as empty data.

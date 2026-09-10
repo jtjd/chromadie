@@ -34,3 +34,8 @@ test('score reveal cancellation settles the pending animation as stale', async (
   assert.equal(await pending, false);
   assert.deepEqual(cancelled, [7]);
 });
+
+test('stale reduced-motion score completion never writes into the next account', async () => {
+  const controller=createScoreCountUpController();
+  assert.equal(await controller.animate({targetScore:100,isCurrent:()=>false,duration:0,reducedMotion:true,onValue:()=>assert.fail('stale write')}),false);
+});

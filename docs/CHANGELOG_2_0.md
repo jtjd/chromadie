@@ -4606,3 +4606,16 @@ published framed profile. The existing card and environment renderers retain
 its identity, links, media, typography, colors, and cosmetics. The snapshot is
 lazy-loaded without account hydration or schema changes. Desktop and phone
 browser coverage checks identity, public media, links, and overflow.
+
+
+## 2026-09-10 — Rolling game reliability audit
+
+Restored reroll and image sharing on modern result cards. Daily state refreshes
+after UTC midnight; failed rerolls keep the last result; guest results survive
+interrupted reveals and optional ranking failures. Failed account refreshes no
+longer leave roll controls locked. Account-scoped locks and request guards protect
+stale completions. Reduced motion skips reveal work and jackpot flashes, and
+dark rolled-color headings remain readable.
+
+Post-roll wallet/inventory read errors preserve the last confirmed account state
+and propagate to the existing refresh warning instead of appearing as empty data.
