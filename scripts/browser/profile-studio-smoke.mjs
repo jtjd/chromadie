@@ -103,6 +103,7 @@ const auditSteps = new Set([
   'direct-refresh authenticated Profile Studio',
   'Customize and More destination usability',
   'Customize Discard restores the persisted draft',
+  'Customize cosmetic fitting-room state is guarded',
   'create an alias and resolve its direct-refresh path',
   'Customize Links tab keeps the live preview connected'
 ]);
@@ -1182,6 +1183,42 @@ try {
     return { persistedValue, restoredValue: restored.value, serverWrites: writes.length };
   });
 
+  await step('Customize cosmetic fitting-room state is guarded', async () => {
+    await page.navigate(`${appUrl}/profile/settings#customize-appearance`, 'cosmetic fitting-room regression');
+    await page.waitFor("document.querySelector('.profile-cosmetics-studio-grid select')", 'Profile effects controls');
+    const requestStart = page.requestLog.length;
+    const staged = await page.evaluate(`(() => {
+      const selects = [...document.querySelectorAll('.profile-cosmetics-studio-grid select')];
+      for (const select of selects) {
+        const option = [...select.options].find(candidate => candidate.value && !candidate.disabled && candidate.value !== select.value);
+        if (!option) continue;
+        const before = select.value;
+        select.value = option.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        return { id: select.id, before, after: option.value };
+      }
+      return null;
+    })()`);
+    assert(staged, 'No enabled cosmetic option was available for the fitting-room regression.');
+    await page.waitFor("document.querySelector('.profile-studio-header__save-state')?.textContent?.includes('Unpublished changes')", 'unapplied cosmetic status');
+    await page.click('.profile-studio-shell__menu-trigger', 'open More for cosmetic discard');
+    await page.click('[data-section="overview"]', 'leave cosmetic fitting room');
+    await page.waitFor("document.querySelector('.profile-studio-dirty-prompt')", 'cosmetic discard warning');
+    await page.click('.profile-studio-dirty-prompt__discard', 'discard cosmetic fitting-room selection');
+    await page.waitFor("document.querySelector('.profile-studio-overview') && !document.querySelector('.profile-studio-dirty-prompt')", 'overview after cosmetic discard');
+    await page.navigate(`${appUrl}/profile/settings#customize-appearance`, 'return after cosmetic discard');
+    await page.waitFor(`document.querySelector(${JSON.stringify(`#${staged.id}`)})`, 'cosmetic control after discard');
+    const restored = await page.evaluate(`(() => ({
+      value: document.querySelector(${JSON.stringify(`#${staged.id}`)})?.value || '',
+      status: document.querySelector('.profile-studio-header__save-state')?.textContent?.trim() || ''
+    }))()`);
+    assert(restored.value === staged.before, `Discard preserved cosmetic value ${restored.value}; expected ${staged.before}.`);
+    assert(restored.status === 'Published', `Discard left cosmetic-only status ${JSON.stringify(restored.status)}.`);
+    const writes = page.requestLog.slice(requestStart).filter(entry => entry.method === 'POST' && /rpc\/(equip_item|unequip_item|publish_profile_studio_v2|save_profile_configuration_v2)/.test(entry.url));
+    assert(writes.length === 0, `Unapplied fitting-room selection wrote to the server: ${JSON.stringify(writes.map(entry => entry.url))}.`);
+    return { control: staged.id, stagedValue: staged.after, restoredValue: restored.value, serverWrites: writes.length };
+  });
+
   await step('Profile Studio ignores stale per-editor session drafts after refresh', async () => {
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card')`, 'initial Studio reference card before stale-session test');
     const baselineSurface = await page.evaluate(`(() => {
@@ -2154,8 +2191,6 @@ try {
     for (const [width, height] of viewports) {
       await page.setViewport(width, height);
       await page.waitFor(`document.querySelector('.studio-customize') && document.querySelector('.profile-studio-header__customize-tabs')`, `Customize at ${width}px`);
-      if (width > 1024) {
-      }
       for (const tab of customizeTabs) {
         await page.click(`#profile-customize-tab-${tab}`, `${tab} tab at ${width}px`);
         await page.waitFor(`document.querySelector('#profile-customize-tab-${tab}')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-${tab === 'appearance' ? 'appearance' : tab}')`, `${tab} panel at ${width}px`);

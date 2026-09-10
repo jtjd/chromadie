@@ -111,6 +111,7 @@
   let dirtyPromptReturnFocus = null;
   let workspace = null;
   let dashboardSaving = false;
+  let dashboardMutationToken = 0;
   let dashboardStatus = '';
   let dashboardError = '';
   let ProfilePreviewComponent = null;
@@ -172,6 +173,7 @@
     if (!settingsLoadAccounts.size) return;
     settingsLoadAccounts.clear();
     requestId += 1;
+    dashboardMutationToken += 1;
     context = null;
     studioDraft = null;
     studioIdentityDraft = null;
@@ -188,6 +190,7 @@
       context = null;
       studioDraft = null;
       studioIdentityDraft = null;
+      dashboardMutationToken += 1;
       dashboardSaving = false;
     }
     void loadSettings(nextAccountKey);
@@ -527,6 +530,7 @@
       dashboardStatus = '';
       return;
     }
+    const mutationToken = ++dashboardMutationToken;
     dashboardSaving = true;
     dashboardError = '';
     dashboardStatus = 'Publishing profile…';
@@ -542,7 +546,7 @@
         p_bio: identityDraft?.bio ?? context?.targetProfile?.bio ?? null,
         p_expected_updated_at: context.profileConfig?.updatedAt || null
       });
-      if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
+      if (mutationToken !== dashboardMutationToken || mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
       if (isFailedResponse(publishResponse)) {
         dashboardStatus = '';
         dashboardError = responseError(publishResponse, 'The profile could not be published.');
@@ -565,7 +569,7 @@
       dashboardStatus = 'Profile published.';
       dashboardError = '';
     } catch (mutationError) {
-      if (mutationRequestId === requestId && mutationAccountId === $session?.user?.id) {
+      if (mutationToken === dashboardMutationToken && mutationRequestId === requestId && mutationAccountId === $session?.user?.id) {
         dashboardStatus = '';
         dashboardError = mutationError?.message || 'The profile could not be published.';
       }
@@ -573,8 +577,10 @@
       // Always release the local mutation lock. A stale response may no
       // longer be allowed to update the model, but it must not strand the UI
       // in Publishing… after an unrelated load or account transition.
-      dashboardSaving = false;
-      if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
+      if (mutationToken === dashboardMutationToken) {
+        dashboardSaving = false;
+        if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
+      }
     }
   }
 
@@ -585,6 +591,7 @@
       dashboardStatus = '';
       return;
     }
+    const mutationToken = ++dashboardMutationToken;
     dashboardSaving = true;
     dashboardError = '';
     dashboardStatus = 'Resetting profile changes…';
@@ -597,7 +604,7 @@
         p_draft: v2Draft,
         p_expected_updated_at: context.profileConfig?.updatedAt || null
       });
-      if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
+      if (mutationToken !== dashboardMutationToken || mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
       if (isFailedResponse(response)) {
         dashboardStatus = '';
         dashboardError = responseError(response, 'The profile changes could not be reset.');
@@ -611,13 +618,15 @@
       });
       dashboardStatus = 'Profile changes reset.';
     } catch (mutationError) {
-      if (mutationRequestId === requestId && mutationAccountId === $session?.user?.id) {
+      if (mutationToken === dashboardMutationToken && mutationRequestId === requestId && mutationAccountId === $session?.user?.id) {
         dashboardStatus = '';
         dashboardError = mutationError?.message || 'The profile changes could not be reset.';
       }
     } finally {
-      dashboardSaving = false;
-      if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
+      if (mutationToken === dashboardMutationToken) {
+        dashboardSaving = false;
+        if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
+      }
     }
   }
 
@@ -819,7 +828,16 @@
   }
 
   function updateCosmeticPreview(event) {
-    cosmeticPreviewLoadout = event.detail?.loadout || null;
+    const nextLoadout = event.detail?.loadout;
+    cosmeticPreviewLoadout = nextLoadout ? { ...nextLoadout } : null;
+    const equipped = $equippedItems || {};
+    const slots = new Set([...Object.keys(equipped), ...Object.keys(nextLoadout || {})]);
+    const hasUnappliedCosmetics = [...slots].some(slot => (nextLoadout?.[slot] || '') !== (equipped[slot] || ''));
+    dirtySources = updateDirtySource(dirtySources, 'customize:cosmetics', hasUnappliedCosmetics);
+    if (hasUnappliedCosmetics) {
+      dashboardError = '';
+      dashboardStatus = '';
+    }
   }
 
   function handleSocialChange() { void ensureFullContext({ force: true }); }

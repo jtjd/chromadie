@@ -5863,3 +5863,13 @@ responses. Failed lazy sections expose an inline Retry action, while Reset
 changes is confirmation-protected and the header reports exactly Published,
 Unpublished changes, or Publishing…. Added focused unit and browser regression
 coverage for these paths.
+
+## Customize reliability follow-up — 2026-09-10
+
+Completed the remaining mutation-state edge cases. Cosmetic recovery now
+keeps known-successful slot changes visible when profile refresh fails, and
+fitting-room previews mark Customize as having unpublished changes until they
+match the equipped state. Publish and Reset use generation guards so stale
+requests cannot clear a newer saving lock. Reset confirmation now describes
+unpublished draft changes, and the empty browser width branch was removed so
+CI can continue into the test suite.

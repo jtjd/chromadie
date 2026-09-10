@@ -240,8 +240,8 @@
   bind:this={resetConfirmComponent}
   open={resetConfirmOpen}
   idPrefix="profile-studio-reset-prompt"
-  title="Reset published changes?"
-  message="This replaces the saved draft with your published profile. This cannot be undone."
+  title="Reset unpublished changes?"
+  message="This replaces your unpublished draft with the last published profile. This cannot be undone."
   cancelLabel="Cancel"
   confirmLabel="Reset changes"
   on:stay={cancelReset}

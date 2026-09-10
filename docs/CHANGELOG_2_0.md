@@ -4576,3 +4576,13 @@ direct route behavior.
   blank or permanently loading workspace.
 - Reset changes has a confirmation dialog, and Customize status labels now
   distinguish Published, Unpublished changes, and Publishing… exactly.
+
+## 2026-09-10 — Customize mutation-state hardening
+
+- Preserve known-successful cosmetic slot mutations when authoritative profile
+  reconciliation is temporarily unavailable.
+- Mark unapplied fitting-room selections as Unpublished changes and include
+  them in leave-page protection.
+- Guard Publish and Reset saving cleanup with a mutation generation token so
+  stale completions cannot unlock a newer request.
+- Rename Reset confirmation to describe resetting unpublished draft changes.

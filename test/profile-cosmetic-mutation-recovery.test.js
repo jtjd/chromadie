@@ -28,7 +28,7 @@ test('partial cosmetic application reconciles to the authoritative equipped stat
   assert.equal(calls.length, 2);
 });
 
-test('a successful mutation with a failed reconciliation remains retryable', async () => {
+test('a successful mutation with a failed reconciliation keeps the known success visible', async () => {
   const result = await applyCosmeticChanges({
     changedSlots: ['profile_border'],
     previewLoadout: { profile_border: 'border_celestial' },
@@ -40,6 +40,6 @@ test('a successful mutation with a failed reconciliation remains retryable', asy
 
   assert.equal(result.success, false);
   assert.deepEqual(result.appliedSlots, ['profile_border']);
-  assert.deepEqual(result.loadout, { profile_border: 'border_signal' });
+  assert.deepEqual(result.loadout, { profile_border: 'border_celestial' });
   assert.equal(result.error, 'The change saved, but the profile could not be refreshed.');
 });

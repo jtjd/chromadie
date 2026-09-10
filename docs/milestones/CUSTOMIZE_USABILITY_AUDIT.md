@@ -210,3 +210,13 @@ recover without a full page reload. Reset changes is confirmation-protected,
 and the header status model is exactly Published, Unpublished changes, or
 Publishing…. Focused tests and the browser Discard regression cover these
 acceptance paths; the full validation suite is run for this completion.
+
+### Mutation-state hardening — 2026-09-10
+
+Follow-up review closed the remaining reliability gaps. Cosmetic batches now
+retain a known-successful loadout when `get_my_profile` reconciliation fails,
+and fitting-room-only selections participate in the Customize dirty model
+until they are applied or discarded. Publish and Reset saving cleanup is
+generation-guarded against stale older mutations. Reset confirmation explicitly
+describes unpublished draft changes. The empty browser width branch is removed
+so CI reaches the test suite. Focused regressions cover each behavior.

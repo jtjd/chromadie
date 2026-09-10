@@ -7193,3 +7193,15 @@ from `finally`, and lazy section failures remain local to the section so a
 visible Retry can mount it without reloading the page. Reset changes has its
 own confirmation dialog because it writes the published configuration over a
 saved draft; no schema, RPC authority, or media boundary changed.
+
+## 2026-09-10 — Preserve known cosmetic mutations during refresh failures
+
+Cosmetic fitting-room updates keep a local loadout that starts from the last
+equipped snapshot and records each successful equip or unequip RPC. If the
+authoritative refresh is unavailable, that known-successful loadout remains
+visible so the UI does not claim that confirmed mutations were undone. The
+Customize dirty source also includes unapplied fitting-room selections, while
+the existing server-owned Apply action remains the only persistence boundary.
+Publish and Reset use a small generation token so an older async completion
+cannot release a newer mutation's saving lock. Reset copy names the operation
+as resetting unpublished changes.

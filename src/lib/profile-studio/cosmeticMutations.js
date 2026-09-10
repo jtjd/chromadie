@@ -24,6 +24,7 @@ export async function applyCosmeticChanges({
   refresh
 }) {
   const appliedSlots = [];
+  const knownLoadout = { ...(equippedItems || {}) };
   const refreshAuthoritative = async fallback => {
     try {
       const refreshed = await refresh?.();
@@ -51,12 +52,14 @@ export async function applyCosmeticChanges({
         throw new Error(response?.error?.message || response?.data?.error || 'The appearance change could not be saved.');
       }
       appliedSlots.push(slot);
+      if (item) knownLoadout[slot] = item.item_key;
+      else delete knownLoadout[slot];
     }
   } catch (error) {
     mutationError = error;
   }
 
-  const reconciliation = await refreshAuthoritative(equippedItems);
+  const reconciliation = await refreshAuthoritative(knownLoadout);
   if (mutationError) {
     return {
       success: false,

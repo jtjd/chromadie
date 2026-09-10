@@ -15,6 +15,7 @@ for (const handler of ['publishDashboard', 'resetDashboard']) {
       let writes = 0;
       const state = {
         requestId: 1, $session: { user: { id: 'a' } },
+        dashboardMutationToken: 0,
         context: { profileId: 'a', targetProfile: {}, profileConfig: {} },
         dashboardSaving: false, dashboardDirty: true,
         configurationWriteAvailable: true, dashboardError: '', dashboardStatus: '',
@@ -45,6 +46,7 @@ for (const handler of ['publishDashboard', 'resetDashboard']) {
 test('a thrown publish RPC releases the mutation lock and exposes a retryable error', async () => {
   const state = {
     requestId: 1, $session: { user: { id: 'a' } },
+    dashboardMutationToken: 0,
     context: { profileId: 'a', targetProfile: {}, profileConfig: {} },
     dashboardSaving: false, dashboardDirty: true,
     configurationWriteAvailable: true, dashboardError: '', dashboardStatus: '',
@@ -67,6 +69,7 @@ test('a thrown publish RPC releases the mutation lock and exposes a retryable er
 test('a thrown reset RPC releases the mutation lock and exposes a retryable error', async () => {
   const state = {
     requestId: 1, $session: { user: { id: 'a' } },
+    dashboardMutationToken: 0,
     context: { profileId: 'a', targetProfile: {}, profileConfig: { published: {} } },
     dashboardSaving: false, dashboardDirty: true,
     configurationWriteAvailable: true, dashboardError: '', dashboardStatus: '',
@@ -84,11 +87,52 @@ test('a thrown reset RPC releases the mutation lock and exposes a retryable erro
   assert.equal(state.dashboardError, 'network unavailable');
 });
 
+for (const handler of ['publishDashboard', 'resetDashboard']) {
+  test(`${handler} cannot clear a newer mutation lock`, async () => {
+    const resolvers = [];
+    const state = {
+      requestId: 1, dashboardMutationToken: 0, $session: { user: { id: 'a' } },
+      context: { profileId: 'a', targetProfile: {}, profileConfig: { published: {} } },
+      dashboardSaving: false, dashboardDirty: true,
+      configurationWriteAvailable: true, dashboardError: '', dashboardStatus: '',
+      accountUsername: 'alice', getDashboardEditor: () => null,
+      getDashboardDraft: () => ({}), getDashboardIdentity: () => ({}),
+      buildConfigurationV2: () => ({}), toEditorProfileConfig: value => value,
+      supabase: { rpc: () => new Promise(resolve => resolvers.push(resolve)) },
+      isFailedResponse: () => false,
+      profile: { update: () => {} },
+      applyDashboardConfiguration: () => {}
+    };
+    vm.createContext(state);
+    vm.runInContext(handlers, state);
+    const older = vm.runInContext(`${handler}()`, state);
+
+    // Account hydration invalidates the old token and releases its lock. A
+    // new mutation may now own the saving state while the old RPC is pending.
+    state.requestId = 2;
+    state.dashboardMutationToken += 1;
+    state.$session = { user: { id: 'b' } };
+    state.context = { profileId: 'b', targetProfile: {}, profileConfig: { published: {} } };
+    state.dashboardSaving = false;
+    const newer = vm.runInContext(`${handler}()`, state);
+    assert.equal(resolvers.length, 2);
+
+    resolvers[0]({ data: { success: true, identity: { bio: 'old account bio' } } });
+    await older;
+    assert.equal(state.dashboardSaving, true);
+
+    resolvers[1]({ data: { success: true, identity: { bio: 'new account bio' } } });
+    await newer;
+    assert.equal(state.dashboardSaving, false);
+  });
+}
+
 test('A to B to A reloads the active account instead of retaining a visited-account set', () => {
   const fn = source.slice(source.indexOf('  function ensureSettingsLoaded('), source.indexOf('  onMount('));
   const calls = [];
   const state = { settingsLoadAccounts: new Set(), context: null,
     studioDraft: null, studioIdentityDraft: null, dashboardSaving: false,
+    dashboardMutationToken: 0,
     loadSettings: id => calls.push(id) };
   vm.createContext(state);
   vm.runInContext(fn, state);
