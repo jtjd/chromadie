@@ -145,6 +145,26 @@ try {
     await capture(`homepage-${width}x${height}`);
   }
 
+  await check('Tjz published profile replaces the Sleek homepage example', async () => {
+    for (const width of [1440, 390]) {
+      await page.setViewport(width, 900);
+      await page.evaluate("document.querySelector('#profiles').scrollIntoView({ block: 'center' })");
+      await page.click('[aria-label="Show Tjz profile"]', 'Tjz profile preview');
+      await page.waitFor("document.querySelector('.tjz-profile .profile-reference-card')", 'Tjz framed profile');
+      await page.waitFor("[...document.querySelectorAll('.tjz-profile img')].every(img => img.complete && img.naturalWidth > 0)", 'Tjz published media');
+      const state = await page.evaluate(`(() => ({
+        address: document.querySelector('.profile-example__browser-address').textContent,
+        content: document.querySelector('.tjz-profile').textContent,
+        overflow: document.documentElement.scrollWidth > innerWidth + 1,
+        links: [...document.querySelectorAll('.tjz-profile a')].map(a => a.href)
+      }))()`);
+      assert(state.address === 'chm.lol/tjz' && state.content.includes('Tjz') && state.content.includes('why does this keep resetting'), 'Tjz identity does not match the published snapshot.');
+      assert(!state.overflow && state.links.includes('https://github.com/jtjd'), 'Tjz preview geometry or links drifted.');
+      await capture(`homepage-tjz-${width}`);
+    }
+    assert(networkSnapshot().profileHydrationCount === 0, 'The captured profile added homepage hydration requests.');
+  });
+
   const unexpectedFailedRequests = page.requestLog.filter(request => request.failed && !request.url.includes('cloudflareinsights.com/cdn-cgi/rum'));
   const browserErrors = page.consoleLog.filter(entry => {
     if (!['error', 'exception', 'log-error'].includes(entry.type)) return false;

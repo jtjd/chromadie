@@ -127,7 +127,7 @@ test('the lower homepage uses canonical examples and direct copy with authentic 
   assert.match(footer, /site-footer__home-grid/);
 });
 
-test('the profile preview is an example, with account actions kept in the closing section', async () => {
+test('the profile preview features Tjz, with account actions kept in the closing section', async () => {
   const preview = await read('src/lib/homepage/HomepageProfileExample.svelte');
   const start = await read('src/lib/homepage/HomepageStart.svelte');
   const player = await read('src/lib/homepage/HomepagePlayerCard.svelte');
@@ -135,11 +135,16 @@ test('the profile preview is an example, with account actions kept in the closin
   assert.match(player, /aria-label=\{`Open \$\{name\}’s profile`\}/);
   assert.match(preview, /<figure aria-label="Profile customization preview">/);
   assert.match(preview, /const scenes = \[/);
-  assert.match(preview, /homepage\/fixtures\/sleek-background\.png/);
+  assert.match(preview, /chm\.lol\/tjz/);
+  const tjz = JSON.parse(await read('src/lib/homepage/tjzProfileSnapshot.json'));
+  assert.equal(tjz.props.displayName, 'Tjz');
+  assert.equal(tjz.props.layoutVariant, 'framed');
+  assert.equal(tjz.props.nameLoadout.motionKey, 'name_motion_haunt_fuzzy');
+  assert.equal(tjz.environment.atmosphereKey, 'profile_atmosphere_snowfall');
   assert.match(preview, /profile-example__controls/);
   assert.match(preview, /prefers-reduced-motion: reduce/);
   assert.doesNotMatch(preview, /<figcaption/);
-  assert.doesNotMatch(preview, /profileHref|profile-example__link|Open Tjz|Explore Tjz|chm\.lol\/tjz/);
+  assert.doesNotMatch(preview, /profileHref|profile-example__link|Open Tjz|Explore Tjz/);
   const sections = ['<RollPage', '<HomepageProfileExample', '<HomepageCollection', '<HomepageCommunity', '<HomepageStart', '<HomepageQuestions', '<SiteFooter'];
   const positions = sections.map(section => home.indexOf(section));
   assert.ok(positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1])));

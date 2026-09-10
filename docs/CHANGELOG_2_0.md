@@ -4597,3 +4597,12 @@ snapshot from reconciliation or known successful RPC results, so refresh failure
 do not leave applied selections marked dirty. No schema or RPC boundary changes.
 Focused regressions cover cosmetic-only state, mixed Publish/Reset, and Apply
 with successful and failed refreshes.
+
+
+### 2026-09-10 — Tjz homepage profile example
+
+Replaced the Sleek marketing example with a snapshot of Tjz’s current public,
+published framed profile. The existing card and environment renderers retain
+its identity, links, media, typography, colors, and cosmetics. The snapshot is
+lazy-loaded without account hydration or schema changes. Desktop and phone
+browser coverage checks identity, public media, links, and overflow.

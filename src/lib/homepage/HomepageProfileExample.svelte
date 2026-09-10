@@ -11,8 +11,8 @@
   let sceneVisible = false;
   let reduceMotion = false;
 
-  // These are deterministic marketing fixtures. They use the real public
-  // profile renderers but never represent accounts or enter discovery data.
+  // The first scene captures Tjz’s published profile; the other scenes are
+  // marketing fixtures. All use existing renderers without profile hydration.
   const links = [
     { type: 'github', label: 'GitHub' },
     { type: 'youtube', label: 'YouTube' },
@@ -23,32 +23,13 @@
 
   const scenes = [
     {
-      id: 'sleek',
-      label: 'Sleek layout',
+      id: 'tjz',
+      label: 'Tjz profile',
       title: 'Start with your color.',
       description: 'A daily roll becomes the first detail people remember.',
-      address: 'chm.lol/chm',
-      colors: ['#A58BFF', '#FFFFFF', '#15151B'],
-      props: {
-        displayName: 'chm',
-        bio: 'making things i like on the internet.',
-        location: 'New York, NY',
-        avatarSrc: '/homepage/fixtures/sleek-avatar.png',
-        bannerSrc: '/homepage/fixtures/sleek-background.png',
-        layoutVariant: 'sleek',
-        headingTag: 'h2',
-        avatarEffectKey: 'avatar_effect_butterfly_orbit',
-        roll: { hex_code: '#FFFFFF', identity: 'The Light', rarity: 'Mythic' },
-        rollLabel: 'Daily color',
-        nameLoadout: { fontKey: 'name_font_velocity', motionKey: 'name_motion_neon_particle', materialKey: '' },
-        nameTodayColor: '#FFFFFF',
-        profileBorderKey: 'border_void',
-        accentColor: '#A58BFF',
-        links,
-        linksInteractive: false,
-        linkStyle: { size: 2, glow: 2 },
-        surfaceStyle: '--profile-surface-fill: rgba(12,12,16,.72); --profile-text: #FFFFFF; --profile-border-radius: 22px; --profile-border-color: #A58BFF; --profile-border-opacity: .56; --profile-username: #FFFFFF; --profile-secondary-text: #E8E8ED; --profile-description: rgba(245,245,247,.88);'
-      }
+      address: 'chm.lol/tjz',
+      colors: ['#99C1F1', '#FFFFFF', '#000000'],
+      props: {}
     },
     {
       id: 'snow',
@@ -108,7 +89,7 @@
   ];
 
   $: scene = scenes[activeScene];
-  $: renderer = renderers?.fullBleed || null;
+  $: renderer = (scene.id === 'tjz' ? renderers?.tjz : renderers?.fullBleed) || null;
 
   function setScene(index) {
     activeScene = Math.max(0, Math.min(scenes.length - 1, index));
@@ -139,8 +120,11 @@
   async function load() {
     failed = false;
     try {
-      const fullBleed = await import('../profile-layout/ProfileFullBleedLayout.svelte');
-      if (!disposed) renderers = { fullBleed: fullBleed.default };
+      const [fullBleed, tjz] = await Promise.all([
+        import('../profile-layout/ProfileFullBleedLayout.svelte'),
+        import('./HomepageTjzProfile.svelte')
+      ]);
+      if (!disposed) renderers = { fullBleed: fullBleed.default, tjz: tjz.default };
     } catch {
       if (!disposed) failed = true;
     }
@@ -204,10 +188,10 @@
         <div class="profile-example__canvas">
         {#if renderer}
           <div class="profile-example__motion-shell">
-            <ProfileMotionEffect motionKey="profile_motion_perspective_tilt" inputSurface="viewport">
+            <ProfileMotionEffect motionKey={scene.id === 'tjz' ? '' : 'profile_motion_perspective_tilt'} inputSurface="viewport">
               {#key scene.id}
                 <div class="profile-example__frame" style={`--scene-accent:${scene.colors[0]}`}>
-                  <svelte:component this={renderer} {...scene.props} />
+                  <svelte:component this={renderer} {...scene.props} reducedMotion={reduceMotion} />
                 </div>
               {/key}
             </ProfileMotionEffect>

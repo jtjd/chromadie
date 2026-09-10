@@ -1,0 +1,136 @@
+{
+  "capturedAt": "2026-09-10",
+  "source": "https://chm.lol/tjz",
+  "environment": {
+    "backgroundColor": "#000000",
+    "backgroundImagePath": null,
+    "backgroundImageUrl": "https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/c74ad22a-faed-4888-80b8-011abc8d26cd/b72b798c9bbb741adfd1fbb1b530406318fe7adf3954396098febea915f34d4f.webp",
+    "backgroundVideoPath": null,
+    "backgroundVideoUrl": "",
+    "backgroundImageOpacity": 100,
+    "backgroundBlur": 0,
+    "atmosphereKey": "profile_atmosphere_snowfall",
+    "cursorTrailKey": "springy-emoji",
+    "cursorUrl": "https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/7709b00b-f15a-42b4-9a22-ba3d2bcb93d5/0a6dffc2823137e622e786f47bb049cec213e76d621ab0661aed72a2d68d9080.webp",
+    "pointerCursorUrl": "",
+    "pageStyle": "--profile-background-paint:#000000;--profile-background-image-opacity:1;--profile-background-blur:0px;--profile-background-overlay:rgba(220, 138, 221, 1);--profile-background-overlay-opacity:0;--profile-font-family:\"Kode Mono\", ui-monospace, SFMono-Regular, Consolas, monospace;cursor:url(\"https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/7709b00b-f15a-42b4-9a22-ba3d2bcb93d5/0a6dffc2823137e622e786f47bb049cec213e76d621ab0661aed72a2d68d9080.webp\") 16 16, auto"
+  },
+  "styles": {
+    "page": "--profile-background-paint:#000000;--profile-background-image-opacity:1;--profile-background-blur:0px;--profile-background-overlay:rgba(220, 138, 221, 1);--profile-background-overlay-opacity:0;--profile-font-family:\"Kode Mono\", ui-monospace, SFMono-Regular, Consolas, monospace;cursor:url(\"https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/7709b00b-f15a-42b4-9a22-ba3d2bcb93d5/0a6dffc2823137e622e786f47bb049cec213e76d621ab0661aed72a2d68d9080.webp\") 16 16, auto",
+    "surface": "--profile-accent:#99C1F1;--profile-surface-accent:#99C1F1;--profile-control-accent:#99C1F1;--profile-text:#FFFFFF;--profile-secondary-text:#FFFFFF;--profile-username:#FFFFFF;--profile-description:#FFFFFF;--profile-background:#000000;--profile-background-paint:#000000;--profile-background-image-opacity:1;--profile-background-blur:0px;--profile-background-overlay:rgba(220, 138, 221, 1);--profile-background-overlay-opacity:0;--profile-surface:#000000;--profile-surface-fill:rgba(0, 0, 0, 0.73);--profile-highlight:#FFFFFF;--profile-surface-opacity:0.73;--profile-surface-blur:0px;--profile-border-color:#E01B24;--profile-border-width:4px;--profile-border-radius:22px;--profile-border-opacity:0.11;--color-ink-strong:#FFFFFF;--color-ink:#FFFFFF;--color-ink-muted:#FFFFFF;--color-ink-faint:#FFFFFF;--color-accent:#99C1F1;--color-accent-bright:#FFFFFF;--surface-panel:#000000;--surface-inset:#000000;--color-canvas-deep:#000000"
+  },
+  "colors": {
+    "signature": "#99C1F1",
+    "nameBase": "#FFFFFF",
+    "nameToday": "#1A9CEB",
+    "nameRecent": [
+      "#1A9CEB",
+      "#5EBAE3",
+      "#C5A9BF",
+      "#84C1EA",
+      "#A1ABE3",
+      "#AEE74D"
+    ],
+    "colorEffectsEnabled": false
+  },
+  "props": {
+    "displayName": "Tjz",
+    "bio": "why does this keep resetting",
+    "meta": "Siberia · Russia · Joined Jul 2026",
+    "avatarSrc": "https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/9e6bd069-5b34-4fc2-a8d0-bb6990872b26/084b06bfaf541b5b9915ca12951d3c0318ec7358e46c34cf960fdce8d81016a5.webp",
+    "avatarEffectKey": "avatar_effect_liquid_blob",
+    "nameLoadout": {
+      "fontKey": "name_font_kode_mono",
+      "materialKey": "name_material_halo_edge",
+      "motionKey": "name_motion_haunt_fuzzy"
+    },
+    "nameTodayColor": "#1A9CEB",
+    "nameBaseColor": "#FFFFFF",
+    "profileBorderKey": "",
+    "surfaceStyle": "--profile-accent:#99C1F1;--profile-surface-accent:#99C1F1;--profile-control-accent:#99C1F1;--profile-text:#FFFFFF;--profile-secondary-text:#FFFFFF;--profile-username:#FFFFFF;--profile-description:#FFFFFF;--profile-background:#000000;--profile-background-paint:#000000;--profile-background-image-opacity:1;--profile-background-blur:0px;--profile-background-overlay:rgba(220, 138, 221, 1);--profile-background-overlay-opacity:0;--profile-surface:#000000;--profile-surface-fill:rgba(0, 0, 0, 0.73);--profile-highlight:#FFFFFF;--profile-surface-opacity:0.73;--profile-surface-blur:0px;--profile-border-color:#E01B24;--profile-border-width:4px;--profile-border-radius:22px;--profile-border-opacity:0.11;--color-ink-strong:#FFFFFF;--color-ink:#FFFFFF;--color-ink-muted:#FFFFFF;--color-ink-faint:#FFFFFF;--color-accent:#99C1F1;--color-accent-bright:#FFFFFF;--surface-panel:#000000;--surface-inset:#000000;--color-canvas-deep:#000000",
+    "showAvatar": true,
+    "descriptionMode": "typewriter",
+    "entryAnimation": "focus",
+    "links": [
+      {
+        "key": "l10bc5da3d6",
+        "type": "github",
+        "label": "GitHub",
+        "url": "https://github.com/jtjd",
+        "visible": true,
+        "order": 0,
+        "alignment": "left",
+        "monochrome": false,
+        "size": 1,
+        "glow": 0
+      },
+      {
+        "key": "l04646be4af",
+        "type": "youtube",
+        "label": "Youtube",
+        "url": "https://youtube.com/@gripg",
+        "visible": true,
+        "order": 1,
+        "alignment": "left",
+        "monochrome": false,
+        "size": 1,
+        "glow": 0
+      },
+      {
+        "key": "l43e9c82877",
+        "type": "twitch",
+        "label": "Twitch",
+        "url": "https://twitch.tv/vallu",
+        "visible": true,
+        "order": 2,
+        "alignment": "left",
+        "monochrome": false,
+        "size": 1,
+        "glow": 0
+      },
+      {
+        "key": "lae086ea57a",
+        "type": "tiktok",
+        "label": "TikTok",
+        "url": "https://tiktok.com/gripgod",
+        "visible": true,
+        "order": 3,
+        "alignment": "left",
+        "monochrome": false,
+        "size": 1,
+        "glow": 0
+      },
+      {
+        "key": "le66f24d83b",
+        "type": "instagram",
+        "label": "Insta",
+        "url": "https://instagram.com/gripgod",
+        "visible": true,
+        "order": 4,
+        "alignment": "left",
+        "monochrome": false,
+        "size": 1,
+        "glow": 0
+      }
+    ],
+    "linkStyle": {
+      "alignment": "left",
+      "monochrome": false,
+      "size": 2,
+      "glow": 2
+    },
+    "roll": null,
+    "accentColor": "#99C1F1",
+    "presentation": "profile",
+    "layoutVariant": "framed",
+    "ariaLabel": "Tjz profile preview",
+    "nameRecentColors": [
+      "#1A9CEB",
+      "#5EBAE3",
+      "#C5A9BF",
+      "#84C1EA",
+      "#A1ABE3",
+      "#AEE74D"
+    ]
+  }
+}
