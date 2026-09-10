@@ -1201,7 +1201,9 @@ try {
     })()`);
     assert(staged, 'No enabled cosmetic option was available for the fitting-room regression.');
     await page.waitFor("document.querySelector('.profile-studio-header__save-state')?.textContent?.includes('Unpublished changes')", 'unapplied cosmetic status');
+    assert(await page.evaluate("document.querySelector('.profile-studio-shell__publish')?.disabled === true && !document.querySelector('.profile-studio-shell__mobile-actions button:not(:disabled)')"), 'Cosmetic-only changes enabled Publish.');
     await page.click('.profile-studio-shell__menu-trigger', 'open More for cosmetic discard');
+    assert(await page.evaluate("[...document.querySelectorAll('[role=menuitem]')].find(item => item.textContent.trim() === 'Reset changes')?.disabled === true"), 'Cosmetic-only changes enabled profile draft Reset.');
     await page.click('[data-section="overview"]', 'leave cosmetic fitting room');
     await page.waitFor("document.querySelector('.profile-studio-dirty-prompt')", 'cosmetic discard warning');
     await page.click('.profile-studio-dirty-prompt__discard', 'discard cosmetic fitting-room selection');

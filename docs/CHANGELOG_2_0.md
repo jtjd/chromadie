@@ -4586,3 +4586,14 @@ direct route behavior.
 - Guard Publish and Reset saving cleanup with a mutation generation token so
   stale completions cannot unlock a newer request.
 - Rename Reset confirmation to describe resetting unpublished draft changes.
+
+
+### 2026-09-10 — Separate cosmetic previews from profile draft actions
+
+Customize status and navigation protection include unapplied cosmetic previews,
+while Publish and draft Reset depend only on profile configuration changes.
+Profile draft writes preserve staged cosmetics. Cosmetic Apply updates the equipped
+snapshot from reconciliation or known successful RPC results, so refresh failures
+do not leave applied selections marked dirty. No schema or RPC boundary changes.
+Focused regressions cover cosmetic-only state, mixed Publish/Reset, and Apply
+with successful and failed refreshes.

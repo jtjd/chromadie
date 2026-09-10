@@ -20,7 +20,7 @@ test('Customize state gaps have explicit parent reset, confirmation, status, and
   assert.match(settings, /sectionErrors = \{ \.\.\.sectionErrors, \[sectionId\]: '' \}/);
   assert.match(settings, /loadSectionComponent\(sectionId, \{ force: true \}\)/);
   assert.match(settings, /dashboardMutationToken/);
-  assert.match(settings, /customize:cosmetics/);
+  assert.match(settings, /cosmeticPreviewDirty/);
   assert.match(settings, /finally \{\n\s+\/\/ Always release the local mutation lock/);
   assert.match(shell, /title="Reset unpublished changes\?"/);
   assert.match(shell, /message="This replaces your unpublished draft with the last published profile\./);

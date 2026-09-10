@@ -202,6 +202,9 @@
         rpc: (name, args) => supabase.rpc(name, args),
         refresh: () => userId ? refreshProfileState(userId) : null
       });
+      if (userId !== $session?.user?.id) return;
+      // Reconciliation returns either the server snapshot or confirmed RPC changes.
+      equippedItems.set({ ...result.loadout });
       previewLoadout = result.loadout;
       syncedLoadoutKey = '';
       dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });

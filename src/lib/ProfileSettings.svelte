@@ -150,7 +150,10 @@
   $: editorProfileConfig = createStudioEditorProfileConfig(context?.profileConfig, studioDraft);
   let preferenceDirty = false;
   $: navigationDirty = dashboardDirty || preferenceDirty;
-  $: dashboardDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
+  $: profileDraftDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
+  $: cosmeticPreviewDirty = cosmeticPreviewLoadout !== null && [...new Set([...Object.keys($equippedItems || {}), ...Object.keys(cosmeticPreviewLoadout || {})])]
+    .some(slot => (cosmeticPreviewLoadout?.[slot] || '') !== ($equippedItems?.[slot] || ''));
+  $: dashboardDirty = profileDraftDirty || cosmeticPreviewDirty;
   $: configurationWriteAvailable = isProfileConfigurationWritable(context);
   $: previewModel = createProfileStudioPreviewModel({
     targetProfile: context?.targetProfile,
@@ -505,7 +508,6 @@
       ...nextDraft,
       bio: context?.targetProfile?.bio || ''
     });
-    cosmeticPreviewLoadout = null;
     dirtySources = {};
   }
 
@@ -518,7 +520,7 @@
   }
 
   async function publishDashboard() {
-    if (dashboardSaving) return;
+    if (dashboardSaving || !profileDraftDirty) return;
     if (!configurationWriteAvailable) {
       dashboardError = PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
       dashboardStatus = '';
@@ -585,7 +587,7 @@
   }
 
   async function resetDashboard() {
-    if (dashboardSaving || !dashboardDirty) return;
+    if (dashboardSaving || !profileDraftDirty) return;
     if (!configurationWriteAvailable) {
       dashboardError = PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
       dashboardStatus = '';
@@ -830,11 +832,7 @@
   function updateCosmeticPreview(event) {
     const nextLoadout = event.detail?.loadout;
     cosmeticPreviewLoadout = nextLoadout ? { ...nextLoadout } : null;
-    const equipped = $equippedItems || {};
-    const slots = new Set([...Object.keys(equipped), ...Object.keys(nextLoadout || {})]);
-    const hasUnappliedCosmetics = [...slots].some(slot => (nextLoadout?.[slot] || '') !== (equipped[slot] || ''));
-    dirtySources = updateDirtySource(dirtySources, 'customize:cosmetics', hasUnappliedCosmetics);
-    if (hasUnappliedCosmetics) {
+    if (nextLoadout) {
       dashboardError = '';
       dashboardStatus = '';
     }
@@ -897,9 +895,9 @@
   mobileTitle={mobileStudioTitle}
   mobilePreviewAvailable={customizePreviewAvailable}
   mobilePreviewOpen={showDashboardPreview}
-  mobileDirty={dashboardDirty}
+  mobileDirty={profileDraftDirty}
   mobileSaving={dashboardSaving}
-  dirty={dashboardDirty}
+  dirty={profileDraftDirty}
   configurationReady={configurationWriteAvailable}
   previewRenderSnapshot={previewRenderSnapshot}
   showPreview={showDashboardPreview}

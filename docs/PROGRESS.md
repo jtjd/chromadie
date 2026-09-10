@@ -5873,3 +5873,14 @@ match the equipped state. Publish and Reset use generation guards so stale
 requests cannot clear a newer saving lock. Reset confirmation now describes
 unpublished draft changes, and the empty browser width branch was removed so
 CI can continue into the test suite.
+
+
+### 2026-09-10 — Separate cosmetic previews from profile draft actions
+
+Customize status and navigation protection include unapplied cosmetic previews,
+while Publish and draft Reset depend only on profile configuration changes.
+Profile draft writes preserve staged cosmetics. Cosmetic Apply updates the equipped
+snapshot from reconciliation or known successful RPC results, so refresh failures
+do not leave applied selections marked dirty. No schema or RPC boundary changes.
+Focused regressions cover cosmetic-only state, mixed Publish/Reset, and Apply
+with successful and failed refreshes.
