@@ -2,6 +2,14 @@ import { getProfileAliasPath, normalizeProfileAliasSegment } from './routeContra
 
 export const MAX_PROFILE_ALIASES = 3;
 
+async function aliasRpc(client, name, args) {
+  try {
+    return await client.rpc(name, args);
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
 function rpcErrorMessage(error, fallback) {
   return error?.message || fallback;
 }
@@ -15,8 +23,8 @@ function normalizeAliasRecord(value) {
 }
 
 export async function loadMyProfileAliases(supabaseClient) {
-  const { data, error } = await supabaseClient.rpc('get_my_profile_aliases');
-  if (error) return { aliases: [], error: rpcErrorMessage(error, 'Aliases could not be loaded.') };
+  const { data, error } = await aliasRpc(supabaseClient, 'get_my_profile_aliases');
+  if (error || data?.success === false) return { aliases: [], error: rpcErrorMessage(error, data?.error || 'Aliases could not be loaded.') };
   const aliases = Array.isArray(data?.aliases)
     ? data.aliases.map(normalizeAliasRecord).filter(Boolean).slice(0, MAX_PROFILE_ALIASES)
     : [];
@@ -26,7 +34,7 @@ export async function loadMyProfileAliases(supabaseClient) {
 export async function createProfileAlias(supabaseClient, alias) {
   const normalized = normalizeProfileAliasSegment(alias);
   if (!normalized) return { success: false, error: 'Use 1–20 letters, numbers, or underscores.' };
-  const { data, error } = await supabaseClient.rpc('create_profile_alias', { p_alias: normalized });
+  const { data, error } = await aliasRpc(supabaseClient, 'create_profile_alias', { p_alias: normalized });
   if (error) return { success: false, error: rpcErrorMessage(error, 'That alias could not be created.') };
   return {
     success: data?.success === true,
@@ -38,7 +46,7 @@ export async function createProfileAlias(supabaseClient, alias) {
 export async function deleteProfileAlias(supabaseClient, alias) {
   const normalized = normalizeProfileAliasSegment(alias);
   if (!normalized) return { success: false, error: 'That alias is not valid.' };
-  const { data, error } = await supabaseClient.rpc('delete_profile_alias', { p_alias: normalized });
+  const { data, error } = await aliasRpc(supabaseClient, 'delete_profile_alias', { p_alias: normalized });
   if (error) return { success: false, error: rpcErrorMessage(error, 'That alias could not be removed.') };
   return { success: data?.success === true, error: data?.success === true ? '' : data?.error || 'That alias was not found.' };
 }
@@ -46,7 +54,7 @@ export async function deleteProfileAlias(supabaseClient, alias) {
 export async function resolveProfileAlias(supabaseClient, alias) {
   const normalized = normalizeProfileAliasSegment(alias);
   if (!normalized) return { profile: null, error: '' };
-  const { data, error } = await supabaseClient.rpc('get_public_profile_alias', { p_alias: normalized });
+  const { data, error } = await aliasRpc(supabaseClient, 'get_public_profile_alias', { p_alias: normalized });
   if (error) return { profile: null, error: rpcErrorMessage(error, 'The profile alias could not be resolved.') };
   return { profile: Array.isArray(data) ? data[0] || null : data || null, error: '' };
 }

@@ -365,6 +365,23 @@ test('an empty default profile does not manufacture a continuation section', () 
   assert.equal(snapshot.visibility.hasProfileMore, false);
 });
 
+test('hosted audio stays in the profile shell without manufacturing an empty continuation', () => {
+  const configuration = {
+    ...createDefaultProfileConfig(),
+    audio_path: MEDIA.audio
+  };
+  const snapshot = buildProfileRenderSnapshot({
+    profile: { id: 'profile-audio', username: 'audio-profile' },
+    profileConfig: { draft: configuration, published: configuration },
+    mediaResolver
+  });
+
+  assert.equal(snapshot.modules.hasMusic, true);
+  assert.equal(snapshot.modules.hasHostedAudio, true);
+  assert.equal(snapshot.modules.showLowerExpression, false);
+  assert.equal(snapshot.visibility.hasProfileMore, false);
+});
+
 test('Studio patches update only the editor-owned slice of the canonical draft', () => {
   const base = createRichConfiguration();
   const staleEditorConfig = {

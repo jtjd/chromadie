@@ -40,6 +40,7 @@ const supabaseUrl = assertLocalSupabaseUrl(supabaseCredentials.url || '');
 const r2Config = getR2Config(process.env);
 const serviceRoleKey = supabaseCredentials.secretKey;
 const publicOrigin = String(process.env.MEDIA_PUBLIC_ORIGIN || '').replace(/\/$/, '');
+const allowPendingCachePurge = process.env.PROFILE_MEDIA_R2_ALLOW_PENDING_CACHE_PURGE === '1';
 
 if (!r2Config) throw new Error('R2 test configuration is incomplete.');
 if (!serviceRoleKey) throw new Error('Local Supabase service-role configuration is missing.');
@@ -395,7 +396,7 @@ async function deleteAssetThroughApp(assetId) {
       'body: JSON.stringify({ asset_id: ' + JSON.stringify(assetId) + ' })' +
     '});' +
     'const body = await response.json().catch(() => ({}));' +
-    'return { status: response.status, success: body?.success === true, configurationChanged: body?.configuration_changed === true, cleanupPending: body?.cleanup_pending === true, updatedAtPresent: Boolean(body?.updated_at) };' +
+    'return { status: response.status, success: body?.success === true, configurationChanged: body?.configuration_changed === true, cleanupPending: body?.cleanup_pending === true, cleanupErrors: (body?.cleanup || []).map(item => ({ operation: item.operation || "object_delete", status: item.status || null, error: item.error || null })), updatedAtPresent: Boolean(body?.updated_at) };' +
   '})()';
   return page.evaluate(expression);
 }
@@ -414,6 +415,20 @@ async function waitForR2Gone(asset, label) {
     const publicResponse = publicUrl ? await fetch(publicUrl, { cache: 'no-store' }) : null;
     return statuses.every(status => status === 404) && (!publicResponse || !publicResponse.ok);
   }, label + ' R2/private/public deletion and public cache removal', 45000);
+}
+
+async function waitForR2ObjectsGone(asset, label) {
+  await waitForCondition(async () => {
+    const keys = [asset.r2_private_key, asset.r2_public_key].filter(Boolean);
+    const statuses = [];
+    for (const key of keys) {
+      for (const bucket of [r2Config.privateBucket, r2Config.publicBucket]) {
+        const response = await requestR2Object(process.env, { method: 'HEAD', bucket, key });
+        statuses.push(response.status);
+      }
+    }
+    return statuses.every(status => status === 404);
+  }, label + ' R2/private/public object deletion', 45000);
 }
 
 async function cleanupExactAsset(asset) {
@@ -444,10 +459,16 @@ async function main() {
   await page.navigate(appUrl + '/signup', 'local signup page');
   await page.waitFor("location.pathname === '/signup' && document.querySelector('#username-input')", 'local signup page');
   await page.setInputValue('#username-input', username, ['input', 'change']);
+  await page.waitFor("document.querySelector('.field-status--available')?.textContent?.includes('Username available')", 'username available');
+  await page.click('.auth-submit', 'continue to email');
+  await page.waitFor("document.querySelector('#email-input')", 'email step');
   await page.setInputValue('#email-input', email, ['input', 'change']);
+  await page.click('.auth-submit', 'continue to password');
+  await page.waitFor("document.querySelector('#password-input') && document.querySelector('#terms-accepted')", 'password step');
   await page.setInputValue('#password-input', password, ['input', 'change']);
+  await page.click('#terms-accepted', 'accept account terms');
   await page.click('.auth-submit', 'local signup submit');
-  await page.waitFor("location.pathname === " + JSON.stringify('/' + username) + " && document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content=full-bleed]')", 'local authenticated profile', 30000);
+  await page.waitFor("location.pathname === '/' && !document.querySelector('.auth-page')", 'homepage after signup', 30000);
   result.accountCreated = true;
 
   const userId = await readLocalUserId();
@@ -502,6 +523,22 @@ async function main() {
     });
   }
 
+  result.librarySelection = [];
+  for (const [kind, width] of [['avatar', 1440], ['background', 390]]) {
+    await page.setViewport(width, 900);
+    const before = (await studioMediaUrls())[kind];
+    await page.evaluate(`document.querySelector('input[aria-label="Choose ${kind} image"]').closest('article').querySelector('.profile-expression-editor__compact-remove').click()`);
+    await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__compact-library-select')]).some(button => button.textContent.trim() === 'Use ${kind}' && !button.disabled)`, kind + ' saved media selection');
+    await page.clickText('Use ' + kind, { description: 'reapply saved ' + kind });
+    await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('${kind === 'avatar' ? 'Avatar' : 'Background'} applied'))`, kind + ' reapplied');
+    await waitForCondition(async () => (await studioMediaUrls())[kind] === before, kind + ' original media restored');
+    assert(await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Saved media controls overflow');
+    const screenshot = join(evidenceDir, 'saved-' + kind + '-' + width + '.png');
+    await page.screenshot(screenshot);
+    result.screenshots.push(screenshot);
+    result.librarySelection.push({ kind, width, unequip: true, reapply: true, sameUrl: true });
+  }
+  await page.setViewport(1440, 1000);
   result.studioMediaStability = await assertStudioMediaStaysStableAfterDraftChange();
 
   const storageRequests = page.requestLog.filter(entry => {
@@ -519,8 +556,13 @@ async function main() {
   for (const asset of [...createdAssets]) {
     const deletion = await deleteAssetThroughApp(asset.id);
     assert(deletion.status === 200 && deletion.success, 'Application delete failed for ' + asset.kind + '.');
-    assert(deletion.cleanupPending === false, asset.kind + ' deletion returned pending cleanup in disposable test infrastructure.');
-    await waitForR2Gone(asset, asset.kind);
+    const credentialLimitedCachePurge = deletion.cleanupPending
+      && allowPendingCachePurge
+      && deletion.cleanupErrors.length > 0
+      && deletion.cleanupErrors.every(item => item.operation === 'cache_purge' && item.error === 'Authentication error');
+    assert(deletion.cleanupPending === false || credentialLimitedCachePurge, asset.kind + ' deletion returned pending cleanup in disposable test infrastructure: ' + safeMessage(JSON.stringify(deletion.cleanupErrors)));
+    if (credentialLimitedCachePurge) await waitForR2ObjectsGone(asset, asset.kind);
+    else await waitForR2Gone(asset, asset.kind);
     const repeated = await deleteAssetThroughApp(asset.id);
     assert(repeated.status === 404 || repeated.success === true, asset.kind + ' repeated deletion returned an unsafe response.');
     result.deletion.push({
@@ -528,8 +570,10 @@ async function main() {
       databaseDelete: true,
       r2PrivateDeleted: true,
       r2PublicDeleted: true,
-      exactCachePurge: true,
-      publicUrlUnavailableAfterDelete: true,
+      exactCachePurge: !credentialLimitedCachePurge,
+      publicUrlUnavailableAfterDelete: !credentialLimitedCachePurge,
+      cleanupPending: credentialLimitedCachePurge,
+      externalCredentialLimited: credentialLimitedCachePurge,
       retrySafe: true,
       updatedAtReturnedOnSelectedMutation: deletion.updatedAtPresent,
       configurationChanged: deletion.configurationChanged

@@ -4526,9 +4526,40 @@ direct route behavior.
   values and normal migration rollout remain external actions.
 - See [measured results and evidence](MAIN_STABILIZATION_REPORT.md).
 
+## 2026-09-09 — Customize usability
+
+- Improved More-menu keyboard navigation, mobile profile access, and short-screen scrolling.
+- Fixed Mark all read for inboxes exceeding 50 entries and added textual unread indicators.
+- Preserved Analytics preference drafts when changing the date range and made failed/partial saves recoverable.
+- Added leave-page warnings for unsaved Analytics and Privacy preferences.
+- Removed misleading published status on independently saved More pages and disabled redundant privacy saves.
+- Fixed project URL typing and retained Content/Links drafts across tab changes.
+- Publishing invalid drafts returns to the tab requiring correction.
+- Moved Privacy controls to the top and expanded them by default.
+- Fixed account-deletion recovery after rejected network requests and locked confirmation input while deletion is pending.
+
+- Revalidated Customize/More desktop and mobile navigation, widget publishing,
+  project reset, preference persistence, Appearance/Layout publication, and
+  recoverable failures in Chromium; aligned Studio tests with retained
+  inactive drafts.
+
+- Added media-library retry and stale-request protection; preserved Privacy
+  drafts across unchanged parent updates and recovered rejected save requests.
+- Verified hosted avatar/background upload, saved-media re-selection, database
+  deletion, R2 deletion, and retry-safe removal. Exact CDN cache-purge evidence
+  awaits renewal of the expired Cloudflare test token.
+
 ## 2026-09-10 — Portfolio identity alignment
 
 - Kept the Portfolio username beside the avatar and above the bio at phone
   widths, with a responsive avatar size and left-aligned identity copy.
 - Preserved the shared public/Studio renderer and existing profile data
   contract; no migration or deployment change was required.
+
+## 2026-09-10 — Restore profile audio
+
+- Restored hosted-audio controls across public profile layouts by mounting the
+  fixed player once at the profile shell.
+- Removed duplicate layout-level hosted-audio mounting while leaving Spotify
+  and provider widgets in their existing inline regions.
+- Prevented audio-only profiles from creating an empty continuation section.

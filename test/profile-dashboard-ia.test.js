@@ -77,7 +77,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   for (const section of ['media', 'content', 'identity', 'appearance', 'effects', 'links', 'layout']) {
     assert.match(customize, new RegExp(`id="customize-${section === 'identity' || section === 'effects' ? section : section}"`));
   }
-  assert.doesNotMatch(customize, /data-editor-section=|hidden=|class:is-tab-hidden/);
+  assert.doesNotMatch(customize, /data-editor-section=|class:is-tab-hidden/);
   assert.match(cosmetics, /profile-cosmetics-surface--compact/);
   assert.match(customize, /id="customize-effects"[\s\S]*id="customize-layout"/);
   assert.match(customize, /Profile media/);

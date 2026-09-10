@@ -20,11 +20,21 @@
   let saving = false;
   let error = '';
   let notice = '';
+  let saveError = '';
+  let preferencesLoaded = false;
   const dispatch = createEventDispatcher();
 
   $: dailyRows = insights.daily.slice(-insights.windowDays);
   $: maxDailyViews = Math.max(1, ...dailyRows.map(entry => Math.max(entry.views, entry.clicks)));
   $: hasUnsavedPreference = enabledDraft !== insights.enabled || publicViewsVisibleDraft !== (socialSettings?.profileViewsVisible !== false);
+  $: dispatch('preferencedirty', { dirty: preferencesLoaded && hasUnsavedPreference });
+
+  export function resetChanges() {
+    enabledDraft = insights.enabled;
+    publicViewsVisibleDraft = socialSettings?.profileViewsVisible !== false;
+    saveError = '';
+  }
+
   function configValue(value) { return /** @type {any} */ (value || {}); }
   $: links = configValue(configuration).published?.links || configValue(configuration).links || [];
   $: projects = configValue(configuration).published?.content?.projects || configValue(configuration).content?.projects || [];
@@ -37,51 +47,55 @@
   async function loadInsights() {
     loading = true;
     error = '';
-    const result = await supabase.rpc('get_my_profile_insights', { p_days: windowDays });
+    const result = await Promise.resolve(supabase.rpc('get_my_profile_insights', { p_days: windowDays })).catch(error => ({ error }));
     if (result.error || result.data?.success === false) {
       error = getProfileInsightsError(result);
       loading = false;
       return;
     }
     insights = normalizeProfileInsights(result.data);
-    enabledDraft = insights.enabled;
+    if (!preferencesLoaded) enabledDraft = insights.enabled;
+    preferencesLoaded = true;
     loading = false;
   }
 
   async function chooseWindow(days) {
+    if (saving || loading) return;
     windowDays = Number(days) || 30;
     await loadInsights();
   }
 
   async function savePreference() {
-    if (saving || !hasUnsavedPreference) return;
+    if (saving || loading || !hasUnsavedPreference) return;
     saving = true;
-    error = '';
+    saveError = '';
     notice = '';
-    const insightResult = enabledDraft !== insights.enabled
-      ? await supabase.rpc('update_my_profile_insights_settings', { p_enabled: enabledDraft })
-      : { data: insights, error: null };
-    if (insightResult.error || insightResult.data?.success === false) {
-      error = getProfileInsightsError(insightResult, 'That profile-insights preference could not be saved.');
-      saving = false;
-      return;
-    }
-    if (publicViewsVisibleDraft !== (socialSettings?.profileViewsVisible !== false)) {
-      const visibilityResult = await supabase.rpc('update_my_profile_view_visibility', { p_visible: publicViewsVisibleDraft });
-      if (visibilityResult.error || visibilityResult.data?.success === false) {
-        error = getProfileInsightsError(visibilityResult, 'The public view-count preference could not be saved.');
-        saving = false;
-        return;
+    try {
+      if (enabledDraft !== insights.enabled) {
+        const result = await supabase.rpc('update_my_profile_insights_settings', { p_enabled: enabledDraft });
+        if (result.error || result.data?.success === false) {
+          saveError = getProfileInsightsError(result, 'That profile-insights preference could not be saved.');
+          return;
+        }
+        // The settings RPC returns a 30-day snapshot; retain the selected report.
+        insights = { ...insights, enabled: normalizeProfileInsights(result.data).enabled };
+        enabledDraft = insights.enabled;
       }
-      socialSettings = visibilityResult.data?.settings || visibilityResult.data;
+      if (publicViewsVisibleDraft !== (socialSettings?.profileViewsVisible !== false)) {
+        const result = await supabase.rpc('update_my_profile_view_visibility', { p_visible: publicViewsVisibleDraft });
+        if (result.error || result.data?.success === false) {
+          saveError = getProfileInsightsError(result, 'The public view-count preference could not be saved.');
+          return;
+        }
+        socialSettings = result.data?.settings || result.data;
+      }
+      dispatch('socialchange');
+      notice = 'Preferences saved.';
+    } catch (error) {
+      saveError = error instanceof Error ? error.message : 'Preferences could not be saved. Try again.';
+    } finally {
+      saving = false;
     }
-    insights = normalizeProfileInsights(insightResult.data);
-    enabledDraft = insights.enabled;
-    dispatch('socialchange');
-    notice = insights.enabled
-      ? 'Aggregate insights are available when visitors opt in.'
-      : 'Aggregate insights are off. New visits will not be recorded.';
-    saving = false;
   }
 
   function formatNumber(value) { return Number(value || 0).toLocaleString(); }
@@ -130,15 +144,16 @@
         <button type="button" class="profile-insights__button profile-insights__button--quiet" on:click={loadInsights}>Try again</button>
       </div>
     {:else}
+      {#if saveError}<p role="alert">{saveError}</p>{/if}
       {#if notice}<p class="profile-insights__notice" role="status" aria-live="polite">{notice}</p>{/if}
       <div class="profile-insights__preference">
         <div class="profile-insights__checks">
           <label class="profile-insights__check">
-            <input type="checkbox" bind:checked={enabledDraft} />
+            <input type="checkbox" disabled={saving} bind:checked={enabledDraft} />
             <span><strong>Allow aggregate public insights</strong><small>Only daily totals are kept. Visitor identities, IP addresses, and exact visit times are never stored. Complete referrers are never stored either.</small></span>
           </label>
           <label class="profile-insights__check">
-            <input type="checkbox" bind:checked={publicViewsVisibleDraft} />
+            <input type="checkbox" disabled={saving} bind:checked={publicViewsVisibleDraft} />
             <span><strong>Show an aggregate public view count</strong><small>This display setting is independent from private insight collection.</small></span>
           </label>
         </div>
@@ -148,7 +163,7 @@
       <div class="profile-insights__toolbar" aria-label="Insight time range">
         <div class="profile-insights__range" role="group" aria-label="Insight window">
           {#each [7, 30, 90] as days (days)}
-            <button type="button" class:active={windowDays === days} aria-pressed={windowDays === days} on:click={() => chooseWindow(days)}>{days}d</button>
+            <button type="button" class:active={windowDays === days} aria-pressed={windowDays === days} disabled={saving} on:click={() => chooseWindow(days)}>{days}d</button>
           {/each}
         </div>
         <button type="button" class="profile-insights__button profile-insights__button--quiet" on:click={downloadCsv}>Download CSV</button>
@@ -166,7 +181,7 @@
         {#if dailyRows.length}
           <div class="profile-insights__chart" role="list" aria-label="Daily public profile activity">
             {#each dailyRows as entry (entry.date)}
-              <div class="profile-insights__day" role="listitem" title={`${formatDate(entry.date)}: ${formatNumber(entry.views)} views, ${formatNumber(entry.clicks)} clicks`}>
+              <div class="profile-insights__day" role="listitem" aria-label={`${formatDate(entry.date)}: ${formatNumber(entry.views)} views, ${formatNumber(entry.clicks)} clicks`} title={`${formatDate(entry.date)}: ${formatNumber(entry.views)} views, ${formatNumber(entry.clicks)} clicks`}>
                 <span class="profile-insights__bar-wrap"><span class="profile-insights__bar profile-insights__bar--views" style={`height:${Math.max(8, Math.round((entry.views / maxDailyViews) * 100))}%`}></span><span class="profile-insights__bar profile-insights__bar--clicks" style={`height:${Math.max(entry.clicks ? 6 : 0, Math.round((entry.clicks / maxDailyViews) * 100))}%`}></span></span>
                 <strong>{formatNumber(entry.views)}</strong><small>{formatDate(entry.date)}</small>
               </div>

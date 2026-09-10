@@ -146,6 +146,8 @@
   // reactive dependency analysis does not inspect variables read only inside
   // a helper function.
   $: editorProfileConfig = createStudioEditorProfileConfig(context?.profileConfig, studioDraft);
+  let preferenceDirty = false;
+  $: navigationDirty = dashboardDirty || preferenceDirty;
   $: dashboardDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
   $: configurationWriteAvailable = isProfileConfigurationWritable(context);
   $: previewModel = createProfileStudioPreviewModel({
@@ -219,7 +221,7 @@
         }
         return;
       }
-      if (dashboardDirty) {
+      if (navigationDirty) {
         const currentHash = getProfileStudioHash(activeSection, activeCustomizeTab);
         window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}#${currentHash}`);
         openDirtyPrompt({ type: 'section', value: nextSection, customizeTab: nextLocation.customizeTab });
@@ -244,12 +246,12 @@
     window.addEventListener('hashchange', restoreLocation);
     window.addEventListener('popstate', restoreLocation);
     const beforeUnload = event => {
-      if (!dashboardDirty) return;
+      if (!navigationDirty) return;
       event.preventDefault();
       event.returnValue = '';
     };
     const navigationGuard = event => {
-      if (!dashboardDirty) return;
+      if (!navigationDirty) return;
       event.preventDefault();
       openDirtyPrompt(event.detail?.navigation
         ? { type: 'navigate', value: event.detail.navigation }
@@ -270,6 +272,7 @@
   function setActiveSection(sectionId, { push = true, customizeTab = null, hash = null } = {}) {
     if (!visibleSettingsSections.some(section => section.id === sectionId)) return;
     if (sectionId === 'customize' && CUSTOMIZE_TAB_IDS.includes(customizeTab)) activeCustomizeTab = customizeTab;
+    preferenceDirty = false;
     activeSection = sectionId;
     if (sectionId === 'customize') {
       if (!isMobileViewport) {
@@ -293,7 +296,7 @@
   function handleDashboardSectionChange(event) {
     const sectionId = event.detail?.sectionId;
     if (!sectionId || sectionId === activeSection) return;
-    if (dashboardDirty) {
+    if (navigationDirty) {
       openDirtyPrompt({ type: 'section', value: sectionId });
       return;
     }
@@ -331,6 +334,7 @@
 
   function resetActiveEditor() {
     workspace?.resetChanges?.(activeSection);
+    preferenceDirty = false;
     dirtySources = clearDirtySourcesForSection(dirtySources, activeSection);
   }
 
@@ -876,8 +880,10 @@
       isAuthenticated={$isAuthenticated}
       {featureFlags}
       configurationUnavailable={context?.configurationUnavailable === true}
+      on:tabrequest={event => selectCustomizeTab(event.detail?.tabId, { focus: true })}
       on:studiopatch={applyStudioPatch}
       on:cosmeticpreview={updateCosmeticPreview}
+      on:preferencedirty={event => { preferenceDirty = event.detail?.dirty === true; }}
       on:dirty={handleSectionDirty}
       on:identitysaved={updateIdentity}
       on:configsaved={handleAppearanceSaved}

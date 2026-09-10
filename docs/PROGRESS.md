@@ -5775,9 +5775,79 @@ Modern's vertical alignment.
   handoff was provided; the progression browser smoke follows all three signup
   steps and checks the required terms control.
 
+## Customize and More usability audit — 2026-09-09
+
+Corrected More-menu keyboard/focus behavior and mobile profile access.
+Notifications now marks the whole inbox read and retains recoverable errors.
+Analytics preserves unsaved preferences across date-range changes and keeps
+the form/report intact on partial or failed saves. Eight focused behavior
+tests pass. Remaining page and browser coverage is tracked in
+[the audit](milestones/CUSTOMIZE_USABILITY_AUDIT.md); this is not a completion
+claim.
+
+The follow-up connects Privacy/Analytics drafts to leave-page protection,
+keeps their save controls independent from profile publishing, removes false
+Published status on More pages, and makes privacy failures recoverable inline.
+Ten audit-specific tests and eight existing Studio race/hardening tests pass;
+Svelte checks and changed-component lint pass. Browser coverage passed the
+initial Studio/alias/Links flows but stopped at published Sleek profile loading
+with a retry state and network-change errors. Browser validation is incomplete.
+
+The focused Customize browser pass now reaches every tab and More destination
+at desktop/phone widths, including preference discard and keyboard focus.
+Content URL typing no longer erases incomplete input; Content/Links drafts
+remain mounted across tab changes. Twelve focused tests pass, including the
+Supabase thenable behavior discovered during browser verification. Privacy
+controls now lead their page and start expanded; final ordering revalidation
+and deeper mutation coverage remain pending.
+
+Project validation, cross-tab publication, direct-refresh persistence, and
+Reset now pass in Chromium. Account-deletion transport rejection recovers
+through the existing error result (two mocked tests pass). The production
+build and changed-file lint pass. Extended widget and preference save browser
+checks are pending.
+
+The extended focused browser run is now verified passed, including widgets and
+preference persistence; evidence and remaining acceptance work are in the audit.
+All required non-test checks pass. Two stale tab-unmounting assertions were
+corrected and their six tests pass. The full test run still has a pre-existing
+public-profile wheel-listener contract failure; completion is not claimed.
+
+Media loading now has a retry path and preserves prior assets on transport
+failure. Privacy saves catch rejected requests, and unchanged parent settings
+cannot replace the draft. Eleven focused tests pass; failure-injection browser
+coverage is still being verified. See the audit for exact validation limits.
+
+The corrected failure-injection browser run now passes: Analytics/Privacy
+save retry and persistence, notification load retry, and compact media-library
+load retry. Evidence: `/tmp/chromadie-profile-studio-smoke-umJpAz/evidence.json`.
+Hosted-media mutations and the existing wheel-scrolling test conflict remain.
+
+The audit is complete on 2026-09-10. The final focused run passes all scoped
+desktop/mobile destinations, cross-tab publication and reset, Appearance and
+Layout persistence, recoverable failures, reduced motion, aliases, and Links
+preview. Evidence:
+`/tmp/chromadie-profile-studio-smoke-y2zNql/evidence.json`.
+
+Hosted avatar/background media now passes upload, public delivery, saved-media
+selection, database and R2 deletion, and repeat-delete coverage at desktop and
+phone widths. Evidence:
+`/tmp/chromadie-profile-media-r2-local-XhKvVy/evidence.json`. Exact CDN cache
+purge could not be certified because both configured Cloudflare test tokens
+return HTTP 401; the smoke records this external credential limitation while
+its strict default continues to require a successful purge.
+
 ## Portfolio identity alignment — 2026-09-10
 
 Portfolio now keeps the username beside the avatar and above the bio on phone
 viewports as well as desktop. The avatar scales down at narrow widths so the
 left-aligned copy retains usable space. This is a shared public/Studio renderer
 change with no schema, authority, or saved-configuration changes.
+
+## Hosted profile audio recovery — 2026-09-10
+
+The fixed hosted-audio control now mounts once at the profile shell instead of
+inside layout-specific continuation content. Portfolio and the other public
+layouts therefore keep audio visible without creating duplicate controls;
+Spotify and provider widgets remain in their inline media regions. Audio-only
+profiles no longer create an empty More continuation.

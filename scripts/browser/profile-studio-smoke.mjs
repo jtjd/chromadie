@@ -96,7 +96,19 @@ function stableProfileMediaRequests() {
   });
 }
 
+const customizeAuditOnly = process.env.PROFILE_STUDIO_SMOKE_SCOPE === 'customize-audit';
+const auditSteps = new Set([
+  'open local homepage',
+  'create a unique account through the signup UI',
+  'direct-refresh authenticated Profile Studio',
+  'Customize and More destination usability',
+  'create an alias and resolve its direct-refresh path',
+  'Customize Links tab keeps the live preview connected'
+]);
+
 async function step(name, action) {
+  if (customizeAuditOnly && !auditSteps.has(name)) return;
+
   process.stdout.write(`\n[smoke] ${name} ... `);
   const started = Date.now();
   try {
@@ -911,10 +923,10 @@ try {
     await page.clickText('Sign up', { description: 'homepage account creation navigation' });
     await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('.auth-page .site-mode-header--home') && document.querySelector('.auth-container') && document.querySelector('#username-input') && !document.querySelector('.auth-modal-overlay')`, 'standalone signup page');
     await capture('02-auth-signup');
-    await page.click('.auth-container .tabs a[href^="/login"]', 'auth route switch to sign in');
+    await page.click('.auth-container .auth-switch a[href^="/login"]', 'auth route switch to sign in');
     await page.waitFor(`location.pathname === '/login' && document.querySelector('.auth-page') && document.querySelector('#email-input')`, 'standalone login page');
     await capture('03-auth-login');
-    await page.click('.auth-container .tabs a[href^="/signup"]', 'auth route switch to create account');
+    await page.click('.auth-container .auth-switch a[href^="/signup"]', 'auth route switch to create account');
     await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('#username-input')`, 'signup route after auth switch');
     if (smokeMode === 'preview' && !localIntegrationTest) {
       await page.waitFor(`(() => {
@@ -923,8 +935,14 @@ try {
       })()`, 'production Turnstile test token', 30000);
     }
     await page.setInputValue('#username-input', canonicalUsername, ['input', 'change']);
+    await page.waitFor("document.querySelector('.field-status--available')?.textContent?.includes('Username available')", 'signup username availability', 30000);
+    await page.click('.auth-submit', 'continue to email');
+    await page.waitFor("document.querySelector('#email-input')", 'signup email step');
     await page.setInputValue('#email-input', email, ['input', 'change']);
+    await page.click('.auth-submit', 'continue to password');
+    await page.waitFor("document.querySelector('#password-input') && document.querySelector('#terms-accepted')", 'signup password step');
     await page.setInputValue('#password-input', password, ['input', 'change']);
+    await page.click('#terms-accepted', 'accept account terms');
     await page.click('.auth-submit', 'signup submit control');
     await page.waitFor(`location.pathname === '/' && document.querySelector('.homepage-reference .roll-page') && !document.querySelector('.auth-page')`, 'authenticated session after signup', 30000);
     const accountPath = await page.evaluate('location.pathname');
@@ -958,6 +976,177 @@ try {
     assert(!state.sharedSiteHeader, 'Profile Studio still mounts the photo-overlaid site header.');
     await capture('04-profile-studio');
     return state;
+  });
+
+  await step('Customize and More destination usability', async () => {
+    const destinations = [
+      ['overview', '.profile-studio-overview'],
+      ['premium', '.profile-premium-page'],
+      ['profile-insights', '.profile-insights__preference'],
+      ['profile-notifications', '.profile-notifications__toolbar'],
+      ['profile-social', '.profile-social__check'],
+      ['account', '#dashboard-delete-confirm'],
+      ['customize', '#customize-appearance']
+    ];
+    for (const width of [1440, 390]) {
+      await page.command('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 });
+      for (const [section, selector] of destinations) {
+        await page.click('.profile-studio-shell__menu-trigger', 'open More');
+        await page.waitFor(`document.querySelector('[data-section="${section}"]')`, 'More destination');
+        await page.click(`[data-section="${section}"]`, section);
+        await page.waitFor(`document.querySelector(${JSON.stringify(selector)})`, section + ' ready');
+        const geometry = await page.evaluate(`({
+          overflow: document.documentElement.scrollWidth > innerWidth + 1,
+          menuClosed: !document.querySelector('#profile-studio-more-menu'),
+          title: document.querySelector('.profile-studio-header__toolbar h1, .profile-studio-header__editor-header h1')?.textContent
+        })`);
+        assert(!geometry.overflow && geometry.menuClosed && geometry.title, `Invalid ${section} geometry: ${JSON.stringify(geometry)}`);
+        await capture(`audit-${section}-${width}`);
+      }
+      for (const [tab, selector] of [
+        ['media', '#customize-media .studio-section--media'],
+        ['content', '.profile-content-editor'],
+        ['links', '.profile-links-editor__text-button'],
+        ['layout', '.profile-layout-editor__card'],
+        ['appearance', '#customize-identity input, #customize-identity textarea']
+      ]) {
+        await page.click(`#profile-customize-tab-${tab}`, tab);
+        await page.waitFor(`document.querySelector(${JSON.stringify(selector)})`, tab + ' controls ready');
+        assert(await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), tab + ' overflows');
+        await capture(`audit-${tab}-${width}`);
+      }
+    }
+    await page.click('.profile-studio-shell__menu-trigger', 'open More for preferences');
+    await page.click('[data-section="profile-insights"]', 'Analytics');
+    await page.waitFor("document.querySelector('.profile-insights__check input:not(:disabled)')", 'Analytics preference');
+    await page.click('.profile-insights__check input', 'stage preference');
+    await page.click('.profile-studio-shell__menu-trigger', 'open More with preference');
+    await page.click('[data-section="account"]', 'leave preference');
+    await page.waitFor("document.querySelector('.profile-studio-dirty-prompt')", 'unsaved preference warning');
+    await page.click('.profile-studio-dirty-prompt__discard', 'discard preference');
+    await page.waitFor("document.querySelector('#dashboard-delete-confirm')", 'account after discard');
+    await page.click('.profile-studio-shell__menu-trigger', 'open More for keyboard check');
+    await page.pressKey('Escape');
+    assert(await page.evaluate("document.activeElement?.classList.contains('profile-studio-shell__menu-trigger')"), 'Escape did not restore More focus');
+    await page.click('.profile-studio-shell__menu-trigger', 'return to Customize');
+    await page.click('[data-section="customize"]', 'Customize');
+    await page.waitFor("document.querySelector('#profile-customize-tab-content')", 'Customize tabs');
+    await page.click('#profile-customize-tab-content', 'Content');
+    await page.waitFor("document.querySelector('#profile-project-placeholder-title')", 'empty project');
+    await page.setInputValue('#profile-project-placeholder-title', 'Audit project', ['input']);
+    await page.waitFor("document.querySelector('.profile-content-editor__project input[inputmode=url]')", 'project URL');
+    await page.setInputValue('.profile-content-editor__project input[inputmode=url]', 'h', ['input']);
+    await page.click('#profile-customize-tab-layout', 'leave incomplete project');
+    await page.click('.profile-studio-shell__publish', 'validate incomplete project from Layout');
+    await page.waitFor("document.querySelector('#profile-customize-tab-content')?.getAttribute('aria-selected') === 'true' && document.querySelector('.profile-content-editor__message[role=alert]')", 'validation returns to Content');
+    assert(await page.evaluate("document.querySelector('.profile-content-editor__project input[inputmode=url]')?.value === 'h'"), 'Incomplete project URL was lost');
+    await page.setInputValue('.profile-content-editor__project input[inputmode=url]', 'https://example.com/audit', ['input']);
+    await page.click('#profile-customize-tab-layout', 'publish Content from Layout');
+    await page.click('.profile-studio-shell__publish', 'publish valid project');
+    await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent === 'Profile published.'", 'project published');
+    await page.navigate(`${appUrl}/profile/settings#customize-content`, 'refresh published content');
+    await page.waitFor("document.querySelector('.profile-content-editor__project input[inputmode=url]')?.value === 'https://example.com/audit'", 'published project survived refresh');
+    await page.setInputValue('.profile-content-editor__project input[inputmode=url]', 'https://example.com/discard', ['input']);
+    await page.click('.profile-studio-shell__menu-trigger', 'reset staged project');
+    await page.clickText('Reset changes', { description: 'reset changes' });
+    await page.waitFor("document.querySelector('.profile-content-editor__project input[inputmode=url]')?.value === 'https://example.com/audit'", 'reset restores published project');
+    await capture('audit-content-published-and-reset');
+    await page.click('.profile-widget-editor__add', 'add provider widget');
+    await page.waitFor("document.querySelector('.profile-widget-editor__panel select')", 'widget provider');
+    await page.evaluate(`(() => {
+      const select = document.querySelector('.profile-widget-editor__panel select');
+      select.value = 'youtube';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
+    await page.setInputValue('.profile-widget-editor__panel input[inputmode=url]', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', ['input']);
+    await page.click('#profile-customize-tab-links', 'retain widget across tabs');
+    await page.click('#profile-customize-tab-content', 'return to widget');
+    assert(await page.evaluate("document.querySelector('.profile-widget-editor__panel input[inputmode=url]')?.value.includes('dQw4w9WgXcQ')"), 'Widget draft lost on tab change');
+    await page.click('.profile-studio-shell__publish', 'publish widget');
+    await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent === 'Profile published.'", 'widget published');
+    await page.navigate(`${appUrl}/profile/settings#customize-content`, 'refresh widget');
+    await page.waitFor("document.querySelector('.profile-widget-editor__panel input[inputmode=url]')?.value.includes('dQw4w9WgXcQ')", 'widget persisted');
+    for (const [section, input, save, notice] of [
+      ['profile-insights', '.profile-insights__check input', '.profile-insights__preference button', '.profile-insights__notice'],
+      ['profile-social', '.profile-social__check input', '.profile-social__settings-body button', '.profile-social__notice']
+    ]) {
+      await page.click('.profile-studio-shell__menu-trigger', 'open preferences');
+      await page.click(`[data-section="${section}"]`, section);
+      await page.waitFor(`document.querySelector(${JSON.stringify(input)})`, 'preference ready');
+      const original = await page.evaluate(`document.querySelector(${JSON.stringify(input)}).checked`);
+      await page.click(input, 'change preference');
+      await page.click(save, 'save preference');
+      await page.waitFor(`document.querySelector(${JSON.stringify(notice)})`, 'preference saved');
+      await page.navigate(`${appUrl}/profile/settings#${section}`, 'refresh saved preference');
+      await page.waitFor(`document.querySelector(${JSON.stringify(input)})?.checked === ${!original}`, 'saved preference persisted');
+    }
+    // Fail actual browser requests, then retry against the local backend.
+    for (const [section, input, save, rpc, alert] of [
+      ['profile-insights', '.profile-insights__check input', '.profile-insights__preference button', 'update_my_profile_insights_settings', '.profile-insights [role=alert]'],
+      ['profile-social', '.profile-social__check input', '.profile-social__settings-body button', 'update_my_profile_social_settings', '.profile-social [role=alert]']
+    ]) {
+      await page.click('.profile-studio-shell__menu-trigger', 'open recovery destination');
+      await page.click(`[data-section="${section}"]`, section);
+      await page.waitFor(`document.querySelector(${JSON.stringify(input)})`, 'recoverable preference ready');
+      const original = await page.evaluate(`document.querySelector(${JSON.stringify(input)}).checked`);
+      await page.click(input, 'stage preference before transport failure');
+      await page.command('Network.setBlockedURLs', { urls: [`*rpc/${rpc}*`] });
+      try {
+        await page.click(save, 'save through failed transport');
+        await page.waitFor(`document.querySelector(${JSON.stringify(alert)}) && !document.querySelector(${JSON.stringify(save)}).disabled`, 'inline failure and retry control');
+        assert(await page.evaluate(`document.querySelector(${JSON.stringify(input)}).checked === ${!original}`), 'Failed save erased preference');
+        await capture(`audit-${section}-save-failure`);
+      } finally {
+        await page.command('Network.setBlockedURLs', { urls: [] });
+      }
+      assert(await page.evaluate(`!document.querySelector(${JSON.stringify(save)}).disabled`), section + ' retry became disabled after failure');
+      await page.click(save, 'retry preference save');
+      await page.waitFor(`!document.querySelector(${JSON.stringify(alert)}) && !document.querySelector(${JSON.stringify(input)}).disabled && document.querySelector(${JSON.stringify(save)}).disabled`, 'successful retry');
+      await page.navigate(`${appUrl}/profile/settings#${section}`, 'refresh retried preference');
+      await page.waitFor(`document.querySelector(${JSON.stringify(input)})?.checked === ${!original}`, 'retried preference persisted');
+    }
+    await page.command('Network.setBlockedURLs', { urls: ['*rpc/get_my_profile_notifications*'] });
+    try {
+      await page.click('.profile-studio-shell__menu-trigger', 'open notification recovery');
+      await page.click('[data-section="profile-notifications"]', 'Notifications');
+      await page.waitFor("document.querySelector('.profile-notifications [role=alert] button')", 'notification load retry');
+      await capture('audit-notifications-load-failure');
+    } finally {
+      await page.command('Network.setBlockedURLs', { urls: [] });
+    }
+    await page.click('.profile-notifications [role=alert] button', 'retry notification load');
+    await page.waitFor("document.querySelector('.profile-notifications__toolbar') && !document.querySelector('.profile-notifications [role=alert]')", 'notifications recovered');
+    await page.command('Network.setBlockedURLs', { urls: ['*rest/v1/profile_media_assets*'] });
+    try {
+      await page.navigate(`${appUrl}/profile/settings#customize-media`, 'failed media library load');
+      await page.waitFor("document.querySelector('.profile-expression-editor__asset-error button')", 'media library retry');
+      await capture('audit-media-library-load-failure');
+    } finally {
+      await page.command('Network.setBlockedURLs', { urls: [] });
+    }
+    await page.click('.profile-expression-editor__asset-error button', 'retry media library');
+    await page.waitFor("document.querySelector('.profile-expression-editor__compact-grid') && !document.querySelector('.profile-expression-editor__asset-error') && !document.querySelector('.profile-expression-editor__asset-loading')", 'media library recovered');
+    await page.command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    assert(await page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"), 'Reduced motion not active');
+    await capture('audit-privacy-saved-reduced-motion');
+    await page.click('#profile-customize-tab-appearance', 'appearance persistence');
+    await page.waitFor("document.querySelector('[data-color-role=\"surface\"] input')", 'surface color control');
+    await page.setInputValue('[data-color-role="surface"] input', '#223344', ['input', 'change']);
+    await page.click('#profile-customize-tab-layout', 'layout persistence');
+    await page.waitFor("document.querySelector('.profile-layout-editor__card[data-layout=\"sleek\"]')", 'Sleek selection');
+    await page.click('.profile-layout-editor__card[data-layout="sleek"]', 'select Sleek');
+    await page.click('.profile-studio-shell__publish', 'publish appearance and layout');
+    await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent === 'Profile published.'", 'appearance and layout published');
+    await page.navigate(`${appUrl}/profile/settings#customize-appearance`, 'refresh appearance and layout');
+    await page.waitFor("document.querySelector('[data-color-role=\"surface\"] input')?.value.toLowerCase() === '#223344'", 'appearance persisted');
+    await page.click('#profile-customize-tab-layout', 'verify persisted layout');
+    await page.waitFor("document.querySelector('.profile-layout-editor__card[data-layout=\"sleek\"]')?.getAttribute('aria-pressed') === 'true'", 'layout persisted');
+    await capture('audit-appearance-layout-persisted');
+    await page.click('.profile-layout-editor__card[data-layout="compact"]', 'restore Compact for later shared smoke steps');
+    await page.click('.profile-studio-shell__publish', 'publish restored Compact layout');
+    await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent === 'Profile published.'", 'restored Compact layout published');
+    await page.setViewport(1440, 1000);
+    return { widths: [1440, 390], destinations: destinations.map(([id]) => id), tabs: 5, preferenceGuard: true };
   });
 
   await step('Profile Studio ignores stale per-editor session drafts after refresh', async () => {
@@ -1064,6 +1253,7 @@ try {
       const canvas = document.querySelector('.profile-studio-preview .profile-reference-card');
       return Boolean(preview && canvas && !preview.closest('.auth-modal-overlay'));
     })()`, 'integrated Links live preview');
+    await page.waitFor(`document.querySelector('#customize-links .profile-links-editor__text-button')`, 'loaded Links editor');
     const state = await page.evaluate(`(() => ({
       open: Boolean(document.querySelector('.profile-studio-preview')),
       tab: document.querySelector('#profile-customize-tab-links')?.getAttribute('aria-selected') === 'true',

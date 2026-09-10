@@ -137,7 +137,8 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(shell, /ProfileEnvironmentLayer/);
   assert.match(shell, /prefersReducedMotion/);
   assert.match(shell, /--profile-pointer-cursor/);
-  assert.match(music, /Enter profile/);
+  assert.match(music, /ProfileAudioControls[^>]*on:toggle=\{toggleAudio\}/);
+  assert.match(music, /aria-label="Profile audio keyboard controls"[^>]*on:click=\{toggleAudio\}[^>]*on:keydown=\{handleMediaKey\}/);
   assert.match(music, /autoplay=\{false\}/);
   assert.match(music, /MediaTrackNext/);
   assert.doesNotMatch(music, /window\.addEventListener\(['"]pointerdown/);

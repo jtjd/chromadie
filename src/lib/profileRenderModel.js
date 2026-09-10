@@ -307,8 +307,9 @@ export function buildProfileRenderSnapshot(input = {}) {
     pointerCursorUrl: resolveMediaUrl(richMedia.pointer_cursor_path, { ...input, mediaReferences }, 'pointer_cursor'),
     playlist: richMedia.audio_playlist
   };
-  const hasProfileMusic = Boolean(media.audioUrl || media.audioPath)
-    || media.playlist.tracks.length > 0
+  const hasHostedAudio = Boolean(media.audioUrl || media.audioPath)
+    || media.playlist.tracks.length > 0;
+  const hasProfileMusic = hasHostedAudio
     || Boolean(configuration.spotify_type && configuration.spotify_id)
     || Boolean(input.dev && input.visualFixture === 'music');
   // ProfileContent intentionally suppresses the default empty About heading.
@@ -318,7 +319,7 @@ export function buildProfileRenderSnapshot(input = {}) {
     (visibleContent.about && (visibleContent.about.body || visibleContent.about.markdown || visibleContent.about.ast?.length))
     || visibleContent.projects.length
   );
-  const hasLowerExpression = hasProfileMusic
+  const hasLowerExpression = (hasProfileMusic && !hasHostedAudio)
     || PROFILE_MUSIC_ENABLED
     || profileWidgets.length > 0
     || hasProfileContent;
@@ -462,6 +463,7 @@ export function buildProfileRenderSnapshot(input = {}) {
       widgets: profileWidgets,
       hasContent: hasProfileContent,
       hasMusic: hasProfileMusic,
+      hasHostedAudio,
       hasSpotifyWidget,
       showLowerExpression,
       hasProfileStory,

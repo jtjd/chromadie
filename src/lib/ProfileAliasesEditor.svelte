@@ -14,6 +14,7 @@
   let aliases = [];
   let draftAlias = '';
   let loading = true;
+  let loadFailed = false;
   let saving = false;
   let deletingAlias = '';
   let error = '';
@@ -27,7 +28,8 @@
     loading = true;
     error = '';
     const result = await loadMyProfileAliases(supabase);
-    aliases = result.aliases;
+    loadFailed = Boolean(result.error);
+    if (!loadFailed) aliases = result.aliases;
     error = result.error;
     loading = false;
   }
@@ -41,7 +43,7 @@
   }
 
   async function saveAlias() {
-    if (saving || aliases.length >= MAX_PROFILE_ALIASES) return;
+    if (saving || deletingAlias || loadFailed || aliases.length >= MAX_PROFILE_ALIASES) return;
     const validationError = validateDraft();
     if (validationError) {
       error = validationError;
@@ -66,7 +68,7 @@
   }
 
   async function removeAlias(alias) {
-    if (deletingAlias) return;
+    if (deletingAlias || saving || loadFailed) return;
     deletingAlias = alias;
     error = '';
     status = '';
@@ -92,13 +94,15 @@
   <div class="aliases-editor__content">
     {#if loading}
       <p class="aliases-editor__state" role="status" aria-live="polite">Loading your aliases…</p>
+    {:else if loadFailed}
+      <button type="button" class="aliases-editor__save" on:click={loadAliases}>Retry loading aliases</button>
     {:else}
       <div class="aliases-editor__list" aria-label="Profile aliases">
         {#if aliases.length}
           {#each aliases as entry (entry.alias)}
             <div class="aliases-editor__row">
               <a href={entry.path}>{entry.path}</a>
-              <button type="button" class="aliases-editor__remove" disabled={Boolean(deletingAlias)} on:click={() => removeAlias(entry.alias)}>
+              <button type="button" class="aliases-editor__remove" disabled={Boolean(deletingAlias) || saving} aria-label={`Remove alias ${entry.alias}`} on:click={() => removeAlias(entry.alias)}>
                 {deletingAlias === entry.alias ? 'Removing…' : 'Remove'}
               </button>
             </div>
@@ -115,8 +119,8 @@
         <label for="profile-alias">New alias</label>
         <div class="aliases-editor__input-row">
           <span class="aliases-editor__prefix" aria-hidden="true">/a/</span>
-          <input id="profile-alias" bind:value={draftAlias} maxlength="20" pattern={'[A-Za-z0-9_]{1,20}'} autocomplete="off" placeholder="your-short-name" disabled={saving || aliases.length >= MAX_PROFILE_ALIASES} />
-          <button type="submit" class="aliases-editor__save" disabled={saving || aliases.length >= MAX_PROFILE_ALIASES}>
+          <input id="profile-alias" bind:value={draftAlias} maxlength="20" pattern={'[A-Za-z0-9_]{1,20}'} autocomplete="off" placeholder="your_short_name" disabled={saving || Boolean(deletingAlias) || aliases.length >= MAX_PROFILE_ALIASES} />
+          <button type="submit" class="aliases-editor__save" disabled={saving || Boolean(deletingAlias) || aliases.length >= MAX_PROFILE_ALIASES}>
             {saving ? 'Saving…' : 'Add alias'}
           </button>
         </div>

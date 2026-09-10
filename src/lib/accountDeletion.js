@@ -47,9 +47,9 @@ export function normalizeAccountDeletionError(error) {
 }
 
 export async function deleteAccount(supabase, confirmationPhrase = 'DELETE') {
-  const { data, error } = await supabase.functions.invoke(DELETE_ACCOUNT_FUNCTION, {
+  const { data, error } = await Promise.resolve().then(() => supabase.functions.invoke(DELETE_ACCOUNT_FUNCTION, {
     body: { confirm: confirmationPhrase }
-  })
+  })).catch(error => ({ data: null, error }))
 
   if (error) {
     return {

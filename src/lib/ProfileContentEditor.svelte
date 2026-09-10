@@ -50,7 +50,16 @@
   }
 
   function updateContent(next) {
-    draft = normalizeDraft({ ...draft, content: { ...draft.content, ...next } });
+    const content = { ...draft.content, ...next };
+    draft = normalizeDraft({ ...draft, content });
+    // Keep text as typed while editing. Public projection still normalizes URLs
+    // and text; incomplete HTTPS input must not erase itself on each keystroke.
+    draft.content.projects = draft.content.projects.map((project, index) => ({
+      ...project,
+      title: String(content.projects[index]?.title || '').slice(0, PROFILE_CONTENT_LIMITS.projectTitle),
+      description: String(content.projects[index]?.description || '').slice(0, PROFILE_CONTENT_LIMITS.projectDescription),
+      url: String(content.projects[index]?.url || '').slice(0, PROFILE_CONTENT_LIMITS.projectUrl)
+    }));
     if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     status = '';
     error = '';

@@ -1,7 +1,6 @@
 <script>
   import { onMount } from 'svelte';
   import Module from './foundation/Module.svelte';
-  import { addToast } from './stores';
   import { supabase } from './supabase';
   import {
     createEmptyProfileNotifications,
@@ -15,6 +14,7 @@
   let saving = false;
   let error = '';
   let notice = '';
+  let actionError = '';
 
   $: unread = inbox.notifications.filter(notification => !notification.readAt).length;
 
@@ -23,7 +23,7 @@
   async function loadNotifications() {
     loading = true;
     error = '';
-    const result = await supabase.rpc('get_my_profile_notifications', { p_limit: 50 });
+    const result = await Promise.resolve(supabase.rpc('get_my_profile_notifications', { p_limit: 50 })).catch(error => ({ error }));
     if (result.error || result.data?.success === false) {
       error = result.error?.message || result.data?.error || 'Notifications could not be loaded.';
       loading = false;
@@ -34,12 +34,13 @@
   }
 
   async function markAllRead() {
-    if (saving || !inbox.notifications.some(notification => !notification.readAt)) return;
+    if (saving || Math.max(inbox.unreadCount, unread) === 0) return;
     saving = true;
-    const ids = inbox.notifications.filter(notification => !notification.readAt).map(notification => notification.id);
-    const result = await supabase.rpc('mark_my_profile_notifications_read', { p_notification_ids: ids });
+    actionError = '';
+    notice = '';
+    const result = await Promise.resolve(supabase.rpc('mark_my_profile_notifications_read', { p_notification_ids: null })).catch(error => ({ error }));
     if (result.error || result.data?.success === false) {
-      addToast(result.error?.message || result.data?.error || 'Notifications could not be marked read.', 'error');
+      actionError = result.error?.message || result.data?.error || 'Notifications could not be marked read.';
       saving = false;
       return;
     }
@@ -57,10 +58,11 @@
     {:else if error}
       <div class="profile-notifications__state" role="alert"><strong>Notifications are temporarily unavailable.</strong><p>{error}</p><button type="button" class="profile-notifications__button" on:click={loadNotifications}>Try again</button></div>
     {:else}
+      {#if actionError}<p role="alert">{actionError}</p>{/if}
       {#if notice}<p class="profile-notifications__notice" role="status" aria-live="polite">{notice}</p>{/if}
       <div class="profile-notifications__toolbar">
-        <div><strong>{inbox.unreadCount || unread}</strong><span>unread signal{(inbox.unreadCount || unread) === 1 ? '' : 's'}</span></div>
-        <button type="button" class="profile-notifications__button profile-notifications__button--quiet" disabled={saving || unread === 0} on:click={markAllRead}>{saving ? 'Saving…' : 'Mark all read'}</button>
+        <div><strong>{Math.max(inbox.unreadCount, unread)}</strong><span>unread signal{(Math.max(inbox.unreadCount, unread)) === 1 ? '' : 's'}</span></div>
+        <button type="button" class="profile-notifications__button profile-notifications__button--quiet" disabled={saving || Math.max(inbox.unreadCount, unread) === 0} on:click={markAllRead}>{saving ? 'Saving…' : 'Mark all read'}</button>
       </div>
       {#if inbox.notifications.length}
         <ol class="profile-notifications__list">
@@ -68,7 +70,7 @@
             <li class:unread={!notification.readAt} class="profile-notifications__item">
               <span class="profile-notifications__dot" aria-hidden="true"></span>
               <div class="profile-notifications__copy">
-                <strong>{getProfileNotificationLabel(notification)}</strong>
+                <strong>{getProfileNotificationLabel(notification)}{#if !notification.readAt}<span class="profile-notifications__unread-label"> · Unread</span>{/if}</strong>
                 {#if getProfileNotificationDetail(notification)}<p>{getProfileNotificationDetail(notification)}</p>{/if}
                 {#if notification.updatedAt || notification.createdAt}<time datetime={notification.updatedAt || notification.createdAt}>{new Date(notification.updatedAt || notification.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>{/if}
               </div>

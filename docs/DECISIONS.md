@@ -7121,9 +7121,62 @@ copy block vertically against the avatar. Shared identity-copy wrappers keep
 these relationships identical in public profiles, Studio, and the homepage
 renderer.
 
+## 2026-09-09 — Customize usability corrections
+
+Use the existing owner APIs for usability fixes. “Mark all read” sends the
+supported null notification-ID argument so its scope matches its label.
+Analytics retains the selected report when a settings write returns the
+default 30-day snapshot and records partial success before retrying the
+remaining preference. No schema or authority changes are required.
+See [the active audit](milestones/CUSTOMIZE_USABILITY_AUDIT.md).
+
+Preference dirty state participates in navigation protection separately from
+profile draft dirty state. Analytics/privacy changes retain their own save
+actions and must never enable Publish profile as if that action saves them.
+
+Content and Links editors remain mounted after their first visit to preserve
+incomplete authoring input and validation. Public projection retains the same
+normalization boundary. The dedicated Privacy page puts its editable settings
+before the social summaries and expands them by default.
+
+Account deletion transport exceptions use the existing normalized error return,
+so the Settings UI can restore its controls and show the same retry guidance
+as ordinary API errors. Tests mock deletion; no destructive browser mutation
+is needed to verify this error path.
+
+### Studio audit test contract — 2026-09-09
+
+Visited Content and Links editors stay mounted and hidden on inactive tabs to
+retain incomplete input. Source assertions now permit this intentional lifetime;
+Chromium confirms draft retention, validation routing, publish, and refresh.
+The unrelated committed public-profile wheel-listener/test conflict remains
+explicitly recorded rather than changing public scroll behavior in this audit.
+
+### Media and preference recovery — 2026-09-09
+
+Keep the last known media library while a refresh fails, expose retry in the
+compact Studio, and apply only the newest request result. Compare canonical
+Privacy settings by normalized value before synchronizing the draft so a
+parent rerender cannot discard input. These changes preserve existing owner
+queries and RPCs; no migration or storage policy changes are needed.
+
+Hosted-media browser certification may explicitly separate application-owned
+deletion from CDN cache invalidation when the external Cloudflare test token is
+invalid. Credential-limited mode must still prove database removal, private and
+public R2 object removal, and repeat-delete safety; the default smoke remains
+strict about exact purge and public cache disappearance.
+
 ## 2026-09-10 — Portfolio identity remains horizontal on phones
 
 Keep Portfolio's avatar and identity copy in the same two-column row at the
 phone breakpoint. The username stays beside the avatar and the bio follows it
 in the copy column, preserving the desktop hierarchy in public and Studio
 rendering without changing profile data or layout identifiers.
+
+## 2026-09-10 — Hosted profile audio mounts at the profile shell
+
+Render hosted profile audio once beside the profile composition because its
+control is fixed to the viewport. Continuation sections retain only inline
+providers and widgets. This keeps the audio control independent of layout and
+below-fold rendering while preserving the bounded media projection. Hosted
+audio alone does not create a continuation section.

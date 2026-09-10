@@ -39,6 +39,7 @@
   let avatarAssets = [];
   let backgroundAssets = [];
   let assetsLoading = false;
+  let assetsError = '';
   let expressionMediaReferences = {};
   let assetLoadRequestId = 0;
   const avatarRules = PROFILE_IMAGE_RULES.avatar;
@@ -119,19 +120,22 @@
     if (!profileId) return;
     const requestId = ++assetLoadRequestId;
     assetsLoading = true;
-    const { data, error: assetError } = await supabase
-      .from('profile_media_assets')
-      .select('id, kind, storage_path, storage_provider, r2_public_key, label, created_at, status, delivery_status, ever_public')
-      .eq('user_id', profileId)
-      .order('created_at', { ascending: false });
-    if (requestId !== assetLoadRequestId) return;
-    assetsLoading = false;
-    if (assetError) {
-      setFeedback(assetError.message || 'The media library could not be loaded.');
-      return;
+    assetsError = '';
+    try {
+      const { data, error: assetError } = await supabase
+        .from('profile_media_assets')
+        .select('id, kind, storage_path, storage_provider, r2_public_key, label, created_at, status, delivery_status, ever_public')
+        .eq('user_id', profileId)
+        .order('created_at', { ascending: false });
+      if (requestId !== assetLoadRequestId) return;
+      if (assetError) throw new Error(assetError.message || 'The media library could not be loaded.');
+      avatarAssets = (data || []).filter(asset => asset.kind === 'avatar' && (!asset.status || asset.status === 'active'));
+      backgroundAssets = (data || []).filter(asset => asset.kind === 'background' && (!asset.status || asset.status === 'active'));
+    } catch (loadError) {
+      if (requestId === assetLoadRequestId) assetsError = loadError instanceof Error ? loadError.message : 'The media library could not be loaded.';
+    } finally {
+      if (requestId === assetLoadRequestId) assetsLoading = false;
     }
-    avatarAssets = (data || []).filter(asset => asset.kind === 'avatar' && (!asset.status || asset.status === 'active'));
-    backgroundAssets = (data || []).filter(asset => asset.kind === 'background' && (!asset.status || asset.status === 'active'));
   }
 
   async function selectR2ExpressionAsset(kind, assetId, { clear = false, mediaReference = null } = {}) {
@@ -637,6 +641,9 @@
                 <div class="profile-expression-editor__compact-library-copy">
                   <strong>{asset.label || 'Saved avatar'}</strong>
                   <span>{asset.id === expression.avatar_asset_id ? 'Active avatar' : 'Saved avatar'}</span>
+                  {#if asset.id !== expression.avatar_asset_id}
+                    <button type="button" class="profile-expression-editor__compact-library-select" disabled={busy} on:click={() => selectAsset('avatar', asset)}>Use avatar</button>
+                  {/if}
                 </div>
                 <button type="button" class="profile-expression-editor__compact-library-delete" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
               </div>
@@ -654,6 +661,9 @@
                 <div class="profile-expression-editor__compact-library-copy">
                   <strong>{asset.label || 'Saved background'}</strong>
                   <span>{asset.id === expression.background_asset_id ? 'Active background' : 'Saved background'}</span>
+                  {#if asset.id !== expression.background_asset_id}
+                    <button type="button" class="profile-expression-editor__compact-library-select" disabled={busy} on:click={() => selectAsset('background', asset)}>Use background</button>
+                  {/if}
                 </div>
                 <button type="button" class="profile-expression-editor__compact-library-delete" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
               </div>
@@ -679,9 +689,15 @@
     </section>
   {/if}
 
+  {#if assetsLoading}<p class="profile-expression-editor__asset-loading" role="status">Loading your saved media…</p>{/if}
+  {#if assetsError}
+    <div class="profile-expression-editor__asset-error" role="alert">
+      <p>{assetsError}</p>
+      <button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={assetsLoading} on:click={loadAssetLibrary}>Retry loading media</button>
+    </div>
+  {/if}
   {#if !compact}
   <details class="profile-expression-editor__advanced" open>
-  {#if assetsLoading}<p class="profile-expression-editor__asset-loading" role="status">Loading your saved media…</p>{/if}
   <div id="profile-media-avatar" class="profile-expression-editor__media-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
     <div class="profile-expression-editor__preview" style="flex:0 0 7rem;width:7rem" aria-label="Avatar preview">
       {#if avatarSrc}
@@ -1007,6 +1023,9 @@
   .profile-expression-editor__compact-library-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-library-copy strong { color: var(--media-text-primary); font-size: .78rem; font-weight: 600; }
   .profile-expression-editor__compact-library-copy span { color: var(--media-text-muted); font-size: .7rem; }
+  .profile-expression-editor__compact-library-select { justify-self: start; min-height: 32px; padding: .35rem .6rem; border: 1px solid var(--media-line); border-radius: .28rem; background: transparent; color: var(--media-text-primary); font: inherit; cursor: pointer; }
+  .profile-expression-editor__compact-library-select:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
+  .profile-expression-editor__compact-library-select:disabled { opacity: .55; cursor: wait; }
   .profile-expression-editor__compact-library-delete { min-height: 1.8rem; padding: .28rem .6rem; border: 1px solid color-mix(in srgb, var(--media-red) 55%, var(--media-line)); border-radius: .28rem; background: transparent; color: color-mix(in srgb, var(--media-red) 84%, var(--media-text-secondary)); font: 600 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
   .profile-expression-editor__compact-library-delete:hover:not(:disabled),
   .profile-expression-editor__compact-library-delete:focus-visible { border-color: var(--media-red); background: color-mix(in srgb, var(--media-red) 10%, transparent); color: var(--media-red); }

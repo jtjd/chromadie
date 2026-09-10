@@ -28,6 +28,10 @@ try {
     const config = createDefaultProfileConfig('#8B7CF6');
     config.layoutVariant = 'portfolio';
     config.storyVisible = true;
+    config.audio_path = 'profile_media/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.mp3';
+    config.media_references = {
+      audio: { storage_provider: 'r2', r2_public_key: 'profiles/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222/immutable.mp3' }
+    };
     config.content = {
       ...config.content,
       about: { ...config.content.about, visible: true, heading: 'About Harper', body: 'A profile with a little more room to tell its story.' }
@@ -58,6 +62,7 @@ try {
     return {
       pageCount: pages.length,
       dotCount: document.querySelectorAll('.profile-shell__portfolio-pagination button').length,
+      audioControlCount: document.querySelectorAll('.profile-audio-control').length,
       scrollHeight: main?.scrollHeight || 0,
       clientHeight: main?.clientHeight || 0,
       overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
@@ -65,6 +70,7 @@ try {
   })()`);
   assert.equal(initial.pageCount, 3, 'portfolio renders one section per visible page');
   assert.equal(initial.dotCount, 3, 'portfolio pagination matches rendered sections');
+  assert.equal(initial.audioControlCount, 1, 'hosted audio renders once at the profile shell');
   assert.ok(initial.scrollHeight > initial.clientHeight, `portfolio sections create a scrollable page: ${JSON.stringify(initial)}`);
   assert.equal(initial.overflow, false, 'portfolio does not overflow horizontally');
   await page.screenshot(`${evidenceDir}/hero.png`);

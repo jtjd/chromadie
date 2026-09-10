@@ -318,7 +318,8 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(renderModel, /continuationNavigationLinks/);
   assert.match(renderModel, /const hasBelowFoldRoll = false/);
   assert.match(shell, /\{#if renderProfileMore\}[\s\S]*<div id="profile-more"/);
-  assert.match(renderModel, /hasLowerExpression = hasProfileMusic/);
+  assert.match(renderModel, /hasLowerExpression = \(hasProfileMusic && !hasHostedAudio\)/);
+  assert.match(renderModel, /hasHostedAudio,/);
   const mediaDeleteMigration = await read('supabase/migrations/20260812160000_profile_media_delete_token_guard.sql');
   assert.match(mediaDeleteMigration, /v_selected := v_selected OR EXISTS/);
   assert.doesNotMatch(mediaDeleteMigration, /v_selected := EXISTS/);

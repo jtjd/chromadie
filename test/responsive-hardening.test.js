@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -51,11 +52,31 @@ test('the replacement homepage has explicit desktop, tablet, and phone containme
   assert.match(homepageSmoke, /scrollWidth <= width \+ 1/);
 });
 
-test('public profiles leave wheel scrolling to the browser', () => {
+test('non-Portfolio profiles leave wheel scrolling to the browser', () => {
   assert.match(profileShell, /scroll-snap-type: y proximity/);
   assert.match(profileShell, /scroll-snap-stop: normal/);
   assert.doesNotMatch(profileShell, /handleProfileWheel/);
-  assert.doesNotMatch(profileShell, /addEventListener\('wheel'/);
+  const start = profileShell.indexOf('    let wheelLockedUntil');
+  const end = profileShell.indexOf("    profilePageElement?.addEventListener('wheel'", start);
+  assert.ok(start >= 0 && end > start, 'Portfolio wheel handler is present');
+  const context = vm.createContext({
+    profilePresentationLayoutVariant: 'compact',
+    performance: { now: () => 1000 }, activePortfolioPage: 0,
+    profilePageElement: { querySelectorAll: () => [{ getBoundingClientRect: () => ({ top: 0, bottom: 800 }) }], getBoundingClientRect: () => ({ top: 0, bottom: 800 }) },
+    scrollToPortfolioPage: () => {}
+  });
+  vm.runInContext(profileShell.slice(start, end) + '\nglobalThis.onWheel = handlePageWheel;', context);
+  for (const layout of ['compact', 'sleek', 'modern', 'full-bleed']) {
+    context.profilePresentationLayoutVariant = layout;
+    context.onWheel({ deltaY: 100, deltaX: 0, preventDefault() { assert.fail(layout + ' intercepted wheel scrolling'); } });
+  }
+  context.profilePresentationLayoutVariant = 'portfolio';
+  for (const event of [{ ctrlKey: true, deltaY: 100, deltaX: 0 }, { deltaY: 1, deltaX: 100 }]) {
+    context.onWheel({ ...event, preventDefault() { assert.fail('Portfolio intercepted zoom or horizontal scrolling'); } });
+  }
+  let prevented = false;
+  context.onWheel({ deltaY: 100, deltaX: 0, preventDefault() { prevented = true; } });
+  assert.equal(prevented, true, 'Portfolio retains its approved page gesture');
 });
 
 test('public profiles do not render a standalone Share profile control', () => {

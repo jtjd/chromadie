@@ -501,6 +501,7 @@
   $: audioSrc = profileRenderSnapshot?.media?.audioUrl || '';
   $: pointerCursorSrc = profileRenderSnapshot?.environment?.pointerCursorUrl || '';
   $: richAudioPlaylist = profileRenderSnapshot?.media?.playlist || { tracks: [] };
+  $: hasHostedAudio = Boolean(audioSrc || richAudioPlaylist.tracks?.length);
   $: profileContent = profileRenderSnapshot?.modules?.content || effectiveProfileConfig.content;
   $: hasProfileContent = profileRenderSnapshot?.modules?.hasContent === true;
   $: profileWidgets = profileRenderSnapshot?.modules?.widgets || [];
@@ -560,6 +561,17 @@
     </nav>
   {/if}
   {#if !loading && targetProfile}
+    {#if hasHostedAudio}
+      <ProfileMusic
+        bestRoll={latestRoll || displayBestRoll}
+        accentColor={profileControlAccent}
+        colorEffectsEnabled={colorEffectsEnabled}
+        audioSrc={audioSrc}
+        audioPlaylist={richAudioPlaylist}
+        deferMedia={previewMode}
+        reducedMotion={prefersReducedMotion}
+      />
+    {/if}
     <div class="profile-shell__composition">
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main" data-profile-portfolio-page="hero">
@@ -744,10 +756,10 @@
             </div>
           </div>
         {/if}
-        {#if showLowerExpression && (hasProfileMusic || profileWidgets.length)}
+        {#if showLowerExpression && ((hasProfileMusic && !hasHostedAudio) || profileWidgets.length)}
           <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition data-profile-continuation="media" aria-label={username + ' media and integrations'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="media-integrations">
-              {#if hasProfileMusic}
+              {#if hasProfileMusic && !hasHostedAudio}
                 <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
               {/if}
               {#if profileWidgets.length}

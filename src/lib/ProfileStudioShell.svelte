@@ -34,13 +34,27 @@
   $: moreActive = activeSection !== 'customize';
 
   function navigate(sectionId) {
-    moreOpen = false;
+    closeMore({ restore: true });
     dispatch('sectionchange', { sectionId });
   }
 
   function resetChanges() {
-    moreOpen = false;
+    closeMore({ restore: true });
     dispatch('reset');
+  }
+
+  function handleTriggerKeydown(event) {
+    if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+    event.preventDefault();
+    moreOpen = true;
+    requestAnimationFrame(() => {
+      const items = moreMenu?.querySelectorAll('[role="menuitem"]:not(:disabled)');
+      (event.key === 'ArrowUp' ? items?.[items.length - 1] : items?.[0])?.focus();
+    });
+  }
+
+  function handleDocumentFocusin(event) {
+    if (moreOpen && !moreMenu?.contains(event.target) && !moreTrigger?.contains(event.target)) closeMore();
   }
 
   function toggleMore() {
@@ -68,7 +82,7 @@
   }
 
   function handleMenuKeydown(event) {
-    const items = [...(moreMenu?.querySelectorAll('[role="menuitem"]') || [])];
+    const items = [...(moreMenu?.querySelectorAll('[role="menuitem"]:not(:disabled)') || [])];
     const currentIndex = items.indexOf(event.currentTarget);
     if (!items.length) return;
     if (event.key === 'ArrowDown') {
@@ -95,9 +109,11 @@
     updateMotionPreference();
     reducedMotionQuery.addEventListener?.('change', updateMotionPreference);
     document.addEventListener('pointerdown', handleDocumentPointerdown);
+    document.addEventListener('focusin', handleDocumentFocusin);
     return () => {
       reducedMotionQuery?.removeEventListener?.('change', updateMotionPreference);
       document.removeEventListener('pointerdown', handleDocumentPointerdown);
+      document.removeEventListener('focusin', handleDocumentFocusin);
     };
   });
 
@@ -136,13 +152,15 @@
             aria-haspopup="menu"
             aria-controls="profile-studio-more-menu"
             on:click={toggleMore}
+            on:keydown={handleTriggerKeydown}
           >More <span aria-hidden="true">{moreOpen ? '−' : '+'}</span></button>
           {#if moreOpen}
             <div bind:this={moreMenu} id="profile-studio-more-menu" class="profile-studio-shell__more-menu" role="menu" aria-label="Profile Studio destinations and actions">
               {#each menuSections as section (section.id)}
-                <button type="button" role="menuitem" class:active={activeSection === section.id} data-section={section.id} on:click={() => navigate(section.id)} on:keydown={handleMenuKeydown}>{section.label}</button>
+                <button type="button" role="menuitem" class:active={activeSection === section.id} aria-current={activeSection === section.id ? 'page' : undefined} data-section={section.id} on:click={() => navigate(section.id)} on:keydown={handleMenuKeydown}>{section.label}</button>
               {/each}
               <span class="profile-studio-shell__menu-divider" role="separator"></span>
+              <a href={ownerProfilePath} role="menuitem" on:click={() => closeMore()} on:keydown={handleMenuKeydown}>View profile</a>
               <a href="/progression" role="menuitem" on:click={() => closeMore()} on:keydown={handleMenuKeydown}>Progression</a>
               <span class="profile-studio-shell__menu-divider" role="separator"></span>
               <button type="button" role="menuitem" disabled={!dirty || mobileSaving || !configurationReady} on:click={resetChanges} on:keydown={handleMenuKeydown}>Reset changes</button>
@@ -261,7 +279,7 @@
   .profile-studio-shell__menu-trigger { min-height: 2.25rem; padding: .45rem .1rem; border: 0; background: transparent; color: var(--studio-muted); font: 500 .78rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
   .profile-studio-shell__menu-trigger:hover, .profile-studio-shell__menu-trigger:focus-visible, .profile-studio-shell__menu-trigger.active { color: var(--studio-text); }
   .profile-studio-shell__menu-trigger span { margin-left: .18rem; color: var(--studio-faint); }
-  .profile-studio-shell__more-menu { position: absolute; top: calc(100% + .35rem); right: 0; z-index: 60; display: grid; min-width: 13rem; padding: .35rem; border: 1px solid var(--studio-border); border-radius: .65rem; background: var(--surface-2, #1e1e22); box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, .36); }
+  .profile-studio-shell__more-menu { position: absolute; top: calc(100% + .35rem); right: 0; z-index: 60; display: grid; min-width: 13rem; max-height: calc(100dvh - 6rem); overflow-y: auto; overscroll-behavior: contain; padding: .35rem; border: 1px solid var(--studio-border); border-radius: .65rem; background: var(--surface-2, #1e1e22); box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, .36); }
   .profile-studio-shell__more-menu button { min-height: 2.3rem; padding: .55rem .65rem; border: 0; border-radius: .35rem; background: transparent; color: var(--studio-muted); font: 500 .76rem/1.2 'Inter', var(--font-body-stack, sans-serif); text-align: left; cursor: pointer; }
   .profile-studio-shell__more-menu a { min-height: 2.3rem; padding: .55rem .65rem; border-radius: .35rem; color: var(--studio-muted); font: 500 .76rem/1.2 'Inter', var(--font-body-stack, sans-serif); text-align: left; text-decoration: none; }
   .profile-studio-shell__more-menu a:hover, .profile-studio-shell__more-menu a:focus-visible { background: var(--studio-accent-soft); color: var(--studio-text); }

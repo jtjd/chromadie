@@ -5,7 +5,7 @@ import { PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS } from '../src/lib/profile-studio/
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Customize tabs mount only the supported visible editor groups', async () => {
+test('Customize tabs retain visited content drafts while exposing only the active editor group', async () => {
   const [customize, settings, contract] = await Promise.all([
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileSettings.svelte'),
@@ -15,8 +15,8 @@ test('Customize tabs mount only the supported visible editor groups', async () =
   assert.match(customize, /export let activeTab = 'appearance'/);
   assert.match(customize, /selectedTab = \['appearance', 'media', 'content', 'links', 'layout'\]/);
   assert.match(customize, /\{#if selectedTab === 'appearance'\}/);
-  assert.match(customize, /\{:else if selectedTab === 'media'\}/);
-  assert.match(customize, /\{:else if selectedTab === 'content'\}/);
+  assert.match(customize, /\{#if selectedTab === 'media'\}/);
+  assert.match(customize, /\{#if contentVisited\}/);
   assert.match(customize, /id="customize-appearance"/);
   assert.match(customize, /id="customize-media"/);
   assert.match(customize, /id="customize-content"/);
@@ -24,7 +24,10 @@ test('Customize tabs mount only the supported visible editor groups', async () =
   assert.match(customize, /id="customize-layout"/);
   assert.match(customize, /id="customize-identity"/);
   assert.match(customize, /id="customize-effects"/);
-  assert.doesNotMatch(customize, /hidden=|class:is-tab-hidden|data-editor-section=/);
+  assert.doesNotMatch(customize, /class:is-tab-hidden|data-editor-section=/);
+  assert.match(customize, /id="customize-content" hidden=\{selectedTab !== 'content'\}/);
+  assert.match(customize, /id="customize-links" hidden=\{selectedTab !== 'links'\}/);
+  assert.match(customize, /\{#if linksVisited\}/);
   assert.match(customize, /profile-collection/);
   assert.match(customize, /contentComponent/);
   assert.match(customize, /widgetComponent/);

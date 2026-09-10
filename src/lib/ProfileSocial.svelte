@@ -44,12 +44,30 @@
   let reportLoading = false;
   let settingsLoading = false;
   let settingsDraft = createDefaultProfileSocialSettings();
+  let settingsError = '';
+  let settingsKey = '';
   let guestbookSort = 'newest';
   let sortLoading = false;
   let replyBodies = {};
 
   $: socialView = normalizeProfileSocial(social);
-  $: settingsDraft = normalizeProfileSocialSettings(settings);
+  $: syncSettings(settings);
+
+  function syncSettings(value) {
+    const normalized = normalizeProfileSocialSettings(value);
+    const nextKey = JSON.stringify(normalized);
+    if (nextKey === settingsKey) return;
+    settingsKey = nextKey;
+    settingsDraft = normalized;
+  }
+  $: settingsDirty = JSON.stringify(settingsDraft) !== JSON.stringify(normalizeProfileSocialSettings(settings));
+  $: dispatch('preferencedirty', { dirty: isOwnProfile && settingsDirty });
+
+  export function resetChanges() {
+    settingsDraft = normalizeProfileSocialSettings(settings);
+    settingsError = '';
+  }
+
   $: depthEnabled = socialDepthEnabled !== false;
   $: canInteract = Boolean(isAuthenticated && !isOwnProfile && !socialView.blocked && socialView.interactionsEnabled);
   $: canWriteGuestbook = Boolean(canInteract && socialView.guestbookEnabled);
@@ -236,21 +254,23 @@
   }
 
   async function saveSettings() {
-    if (!isOwnProfile || settingsLoading) return;
+    if (!isOwnProfile || settingsLoading || !settingsDirty) return;
+    settingsError = '';
     settingsLoading = true;
-    const result = await invokeProfileSocialRpc(supabase, 'update_my_profile_social_settings', {
+    const result = await Promise.resolve(invokeProfileSocialRpc(supabase, 'update_my_profile_social_settings', {
       p_interactions_enabled: settingsDraft.interactionsEnabled,
       p_guestbook_enabled: settingsDraft.guestbookEnabled,
       p_activity_visible: settingsDraft.activityVisible,
       p_discoverable: settingsDraft.discoverable,
       p_social_summary_visible: settingsDraft.socialSummaryVisible
-    });
+    })).catch(error => ({ error }));
     settingsLoading = false;
     if (result.error || result.data?.success === false) {
-      addToast(getProfileSocialError(result, 'Privacy settings could not be saved.'), 'error');
+      settingsError = getProfileSocialError(result, 'Privacy settings could not be saved.');
       return;
     }
-    settingsDraft = normalizeProfileSocialSettings(result.data);
+    settings = normalizeProfileSocialSettings(result.data);
+    settingsDraft = normalizeProfileSocialSettings(settings);
     setNotice('Privacy settings saved.');
     dispatch('socialchange');
   }
@@ -267,6 +287,21 @@
   <div class="profile-social">
     {#if notice}<p class="profile-social__notice" role="status" aria-live="polite">{notice}</p>{/if}
 
+    {#if isOwnProfile}
+      <details class="profile-social__settings" open>
+        <summary><strong>Privacy and interaction controls</strong><span>Favorites, guestbook, activity, discovery</span></summary>
+        <div class="profile-social__settings-body">
+        <label class="profile-social__check"><input type="checkbox" disabled={settingsLoading} checked={settingsDraft.interactionsEnabled} on:change={(event) => updateSetting('interactionsEnabled', event.currentTarget.checked)} /><span><b>Allow favorites, reactions, and rivals</b><small>Turn off new social connections while keeping your public profile visible.</small></span></label>
+        <label class="profile-social__check"><input type="checkbox" disabled={settingsLoading} checked={settingsDraft.guestbookEnabled} on:change={(event) => updateSetting('guestbookEnabled', event.currentTarget.checked)} /><span><b>Accept guestbook notes</b><small>Existing notes remain visible until you remove them.</small></span></label>
+        <label class="profile-social__check"><input type="checkbox" disabled={settingsLoading} checked={settingsDraft.activityVisible} on:change={(event) => updateSetting('activityVisible', event.currentTarget.checked)} /><span><b>Show recent color activity</b><small>Hides the recent roll timeline and collection story from visitors.</small></span></label>
+        <label class="profile-social__check"><input type="checkbox" disabled={settingsLoading} checked={settingsDraft.discoverable} on:change={(event) => updateSetting('discoverable', event.currentTarget.checked)} /><span><b>Show my profile in ChromaDie discovery and allow search indexing</b><small>Your direct link still works when this is off.</small></span></label>
+        <label class="profile-social__check"><input type="checkbox" disabled={settingsLoading} checked={settingsDraft.socialSummaryVisible} on:change={(event) => updateSetting('socialSummaryVisible', event.currentTarget.checked)} /><span><b>Show positive social counts</b><small>Visitors can still react or save your profile when counts are hidden.</small></span></label>
+          {#if settingsError}<p role="alert">{settingsError}</p>{/if}
+          <button type="button" class="profile-social__button" disabled={settingsLoading || !settingsDirty} on:click={saveSettings}>{settingsLoading ? 'Saving…' : 'Save privacy settings'}</button>
+        </div>
+      </details>
+    {/if}
+
     {#if socialView.blocked}
       <div class="profile-social__blocked" role="status">
         <strong>Social connection paused.</strong>
@@ -282,7 +317,7 @@
       <div class="profile-social__signals" aria-label={username + ' social signals'}>
         <div class="profile-social__save">
           <div>
-            <strong>Favorite this identity</strong>
+            <strong>{isOwnProfile ? 'Profile favorites' : 'Favorite this identity'}</strong>
             <span>{socialView.socialSummaryVisible ? socialView.favoriteCount + ' saved' : 'Save count is private'}</span>
           </div>
           {#if isOwnProfile}
@@ -454,19 +489,7 @@
       </form>
     {/if}
 
-    {#if isOwnProfile}
-      <details class="profile-social__settings">
-        <summary><strong>Privacy and interaction controls</strong><span>Favorites, guestbook, activity, discovery</span></summary>
-        <div class="profile-social__settings-body">
-        <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.interactionsEnabled} on:change={(event) => updateSetting('interactionsEnabled', event.currentTarget.checked)} /><span><b>Allow favorites, reactions, and rivals</b><small>Turn off new social connections while keeping your public profile visible.</small></span></label>
-        <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.guestbookEnabled} on:change={(event) => updateSetting('guestbookEnabled', event.currentTarget.checked)} /><span><b>Accept guestbook notes</b><small>Existing notes remain visible until you remove them.</small></span></label>
-        <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.activityVisible} on:change={(event) => updateSetting('activityVisible', event.currentTarget.checked)} /><span><b>Show recent color activity</b><small>Hides the recent roll timeline and collection story from visitors.</small></span></label>
-        <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.discoverable} on:change={(event) => updateSetting('discoverable', event.currentTarget.checked)} /><span><b>Show my profile in ChromaDie discovery and allow search indexing</b><small>Your direct link still works when this is off.</small></span></label>
-        <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.socialSummaryVisible} on:change={(event) => updateSetting('socialSummaryVisible', event.currentTarget.checked)} /><span><b>Show positive social counts</b><small>Visitors can still react or save your profile when counts are hidden.</small></span></label>
-          <button type="button" class="profile-social__button" disabled={settingsLoading} on:click={saveSettings}>{settingsLoading ? 'Saving…' : 'Save privacy settings'}</button>
-        </div>
-      </details>
-    {/if}
+
   </div>
 </Module>
 

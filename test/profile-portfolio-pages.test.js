@@ -37,10 +37,13 @@ test('portfolio pages and audio controls retain the bounded profile contracts', 
   assert.match(shell, /profile-shell__portfolio-pagination/);
   assert.match(shell, /scroll-snap-type: y mandatory/);
   assert.match(shell, /scrollToPortfolioPage/);
+  assert.match(shell, /\{#if hasHostedAudio\}[\s\S]*<ProfileMusic[\s\S]*audioSrc=\{audioSrc\}[\s\S]*audioPlaylist=\{richAudioPlaylist\}/);
+  assert.match(shell, /hasProfileMusic && !hasHostedAudio/);
   assert.match(continuation, /data-profile-portfolio-page="content"/);
   assert.match(continuation, /data-profile-portfolio-page="media"/);
   assert.match(continuation, /data-profile-portfolio-page="story"/);
   assert.match(continuation, /placement="floating"/);
+  assert.doesNotMatch(continuation, /hasProfileMusic && \(audioSrc \|\| richAudioPlaylist\.tracks\.length\)/);
   assert.match(music, /on:timeupdate=\{handleTimeUpdate\}/);
 
   assert.doesNotMatch(controls, /profile-audio-control__progress/);

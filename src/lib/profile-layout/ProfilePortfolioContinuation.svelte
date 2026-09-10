@@ -64,9 +64,6 @@
 </script>
 
 <div class="profile-portfolio-continuation" style={`--profile-portfolio-continuation-accent:${safeAccent};`} data-profile-portfolio-continuation data-profile-username={username}>
-  {#if hasProfileMusic && (audioSrc || richAudioPlaylist.tracks.length)}
-    <ProfileMusic {audioSrc} audioPlaylist={richAudioPlaylist} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
-  {/if}
   {#if hasProfileContent}
     <section class="profile-portfolio-page profile-portfolio-page--content" data-profile-portfolio-page="content" aria-label="About">
       <div class="profile-portfolio-page__inner">

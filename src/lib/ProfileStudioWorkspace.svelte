@@ -29,6 +29,7 @@
   const dispatch = createEventDispatcher();
   let customizePage = null;
   let layoutEditor = null;
+  let preferenceEditor = null;
 
   $: isCustomize = activeSection === 'customize';
   $: activeRegistration = getProfileStudioSectionRegistration(activeSection);
@@ -63,6 +64,7 @@
   }
 
   export function resetChanges(sectionId = activeSection) {
+    if (['profile-insights', 'profile-social'].includes(sectionId)) preferenceEditor?.resetChanges?.();
     if (sectionId === 'customize') customizePage?.resetChanges?.();
     if (sectionId === 'profile-layout') layoutEditor?.resetChanges?.();
   }
@@ -96,6 +98,7 @@
             activeTab={activeCustomizeTab}
             {entitlements}
             {staff}
+            on:tabrequest={forward}
             on:studiopatch={forward}
             on:cosmeticpreview={forward}
             on:dirty={forward}
@@ -133,9 +136,9 @@
         {:else if activeSection === 'profile-layout'}
           <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:dirty={event => forwardDirty('profile-layout', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardStudioPatch('layout', event)} />
         {:else if activeSection === 'profile-social'}
-          <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} {isAuthenticated} social={context.social} settings={context.socialSettings} socialDepthEnabled={featureFlags.socialDepth} on:socialchange={forward} />
+          <svelte:component this={sectionComponents[activeSection]} bind:this={preferenceEditor} on:preferencedirty={forward} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} {isAuthenticated} social={context.social} settings={context.socialSettings} socialDepthEnabled={featureFlags.socialDepth} on:socialchange={forward} />
         {:else if activeSection === 'profile-insights'}
-          <svelte:component this={sectionComponents[activeSection]} configuration={context.profileConfig} socialSettings={context.socialSettings} on:socialchange={forward} />
+          <svelte:component this={sectionComponents[activeSection]} bind:this={preferenceEditor} on:preferencedirty={forward} configuration={context.profileConfig} socialSettings={context.socialSettings} on:socialchange={forward} />
         {:else if activeSection === 'profile-notifications'}
           <svelte:component this={sectionComponents[activeSection]} />
         {/if}

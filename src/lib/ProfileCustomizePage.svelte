@@ -25,6 +25,10 @@
   let widgetEditor = null;
   let linksEditor = null;
   let layoutEditor = null;
+  let contentVisited = false;
+  let linksVisited = false;
+  $: if (activeTab === 'content') contentVisited = true;
+  $: if (activeTab === 'links') linksVisited = true;
 
   $: identityComponent = components['profile-identity'];
   $: mediaComponent = components['profile-media'];
@@ -48,9 +52,17 @@
   }
 
   export function validateDraft() {
-    return [identityEditor, appearanceEditor, contentEditor, widgetEditor, linksEditor, layoutEditor]
-      .filter(Boolean)
-      .every(editor => editor.validateDraft?.() !== false);
+    for (const [tabId, editor] of [
+      ['appearance', identityEditor], ['appearance', appearanceEditor],
+      ['content', contentEditor], ['content', widgetEditor],
+      ['links', linksEditor], ['layout', layoutEditor]
+    ]) {
+      if (editor?.validateDraft?.() === false) {
+        dispatch('tabrequest', { tabId, focus: true });
+        return false;
+      }
+    }
+    return true;
   }
 
   export function acceptSaved(nextConfig) {
@@ -130,7 +142,8 @@
         {/if}
       </section>
     </div>
-  {:else if selectedTab === 'media'}
+  {/if}
+  {#if selectedTab === 'media'}
     <div class="studio-panel" id="customize-media" role="region" aria-label="Profile media">
       <section class="studio-section studio-section--media" aria-labelledby="studio-media-title">
         <header class="studio-section__head">
@@ -158,8 +171,9 @@
         {/if}
       </section>
     </div>
-  {:else if selectedTab === 'content'}
-    <div class="studio-panel" id="customize-content" role="region" aria-label="Profile content">
+  {/if}
+  {#if contentVisited}
+    <div class="studio-panel" id="customize-content" hidden={selectedTab !== 'content'} role="region" aria-label="Profile content">
       <section class="studio-section studio-section--content" aria-label="About and projects">
         {#if contentComponent}
           <svelte:component
@@ -198,8 +212,9 @@
         {/if}
       </section>
     </div>
-  {:else if selectedTab === 'links'}
-    <div class="studio-panel" id="customize-links" role="region" aria-label="Profile links">
+  {/if}
+  {#if linksVisited}
+    <div class="studio-panel" id="customize-links" hidden={selectedTab !== 'links'} role="region" aria-label="Profile links">
       <section class="studio-section studio-section--links" aria-labelledby="studio-links-title">
         <header class="studio-section__head">
           <div>
@@ -237,7 +252,8 @@
         </section>
       {/if}
     </div>
-  {:else}
+  {/if}
+  {#if selectedTab === 'layout'}
     <div class="studio-panel" id="customize-layout" role="region" aria-label="Profile layout">
       <ProfileReferenceLayoutEditor
         bind:this={layoutEditor}
@@ -251,6 +267,7 @@
 </div>
 
 <style>
+  .studio-panel[hidden] { display: none; }
   .studio-customize {
     --studio-bg: var(--bg, #0e0e10);
     --studio-panel: var(--surface, #161619);

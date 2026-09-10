@@ -39,7 +39,7 @@
     <h3>Delete account</h3>
     <p>This permanently deletes your profile, rolls, inventory, achievements, and other app-owned account data.</p>
     <label for="dashboard-delete-confirm">Type DELETE to confirm</label>
-    <input id="dashboard-delete-confirm" bind:value={confirmation} autocomplete="off" spellcheck="false" />
+    <input id="dashboard-delete-confirm" bind:value={confirmation} disabled={loading} autocomplete="off" spellcheck="false" />
     {#if error}<p class="account-settings__error" role="alert">{error}</p>{/if}
     {#if notice}<p class="account-settings__notice" role="status">{notice}</p>{/if}
     <button type="button" disabled={loading || confirmation.trim().toUpperCase() !== 'DELETE'} on:click={removeAccount}>{loading ? 'Deleting…' : 'Delete account permanently'}</button>
