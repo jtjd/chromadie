@@ -259,12 +259,12 @@
 
   @media (max-width: 36rem) {
     .profile-portfolio { gap: .9rem; padding-inline: .75rem; }
-    .profile-portfolio__identity { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: .7rem; text-align: center; }
-    .profile-portfolio__avatar-shell { width: 8.5rem; height: 8.5rem; }
+    .profile-portfolio__identity { grid-template-columns: auto minmax(0, 1fr); gap: .7rem; text-align: left; }
+    .profile-portfolio--no-avatar .profile-portfolio__identity { grid-template-columns: minmax(0, 1fr); }
+    .profile-portfolio__avatar-shell { width: clamp(5.5rem, 25vw, 8.5rem); height: clamp(5.5rem, 25vw, 8.5rem); }
     .profile-portfolio__copy { width: 100%; }
-    .profile-portfolio__name { font-size: clamp(1.8rem, 10vw, 2.75rem); text-align: center; }
-    .profile-portfolio__bio { margin-inline: auto; text-align: center; }
-    .profile-portfolio__metadata { justify-content: center; text-align: center; }
+    .profile-portfolio__name { font-size: clamp(1.8rem, 10vw, 2.75rem); text-align: left; }
+    .profile-portfolio__metadata { justify-content: flex-start; text-align: left; }
     .profile-portfolio__roll { width: 100%; }
   }
 

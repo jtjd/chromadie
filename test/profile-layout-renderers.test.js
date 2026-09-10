@@ -303,6 +303,8 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(portfolio, /ProfileRollSummary/);
   assert.match(fullBleed, /profile-full-bleed--no-avatar/);
   assert.match(portfolio, /profile-portfolio--no-avatar/);
+  assert.match(portfolio, /@media \(max-width: 36rem\)[\s\S]*\.profile-portfolio__identity \{ grid-template-columns: auto minmax\(0, 1fr\);[\s\S]*text-align: left;/);
+  assert.match(portfolio, /@media \(max-width: 36rem\)[\s\S]*\.profile-portfolio__name \{[^}]*text-align: left;/);
   assert.doesNotMatch(shell, /ProfileLayoutFrame|IdentityCard|profile-layout-frame/);
   assert.doesNotMatch(shell, /profileRollComponent|todayColorComponent/);
   assert.doesNotMatch(shell, /profileLayoutFrameComponent|Profile layout pending/);

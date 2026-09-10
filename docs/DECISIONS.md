@@ -7120,3 +7120,10 @@ the avatar and identity copy in one two-column row and centers the complete
 copy block vertically against the avatar. Shared identity-copy wrappers keep
 these relationships identical in public profiles, Studio, and the homepage
 renderer.
+
+## 2026-09-10 — Portfolio identity remains horizontal on phones
+
+Keep Portfolio's avatar and identity copy in the same two-column row at the
+phone breakpoint. The username stays beside the avatar and the bio follows it
+in the copy column, preserving the desktop hierarchy in public and Studio
+rendering without changing profile data or layout identifiers.

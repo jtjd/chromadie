@@ -4525,3 +4525,10 @@ direct route behavior.
   was excluded from the Studio runs. Nothing deployed; Cloudflare release
   values and normal migration rollout remain external actions.
 - See [measured results and evidence](MAIN_STABILIZATION_REPORT.md).
+
+## 2026-09-10 — Portfolio identity alignment
+
+- Kept the Portfolio username beside the avatar and above the bio at phone
+  widths, with a responsive avatar size and left-aligned identity copy.
+- Preserved the shared public/Studio renderer and existing profile data
+  contract; no migration or deployment change was required.

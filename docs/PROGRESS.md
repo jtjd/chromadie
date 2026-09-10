@@ -5774,3 +5774,10 @@ Modern's vertical alignment.
 - Successful auth now lands on the homepage unless a bounded same-origin `next`
   handoff was provided; the progression browser smoke follows all three signup
   steps and checks the required terms control.
+
+## Portfolio identity alignment — 2026-09-10
+
+Portfolio now keeps the username beside the avatar and above the bio on phone
+viewports as well as desktop. The avatar scales down at narrow widths so the
+left-aligned copy retains usable space. This is a shared public/Studio renderer
+change with no schema, authority, or saved-configuration changes.
