@@ -2,6 +2,11 @@
   import { createEventDispatcher } from 'svelte';
 
   export let open = false;
+  export let title = 'Unsaved changes';
+  export let message = 'Stay to keep editing or discard this draft?';
+  export let cancelLabel = 'Stay';
+  export let confirmLabel = 'Discard';
+  export let idPrefix = 'profile-studio-dirty-prompt';
 
   const dispatch = createEventDispatcher();
   let primaryElement = null;
@@ -26,12 +31,12 @@
 
 {#if open}
   <div class="profile-studio-dirty-prompt__backdrop" role="presentation">
-    <div class="profile-studio-dirty-prompt" bind:this={dialog} role="dialog" aria-modal="true" aria-labelledby="profile-studio-dirty-prompt-title" tabindex="-1">
-      <h2 id="profile-studio-dirty-prompt-title">Unsaved changes</h2>
-      <p>Stay to keep editing or discard this draft?</p>
+    <div class="profile-studio-dirty-prompt" bind:this={dialog} role="dialog" aria-modal="true" aria-labelledby={`${idPrefix}-title`} tabindex="-1">
+      <h2 id={`${idPrefix}-title`}>{title}</h2>
+      <p>{message}</p>
       <div>
-        <button bind:this={primaryElement} type="button" on:click={stay}>Stay</button>
-        <button type="button" class="profile-studio-dirty-prompt__discard" on:click={discard}>Discard</button>
+        <button bind:this={primaryElement} type="button" on:click={stay}>{cancelLabel}</button>
+        <button type="button" class="profile-studio-dirty-prompt__discard" on:click={discard}>{confirmLabel}</button>
       </div>
     </div>
   </div>

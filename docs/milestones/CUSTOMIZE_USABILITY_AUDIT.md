@@ -197,3 +197,16 @@ renewed.
 Hosted profile audio was restored at the shell boundary during final review.
 It now remains visible in every layout without duplicate players or an empty
 audio-only continuation page. No schema or authority boundary changed.
+
+### State recovery follow-up — 2026-09-10
+
+The remaining state gaps are complete. Navigation Discard now replaces every
+staged parent and editor slice with the latest persisted draft, identity, and
+equipped cosmetic state, then proceeds without a write. Cosmetic slot batches
+reconcile from the authoritative profile after a partial RPC failure. Publish
+and Reset always release their async saving flags, including thrown and stale
+responses. Lazy Customize section failures show a local Retry action and
+recover without a full page reload. Reset changes is confirmation-protected,
+and the header status model is exactly Published, Unpublished changes, or
+Publishing…. Focused tests and the browser Discard regression cover these
+acceptance paths; the full validation suite is run for this completion.

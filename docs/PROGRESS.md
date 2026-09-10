@@ -5851,3 +5851,15 @@ inside layout-specific continuation content. Portfolio and the other public
 layouts therefore keep audio visible without creating duplicate controls;
 Spotify and provider widgets remain in their inline media regions. Audio-only
 profiles no longer create an empty More continuation.
+
+## Customize state recovery — 2026-09-10
+
+Completed the remaining Customize state gaps. Discard now resets parent draft,
+identity, cosmetic preview, child editors, and dirty state to the persisted
+draft before navigation. Partial cosmetic failures reconcile against the
+authoritative profile response and keep the applied slots visible. Publish and
+Reset always clear their async saving state, including thrown and stale
+responses. Failed lazy sections expose an inline Retry action, while Reset
+changes is confirmation-protected and the header reports exactly Published,
+Unpublished changes, or Publishing…. Added focused unit and browser regression
+coverage for these paths.

@@ -7180,3 +7180,16 @@ control is fixed to the viewport. Continuation sections retain only inline
 providers and widgets. This keeps the audio control independent of layout and
 below-fold rendering while preserving the bounded media projection. Hosted
 audio alone does not create a continuation section.
+
+## 2026-09-10 — Keep Customize staged state recoverable
+
+Discard restores the complete in-memory Customize state from the latest
+server-backed draft, identity, and equipped-cosmetic snapshots before the
+requested navigation continues. It clears dirty markers without writing to
+the server. Multi-slot cosmetic changes apply through the existing equip and
+unequip RPCs, then reconcile the visible loadout from `get_my_profile` after
+both success and partial failure. Publish and Reset release their saving lock
+from `finally`, and lazy section failures remain local to the section so a
+visible Retry can mount it without reloading the page. Reset changes has its
+own confirmation dialog because it writes the published configuration over a
+saved draft; no schema, RPC authority, or media boundary changed.

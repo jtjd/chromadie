@@ -4563,3 +4563,16 @@ direct route behavior.
 - Removed duplicate layout-level hosted-audio mounting while leaving Spotify
   and provider widgets in their existing inline regions.
 - Prevented audio-only profiles from creating an empty continuation section.
+
+## 2026-09-10 — Customize state recovery
+
+- Discard now restores all staged Customize state from the persisted draft and
+  continues navigation without a server write.
+- Partial multi-slot cosmetic mutations reconcile the preview with the
+  authoritative equipped loadout after a failed slot.
+- Publish and Reset clean up saving state after success, failure, stale
+  responses, and thrown transport errors.
+- Lazy Customize sections show a retryable failure state instead of leaving a
+  blank or permanently loading workspace.
+- Reset changes has a confirmation dialog, and Customize status labels now
+  distinguish Published, Unpublished changes, and Publishing… exactly.

@@ -102,6 +102,7 @@ const auditSteps = new Set([
   'create a unique account through the signup UI',
   'direct-refresh authenticated Profile Studio',
   'Customize and More destination usability',
+  'Customize Discard restores the persisted draft',
   'create an alias and resolve its direct-refresh path',
   'Customize Links tab keeps the live preview connected'
 ]);
@@ -1049,6 +1050,8 @@ try {
     await page.setInputValue('.profile-content-editor__project input[inputmode=url]', 'https://example.com/discard', ['input']);
     await page.click('.profile-studio-shell__menu-trigger', 'reset staged project');
     await page.clickText('Reset changes', { description: 'reset changes' });
+    await page.waitFor("document.querySelector('#profile-studio-reset-prompt-title') && document.querySelector('.profile-studio-dirty-prompt__discard')", 'reset confirmation');
+    await page.click('.profile-studio-dirty-prompt__discard', 'confirm reset changes');
     await page.waitFor("document.querySelector('.profile-content-editor__project input[inputmode=url]')?.value === 'https://example.com/audit'", 'reset restores published project');
     await capture('audit-content-published-and-reset');
     await page.click('.profile-widget-editor__add', 'add provider widget');
@@ -1147,6 +1150,36 @@ try {
     await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent === 'Profile published.'", 'restored Compact layout published');
     await page.setViewport(1440, 1000);
     return { widths: [1440, 390], destinations: destinations.map(([id]) => id), tabs: 5, preferenceGuard: true };
+  });
+
+  await step('Customize Discard restores the persisted draft', async () => {
+    await page.setViewport(1440, 1000);
+    await page.navigate(`${appUrl}/profile/settings#customize-appearance`, 'Customize Discard regression');
+    await page.waitFor("document.querySelector('[data-color-role=\"surface\"] input')", 'surface control for Discard regression');
+    const persistedValue = await page.evaluate("document.querySelector('[data-color-role=\"surface\"] input')?.value || ''");
+    assert(persistedValue, 'Could not read the persisted surface before the Discard regression.');
+    const requestStart = page.requestLog.length;
+    await page.setInputValue('[data-color-role="surface"] input', '#334455', ['input', 'change']);
+    await page.waitFor("document.querySelector('.profile-studio-header__save-state')?.textContent?.includes('Unpublished changes')", 'staged Discard change');
+    await page.click('.profile-studio-shell__menu-trigger', 'open More for Discard regression');
+    await page.click('[data-section="overview"]', 'navigate away from staged draft');
+    await page.waitFor("document.querySelector('.profile-studio-dirty-prompt')", 'Discard navigation warning');
+    await page.click('.profile-studio-dirty-prompt__discard', 'discard all staged changes');
+    await page.waitFor("document.querySelector('.profile-studio-overview') && !document.querySelector('.profile-studio-dirty-prompt')", 'overview after Discard');
+    await page.navigate(`${appUrl}/profile/settings#customize-appearance`, 'return to Customize after Discard');
+    await page.waitFor("document.querySelector('[data-color-role=\"surface\"] input')", 'surface control after Discard');
+    const restored = await page.evaluate(`(() => ({
+      value: document.querySelector('[data-color-role="surface"] input')?.value || '',
+      status: document.querySelector('.profile-studio-header__save-state')?.textContent?.trim() || ''
+    }))()`);
+    assert(restored.value.toLowerCase() === persistedValue.toLowerCase(), `Discard restored ${restored.value} instead of the persisted ${persistedValue}.`);
+    assert(restored.status === 'Published', `Discard left the Customize header in ${JSON.stringify(restored.status)}.`);
+    const writes = page.requestLog.slice(requestStart).filter(entry => entry.method === 'POST' && (
+      entry.url.includes('/rpc/publish_profile_studio_v2')
+      || entry.url.includes('/rpc/save_profile_configuration_v2')
+    ));
+    assert(writes.length === 0, `Discard unexpectedly wrote the staged draft: ${JSON.stringify(writes.map(entry => entry.url))}.`);
+    return { persistedValue, restoredValue: restored.value, serverWrites: writes.length };
   });
 
   await step('Profile Studio ignores stale per-editor session drafts after refresh', async () => {

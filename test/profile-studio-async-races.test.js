@@ -37,9 +37,52 @@ for (const handler of ['publishDashboard', 'resetDashboard']) {
       await pending;
       assert.equal(writes, 0);
       assert.equal(state.context, nextContext);
+      assert.equal(state.dashboardSaving, false);
     });
   }
 }
+
+test('a thrown publish RPC releases the mutation lock and exposes a retryable error', async () => {
+  const state = {
+    requestId: 1, $session: { user: { id: 'a' } },
+    context: { profileId: 'a', targetProfile: {}, profileConfig: {} },
+    dashboardSaving: false, dashboardDirty: true,
+    configurationWriteAvailable: true, dashboardError: '', dashboardStatus: '',
+    accountUsername: 'alice', getDashboardEditor: () => null,
+    getDashboardDraft: () => ({}), getDashboardIdentity: () => ({}),
+    buildConfigurationV2: () => ({}), toEditorProfileConfig: value => value,
+    supabase: { rpc: async () => { throw new Error('network unavailable'); } },
+    isFailedResponse: () => false,
+    profile: { update: () => {} },
+    applyDashboardConfiguration: () => {}
+  };
+  vm.createContext(state);
+  vm.runInContext(handlers, state);
+  await vm.runInContext('publishDashboard()', state);
+  assert.equal(state.dashboardSaving, false);
+  assert.equal(state.dashboardStatus, '');
+  assert.equal(state.dashboardError, 'network unavailable');
+});
+
+test('a thrown reset RPC releases the mutation lock and exposes a retryable error', async () => {
+  const state = {
+    requestId: 1, $session: { user: { id: 'a' } },
+    context: { profileId: 'a', targetProfile: {}, profileConfig: { published: {} } },
+    dashboardSaving: false, dashboardDirty: true,
+    configurationWriteAvailable: true, dashboardError: '', dashboardStatus: '',
+    getDashboardDraft: () => ({}), buildConfigurationV2: () => ({}),
+    toEditorProfileConfig: value => value,
+    supabase: { rpc: async () => { throw new Error('network unavailable'); } },
+    isFailedResponse: () => false,
+    applyDashboardConfiguration: () => {}
+  };
+  vm.createContext(state);
+  vm.runInContext(handlers, state);
+  await vm.runInContext('resetDashboard()', state);
+  assert.equal(state.dashboardSaving, false);
+  assert.equal(state.dashboardStatus, '');
+  assert.equal(state.dashboardError, 'network unavailable');
+});
 
 test('A to B to A reloads the active account instead of retaining a visited-account set', () => {
   const fn = source.slice(source.indexOf('  function ensureSettingsLoaded('), source.indexOf('  onMount('));

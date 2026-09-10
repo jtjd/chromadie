@@ -56,10 +56,10 @@
   <header class="profile-studio-header__editor-header">
     <div>
       <h1>Customize profile</h1>
-      <div class="profile-studio-header__save-state"><i class:dirty={dirty}></i><span>{saving ? 'Saving changes' : dirty ? 'Unpublished changes' : 'All changes saved'}</span></div>
+      <div class="profile-studio-header__save-state"><i class:dirty={dirty}></i><span>{saving ? 'Publishing…' : dirty ? 'Unpublished changes' : 'Published'}</span></div>
       {#if error}<p class="profile-studio-header__message profile-studio-header__message--error" role="alert">{error}</p>{:else if status}<p class="profile-studio-header__message" role="status" aria-live="polite">{status}</p>{/if}
     </div>
-    <span class="profile-studio-header__published" class:dirty>{dirty ? 'Draft' : 'Published'}</span>
+    <span class="profile-studio-header__published" class:dirty>{saving ? 'Publishing…' : dirty ? 'Unpublished changes' : 'Published'}</span>
   </header>
   <div class="profile-studio-header__customize-tabs">
     <div class="profile-studio-header__tablist" role="tablist" aria-label="Customize profile">

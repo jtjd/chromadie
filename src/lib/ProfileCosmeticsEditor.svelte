@@ -25,6 +25,7 @@
   import { createFittingRoom, getShopAccessLabel, hasShopEntitlement, SHOP_SLOT_LABELS, isShopCosmetic } from './shopCatalog.js';
   import { isCuratedCursorTrail } from './cursor-trail/cursorTrails.js';
   import { getProfileMediaUrl } from './profileMedia.js';
+  import { applyCosmeticChanges } from './profile-studio/cosmeticMutations.js';
 
   export let accountProfile = null;
   /** @type {any} */
@@ -191,24 +192,27 @@
     error = '';
 
     try {
-      for (const slot of changedSlots) {
-        const item = previewLoadout[slot] ? $cosmeticCatalogItems[previewLoadout[slot]] : null;
-        if (item && !hasShopEntitlement(item, fittingRoom)) {
-          throw new Error(`${item.name} is not unlocked for this profile yet.`);
-        }
-        const { data, error: rpcError } = item
-          ? await supabase.rpc('equip_item', { p_item_key: item.item_key })
-          : await supabase.rpc('unequip_item', { p_slot: slot });
-        if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The appearance change could not be saved.');
-        if (item) trackProductEvent('cosmetic_equip', { slot, context: 'profile' });
-      }
-
       const userId = $session?.user?.id;
-      const refreshedProfile = userId ? await refreshProfileState(userId) : null;
-      if (!refreshedProfile) throw new Error('The change saved, but the profile could not be refreshed.');
-      previewLoadout = { ...(refreshedProfile.equipped_cosmetics || {}) };
+      const result = await applyCosmeticChanges({
+        changedSlots,
+        previewLoadout,
+        equippedItems: $equippedItems,
+        getItem: itemKey => $cosmeticCatalogItems[itemKey] || null,
+        hasEntitlement: item => hasShopEntitlement(item, fittingRoom),
+        rpc: (name, args) => supabase.rpc(name, args),
+        refresh: () => userId ? refreshProfileState(userId) : null
+      });
+      previewLoadout = result.loadout;
       syncedLoadoutKey = '';
       dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
+      for (const slot of result.appliedSlots) {
+        const item = previewLoadout[slot] ? $cosmeticCatalogItems[previewLoadout[slot]] : null;
+        if (item) trackProductEvent('cosmetic_equip', { slot, context: 'profile' });
+      }
+      if (!result.success) {
+        error = result.error;
+        return;
+      }
       addToast(`${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'} applied.`, 'success');
     } catch (actionError) {
       previewLoadout = { ...$equippedItems };

@@ -11,6 +11,8 @@ function menuHarness() {
   const items = [0, 1, 2].map(index => ({ focus: () => focused.push(index) }));
   const context = vm.createContext({
     moreOpen: true,
+    resetConfirmOpen: false,
+    trapFocus: () => {},
     moreTrigger: { focus: () => focused.push('trigger'), contains: () => false },
     moreMenu: {
       contains: target => items.includes(target),

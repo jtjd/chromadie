@@ -32,8 +32,9 @@ test('the retired Shop surface has no runtime route or presentation files', asyn
 });
 
 test('Customize exposes active cosmetics with server-owned acquisition states', async () => {
-  const [cosmetics, stores, catalogState, analytics] = await Promise.all([
+  const [cosmetics, mutations, stores, catalogState, analytics] = await Promise.all([
     read('src/lib/ProfileCosmeticsEditor.svelte'),
+    read('src/lib/profile-studio/cosmeticMutations.js'),
     read('src/lib/stores.js'),
     read('src/lib/catalogState.js'),
     read('src/lib/productAnalytics.js')
@@ -44,8 +45,8 @@ test('Customize exposes active cosmetics with server-owned acquisition states', 
   assert.match(cosmetics, /hasShopEntitlement/);
   assert.match(cosmetics, /getShopAccessLabel/);
   assert.doesNotMatch(cosmetics, /ownedCosmetics|purchase_item/);
-  assert.match(cosmetics, /equip_item/);
-  assert.match(cosmetics, /unequip_item/);
+  assert.match(mutations, /equip_item/);
+  assert.match(mutations, /unequip_item/);
   assert.match(cosmetics, /loadCosmeticCatalog/);
   assert.match(stores, /from '\.\/catalogState\.js'/);
   assert.match(catalogState, /export const cosmeticCatalogItems/);

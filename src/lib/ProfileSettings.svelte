@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, tick } from 'svelte';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import { restoreFocus, trapFocus } from './a11y.js';
   import { authUser, equippedItems, isAuthenticated, profile, profileEntitlements, session } from './stores';
@@ -32,12 +32,12 @@
     buildConfigurationV2 as buildConfigurationV2Model,
     createEditorProfileConfig,
     createProfileStudioPreviewModel,
+    getPersistedProfileStudioState,
     hasServerDraftChanges,
     preserveExpressionFields,
     toEditorProfileConfig
   } from './profile-studio/draftModel.js';
   import {
-    clearDirtySourcesForSection,
     dirtySourceForEvent,
     hasDirtySources,
     updateDirtySource
@@ -101,6 +101,7 @@
   let cosmeticPreviewLoadout = null;
   let previewOpen = false;
   let sectionComponents = {};
+  let sectionErrors = {};
   let sectionLoading = false;
   const sectionLoadPromises = new SvelteMap();
   let dirtySources = {};
@@ -175,6 +176,7 @@
     studioDraft = null;
     studioIdentityDraft = null;
     dashboardSaving = false;
+    sectionErrors = {};
   }
 
   function ensureSettingsLoaded(nextAccountKey) {
@@ -332,10 +334,26 @@
     }
   }
 
-  function resetActiveEditor() {
+  async function discardAllStagedChanges() {
+    // Reset child-owned input first, then replace every parent-owned staged
+    // slice from the latest server-backed draft and equipped cosmetics. The
+    // second pass runs after Svelte propagates those props to remounted
+    // editors, so no hidden tab can keep an abandoned value alive.
     workspace?.resetChanges?.(activeSection);
+    const persistedState = getPersistedProfileStudioState(
+      context?.profileConfig,
+      context?.targetProfile,
+      FALLBACK_PROFILE_COLOR
+    );
+    studioDraft = persistedState.studioDraft;
+    studioIdentityDraft = persistedState.studioIdentityDraft;
+    cosmeticPreviewLoadout = persistedState.cosmeticPreviewLoadout;
+    dirtySources = {};
     preferenceDirty = false;
-    dirtySources = clearDirtySourcesForSection(dirtySources, activeSection);
+    dashboardStatus = '';
+    dashboardError = '';
+    await tick();
+    workspace?.resetChanges?.('customize');
   }
 
   function openDirtyPrompt(next) {
@@ -357,9 +375,9 @@
     closeDirtyPrompt();
   }
 
-  function discardAndContinue() {
+  async function discardAndContinue() {
     const next = pendingNavigation;
-    resetActiveEditor();
+    await discardAllStagedChanges();
     pendingNavigation = null;
     closeDirtyPrompt();
     if (!next) return;
@@ -372,14 +390,23 @@
     }
   }
 
-  function loadSectionComponent(sectionId) {
+  function loadSectionComponent(sectionId, { force = false } = {}) {
     const loader = SECTION_LOADERS[sectionId];
-    if (!loader || sectionComponents[sectionId]) return Promise.resolve();
+    if (!loader || (!force && sectionComponents[sectionId])) return Promise.resolve();
     if (sectionLoadPromises.has(sectionId)) return sectionLoadPromises.get(sectionId);
+    sectionErrors = { ...sectionErrors, [sectionId]: '' };
     sectionLoading = true;
     const promise = loader()
-      .then(module => { sectionComponents = { ...sectionComponents, [sectionId]: module.default }; })
-      .catch(loadError => { error = loadError instanceof Error ? loadError.message : 'The dashboard section could not be loaded.'; })
+      .then(module => {
+        sectionComponents = { ...sectionComponents, [sectionId]: module.default };
+        sectionErrors = { ...sectionErrors, [sectionId]: '' };
+      })
+      .catch(loadError => {
+        sectionErrors = {
+          ...sectionErrors,
+          [sectionId]: loadError?.message || 'The dashboard section could not be loaded.'
+        };
+      })
       .finally(() => { sectionLoadPromises.delete(sectionId); sectionLoading = sectionLoadPromises.size > 0; });
     sectionLoadPromises.set(sectionId, promise);
     return promise;
@@ -413,6 +440,11 @@
           ? ['customize', 'profile-layout', 'profile-aliases']
           : ['customize'];
     await Promise.all(sectionIds.map(sectionId => loadSectionComponent(sectionId)));
+  }
+
+  function retrySectionComponent(sectionId) {
+    if (!sectionId) return;
+    void loadSectionComponent(sectionId, { force: true });
   }
 
   function buildConfigurationV2(editorConfig, reference = context?.profileConfig?.v2Draft) {
@@ -503,36 +535,47 @@
     const v2Draft = buildConfigurationV2(editorDraft);
     const mutationRequestId = requestId;
     const mutationAccountId = $session?.user?.id;
-    const publishResponse = await supabase.rpc('publish_profile_studio_v2', {
-      p_draft: v2Draft,
-      p_display_name: accountUsername || null,
-      p_bio: identityDraft?.bio ?? context?.targetProfile?.bio ?? null,
-      p_expected_updated_at: context.profileConfig?.updatedAt || null
-    });
-    if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
-    if (isFailedResponse(publishResponse)) {
+    try {
+      const publishResponse = await supabase.rpc('publish_profile_studio_v2', {
+        p_draft: v2Draft,
+        p_display_name: accountUsername || null,
+        p_bio: identityDraft?.bio ?? context?.targetProfile?.bio ?? null,
+        p_expected_updated_at: context.profileConfig?.updatedAt || null
+      });
+      if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
+      if (isFailedResponse(publishResponse)) {
+        dashboardStatus = '';
+        dashboardError = responseError(publishResponse, 'The profile could not be published.');
+        return;
+      }
+      const nextBio = publishResponse.data?.identity?.bio ?? identityDraft?.bio ?? context?.targetProfile?.bio ?? null;
+      // Settings remounts hydrate from the authenticated account store. Keep it
+      // aligned with the successful publish so leaving for the public profile
+      // and returning cannot restore the pre-publish bio.
+      profile.update(currentProfile => currentProfile && currentProfile.id === context.profileId
+        ? { ...currentProfile, bio: nextBio }
+        : currentProfile);
+      context = { ...context, targetProfile: { ...context.targetProfile, bio: nextBio } };
+      applyDashboardConfiguration({
+        draft: publishResponse.data?.draft || v2Draft,
+        published: publishResponse.data?.published || v2Draft,
+        updatedAt: publishResponse.data?.updated_at || context.profileConfig?.updatedAt,
+        publishedAt: publishResponse.data?.published_at || context.profileConfig?.publishedAt
+      });
+      dashboardStatus = 'Profile published.';
+      dashboardError = '';
+    } catch (mutationError) {
+      if (mutationRequestId === requestId && mutationAccountId === $session?.user?.id) {
+        dashboardStatus = '';
+        dashboardError = mutationError?.message || 'The profile could not be published.';
+      }
+    } finally {
+      // Always release the local mutation lock. A stale response may no
+      // longer be allowed to update the model, but it must not strand the UI
+      // in Publishing… after an unrelated load or account transition.
       dashboardSaving = false;
-      dashboardStatus = '';
-      dashboardError = responseError(publishResponse, 'The profile could not be published.');
-      return;
+      if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
     }
-    const nextBio = publishResponse.data?.identity?.bio ?? identityDraft?.bio ?? context?.targetProfile?.bio ?? null;
-    // Settings remounts hydrate from the authenticated account store. Keep it
-    // aligned with the successful publish so leaving for the public profile
-    // and returning cannot restore the pre-publish bio.
-    profile.update(currentProfile => currentProfile && currentProfile.id === context.profileId
-      ? { ...currentProfile, bio: nextBio }
-      : currentProfile);
-    context = { ...context, targetProfile: { ...context.targetProfile, bio: nextBio } };
-    applyDashboardConfiguration({
-      draft: publishResponse.data?.draft || v2Draft,
-      published: publishResponse.data?.published || v2Draft,
-      updatedAt: publishResponse.data?.updated_at || context.profileConfig?.updatedAt,
-      publishedAt: publishResponse.data?.published_at || context.profileConfig?.publishedAt
-    });
-    dashboardSaving = false;
-    dashboardStatus = 'Profile published.';
-    dashboardError = '';
   }
 
   async function resetDashboard() {
@@ -549,25 +592,33 @@
     const v2Draft = buildConfigurationV2(publishedConfig, context?.profileConfig?.v2Published);
     const mutationRequestId = requestId;
     const mutationAccountId = $session?.user?.id;
-    const response = await supabase.rpc('save_profile_configuration_v2', {
-      p_draft: v2Draft,
-      p_expected_updated_at: context.profileConfig?.updatedAt || null
-    });
-    if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
-    if (isFailedResponse(response)) {
+    try {
+      const response = await supabase.rpc('save_profile_configuration_v2', {
+        p_draft: v2Draft,
+        p_expected_updated_at: context.profileConfig?.updatedAt || null
+      });
+      if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
+      if (isFailedResponse(response)) {
+        dashboardStatus = '';
+        dashboardError = responseError(response, 'The profile changes could not be reset.');
+        return;
+      }
+      applyDashboardConfiguration({
+        draft: response.data?.draft || v2Draft,
+        published: response.data?.published || context.profileConfig?.v2Published || v2Draft,
+        updatedAt: response.data?.updated_at || context.profileConfig?.updatedAt,
+        publishedAt: context.profileConfig?.publishedAt
+      });
+      dashboardStatus = 'Profile changes reset.';
+    } catch (mutationError) {
+      if (mutationRequestId === requestId && mutationAccountId === $session?.user?.id) {
+        dashboardStatus = '';
+        dashboardError = mutationError?.message || 'The profile changes could not be reset.';
+      }
+    } finally {
       dashboardSaving = false;
-      dashboardStatus = '';
-      dashboardError = responseError(response, 'The profile changes could not be reset.');
-      return;
+      if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
     }
-    applyDashboardConfiguration({
-      draft: response.data?.draft || v2Draft,
-      published: response.data?.published || context.profileConfig?.v2Published || v2Draft,
-      updatedAt: response.data?.updated_at || context.profileConfig?.updatedAt,
-      publishedAt: context.profileConfig?.publishedAt
-    });
-    dashboardSaving = false;
-    dashboardStatus = 'Profile changes reset.';
   }
 
   async function loadSettings(expectedAccountKey = '') {
@@ -577,6 +628,7 @@
     error = '';
     dashboardStatus = '';
     dashboardError = '';
+    sectionErrors = {};
     fullContextLoaded = false;
     fullContextPromise = null;
     const nextContext = await loadProfileStudioContext({
@@ -868,6 +920,7 @@
       {context}
       {editorProfileConfig}
       {sectionComponents}
+      {sectionErrors}
       {sectionLoading}
       {loading}
       {error}
@@ -892,6 +945,7 @@
       on:socialchange={handleSocialChange}
       on:accountdeleted={handleAccountDeleted}
       on:configurationretry={() => loadSettings(accountKey)}
+      on:sectionretry={event => retrySectionComponent(event.detail?.sectionId)}
     />
   </div>
 

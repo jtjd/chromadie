@@ -11,6 +11,7 @@
   export let editorProfileConfig = null;
   /** @type {any} */
   export let sectionComponents = {};
+  export let sectionErrors = {};
   export let sectionLoading = false;
   export let loading = false;
   export let error = '';
@@ -34,6 +35,18 @@
   $: isCustomize = activeSection === 'customize';
   $: activeRegistration = getProfileStudioSectionRegistration(activeSection);
   $: configurationBlocked = configurationUnavailable && ['customize', 'profile-identity', 'profile-media', 'profile-layout'].includes(activeSection);
+  $: customizeSectionIds = activeCustomizeTab === 'appearance'
+    ? ['customize', 'profile-identity', 'profile-collection']
+    : activeCustomizeTab === 'media'
+      ? ['customize', 'profile-media']
+      : activeCustomizeTab === 'content'
+        ? ['customize', 'profile-content', 'profile-widgets']
+        : activeCustomizeTab === 'links'
+          ? ['customize', 'profile-layout', 'profile-aliases']
+          : ['customize'];
+  $: activeSectionError = (isCustomize ? customizeSectionIds : [activeSection])
+    .map(sectionId => sectionErrors?.[sectionId])
+    .find(Boolean) || '';
 
   function forward(event) {
     dispatch(event.type, event.detail);
@@ -80,6 +93,12 @@
       <h1>Profile customization unavailable</h1>
       <p>Retry before making changes.</p>
       <button class="profile-studio-workspace__retry" type="button" on:click={() => dispatch('configurationretry')}>Retry loading configuration</button>
+    </div>
+  {:else if context && activeSectionError}
+    <div class="profile-studio-workspace__state" role="alert">
+      <h1>Section unavailable</h1>
+      <p>{activeSectionError}</p>
+      <button class="profile-studio-workspace__retry" type="button" on:click={() => dispatch('sectionretry', { sectionId: (isCustomize ? customizeSectionIds : [activeSection]).find(sectionId => sectionErrors?.[sectionId]) })}>Retry section</button>
     </div>
   {:else if context}
     <div class="profile-studio-workspace__content" id={isCustomize ? 'profile-customize-tabpanel' : undefined} role={isCustomize ? 'tabpanel' : undefined} aria-labelledby={isCustomize ? `profile-customize-tab-${activeCustomizeTab}` : undefined}>

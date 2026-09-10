@@ -1,8 +1,10 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { onDestroy, onMount } from 'svelte';
+  import { trapFocus } from './a11y.js';
   import { getProfileStudioNavigation } from './profile-studio/dashboardContract.js';
   import ProfileEnvironmentLayer from './ProfileEnvironmentLayer.svelte';
+  import ProfileStudioDirtyPrompt from './ProfileStudioDirtyPrompt.svelte';
   import SiteFooter from './SiteFooter.svelte';
 
   export let activeSection = 'overview';
@@ -27,6 +29,9 @@
   let moreMenu = null;
   let reducedMotionQuery = null;
   let prefersReducedMotion = false;
+  let resetConfirmOpen = false;
+  let resetConfirmComponent = null;
+  let resetConfirmReturnFocus = null;
 
   $: activeLabel = sections.find(section => section.id === activeSection)?.label || 'Customize';
   $: navigation = getProfileStudioNavigation(sections);
@@ -39,8 +44,25 @@
   }
 
   function resetChanges() {
-    closeMore({ restore: true });
+    closeMore();
+    resetConfirmReturnFocus = moreTrigger;
+    resetConfirmOpen = true;
+    requestAnimationFrame(() => resetConfirmComponent?.focusPrimary?.());
+  }
+
+  function cancelReset() {
+    const previous = resetConfirmReturnFocus;
+    resetConfirmReturnFocus = null;
+    resetConfirmOpen = false;
+    requestAnimationFrame(() => previous?.focus?.());
+  }
+
+  function confirmReset() {
+    const previous = resetConfirmReturnFocus;
+    resetConfirmReturnFocus = null;
+    resetConfirmOpen = false;
     dispatch('reset');
+    requestAnimationFrame(() => previous?.focus?.());
   }
 
   function handleTriggerKeydown(event) {
@@ -69,6 +91,15 @@
   }
 
   function handleWindowKeydown(event) {
+    if (resetConfirmOpen) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelReset();
+      } else {
+        trapFocus(event, resetConfirmComponent?.getDialog?.());
+      }
+      return;
+    }
     if (event.key === 'Escape' && moreOpen) {
       event.preventDefault();
       closeMore({ restore: true });
@@ -117,7 +148,10 @@
     };
   });
 
-  onDestroy(() => closeMore());
+  onDestroy(() => {
+    closeMore();
+    resetConfirmOpen = false;
+  });
 </script>
 
 <svelte:window on:keydown={handleWindowKeydown} />
@@ -201,6 +235,18 @@
 
   <SiteFooter isAuthenticated={true} variant="studio" />
 </div>
+
+<ProfileStudioDirtyPrompt
+  bind:this={resetConfirmComponent}
+  open={resetConfirmOpen}
+  idPrefix="profile-studio-reset-prompt"
+  title="Reset published changes?"
+  message="This replaces the saved draft with your published profile. This cannot be undone."
+  cancelLabel="Cancel"
+  confirmLabel="Reset changes"
+  on:stay={cancelReset}
+  on:discard={confirmReset}
+/>
 
 <style>
   /* Studio chrome deliberately shares the atmosphere backdrop so its

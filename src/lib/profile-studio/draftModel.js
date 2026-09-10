@@ -87,6 +87,19 @@ export function createEmptyEditorProfileConfig(fallbackColor = PROFILE_STUDIO_FA
   return { version: 1, draft: defaults, published: defaults };
 }
 
+export function getPersistedProfileStudioState(profileConfig, targetProfile, fallbackColor = PROFILE_STUDIO_FALLBACK_COLOR) {
+  const draft = profileConfig?.draft
+    ? toEditorProfileConfig(profileConfig.draft, fallbackColor)
+    : null;
+  return {
+    studioDraft: draft,
+    studioIdentityDraft: draft
+      ? { bio: targetProfile?.bio || '', identityPresentation: draft.identityPresentation }
+      : null,
+    cosmeticPreviewLoadout: null
+  };
+}
+
 export function preserveExpressionFields(nextConfig, currentConfig) {
   const next = nextConfig || {};
   const current = currentConfig || {};

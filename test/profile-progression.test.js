@@ -30,7 +30,10 @@ test('progression is a dedicated page backed by existing profile history', async
 });
 
 test('Customize is the complete profile cosmetics surface with earned and Plus states', async () => {
-  const cosmetics = await read('src/lib/ProfileCosmeticsEditor.svelte');
+  const [cosmetics, mutations] = await Promise.all([
+    read('src/lib/ProfileCosmeticsEditor.svelte'),
+    read('src/lib/profile-studio/cosmeticMutations.js')
+  ]);
 
   assert.match(cosmetics, /Profile cosmetics/);
   assert.match(cosmetics, /every profile cosmetic layer/);
@@ -38,7 +41,7 @@ test('Customize is the complete profile cosmetics surface with earned and Plus s
   assert.match(cosmetics, /hasShopEntitlement/);
   assert.match(cosmetics, /getShopAccessLabel/);
   assert.doesNotMatch(cosmetics, /ownedCosmetics|profile-cosmetics-plus-guide/);
-  assert.match(cosmetics, /equip_item/);
+  assert.match(mutations, /equip_item/);
   assert.doesNotMatch(cosmetics, /purchase_item/);
 });
 
