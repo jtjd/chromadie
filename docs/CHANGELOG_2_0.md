@@ -4619,3 +4619,25 @@ dark rolled-color headings remain readable.
 
 Post-roll wallet/inventory read errors preserve the last confirmed account state
 and propagate to the existing refresh warning instead of appearing as empty data.
+
+## 2026-09-11 — Recognizable butterfly and bat avatar effects
+
+- Redesigned butterflies with distinct upper/lower wings, bodies, and antennae;
+  bats now have broad scalloped wings, visible ears, and dark plum membranes.
+- Added synchronized wing poses with tip flex, fixed bat wingbeat timing,
+  reduced overlapping bats, and scaled butterfly glow to avatar size.
+- Smoothed pointer camera movement and provided open-wing reduced-motion poses.
+- Preserved existing cosmetics, avatar rendering, privacy, and inventory contracts.
+
+### Avatar creature quality follow-up
+
+- Butterflies fold distinct lobes; bats bend their outer wings and membranes.
+- Creatures turn with their flight path and stay around the avatar perimeter.
+- Five butterflies/six bats keep the center clear and avoid overlapping clusters.
+- Brighter plum bat membranes improve visibility on dark backgrounds.
+
+### Independent butterfly and bat flight
+
+- Replaced the circular formation with individual wandering routes, varying
+  speeds, turns, and front/back passes around the avatar.
+- Retained wing artwork, reduced-motion handling, and existing cosmetic IDs.

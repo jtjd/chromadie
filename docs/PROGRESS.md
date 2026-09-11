@@ -5906,3 +5906,31 @@ the changes; validation is recorded in the rolling-game audit milestone.
 
 Post-roll wallet/inventory read errors preserve the last confirmed account state
 and propagate to the existing refresh warning instead of appearing as empty data.
+
+## 2026-09-11 — Butterfly and bat artwork redesign
+
+Replaced unreadable projected creature geometry with shared authored vector
+silhouettes, visible anatomy, symmetric wing poses, proportional glow, corrected
+bat wingbeat timing, and eased pointer response. Reduced-motion specimens show
+open wings, and disabling animation cancels pending frames. The existing DOM
+avatar and two decorative canvas layers remain intact. Desktop and 390px/DPR2
+browser studies exercise the production AvatarEffect component; screenshots
+and exported SVG artwork are under `artifacts/avatar-creatures/`.
+
+Validation and scope: `docs/milestones/AVATAR_CREATURE_ARTWORK.md`.
+
+### 2026-09-11 — Creature animation quality follow-up
+
+Replaced shared wing squeezing with species-specific folded paths and tip/membrane
+follow-through, aligned bodies to flight direction, increased bat fill contrast,
+and moved fewer creatures into a spaced peripheral flight path. Reviewed actual
+86px wingbeat and full-orbit samples. Added full-cycle spacing, avatar-center
+clearance, and travel-direction regressions; all 609 tests and mandatory checks
+pass. See the avatar creature milestone for the revised visual contract.
+
+### 2026-09-11 — Random wandering flight correction
+
+Replaced the mechanical ring with independent seeded-random spline paths for
+both creatures. Paths remain within the canvas, turn smoothly, vary speed and
+depth, and pass over/behind the avatar. Added three-minute per-creature sampling
+for continuity, bounds, heading, reproducibility, and radial/depth variation.

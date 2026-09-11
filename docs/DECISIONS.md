@@ -7238,3 +7238,36 @@ See `milestones/ROLLING_GAME_RELIABILITY_AUDIT.md` for scope and evidence.
 
 Post-roll wallet/inventory read errors preserve the last confirmed account state
 and propagate to the existing refresh warning instead of appearing as empty data.
+
+## 2026-09-11 — Author avatar creatures before orbit projection
+
+The user authorized replacing the old butterfly/bat geometry after reviewing
+its unreadable silhouettes. Shared SVG-compatible illustration paths now drive
+canvas wing rigs and exported review SVGs. The dorsal artwork remains readable
+through gentle screen-space banking while orbital position, perspective size,
+and DOM-avatar front/back occlusion retain depth. White butterflies retain
+small proportional bloom; plum-black bats use contrasting edges and twelve
+instances instead of twenty-four. Wing poses are mirrored, root-attached, and
+use asymmetric timing with tip flex. Reduced motion uses open wings and blocks
+pointer displacement. Existing effect IDs, inventory, profile states, lazy
+loading, and all backend contracts are unchanged; no migration is required.
+
+### 2026-09-11 — Creature quality follow-up
+
+The user authorized a further quality pass after the first implementation still
+read as moving icons. Distinct authored folded-wing paths now replace uniform
+horizontal squeezing. Creatures face the flight tangent, with asymmetric banking,
+and occupy a spaced peripheral corridor (five butterflies/six bats). This
+supersedes the first pass's camera-facing orientation and twelve-bat count.
+A brighter plum membrane keeps bats legible without relying solely on outlines.
+No persisted or backend contracts change.
+
+### 2026-09-11 — Independent wandering avatar flight
+
+The user explicitly rejected the peripheral ring. Each creature now follows an
+independent seeded waypoint sequence, interpolated with a cubic B-spline for
+continuous position, velocity, and acceleration. Individual waypoint timing
+varies speed; paths change direction and depth and may cross the avatar. Heading
+follows velocity and banking follows curvature. This supersedes the shared
+angular clock and enforced center clearance. Existing low counts bound visual
+density; occasional crossings are intentional. No backend/data changes.

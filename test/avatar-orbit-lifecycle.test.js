@@ -42,6 +42,10 @@ test('returning to a visible tab never restarts an offscreen avatar orbit', t =>
   assert.equal(frames.size, 0);
   intersection([{ isIntersecting: true, intersectionRatio: 1 }]);
   assert.equal(frames.size, 1);
+  controller.update({ enabled: false });
+  assert.equal(frames.size, 0, 'disabling cancels an already scheduled animation');
+  controller.update({ enabled: true });
+  assert.equal(frames.size, 1, 'reenabling starts exactly one animation');
   controller.destroy();
   assert.equal(frames.size, 0);
   assert.equal(listeners.size, 0);
