@@ -62,14 +62,39 @@ try {
   await page.waitFor('document.querySelector(".roll-stage--results")?.textContent.includes("#654321")','confirmed new result');
   await page.waitFor('document.querySelector(".reroll-btn:not(:disabled)")','refresh failure releases controls');
   checks.push('reduced-motion result survives failed account refresh without locking controls');
-  await page.evaluate("[...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'View image').click()");
+  await page.evaluate("document.querySelector('[data-roll-action=share-image]').click()");
   await page.waitFor('document.querySelector(".image-modal-content")','share image dialog');
+  const shareImageState=await page.evaluate(`(()=>{
+    const dialog=document.querySelector('.image-modal-content');
+    const preview=document.querySelector('.preview-img');
+    const style=getComputedStyle(dialog);
+    return {title:document.querySelector('.image-modal-content h3')?.textContent.trim(),background:style.backgroundColor,previewWidth:preview?.getBoundingClientRect().width||0};
+  })()`);
+  assert.equal(shareImageState.title,'Share this roll',JSON.stringify(shareImageState));
+  assert.ok(shareImageState.previewWidth>0,JSON.stringify(shareImageState));
+  await page.screenshot(join(evidenceDir,'share-image-modal.png'));
   await page.pressKey('Escape');
   await page.waitFor('!document.querySelector(".image-modal-content")','share image closes with Escape');
   checks.push('share image opens and keyboard dismissal releases the dialog');
   for(const width of [1440,390]){
     await page.setViewport(width,900);
     assert.ok(await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'));
+    const actionLayout=await page.evaluate(`(()=>{
+      const summary=document.querySelector('.roll-result-summary')?.getBoundingClientRect();
+      const actions=document.querySelector('.roll-acquisition-actions--dedicated');
+      const share=actions?.querySelector('button:not([data-roll-action])')?.getBoundingClientRect();
+      const image=actions?.querySelector('[data-roll-action=share-image]')?.getBoundingClientRect();
+      return {
+        summaryBottom:summary?.bottom ?? -1,
+        actionsTop:actions?.getBoundingClientRect().top ?? -1,
+        shareTop:share?.top ?? -1,
+        imageTop:image?.top ?? -1,
+        sharedGroup:Boolean(actions?.querySelector('[data-roll-action=share-image]')?.closest('.post-score-actions--dedicated'))
+      };
+    })()`);
+    assert.ok(actionLayout.actionsTop>=actionLayout.summaryBottom-1,JSON.stringify(actionLayout));
+    assert.ok(actionLayout.shareTop>=actionLayout.summaryBottom-1 && actionLayout.imageTop>=actionLayout.summaryBottom-1,JSON.stringify(actionLayout));
+    assert.equal(actionLayout.sharedGroup,true,JSON.stringify(actionLayout));
     const headingContrast=await page.evaluate(`(()=>{
       const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
       const ctx=canvas.getContext('2d');ctx.fillStyle=getComputedStyle(document.querySelector('.roll-page__context h1 span')).color;ctx.fillRect(0,0,1,1);

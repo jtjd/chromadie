@@ -1,5 +1,14 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-12 — Roll result action hierarchy
+
+- Moved View/share image and Reroll below the score breakdown beside Share
+  result on the homepage and dedicated Roll page.
+- Refreshed the share dialog and generated card with the current graphite,
+  result-color, and flat panel styling.
+- Added desktop/mobile browser assertions that the secondary actions stay
+  below the score across result layouts.
+
 ## 2026-09-12 — Homepage hero atmosphere
 
 - Added generated wide and mobile flat anime-inspired hero atmospheres with

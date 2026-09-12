@@ -137,6 +137,12 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(game, /roll-score-reveal strong[\s\S]*color: var\(--roll-score-color/);
   assert.doesNotMatch(breakdown, /roll-result-summary__rarity|export let rarity|safeRarity/);
   assert.match(page, /roll-acquisition-actions \.result-action[\s\S]*justify-content: center/);
+  assert.match(game, /roll-acquisition-actions--dedicated/);
+  assert.match(game, /post-score-actions--dedicated/);
+  assert.match(game, /data-roll-action="share-image"/);
+  assert.match(game, /View \/ share image/);
+  assert.match(game, /image-modal-preview/);
+  assert.match(game, /--share-image-accent/);
   assert.doesNotMatch(page, /Save future rolls and earn EP\./);
   assert.match(page, /aria-live="polite"/);
   assert.match(page, /You rolled <span>\{rollContext\.identity\}\.<\/span>/);

@@ -44,6 +44,22 @@ try {
   await page.waitFor('document.querySelector(".roll-page__streak")?.textContent.includes("2-day streak")', 'account details update without another roll');
   assert.equal(await page.evaluate('Boolean(document.querySelector(".roll-page__guest-cta"))'), false);
   assert.equal(await page.evaluate('document.querySelector(".roll-acquisition-actions .result-action--primary")?.textContent'), 'View your profile');
+  const dedicatedActionLayout = await page.evaluate(`(() => {
+    const summary = document.querySelector('.roll-result-summary')?.getBoundingClientRect();
+    const actions = document.querySelector('.roll-acquisition-actions--dedicated');
+    const image = actions?.querySelector('[data-roll-action=share-image]')?.getBoundingClientRect();
+    const share = [...(actions?.querySelectorAll('button') || [])].find(button => button.textContent.includes('Share result'))?.getBoundingClientRect();
+    return {
+      summaryBottom: summary?.bottom ?? -1,
+      actionsTop: actions?.getBoundingClientRect().top ?? -1,
+      imageTop: image?.top ?? -1,
+      shareTop: share?.top ?? -1,
+      sharedGroup: Boolean(actions?.querySelector('[data-roll-action=share-image]')?.closest('.post-score-actions--dedicated'))
+    };
+  })()`);
+  assert.ok(dedicatedActionLayout.actionsTop >= dedicatedActionLayout.summaryBottom - 1, JSON.stringify(dedicatedActionLayout));
+  assert.ok(dedicatedActionLayout.imageTop >= dedicatedActionLayout.summaryBottom - 1 && dedicatedActionLayout.shareTop >= dedicatedActionLayout.summaryBottom - 1, JSON.stringify(dedicatedActionLayout));
+  assert.equal(dedicatedActionLayout.sharedGroup, true, JSON.stringify(dedicatedActionLayout));
   console.log('PASS delayed profile hydration updates live account controls');
   await page.click('.roll-result-summary__breakdown', 'full breakdown').catch(async () => {
     await page.evaluate(`([...document.querySelectorAll('button')].find(b => b.textContent.includes('View full breakdown'))).click()`);

@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-12 — Keep roll result tools below the score
+
+Keep the dedicated roll's share result, image preview, and reroll controls in
+one secondary action group after the score breakdown. The score remains the
+main result signal, while the image dialog and generated 1200×630 card use the
+current graphite surfaces, result-color accent, and restrained borders. The
+existing profile CTA stays above that tool group when the homepage provides
+it; roll authority and reroll eligibility remain in the existing server-backed
+flow.
+
 ## 2026-09-12 — Give the homepage hero a quiet game atmosphere
 
 Use generated wide and mobile atmospheric rasters behind the homepage hero

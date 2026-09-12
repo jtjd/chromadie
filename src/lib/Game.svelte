@@ -18,7 +18,6 @@
   import { clearRerollLock, hasActiveRerollLock, requestRoll, requestRollPercentile, setRerollLock } from './rollService.js';
   import { getAppOrigin } from './authUrls';
   import { trackProductEvent } from './productAnalytics.js';
-  import { buildRollShareCardCanvas, canvasToPngBlob } from './rollShareExport.js';
   import { createScoreCountUpController } from './rollRevealController.js';
   import {
     getRevealHexCharacters,
@@ -573,6 +572,7 @@
   }
 
   async function buildShareCardCanvas() {
+    const { buildRollShareCardCanvas } = await import('./rollShareExport.js');
     return buildRollShareCardCanvas({
       score,
       rarity,
@@ -598,6 +598,7 @@
     const exportCanvas = await buildShareCardCanvas();
     if (!exportCanvas) return;
 
+    const { canvasToPngBlob } = await import('./rollShareExport.js');
     const blob = await canvasToPngBlob(exportCanvas);
     if (!blob) return;
 
@@ -865,7 +866,12 @@
 
 <!-- Image Preview Modal -->
 {#if showImageModal}
-  <div class="image-modal-overlay" role="presentation" on:click|self={closeImageModal}>
+  <div
+    class="image-modal-overlay"
+    style={`--share-image-accent: ${normalizeHexColor(displayColor, '#ffffff')}; --share-image-ink: ${rollActionInk};`}
+    role="presentation"
+    on:click|self={closeImageModal}
+  >
     <div
       class="image-modal-content"
       bind:this={imageDialog}
@@ -875,11 +881,17 @@
       tabindex="-1"
       on:keydown={handleImageModalKeydown}
     >
-      <h3 id="share-image-title">Share Image</h3>
-      <img src={imagePreviewUrl} alt="ChromaDie Share Card" class="preview-img" />
+      <header class="image-modal-header">
+        <p class="image-modal-kicker">Daily roll</p>
+        <h3 id="share-image-title">Share this roll</h3>
+        <p class="image-modal-copy">Preview the result image or copy it to share elsewhere.</p>
+      </header>
+      <div class="image-modal-preview">
+        <img src={imagePreviewUrl} alt="ChromaDie daily roll share card" class="preview-img" />
+      </div>
       <div class="modal-actions">
         <button type="button" class="download-btn" on:click={copyImageToClipboard}>
-          {#if imageCopied}✅ Copied!{:else}📋 Copy Image{/if}
+          {#if imageCopied}Copied{:else}Copy image{/if}
         </button>
         <button type="button" class="close-btn" on:click={closeImageModal}>Close</button>
       </div>
@@ -1043,7 +1055,22 @@
         <p class="roll-countdown" role="timer" aria-live="off">Next roll in <strong>{countdownString}</strong></p>
       {/if}
 
-      {#if showAcquisitionActions}
+      {#if dedicated}
+        <div class="roll-acquisition-actions roll-acquisition-actions--dedicated" aria-label="Roll result actions">
+          {#if showAcquisitionActions && $isAuthenticated}
+            <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
+          {/if}
+          <div class="post-score-actions post-score-actions--dedicated" aria-label="Share and continue">
+            <button type="button" class="chroma-btn result-action roll-acquisition-actions__tool" on:click={shareResultsText}>
+              {copied ? 'Copied' : 'Share result'}
+            </button>
+            <button type="button" class="chroma-btn result-action roll-acquisition-actions__tool" data-roll-action="share-image" on:click={generateShareImage}>View / share image</button>
+            {#if $isAuthenticated && $rerollShards > 0}
+              <button type="button" class="reroll-btn result-action result-action--reroll roll-acquisition-actions__tool" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}>Reroll · {$rerollShards} left</button>
+            {/if}
+          </div>
+        </div>
+      {:else if showAcquisitionActions}
         <div class="roll-acquisition-actions" aria-label="Roll result actions">
           {#if $isAuthenticated}
             <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
@@ -1054,18 +1081,6 @@
             <button class="roll-acquisition-actions__quiet" type="button" on:click={shareResultsText}>
               {copied ? 'Copied' : 'Share result'}
             </button>
-          {/if}
-        </div>
-      {/if}
-
-      {#if dedicated}
-        <div class="post-score-actions" aria-label="Additional roll actions">
-          {#if !showAcquisitionActions}
-            <button type="button" class="chroma-btn result-action" on:click={shareResultsText}>{copied ? 'Copied' : 'Share result'}</button>
-          {/if}
-          <button type="button" class="chroma-btn result-action" on:click={generateShareImage}>View image</button>
-          {#if $isAuthenticated && $rerollShards > 0}
-            <button type="button" class="reroll-btn result-action result-action--reroll" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}>Reroll · {$rerollShards} left</button>
           {/if}
         </div>
       {/if}
@@ -1313,6 +1328,29 @@
   }
 
   .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
+  .roll-acquisition-actions--dedicated { gap: 12px; }
+  .post-score-actions--dedicated { width: 100%; margin: 0; gap: 8px; }
+  .post-score-actions--dedicated .roll-acquisition-actions__tool {
+    min-height: 40px;
+    padding: 0 13px;
+    border-color: var(--roll-border, var(--card-border));
+    background: var(--roll-panel-card, rgba(255, 255, 255, .025));
+    color: var(--roll-muted, var(--text-muted));
+    font: 650 .72rem/1 var(--site-font, var(--font-body-stack));
+  }
+  .post-score-actions--dedicated .roll-acquisition-actions__tool:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--roll-accent, var(--color-accent)) 60%, var(--roll-border, var(--card-border)));
+    background: color-mix(in srgb, var(--roll-accent, var(--color-accent)) 9%, var(--roll-panel-card, transparent));
+    color: var(--roll-text, var(--text));
+  }
+  .post-score-actions--dedicated .reroll-btn.roll-acquisition-actions__tool {
+    border-color: color-mix(in srgb, var(--roll-accent, var(--color-accent)) 58%, transparent);
+    background: transparent;
+    color: var(--roll-accent, var(--color-accent-bright));
+  }
+  .post-score-actions--dedicated .reroll-btn.roll-acquisition-actions__tool:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--roll-accent, var(--color-accent)) 10%, transparent);
+  }
   .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-body-stack); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 9px; border: 1px solid var(--card-border); }
   .chroma-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 42px; padding: 0 18px; border: 1px solid var(--card-border); border-radius: 9px; background: transparent; color: #f8f8f8; cursor: pointer; font: 600 .88rem/1 var(--font-body-stack); transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease; }
   .chroma-btn:hover { transform: translateY(-1px); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 9%, transparent); }
@@ -1447,16 +1485,27 @@
   .ep-points { color: #f1c40f !important; text-shadow: 0 0 10px rgba(241, 196, 15, 0.3) !important; }
 
   .image-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;
+    position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: clamp(16px, 4vw, 32px);
+    background: rgba(8, 8, 10, .86); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
-  .image-modal-content { background: rgba(10, 10, 12, .92); border: 1px solid var(--card-border); border-radius: 18px; padding: 25px; max-width: 650px; width: 100%; max-height: calc(100dvh - 2rem); overflow-y: auto; text-align: center; }
-  .image-modal-content h3 { margin: 0 0 20px 0; font-family: var(--font-display-stack); color: #fff; }
-  .preview-img { width: 100%; max-height: min(63vw, calc(100dvh - 10rem)); object-fit: contain; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 20px; }
-  .modal-actions { display: flex; gap: 15px; justify-content: center; }
-  .download-btn { background: #f8f8f8; color: #08080a; border: none; padding: 0 18px; min-height: 42px; border-radius: 9px; cursor: pointer; font-weight: 600; }
-  .download-btn:hover { background: var(--color-accent); }
-  .close-btn { background: transparent; color: #fff; border: 1px solid var(--card-border); padding: 0 18px; min-height: 42px; border-radius: 9px; cursor: pointer; font-weight: 500; }
+  .image-modal-content {
+    display: grid; gap: 18px; width: min(100%, 680px); max-height: calc(100dvh - 32px); overflow-y: auto; padding: clamp(18px, 4vw, 28px);
+    border: 1px solid color-mix(in srgb, var(--share-image-accent, #ffffff) 32%, var(--card-border)); border-radius: 16px;
+    background: #161619; box-shadow: 0 24px 80px rgba(0, 0, 0, .48); text-align: left;
+  }
+  .image-modal-header { display: grid; gap: 6px; }
+  .image-modal-kicker { margin: 0; color: var(--share-image-accent, var(--color-accent)); font: 700 .62rem/1 var(--font-mono-stack); letter-spacing: .14em; text-transform: uppercase; }
+  .image-modal-content h3 { margin: 0; color: #fff; font: 750 1.45rem/1.05 var(--font-display-stack); letter-spacing: -.03em; }
+  .image-modal-copy { margin: 0; color: var(--text-muted); font: 500 .78rem/1.4 var(--font-body-stack); }
+  .image-modal-preview { padding: 8px; border: 1px solid var(--card-border); border-radius: 12px; background: #0e0e10; }
+  .preview-img { display: block; width: 100%; max-height: min(63vw, calc(100dvh - 12rem)); object-fit: contain; border-radius: 7px; }
+  .modal-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .download-btn,
+  .close-btn { min-height: 42px; padding: 0 16px; border-radius: 9px; cursor: pointer; font: 650 .76rem/1 var(--font-body-stack); }
+  .download-btn { border: 1px solid var(--share-image-accent, #fff); background: var(--share-image-accent, #fff); color: var(--share-image-ink, #0e0e10); }
+  .download-btn:hover { filter: brightness(1.08); }
+  .close-btn { border: 1px solid var(--card-border); background: transparent; color: var(--text); }
+  .close-btn:hover { border-color: var(--share-image-accent, var(--color-accent)); background: color-mix(in srgb, var(--share-image-accent, var(--color-accent)) 8%, transparent); }
 
   @media (max-width: 600px) {
     .roll-reveal-discovery__header { font-size: .56rem; }
@@ -1490,6 +1539,7 @@
       align-items: stretch;
       gap: 10px;
     }
+    .post-score-actions--dedicated { gap: 8px; }
     .countdown-inline,
     .chroma-btn,
     .reroll-btn {
@@ -1554,6 +1604,8 @@
       padding: 18px 16px;
       border-radius: 14px;
     }
+    .image-modal-content h3 { font-size: 1.25rem; }
+    .image-modal-preview { padding: 5px; }
     .modal-actions {
       flex-direction: column;
     }

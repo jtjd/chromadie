@@ -11,6 +11,22 @@ const RARITY_COLORS = Object.freeze({
   Trash: '#767b8c'
 });
 
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
+}
+
+function rgba(hex, alpha) {
+  const normalized = normalizeHexColor(hex).slice(1);
+  const channels = [0, 2, 4].map(offset => Number.parseInt(normalized.slice(offset, offset + 2), 16));
+  return `rgba(${channels.join(', ')}, ${alpha})`;
+}
+
 export async function buildRollShareCardCanvas({
   score = 0,
   rarity = 'Common',
@@ -38,97 +54,87 @@ export async function buildRollShareCardCanvas({
   const H = exportCanvas.height;
   const scoreText = Number(score || 0).toLocaleString();
   const cardColor = normalizeHexColor(color || '#222222');
+  const rarityColor = RARITY_COLORS[rarity] || '#ffffff';
 
   ctx.save();
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = '#0a0a0d';
+  ctx.fillStyle = '#0e0e10';
   ctx.fillRect(0, 0, W, H);
 
-  const backdrop = ctx.createLinearGradient(0, 0, W, H);
-  backdrop.addColorStop(0, 'rgba(139, 124, 246, 0.18)');
-  backdrop.addColorStop(0.55, 'rgba(10, 10, 13, 0.15)');
-  backdrop.addColorStop(1, 'rgba(46, 211, 201, 0.10)');
-  ctx.fillStyle = backdrop;
+  const atmosphere = ctx.createRadialGradient(950, 86, 10, 950, 86, 520);
+  atmosphere.addColorStop(0, rgba(cardColor, .18));
+  atmosphere.addColorStop(1, rgba(cardColor, 0));
+  ctx.fillStyle = atmosphere;
   ctx.fillRect(0, 0, W, H);
-
-  const accent = ctx.createLinearGradient(0, 0, W, 0);
-  accent.addColorStop(0, '#ff4d4d');
-  accent.addColorStop(0.2, '#ffab2e');
-  accent.addColorStop(0.4, '#ffe14d');
-  accent.addColorStop(0.6, '#6ee787');
-  accent.addColorStop(0.8, '#4d7dff');
-  accent.addColorStop(1, '#a15cff');
-  ctx.fillStyle = accent;
-  ctx.fillRect(0, 0, W, 10);
-
-  const cardX = 56;
-  const cardY = 56;
-  const cardW = 1088;
-  const cardH = 518;
-  const radius = 34;
-
-  ctx.beginPath();
-  ctx.moveTo(cardX + radius, cardY);
-  ctx.arcTo(cardX + cardW, cardY, cardX + cardW, cardY + cardH, radius);
-  ctx.arcTo(cardX + cardW, cardY + cardH, cardX, cardY + cardH, radius);
-  ctx.arcTo(cardX, cardY + cardH, cardX, cardY, radius);
-  ctx.arcTo(cardX, cardY, cardX + cardW, cardY, radius);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(15, 16, 22, 0.92)';
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.stroke();
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '700 44px "Cabinet Grotesk", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('ChromaDie', 96, 132);
-
-  ctx.fillStyle = '#767b8c';
-  ctx.font = '600 20px Inter, sans-serif';
-  ctx.fillText('Daily Roll', 96, 164);
-
-  const orbGlow = ctx.createRadialGradient(262, 326, 18, 262, 326, 150);
-  orbGlow.addColorStop(0, cardColor);
-  orbGlow.addColorStop(0.58, `${cardColor}CC`);
-  orbGlow.addColorStop(0.82, `${cardColor}66`);
-  orbGlow.addColorStop(1, `${cardColor}00`);
-  ctx.fillStyle = orbGlow;
-  ctx.beginPath();
-  ctx.arc(262, 326, 150, 0, Math.PI * 2);
-  ctx.fill();
 
   ctx.fillStyle = cardColor;
-  ctx.beginPath();
-  ctx.arc(262, 326, 118, 0, Math.PI * 2);
+  ctx.fillRect(0, 0, W, 8);
+
+  const cardX = 48;
+  const cardY = 48;
+  const cardW = 1104;
+  const cardH = 534;
+  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 24);
+  ctx.fillStyle = '#161619';
   ctx.fill();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = 'rgba(255,255,255,0.24)';
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255, 255, 255, .1)';
   ctx.stroke();
 
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#e0e0e0';
-  ctx.font = '700 28px Inter, sans-serif';
-  ctx.fillText(cardColor.toUpperCase(), 262, 482);
+  ctx.fillStyle = cardColor;
+  drawRoundedRect(ctx, 88, 96, 44, 5, 2.5);
+  ctx.fill();
 
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '700 92px "Cabinet Grotesk", sans-serif';
-  ctx.fillText(scoreText, 460, 320);
-  ctx.fillStyle = '#767b8c';
-  ctx.font = '500 24px Inter, sans-serif';
-  ctx.fillText('Entropy Points', 460, 368);
-  ctx.fillStyle = RARITY_COLORS[rarity] || '#ffffff';
-  ctx.font = '700 30px "Cabinet Grotesk", sans-serif';
-  ctx.fillText((rarity || 'Common').toUpperCase(), 460, 420);
-  ctx.fillStyle = '#767b8c';
-  ctx.font = '500 22px Inter, sans-serif';
-  ctx.fillText('Can you beat my color?', 460, 476);
-  ctx.fillStyle = '#8b7cf6';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#f5f5f6';
+  ctx.font = '700 40px Inter, sans-serif';
+  ctx.fillText('ChromaDie', 88, 150);
+  ctx.fillStyle = '#8d8c92';
   ctx.font = '600 18px Inter, sans-serif';
-  ctx.fillText(String(origin || '').replace(/^https?:\/\//, ''), 460, 514);
+  ctx.fillText('Daily roll', 88, 180);
+
+  drawRoundedRect(ctx, 88, 230, 222, 222, 22);
+  ctx.fillStyle = cardColor;
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(255, 255, 255, .22)';
+  ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#f5f5f6';
+  ctx.font = '700 28px Inter, sans-serif';
+  ctx.fillText(cardColor, 199, 492);
+  ctx.fillStyle = '#8d8c92';
+  ctx.font = '600 15px Inter, sans-serif';
+  ctx.fillText('RESULT COLOR', 199, 522);
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#8d8c92';
+  ctx.font = '700 16px Inter, sans-serif';
+  ctx.fillText('TODAY\'S SCORE', 408, 252);
+  ctx.fillStyle = '#f5f5f6';
+  ctx.font = '700 94px Inter, sans-serif';
+  ctx.fillText(scoreText, 408, 350);
+  ctx.fillStyle = '#8d8c92';
+  ctx.font = '500 22px Inter, sans-serif';
+  ctx.fillText('score', 410, 386);
+
+  drawRoundedRect(ctx, 408, 422, 190, 38, 19);
+  ctx.fillStyle = rgba(rarityColor, .15);
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = rgba(rarityColor, .65);
+  ctx.stroke();
+  ctx.fillStyle = rarityColor;
+  ctx.font = '700 17px Inter, sans-serif';
+  ctx.fillText((rarity || 'Common').toUpperCase(), 428, 447);
+
+  ctx.fillStyle = '#8d8c92';
+  ctx.font = '500 19px Inter, sans-serif';
+  ctx.fillText('A new color for your profile.', 408, 505);
+  ctx.fillStyle = cardColor;
+  ctx.font = '600 16px Inter, sans-serif';
+  ctx.fillText(String(origin || '').replace(/^https?:\/\//, ''), 408, 540);
 
   ctx.restore();
   return exportCanvas;
