@@ -1,5 +1,35 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-12 — Avatar decoration fit across production layouts
+
+Replaced the shared 138% plate geometry with individual square scales and
+offsets for all eight illustrated effects. Fit follows the portrait opening,
+allowing deliberate foreground flowers, masks and ribbons. Static artwork and
+WebGL share one box, preserving texture proportions and shader choreography.
+
+Actual layout screenshots exposed name collisions beyond the original Cloud
+Bunny issue. The lazy authored-decoration component now reserves portrait
+surround space in Compact, Framed, Full Bleed, Sleek and Portfolio, including
+Sakura Petals' full emitter bounds. Framed allows decorative overflow; Sleek
+reserves top space for ears/horns and more room before the name. Avatar sizes,
+source artwork, catalog, permissions and database remain unchanged.
+
+The new avatar-layout-fit-smoke.mjs mounts production layout components with a
+photo avatar. It captures all nine effects across five layouts at 1440, 390
+and 320px (135 cases), tests opaque artwork samples against the name, viewport
+and clipping ancestors, and checks petals' emitter/name separation. Final
+matrix: zero collisions, clipping or horizontal overflow. Evidence is in
+/tmp/chromadie-avatar-fit-verified. Desktop and mobile contact sheets reviewed.
+The existing studies additionally check proportional geometry at 13 diameters
+from 64 to 320px and matching static/canvas placement.
+Both decoration browser suites passed animation, context recovery, reduced
+motion, offscreen suspension and cleanup checks after the fit changes.
+
+Required application validation passed, including 613 tests, Svelte check,
+lint, build, enforced performance budgets, drift, parity and database security.
+No schema change requires a database reset. Aggregate asset size advisories
+remain unchanged.
+
 ## 2026-09-09 — Reference audio and page scrolling correction
 
 Replaced the oversized player with a profile-colored top-left sound icon,

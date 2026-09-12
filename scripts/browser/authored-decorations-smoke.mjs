@@ -117,6 +117,38 @@ try {
   await page.screenshot(join(evidenceDir,'mobile-bottom.png'));
   await page.evaluate('document.querySelector("button").click()');
   await page.waitFor('document.querySelectorAll("canvas.ready").length===0','animation toggle stops rendering');
+  await page.setReducedMotion(true);
+  const fit = await page.evaluate(`(() => {
+    const results=[];
+    for (const size of [64,86,88,90,96,100,107.2,108,120,136,180,240,320]) {
+      for (const avatar of document.querySelectorAll('[data-avatar-effect]')) {
+        avatar.parentElement.style.width=size+'px';
+        avatar.parentElement.style.height=size+'px';
+        const art=avatar.querySelector('.illustrated-decoration');
+        if (!art) continue;
+        const box=avatar.getBoundingClientRect(), plate=art.getBoundingClientRect();
+        const img=art.querySelector('img').getBoundingClientRect();
+        const canvas=art.querySelector('canvas').getBoundingClientRect();
+        results.push({key:avatar.dataset.avatarEffect,size,
+          scale:plate.width/box.width, aspect:plate.width/plate.height,
+          x:(plate.x+plate.width/2-box.x-box.width/2)/box.width,
+          y:(plate.y+plate.height/2-box.y-box.height/2)/box.height,
+          aligned:Math.abs(img.x-canvas.x)+Math.abs(img.y-canvas.y)+Math.abs(img.width-canvas.width)+Math.abs(img.height-canvas.height)});
+      }
+    }
+    return results;
+  })()`);
+  const baseline=new Map();
+  for (const sample of fit) {
+    if (!baseline.has(sample.key)) baseline.set(sample.key,sample);
+    const expected=baseline.get(sample.key);
+    assert.ok(sample.scale>=1.3 && sample.scale<=1.65, 'bounded decorative footprint');
+    assert.ok(Math.abs(sample.scale-expected.scale)<.002, JSON.stringify(sample));
+    assert.ok(Math.abs(sample.aspect-1)<.002, 'artwork stays square');
+    assert.ok(Math.abs(sample.x-expected.x)<.002, 'proportional horizontal fit');
+    assert.ok(Math.abs(sample.y-expected.y)<.002, 'proportional vertical fit');
+    assert.ok(sample.aligned<.1, 'static and animated artwork share identical placement');
+  }
   await page.evaluate('cleanup()');
   assert.equal(await page.evaluate('document.querySelectorAll("canvas").length'),0,'unmount removes canvases');
   assert.equal(page.consoleLog.filter(e=>e.type==='exception').length,0,JSON.stringify(page.consoleLog));
