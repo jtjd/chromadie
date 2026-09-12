@@ -16,7 +16,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('launch renderer registries contain exactly the requested finite keys', () => {
   assert.equal(CURSOR_TRAIL_KEYS.length, 23);
-  assert.deepEqual(AVATAR_EFFECT_KEYS, ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'bat-orbit']);
+  assert.deepEqual(AVATAR_EFFECT_KEYS, ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'fireflies', 'bat-orbit']);
   assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 13);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 23);
   assert.doesNotMatch(Object.values(CURSOR_TRAIL_DEFINITIONS).map(definition => definition.label).join(' '), /\b(?:guns|vaults|haunt|carrd|linktree)\b/i);
@@ -25,7 +25,7 @@ test('launch renderer registries contain exactly the requested finite keys', () 
       .map(key => CURSOR_TRAIL_DEFINITIONS[key].label),
     ['Bubble Lift', 'Glyph Bloom', 'Joy Burst', 'Orbit Dot', 'Signal Ribbon', 'Elastic Emoji']
   );
-  assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 6);
+  assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 7);
   assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']);
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
   assert.equal(isAvatarEffectKey('avatar_effect_cyber_hud'), true);
@@ -50,7 +50,7 @@ test('launch renderer registries contain exactly the requested finite keys', () 
 test('reference avatar effects are code-owned, image-aware, and motion-safe', async () => {
   const avatarSource = await read('src/lib/avatar-effect/AvatarEffect.svelte');
 
-  assert.deepEqual(Object.keys(AVATAR_EFFECT_DEFINITIONS), ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'bat-orbit']);
+  assert.deepEqual(Object.keys(AVATAR_EFFECT_DEFINITIONS), ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'fireflies', 'bat-orbit']);
   assert.match(avatarSource, /data-avatar-effect=\{activeDefinitionKey\}/);
   assert.match(avatarSource, /avatar-effect__glitch-layer--red/);
   assert.match(avatarSource, /avatar-effect__hud-ring--one/);
@@ -185,7 +185,7 @@ test('seed and migrations contain the launch products and version bumps', async 
     read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql')
   ]);
   assert.equal((seed.match(/^\s+\('cursor_trail_[a-z0-9_]+'/gm) || []).length, 23);
-  assert.equal((seed.match(/^\s+\('avatar_effect_[a-z0-9_]+'/gm) || []).length, 6);
+  assert.equal((seed.match(/^\s+\('avatar_effect_[a-z0-9_]+'/gm) || []).length, 7);
   assert.equal((seed.match(/^\s+\('profile_layout_[a-z0-9_]+'/gm) || []).length, 5);
   assert.equal((seed.match(/^\s+\('profile_atmosphere_[a-z0-9_]+'/gm) || []).length, 13);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');

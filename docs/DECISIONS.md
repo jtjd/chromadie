@@ -7271,3 +7271,29 @@ varies speed; paths change direction and depth and may cross the avatar. Heading
 follows velocity and banking follows curvature. This supersedes the shared
 angular clock and enforced center clearance. Existing low counts bound visual
 density; occasional crossings are intentional. No backend/data changes.
+
+### 2026-09-11 — Persistent separated flight and safe depth transitions
+
+Independent random spline depth could flip layers mid-avatar and paths had no
+separation. Replace them with fixed-step persistent steering agents: seeded
+waypoint pursuit, velocity/acceleration caps, predictive separation, and soft
+boundary steering. A creature retains its depth lane until its center is more
+than 1.4 avatar radii away, clearing wings and pointer offset before switching.
+The padded canvas grows to 210% while avatar-relative artwork size stays fixed.
+This supersedes the independent spline flight implementation, not its wandering
+behavior. No backend or persisted configuration changes.
+
+### 2026-09-11 — Pause bats, restore butterfly bloom, add Fireflies
+
+User direction supersedes the bat quality work: Bat Orbit remains a recognized
+historical ID but is disabled in AvatarEffect and retired from the catalog.
+Client catalog projection also retires stale cached bat rows, so pausing does
+not depend on cache expiry. No inventories or saved loadouts are deleted.
+
+Butterfly silhouettes retain their artwork with stronger proportional white
+bloom. Fireflies is a new free renderer/catalog item using separated persistent
+flight, soft independent yellow-green light pulses, wings, and luminous cores.
+The finite shop constraint is extended with only `fireflies`; all previous
+values and authority checks remain. Migration `20260911180000_avatar_fireflies`
+updates the catalog version. Rollback can retire Fireflies, reactivate bats,
+and revert the client disable flag without deleting any historical records.

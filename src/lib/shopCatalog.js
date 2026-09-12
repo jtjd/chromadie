@@ -101,6 +101,7 @@ export function getShopAccessLabel(item) {
 }
 
 export function getCatalogStatus(item) {
+  if (item?.item_key === 'avatar_effect_bat_orbit') return 'retired';
   return ['active', 'legacy', 'retired'].includes(item?.catalog_status)
     ? item.catalog_status
     : 'active';

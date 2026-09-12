@@ -26,11 +26,11 @@
   let host;
   let lastParallaxRotation = null;
   $: definition = getAvatarEffectDefinition(effectKey);
-  $: activeDefinitionKey = definition?.key || 'none';
+  $: activeDefinitionKey = definition?.disabled ? 'none' : (definition?.key || 'none');
   $: compact = mode === 'compact' || mode === 'card';
   $: motionActive = Boolean(animated && (active || !compact));
   $: isParallax = activeDefinitionKey === '3d-parallax';
-  $: isOrbit = activeDefinitionKey === 'butterfly-orbit' || activeDefinitionKey === 'bat-orbit';
+  $: isOrbit = activeDefinitionKey === 'butterfly-orbit' || activeDefinitionKey === 'fireflies';
   $: colors = [accentColor, ...(Array.isArray(recentColors) ? recentColors : [])]
     .filter(color => /^#[0-9a-f]{6}$/i.test(String(color || '')))
     .slice(0, 4);
@@ -238,7 +238,7 @@
   }
 
   .avatar-effect--butterfly-orbit,
-  .avatar-effect--bat-orbit {
+  .avatar-effect--fireflies {
     overflow: visible;
   }
 

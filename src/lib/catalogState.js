@@ -58,7 +58,7 @@ function normalizeShopItem(item) {
   const entitlementKey = item.entitlement_key == null ? null : String(item.entitlement_key);
   if (entitlementKey && !/^[a-z0-9_]{1,80}$/.test(entitlementKey)) return null;
   if (accessTier === 'premium' && !entitlementKey) return null;
-  const catalogStatus = item.catalog_status || 'active';
+  const catalogStatus = item.item_key === 'avatar_effect_bat_orbit' ? 'retired' : (item.catalog_status || 'active');
   if (!['active', 'legacy', 'retired'].includes(catalogStatus)) return null;
   return { ...item, cost, access_tier: accessTier, entitlement_key: entitlementKey, catalog_status: catalogStatus };
 }

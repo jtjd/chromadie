@@ -4641,3 +4641,18 @@ and propagate to the existing refresh warning instead of appearing as empty data
 - Replaced the circular formation with individual wandering routes, varying
   speeds, turns, and front/back passes around the avatar.
 - Retained wing artwork, reduced-motion handling, and existing cosmetic IDs.
+
+### Fluid creature flight corrections
+
+- Bats and butterflies retain their front/back layer while crossing the avatar.
+- Nearby creatures steer apart before contact rather than following intersecting
+  independent paths; heading and banking respond smoothly to movement.
+- Increased decorative canvas padding to accommodate wider wandering paths.
+
+### Fireflies and butterfly glow
+
+- Temporarily disabled Bat Orbit and removed it from selectable cosmetics while
+  retaining saved selections and inventory records.
+- Restored a stronger white glow around butterflies.
+- Added free Fireflies: wandering yellow-green lights with soft independent
+  pulses, luminous bodies, and delicate wings.

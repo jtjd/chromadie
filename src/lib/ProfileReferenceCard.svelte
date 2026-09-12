@@ -73,7 +73,7 @@
     `profile-reference-card--${presentation}`,
     framedLayout ? 'profile-reference-card--framed' : '',
     showAvatar ? '' : 'profile-reference-card--no-avatar',
-    ['butterfly-orbit', 'bat-orbit'].includes(avatarEffectCanonicalKey) ? 'profile-reference-card--avatar-orbit' : '',
+    ['butterfly-orbit', 'fireflies'].includes(avatarEffectCanonicalKey) ? 'profile-reference-card--avatar-orbit' : '',
     `profile-reference-card--description-${safeDescriptionMode}`,
     `profile-reference-card--entry-${safeEntryAnimation}`,
     className

@@ -20,9 +20,11 @@ const definitions = {
     key: 'butterfly-orbit',
     label: 'Butterfly Orbit'
   },
+  'fireflies': { key: 'fireflies', label: 'Fireflies' },
   'bat-orbit': {
     key: 'bat-orbit',
-    label: 'Bat Orbit'
+    label: 'Bat Orbit',
+    disabled: true
   }
 };
 

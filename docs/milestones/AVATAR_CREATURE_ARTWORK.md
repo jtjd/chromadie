@@ -82,3 +82,41 @@ reduced-motion checks. Inspected 25 seconds of sampled flight plus mobile frames
 evidence is `artifacts/avatar-creatures/wandering-flight-review.png` and the
 refreshed browser screenshots. Existing aggregate asset-budget advisories remain;
 enforced performance budgets pass. No schema checks apply.
+
+## Live feedback correction — disappearance and clumping
+
+Random depth was independent of screen location and could abruptly put an entire
+creature behind the avatar. Persistent depth lanes now change only when the
+whole silhouette clears the avatar. Fixed-step steering adds predictive
+separation, bounded acceleration/speed, and wider excursions. Canvas overscan is
+210%; artwork remains scaled relative to the real avatar radius. No migrations.
+The previous random spline depth and non-interacting paths are superseded.
+
+All required checks passed, including 609 tests and three-minute per-species
+simulation regressions. Browser evidence includes mobile/reduced-motion and
+`artifacts/avatar-creatures/separated-flight.png`, sampled at five-second
+intervals from the actual simulation and shared artwork renderer.
+
+## User direction — disable bats, restore glow, add Fireflies
+
+Scope: pause Bat Orbit, restore butterfly bloom, add a separate free avatar
+Fireflies effect. Existing persistent flight/separation and safe depth changes
+are retained for butterflies and fireflies. Bat artwork remains in source for
+possible later work, but no bat canvas/controller mounts in the product.
+
+Migration `20260911180000_avatar_fireflies.sql` expands the finite renderer
+constraint, inserts `avatar_effect_fireflies`, retires the bat catalog row, and
+bumps shop_version. Seed mirrors it. Saved selections/inventory remain intact.
+No RLS, RPC authority, scoring, routes, or private-profile behavior changes.
+Compatibility: prior clients need the new renderer before users equip Fireflies;
+new clients suppress bats even with a stale active catalog row. Deploy the new
+client before exposing the new row in the hosted database. Rollback can retire
+Fireflies and restore bats without removing either historical identifier.
+
+Validation: full required suite passed, including 610 tests; `npm run db:reset`
+applied the new migration and seed; `supabase db lint --local --level warning
+--fail-on warning` passed without warnings. DB checks initially failed to connect
+while reset restarted Postgres; all passed after reset completed. Browser checks
+passed production-component animation, reduced motion, disabled bats, and mobile
+overflow. Screenshots in `artifacts/avatar-creatures/` show final glow and fireflies.
+No hosted migration or deployment performed for this slice.

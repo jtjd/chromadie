@@ -27,30 +27,32 @@ test('bats complete 3.3 wingbeats per second rather than interpreting Hz as radi
   }
 });
 
-test('wandering flights are bounded, continuous, independent, and cross depth layers', async () => {
-  const { getCreatureFlight } = await import('../src/lib/avatar-effect/avatarOrbitRenderer.js');
-  for (const key of ['butterfly-orbit', 'bat-orbit']) {
-    const count = key === 'butterfly-orbit' ? 5 : 6;
-    for (let i = 0; i < count; i++) {
-      let front = false, back = false, inward = false, outward = false;
-      const radii = [];
-      for (let time = 0; time < 180000; time += 40) {
-        const state = getCreatureFlight(key, i, time);
-        const next = getCreatureFlight(key, i, time + 1);
-        const radius = Math.hypot(state.x, state.y);
-        assert.ok(radius < 1.25, 'geometry stays inside overscan');
-        assert.ok(Math.hypot(next.x - state.x, next.y - state.y) < .002, 'no waypoint teleport');
-        assert.ok(Number.isFinite(state.rotation) && Number.isFinite(state.bank));
-        assert.deepEqual(state, getCreatureFlight(key, i, time), 'deterministic across redraws');
-        const nose = { x: Math.sin(state.rotation), y: -Math.cos(state.rotation) };
-        assert.ok(nose.x * (next.x - state.x) + nose.y * (next.y - state.y) > -1e-7);
-        front ||= state.depth > .1; back ||= state.depth < -.1;
-        inward ||= radius < .5; outward ||= radius > 1;
-        radii.push(radius);
+test('persistent flight keeps lane changes outside the avatar and steers creatures apart', async () => {
+  const { createCreatureFlight } = await import('../src/lib/avatar-effect/creatureFlight.js');
+  for (const key of ['butterfly-orbit', 'bat-orbit', 'fireflies']) {
+    const flight = createCreatureFlight(key);
+    let previous = flight.advance(0), changes = 0;
+    for (let frame = 0; frame < 10800; frame++) {
+      const states = flight.advance(1 / 60);
+      for (const [i, a] of states.entries()) {
+        assert.ok(Math.hypot(a.x, a.y) < 1.85, 'inside padded canvas');
+        assert.ok(Math.hypot(a.x - previous[i].x, a.y - previous[i].y) < .01, 'bounded frame displacement');
+        if (a.depth !== previous[i].depth) {
+          changes++;
+          assert.ok(Math.hypot(a.x, a.y) > 1.4, 'whole creature clear before lane swap');
+        }
+        for (const b of states.slice(i + 1)) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > .42, 'silhouettes do not clump');
       }
-      assert.ok(front && back && inward && outward, 'wanders across radius and depth instead of circling');
-      assert.ok(Math.max(...radii) - Math.min(...radii) > .6);
-      assert.notDeepEqual(getCreatureFlight(key, i, 5000), getCreatureFlight(key, i + 1, 5000));
+      previous = states;
     }
+    assert.ok(changes > 0, 'still supports behind-avatar flight');
   }
+});
+
+test('fireflies resolve independently and bats are retained but disabled', async () => {
+  const { getAvatarEffectDefinition } = await import('../src/lib/avatar-effect/avatarEffects.js');
+  const { getCatalogStatus } = await import('../src/lib/shopCatalog.js');
+  assert.equal(getAvatarEffectDefinition('avatar_effect_fireflies').key, 'fireflies');
+  assert.equal(getAvatarEffectDefinition('bat-orbit').disabled, true);
+  assert.equal(getCatalogStatus({ item_key: 'avatar_effect_bat_orbit', catalog_status: 'active' }), 'retired', 'old cached catalogs cannot reenable bats');
 });

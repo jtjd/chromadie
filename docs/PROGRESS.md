@@ -5934,3 +5934,23 @@ Replaced the mechanical ring with independent seeded-random spline paths for
 both creatures. Paths remain within the canvas, turn smoothly, vary speed and
 depth, and pass over/behind the avatar. Added three-minute per-creature sampling
 for continuity, bounds, heading, reproducibility, and radial/depth variation.
+
+### 2026-09-11 — Fix mid-avatar disappearance and clumping
+
+Introduced persistent steering with predictive separation and edge-only depth
+lane changes. Fixed-step updates cap long resume gaps; static modes retain a
+stable spread. Three-minute simulations for both species check frame movement,
+canvas bounds, minimum separation, and every depth transition. Required build,
+type, lint, 609 tests, link/CSP/performance/drift/parity/security checks passed.
+
+### 2026-09-11 — Fireflies and temporary bat disablement
+
+Disabled bats without rewriting saved profiles, restored butterfly white bloom,
+and added free Fireflies through the registry, preview/public renderer, finite
+SQL allowlist, seed, and catalog. Local reset applied all migrations and seeds;
+DB lint reported no warnings/errors. All mandatory checks passed, including
+610 tests. Browser review confirms glowing butterflies, green-gold fireflies,
+no bat canvas, and static reduced-motion behavior at desktop/mobile sizes.
+
+The catalog migration is implemented and tested locally; it has not been
+applied to the hosted database. Fireflies requires that migration on live.

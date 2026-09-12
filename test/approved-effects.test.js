@@ -343,7 +343,7 @@ test('avatar orbit layers stay centered when the canvas overscans the real avata
     const back = createCanvas(createRecordingContext(), { left: 40, top: 20, width: 86, height: 134.15625 });
     const front = createCanvas(createRecordingContext(), { left: 40, top: 20, width: 86, height: 134.15625 });
     const controller = createAvatarOrbitController({ host, backCanvas: back, frontCanvas: front, effectKey: 'butterfly-orbit', enabled: false });
-    const expectedWidth = 86 * 1.56;
+    const expectedWidth = 86 * 2.1;
     const expectedOffset = (86 - expectedWidth) / 2;
     const center = canvas => Number.parseFloat(canvas.style.left) + Number.parseFloat(canvas.style.width) / 2;
 

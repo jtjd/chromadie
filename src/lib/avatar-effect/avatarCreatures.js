@@ -76,9 +76,10 @@ export function drawAvatarCreature(context, effectKey, { x, y, width, rotation =
     };
     trace(context, art.wing, map, art.folded, pose.fold);
     context.fillStyle = art.fill;
-    context.shadowColor = effectKey === 'butterfly-orbit' ? 'rgba(220,237,255,.55)' : 'transparent';
-    context.shadowBlur = glow && effectKey === 'butterfly-orbit' ? width * .065 : 0;
+    context.shadowColor = effectKey === 'butterfly-orbit' ? 'rgba(224,242,255,.95)' : 'transparent';
+    context.shadowBlur = glow && effectKey === 'butterfly-orbit' ? width * .20 : 0;
     context.fill();
+    if (glow && effectKey === 'butterfly-orbit') context.fill();
     context.shadowBlur = 0;
     context.strokeStyle = art.edge;
     context.lineWidth = 1.3;

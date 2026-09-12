@@ -3,8 +3,8 @@
 </script>
 <main>
   <h1>Avatar creatures</h1>
-  <p>Shared production component · white butterflies / dark bats</p>
-  {#each ['butterfly-orbit', 'bat-orbit'] as effectKey}
+  <p>Shared production component · glowing butterflies / fireflies / disabled bats</p>
+  {#each ['butterfly-orbit', 'fireflies', 'bat-orbit'] as effectKey}
     <section>
       <h2>{effectKey}</h2>
       <div class="samples">

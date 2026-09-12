@@ -325,13 +325,13 @@ const validCatalogStatuses = new Set(['active', 'legacy', 'retired']);
 // These expression rows are intentionally retained as retired records so
 // historical ownership/equipped references remain renderable. They are not
 // part of the active catalog and must not be treated as available purchases.
-const retiredExpressionKeys = new Set(['name_prism_atelier', 'bg_prism_atmosphere']);
+const retiredExpressionKeys = new Set(['name_prism_atelier', 'bg_prism_atmosphere', 'avatar_effect_bat_orbit']);
 const rendererKeys = Object.freeze({
   name_font: new Set(['industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins', 'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit', 'kode-mono', 'soft-orbit']),
   name_material: new Set(['glass-emboss', 'carbon-cut', 'neon-tube', 'velvet-ink', 'engraved-stone', 'crt-phosphor', 'blueprint-ink', 'halo-edge']),
   name_motion: new Set(['haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles', 'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal', 'haunt-split', 'haunt-flash', 'kinetic-echo', 'magnetic-type', 'neon-particle', 'raster-signal', 'spectrum-flow']),
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing', 'plasma-swarm', 'bubble-wake', 'character-bloom', 'emoji-bloom', 'following-dot', 'text-flag', 'springy-emoji']),
-  avatar_effect: new Set(['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'bat-orbit']),
+  avatar_effect: new Set(['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'fireflies', 'bat-orbit']),
   profile_layout: new Set(['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']),
   profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare', 'prism-dust']),
   profile_motion: new Set(['perspective-tilt', 'halo-offset', 'wavefront'])

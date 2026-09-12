@@ -32,7 +32,7 @@ test('returning to a visible tab never restarts an offscreen avatar orbit', t =>
   });
   t.after(() => controller.destroy());
   assert.equal(frames.size, 1);
-  assert.equal(backCanvas.width, 312, 'DPR stays capped at two');
+  assert.equal(backCanvas.width, 420, 'DPR stays capped at two');
   intersection([{ isIntersecting: false, intersectionRatio: 0 }]);
   assert.equal(frames.size, 0);
   document.visibilityState = 'hidden';
