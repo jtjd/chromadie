@@ -119,4 +119,17 @@ applied the new migration and seed; `supabase db lint --local --level warning
 while reset restarted Postgres; all passed after reset completed. Browser checks
 passed production-component animation, reduced motion, disabled bats, and mobile
 overflow. Screenshots in `artifacts/avatar-creatures/` show final glow and fireflies.
-No hosted migration or deployment performed for this slice.
+The catalog migration was applied to the hosted database on 2026-09-11; this
+startup correction remains client-only.
+
+## User correction — dispersed startup
+
+The persistent flight previously exposed its seeded ring on the first frame:
+positions shared one radius, velocities were tangential, and all waypoints
+started at the center. Startup now samples deterministic positions with a
+minimum separation, nonzero headings and speeds, active waypoints, independent
+ages, phases, and an initial front depth lane. The fixed-step steering takes over
+without a reset, so the first frame is already a varied wandering flight.
+No schema, catalog, or compatibility changes were required. A regression
+checks varied startup radii and headings and confirms immediate movement for
+butterflies, Fireflies, and the retained bat flight module.

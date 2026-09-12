@@ -9,11 +9,34 @@ export function createCreatureFlight(effectKey) {
   const count = effectKey === 'fireflies' ? 8 : bat ? 6 : 5;
   let seed = bat ? 1741 : 3571;
   const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-  const agents = Array.from({ length: count }, (_, i) => {
-    const angle = i / count * TAU;
-    return { x: Math.cos(angle) * 1.35, y: Math.sin(angle) * 1.35,
-      vx: -Math.sin(angle) * .2, vy: Math.cos(angle) * .2, rotation: angle + Math.PI,
-      tx: 0, ty: 0, age: 10, depth: .4, desiredDepth: .4, phase: random() * TAU, bank: 0, scale: 1.048 };
+  // The first frame is part of the flight, too. Seed each creature at its own
+  // position, heading, and waypoint so mounting never reveals a perfect ring
+  // before the persistent steering has had a chance to randomize it.
+  const starts = [];
+  const minimumStartSpacing = count > 6 ? .46 : .54;
+  while (starts.length < count) {
+    const angle = random() * TAU;
+    const radius = .82 + random() * .68;
+    const point = { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+    if (starts.every(start => Math.hypot(point.x - start.x, point.y - start.y) >= minimumStartSpacing)) starts.push(point);
+  }
+  const randomWaypoint = () => {
+    const angle = random() * TAU;
+    const radius = 1.18 + random() * .38;
+    return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+  };
+  const agents = starts.map(({ x, y }) => {
+    const heading = random() * TAU;
+    const speed = (bat ? .16 : .1) + random() * (bat ? .2 : .16);
+    const waypoint = randomWaypoint();
+    // Start in front so the varied entry is readable. Subsequent lane changes
+    // still wait for the whole silhouette to clear the avatar boundary.
+    const initialDepth = .4;
+    return { x, y,
+      vx: Math.cos(heading) * speed, vy: Math.sin(heading) * speed,
+      rotation: heading + Math.PI / 2,
+      tx: waypoint.x, ty: waypoint.y, age: random() * 4.6,
+      depth: initialDepth, desiredDepth: initialDepth, phase: random() * TAU, bank: 0, scale: 1.048 };
   });
   let accumulator = 0;
   function step() {

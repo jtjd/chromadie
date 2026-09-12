@@ -27,6 +27,20 @@ test('bats complete 3.3 wingbeats per second rather than interpreting Hz as radi
   }
 });
 
+test('orbit effects enter as a dispersed flight instead of revealing a startup ring', async () => {
+  const { createCreatureFlight } = await import('../src/lib/avatar-effect/creatureFlight.js');
+  for (const key of ['butterfly-orbit', 'bat-orbit', 'fireflies']) {
+    const flight = createCreatureFlight(key);
+    const starts = flight.advance(0);
+    const radii = starts.map(state => Math.hypot(state.x, state.y));
+    assert.ok(Math.max(...radii) - Math.min(...radii) > .2, `${key} starts with varied distances`);
+    assert.ok(starts.every(state => Math.hypot(state.vx, state.vy) > .05), `${key} starts moving immediately`);
+    assert.ok(new Set(starts.map(state => state.rotation.toFixed(2))).size > 2, `${key} starts with varied headings`);
+    const next = flight.advance(1 / 60);
+    assert.ok(next.some((state, index) => Math.hypot(state.x - starts[index].x, state.y - starts[index].y) > .0001), `${key} advances from its seeded state`);
+  }
+});
+
 test('persistent flight keeps lane changes outside the avatar and steers creatures apart', async () => {
   const { createCreatureFlight } = await import('../src/lib/avatar-effect/creatureFlight.js');
   for (const key of ['butterfly-orbit', 'bat-orbit', 'fireflies']) {

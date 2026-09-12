@@ -4656,3 +4656,10 @@ and propagate to the existing refresh warning instead of appearing as empty data
 - Restored a stronger white glow around butterflies.
 - Added free Fireflies: wandering yellow-green lights with soft independent
   pulses, luminous bodies, and delicate wings.
+
+### Dispersed orbit startup
+
+- Seeded butterflies and Fireflies into independently spaced positions and
+  headings, with active waypoints from their first rendered frame.
+- Removed the visible synchronized ring that appeared while the persistent
+  wandering flight initialized; separation and depth-lane safeguards remain.

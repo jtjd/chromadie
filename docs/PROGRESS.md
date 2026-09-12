@@ -5952,5 +5952,13 @@ DB lint reported no warnings/errors. All mandatory checks passed, including
 610 tests. Browser review confirms glowing butterflies, green-gold fireflies,
 no bat canvas, and static reduced-motion behavior at desktop/mobile sizes.
 
-The catalog migration is implemented and tested locally; it has not been
-applied to the hosted database. Fireflies requires that migration on live.
+The catalog migration was applied to the hosted database on 2026-09-11; the
+remote catalog exposes Fireflies and keeps Bat Orbit retired.
+
+### 2026-09-11 — Dispersed orbit startup
+
+Orbit creatures no longer mount in a synchronized ring before steering begins.
+Each flight seeds a spaced position, heading, speed, waypoint, phase, and depth
+lane, so the first frame already belongs to the same wandering motion as the
+rest of the effect. Added a regression for varied startup radii, headings, and
+immediate movement; no schema or catalog changes were needed.

@@ -7297,3 +7297,13 @@ The finite shop constraint is extended with only `fireflies`; all previous
 values and authority checks remain. Migration `20260911180000_avatar_fireflies`
 updates the catalog version. Rollback can retire Fireflies, reactivate bats,
 and revert the client disable flag without deleting any historical records.
+
+### 2026-09-11 — Seed orbit effects into flight
+
+The first rendered orbit frame now uses deterministic, independently sampled
+positions, headings, speeds, waypoints, phases, and an initial front depth
+lane. A minimum
+startup spacing prevents the creatures from entering as a formation, while
+their existing fixed-step steering, separation, bounds, and safe depth changes
+take over immediately. This removes the visible startup ring without adding
+frame randomness or changing the renderer, effect IDs, or backend contracts.
