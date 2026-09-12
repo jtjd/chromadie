@@ -26,7 +26,7 @@ const [home, rollPage, rollPageContext, game, preRoll, bestRoll, loop, scoring, 
 ]);
 
 test('the homepage leads from the real roll to profiles, collection, discovery, and signup', () => {
-  for (const component of ['HomepageHeader', 'RollPage', 'HomepageProfileExample', 'HomepageCollection', 'HomepageCommunity', 'HomepageStart', 'HomepageQuestions', 'SiteFooter']) {
+  for (const component of ['HomepageHeader', 'RollPage', 'HomepageProfileExample', 'HomepageCollection', 'HomepagePricingLoader', 'HomepageCommunity', 'HomepageStart', 'HomepageQuestions', 'SiteFooter']) {
     assert.match(home, new RegExp(component));
   }
   assert.match(home, /surface="homepage"/);
@@ -163,7 +163,7 @@ test('the profile preview features Tjz, with account actions kept in the closing
   assert.match(preview, /prefers-reduced-motion: reduce/);
   assert.doesNotMatch(preview, /<figcaption/);
   assert.doesNotMatch(preview, /profileHref|profile-example__link|Open Tjz|Explore Tjz/);
-  const sections = ['<RollPage', '<HomepageProfileExample', '<HomepageCollection', '<HomepageCommunity', '<HomepageStart', '<HomepageQuestions', '<SiteFooter'];
+  const sections = ['<RollPage', '<HomepageProfileExample', '<HomepageCollection', '<HomepagePricingLoader', '<HomepageCommunity', '<HomepageStart', '<HomepageQuestions', '<SiteFooter'];
   const positions = sections.map(section => home.indexOf(section));
   assert.ok(positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1])));
   assert.match(start, /accountState === ACCOUNT_STATES\.SIGNED_OUT && !isAuthenticated/);
@@ -176,6 +176,24 @@ test('the profile preview features Tjz, with account actions kept in the closing
   assert.doesNotMatch(preview + start + loop + scoring + community, /your story|journey|daily ritual/i);
   assert.doesNotMatch(preview + start + loop + scoring + community + rollPage, /[↗→↓]/);
   assert.doesNotMatch(preview + start + loop + community, /homepage-section-kicker/);
+});
+
+test('the homepage presents free and Plus pricing from the canonical feature matrix', async () => {
+  const [home, loader, pricing, pricingData] = await Promise.all([
+    read('src/lib/HomePage.svelte'),
+    read('src/lib/homepage/HomepagePricingLoader.svelte'),
+    read('src/lib/homepage/HomepagePricing.svelte'),
+    read('src/lib/pricingData.js')
+  ]);
+  assert.match(home, /<HomepagePricingLoader \{isAuthenticated\} \/>/);
+  assert.match(loader, /import\('\.\/HomepagePricing\.svelte'\)/);
+  assert.match(loader, /id="pricing"/);
+  assert.match(pricing, /Start free\.<br \/>\s*<span>Add Plus when you need it\.<\/span>/);
+  assert.match(pricing, /aria-label="Free profile and Chromadie Plus plans"/);
+  assert.match(pricing, /href="\/pricing"/);
+  assert.match(pricing, /pricingComparisonRows/);
+  assert.match(pricingData, /label: 'Background video hosting'/);
+  assert.match(pricingData, /label: 'Up to 1 GB hosted media'/);
 });
 
 test('root and compatibility metadata identify one canonical playable entry', () => {

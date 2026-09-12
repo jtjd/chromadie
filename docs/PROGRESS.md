@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-12 — Homepage pricing preview
+
+Added a responsive pricing section after the homepage profile examples. It
+shows the current free profile capabilities and the one-time $7.99 Chromadie
+Plus offer using the canonical pricing matrix, with an auth-aware free CTA and
+a link to the full Plus details page. The Plus card is raised and highlighted
+to echo the supplied reference while using the homepage's dark and purple
+styling. The preview lazy-loads below the fold to keep the homepage route under
+its existing JavaScript budget. Browser smoke coverage checks the offer,
+feature counts, and desktop/mobile overflow.
+
 ## 2026-09-12 — Homepage Simplistic profile refresh
 
 Refreshed only the Simplistic homepage fixture from Tjz’s current published

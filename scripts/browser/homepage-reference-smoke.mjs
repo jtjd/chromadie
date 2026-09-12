@@ -79,6 +79,7 @@ try {
         bestRollConditionCount: document.querySelectorAll('.homepage-best-roll__condition').length,
         profileSpecimenCount: document.querySelectorAll('[data-homepage-profile-specimen], .homepage-profile-demo, .homepage-profile-stage').length,
         profileSceneCount: document.querySelectorAll('.profile-example__controls button').length,
+        pricingAnchorCount: document.querySelectorAll('#pricing').length,
         homeFooter: Boolean(document.querySelector('.site-footer--home .site-footer__home-grid')),
         homeFooterDisplay: getComputedStyle(document.querySelector('.site-footer--home')).display,
         sceneryCount: document.querySelectorAll('.homepage-background, .homepage-atmosphere').length,
@@ -92,6 +93,7 @@ try {
     assert(state.title === 'Roll today’s color.' && state.accountPrompt.includes('to start your profile history.'), `First-visit explanation drifted: ${JSON.stringify(state)}.`);
     assert(state.bestRollCount === 1 && state.bestRollTitle === 'Today’s top roll', `Best-roll invitation drifted: ${JSON.stringify(state)}.`);
     assert(state.profileSceneCount === 3 && state.homeFooter && state.homeFooterDisplay === 'grid', `Homepage product showcase/footer drifted: ${JSON.stringify(state)}.`);
+    assert(state.pricingAnchorCount === 1, `Homepage pricing preview anchor drifted: ${JSON.stringify(state)}.`);
     assert(state.profileSpecimenCount === 0 && state.sceneryCount === 0 && state.finalClaimCount === 0, `Retired homepage marketing returned: ${JSON.stringify(state)}.`);
     assert(!state.headerLabels.includes('Roll') && !state.headerLabels.includes('Claim handle'), `Competing controls returned: ${JSON.stringify(state)}.`);
   });
@@ -144,6 +146,24 @@ try {
     results.viewports.push(state);
     await capture(`homepage-${width}x${height}`);
   }
+
+  await check('homepage pricing shows the current free and Plus offers', async () => {
+    for (const width of [1440, 390]) {
+      await page.setViewport(width, 900);
+      await page.evaluate("document.querySelector('#pricing').scrollIntoView({ block: 'center' })");
+      await page.waitFor("document.querySelector('.homepage-pricing__card--plus')", 'Homepage pricing preview');
+      const state = await page.evaluate(`(() => ({
+        section: Boolean(document.querySelector('.homepage-pricing')),
+        cards: document.querySelectorAll('.homepage-pricing__card').length,
+        freeFeatures: document.querySelectorAll('.homepage-pricing__card--free li').length,
+        plusFeatures: document.querySelectorAll('.homepage-pricing__card--plus li').length,
+        plusPrice: document.querySelector('.homepage-pricing__card--plus .homepage-pricing__price')?.textContent?.trim() || '',
+        overflow: document.documentElement.scrollWidth > innerWidth + 1
+      }))()`);
+      assert(state.section && state.cards === 2 && state.freeFeatures === 4 && state.plusFeatures === 6 && state.plusPrice.includes('$7.99') && !state.overflow, `Homepage pricing geometry or offer drifted: ${JSON.stringify(state)}.`);
+      await capture(`homepage-pricing-${width}`);
+    }
+  });
 
   await check('Tjz published profile replaces the Sleek homepage example', async () => {
     for (const width of [1440, 390]) {

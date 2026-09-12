@@ -135,14 +135,16 @@ test('billing migration makes webhook processing atomic, replay-safe, and servic
 });
 
 test('checkout, restore, and webhook endpoints preserve the authority boundary', async () => {
-  const [checkout, restore, webhook, pricing, routes, config] = await Promise.all([
+  const [checkout, restore, webhook, pricing, pricingData, routes, config] = await Promise.all([
     read('supabase/functions/create-premium-checkout/index.ts'),
     read('supabase/functions/restore-premium-checkout/index.ts'),
     read('supabase/functions/stripe-premium-webhook/index.ts'),
     read('src/lib/Pricing.svelte'),
+    read('src/lib/pricingData.js'),
     read('src/lib/routes.js'),
     read('supabase/config.toml')
   ]);
+  const pricingSource = `${pricing}\n${pricingData}`;
 
   assert.match(checkout, /auth\.getUser/);
   assert.match(checkout, /unit_amount/);
@@ -168,9 +170,9 @@ test('checkout, restore, and webhook endpoints preserve the authority boundary',
   assert.match(pricing, /create-premium-checkout/);
   assert.match(pricing, /restore-premium-checkout/);
   assert.match(pricing, /profileMediaR2/);
-  assert.match(pricing, /Background video hosting/);
-  assert.match(pricing, /Animated avatar hosting/);
-  assert.match(pricing, /Up to 1 GB hosted media/);
+  assert.match(pricingSource, /Background video hosting/);
+  assert.match(pricingSource, /Animated avatar hosting/);
+  assert.match(pricingSource, /Up to 1 GB hosted media/);
   assert.doesNotMatch(pricing, /grant_profile_entitlement|profile_entitlements.*insert/s);
   assert.match(routes, /\/pricing/);
   assert.match(config, /\[functions\.stripe-premium-webhook\][\s\S]*verify_jwt = false/);
@@ -197,14 +199,18 @@ test('pricing presentation follows the homepage visual language without weakenin
 });
 
 test('pricing includes a responsive feature comparison matrix for the current offer', async () => {
-  const pricing = await read('src/lib/Pricing.svelte');
+  const [pricing, pricingData] = await Promise.all([
+    read('src/lib/Pricing.svelte'),
+    read('src/lib/pricingData.js')
+  ]);
+  const pricingSource = `${pricing}\n${pricingData}`;
   assert.match(pricing, /class="pricing-comparison"/);
   assert.match(pricing, /<table class="pricing-comparison__table" aria-label="Free and Chromadie Plus feature comparison">/);
-  assert.match(pricing, /Background video hosting/);
-  assert.match(pricing, /Animated avatar hosting/);
-  assert.match(pricing, /Profile audio and playlists/);
-  assert.match(pricing, /Custom OG\/share image/);
-  assert.match(pricing, /Up to 1 GB hosted media/);
+  assert.match(pricingSource, /Background video hosting/);
+  assert.match(pricingSource, /Animated avatar hosting/);
+  assert.match(pricingSource, /Profile audio and playlists/);
+  assert.match(pricingSource, /Custom OG\/share image/);
+  assert.match(pricingSource, /Up to 1 GB hosted media/);
   assert.match(pricing, /scope="row"/);
   assert.match(pricing, /pricing-comparison__plan-col \{ width: 6\.4rem; \}/);
   assert.match(pricing, /pricing-card__terms">USD · lifetime access · one identity · up to 1 GB shared media/);

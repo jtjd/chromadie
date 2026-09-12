@@ -9,6 +9,7 @@
   import HomepageCommunity from './homepage/HomepageCommunity.svelte';
   import HomepageHeader from './homepage/HomepageHeader.svelte';
   import HomepageCollection from './homepage/HomepageCollection.svelte';
+  import HomepagePricingLoader from './homepage/HomepagePricingLoader.svelte';
   import HomepageStart from './homepage/HomepageStart.svelte';
   import HomepageQuestions from './homepage/HomepageQuestions.svelte';
   import HomepageProfileExample from './homepage/HomepageProfileExample.svelte';
@@ -66,6 +67,7 @@
     <div class="homepage-content">
       <HomepageProfileExample />
       <HomepageCollection />
+      <HomepagePricingLoader {isAuthenticated} />
       <HomepageCommunity {isAuthenticated} {username} refreshKey={discoveryRefresh} on:leaderboard={handleLeaderboard} />
       <HomepageStart {isAuthenticated} {accountState} on:retry={forwardAction} />
       <HomepageQuestions />

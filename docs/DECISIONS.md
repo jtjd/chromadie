@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-12 — Add the current Plus offer to the homepage
+
+Use the existing pricing feature matrix as the single source for a two-card
+homepage preview: a free profile card and a raised Chromadie Plus card with the
+current one-time $7.99 offer. Keep the homepage copy direct and link the Plus
+card to the full pricing page. Load the below-fold preview as a lazy component
+so the homepage route stays within its existing JavaScript budget. This is a
+presentation-only change; billing authority, entitlements, and checkout stay
+on the existing pricing route and server boundaries.
+
 ## 2026-09-12 — Reuse the current profile snapshot in the Simplistic showcase
 
 Keep a separate snapshot of Tjz’s current published profile as the source for

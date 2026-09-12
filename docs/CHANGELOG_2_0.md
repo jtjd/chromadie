@@ -1,5 +1,14 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-12 — Homepage pricing preview
+
+- Added a responsive free versus Chromadie Plus pricing section to the
+  homepage using the existing feature matrix and current one-time $7.99 offer.
+- Kept the homepage styling direct and connected the free CTA to the current
+  auth state while linking Plus details to `/pricing`.
+- Lazy-loaded the below-fold pricing preview and added desktop/mobile browser
+  smoke coverage so the homepage JavaScript budget remains intact.
+
 ## 2026-09-12 — Homepage Simplistic profile refresh
 
 Only the Simplistic homepage preview now uses Tjz’s current published avatar,
