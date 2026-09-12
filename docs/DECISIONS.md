@@ -2,10 +2,13 @@
 
 ## 2026-09-12 — Avatar decoration fit across production layouts
 
-Replaced the shared 138% plate geometry with individual square scales and
-offsets for all eight illustrated effects. Fit follows the portrait opening,
-allowing deliberate foreground flowers, masks and ribbons. Static artwork and
-WebGL share one box, preserving texture proportions and shader choreography.
+Replaced the shared 138% plate geometry with an explicit circular aperture
+contract for all eight illustrated effects. Each source plate declares its
+normalized opening; the renderer maps that opening to the real circular
+portrait and masks painted pixels at the aperture. Static artwork and WebGL
+share one box, preserving texture proportions and shader choreography. Koi
+Current gets a higher visual anchor to account for its low weighted water
+forms.
 
 Actual layout screenshots exposed name collisions beyond the original Cloud
 Bunny issue. The lazy authored-decoration component now reserves portrait

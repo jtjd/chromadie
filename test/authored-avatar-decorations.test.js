@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { getAvatarEffectDefinition } from '../src/lib/avatar-effect/avatarEffects.js';
+import { getIllustratedDecorationFrame } from '../src/lib/avatar-effect/illustratedDecorationFrames.js';
 import { createIllustratedDecoration } from '../src/lib/avatar-effect/illustratedDecorationRenderer.js';
 
 test('illustrated decorations have bounded local alpha artwork and matching catalog migration', async () => {
@@ -11,6 +12,12 @@ test('illustrated decorations have bounded local alpha artwork and matching cata
     const itemKey=`avatar_effect_${key.replaceAll('-','_')}`;
     const definition=getAvatarEffectDefinition(itemKey);
     assert.equal(definition.key,key);
+    if (definition.artwork) {
+      const frame = getIllustratedDecorationFrame(key);
+      assert.ok(frame.radius > .3 && frame.radius < .4);
+      assert.ok(frame.x > .45 && frame.x < .6);
+      assert.ok(frame.y > .4 && frame.y < .56);
+    }
     const expectedKind = ['moonlit-clouds','enchanted-garden','prismatic-fracture','sakura-neko','cloud-bunny','crimson-ronin','midnight-oni','koi-current'].indexOf(key);
     if (expectedKind >= 0) assert.equal(definition.choreography, expectedKind, 'catalog order preserves authored shader choreography');
     const asset=new URL(`../public${definition.artwork || definition.sprite}`,import.meta.url);
