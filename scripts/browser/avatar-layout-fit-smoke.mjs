@@ -43,18 +43,19 @@ try {
         const style=getComputedStyle(parent);
         if(/hidden|clip|scroll|auto/.test(style.overflowX+' '+style.overflowY))clips.push({rect:parent.getBoundingClientRect(),x:style.overflowX!=='visible',y:style.overflowY!=='visible'});
       }
-      let nameHits=0,clipped=0;
+      let nameHits=0,clipped=0,visibleBottom=-Infinity;
       for(let y=0;y<c.height;y+=3)for(let x=0;x<c.width;x+=3){
         if(data[(y*c.width+x)*4+3]<128)continue;
         const px=bounds.x+x/c.width*bounds.width,py=bounds.y+y/c.height*bounds.height;
+        visibleBottom=Math.max(visibleBottom,py);
         if(px>=name.x&&px<=name.right&&py>=name.y&&py<=name.bottom)nameHits++;
         if(px<0||px>innerWidth||py<0||clips.some(c=>(c.x&&(px<c.rect.left||px>c.rect.right))||(c.y&&(py<c.rect.top||py>c.rect.bottom))))clipped++;
       }
-      return {size:box.width,nameHits,clipped,overflow:document.documentElement.scrollWidth>innerWidth};
+      return {size:box.width,nameHits,clipped,decorationGap:visibleBottom===-Infinity?null:name.y-visibleBottom,overflow:document.documentElement.scrollWidth>innerWidth};
     };
   })()`);
   const results=[];
-  for(const width of [1440,390,320]) {
+  for(const width of [1440,997,390,320]) {
     await page.setViewport(width,700);
     for(const layout of ['compact','framed','full-bleed','sleek','portfolio']) {
       for(const key of ['moonlit-clouds','enchanted-garden','prismatic-fracture','sakura-neko','cloud-bunny','crimson-ronin','midnight-oni','koi-current','sakura-petals']) {
@@ -63,6 +64,9 @@ try {
         await page.waitFor('document.querySelector("[data-name-font-ready=true]")','name ready');
         const measurement=await page.evaluate('measureFit()');
         results.push({width,layout,key,...measurement});
+        if(layout==='full-bleed' && key!=='sakura-petals') {
+          assert.ok(measurement.decorationGap >= 6 && measurement.decorationGap <= 22, `${width}/${layout}/${key}: avatar-to-name gap ${measurement.decorationGap}px is outside the fitted range`);
+        }
         await page.screenshot(`${evidenceDir}/${width}-${layout}-${key}.png`);
       }
     }

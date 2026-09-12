@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-12 — Simplistic avatar spacing refinement
+
+Tuned the authored decoration reserve for the Simplistic layout per artwork
+silhouette. Cloud Bunny and Koi now sit closer to the name while deeper frames
+keep enough clearance. The avatar fit smoke now covers 1440, 997, 390, and
+320px across all five layouts and asserts a bounded avatar-to-name gap for the
+eight illustrated plates.
+
 ## 2026-09-12 — Cute Name Font shelf
 
 Added five free, code-owned Name Font choices: Fredoka, Baloo 2, Bubblegum

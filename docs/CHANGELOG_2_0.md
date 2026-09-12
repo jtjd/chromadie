@@ -1,5 +1,12 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-12 — Simplistic avatar spacing refinement
+
+Reduced the gap between authored avatar decorations and profile names in the
+Simplistic layout. Each illustrated frame now reserves only the lower space it
+needs, keeping Cloud Bunny and Koi visually connected to the profile copy
+without letting deeper artwork collide with it.
+
 ## 2026-09-12 — Cute Name Font shelf
 
 Added five free Name Font choices: Fredoka, Baloo 2, Bubblegum Sans, Comic

@@ -1,5 +1,13 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-12 — Tune Simplistic decoration flow by artwork silhouette
+
+Keep the circular portrait aperture and assign the Simplistic layout's lower
+flow reserve per authored artwork. A shared reserve follows the deepest plate
+and leaves Cloud Bunny and Koi with an unnecessary gap before the identity
+copy; effect-specific bounded reserves preserve clearance while keeping the
+profile rhythm tight at desktop and mobile widths.
+
 ## 2026-09-12 — Cute Name Font shelf
 
 Use five bundled Fontsource faces for the new cute Name Font choices:
