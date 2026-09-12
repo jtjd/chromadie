@@ -79,6 +79,7 @@ try {
         bestRollConditionCount: document.querySelectorAll('.homepage-best-roll__condition').length,
         profileSpecimenCount: document.querySelectorAll('[data-homepage-profile-specimen], .homepage-profile-demo, .homepage-profile-stage').length,
         profileSceneCount: document.querySelectorAll('.profile-example__controls button').length,
+        heroAmbient: getComputedStyle(document.querySelector('.roll-page--homepage'), '::after').backgroundImage.includes('homepage-hero-atmosphere-anime-v1'),
         pricingAnchorCount: document.querySelectorAll('#pricing').length,
         homeFooter: Boolean(document.querySelector('.site-footer--home .site-footer__home-grid')),
         homeFooterDisplay: getComputedStyle(document.querySelector('.site-footer--home')).display,
@@ -92,7 +93,7 @@ try {
     assert(state.rollButtonCount === 1 && state.rollButtonLabel === 'Roll today’s color', `Primary action drifted: ${JSON.stringify(state)}.`);
     assert(state.title === 'Roll today’s color.' && state.accountPrompt.includes('to start your profile history.'), `First-visit explanation drifted: ${JSON.stringify(state)}.`);
     assert(state.bestRollCount === 1 && state.bestRollTitle === 'Today’s top roll', `Best-roll invitation drifted: ${JSON.stringify(state)}.`);
-    assert(state.profileSceneCount === 3 && state.homeFooter && state.homeFooterDisplay === 'grid', `Homepage product showcase/footer drifted: ${JSON.stringify(state)}.`);
+    assert(state.profileSceneCount === 3 && state.homeFooter && state.homeFooterDisplay === 'grid' && state.heroAmbient, `Homepage product showcase or hero atmosphere drifted: ${JSON.stringify(state)}.`);
     assert(state.pricingAnchorCount === 1, `Homepage pricing preview anchor drifted: ${JSON.stringify(state)}.`);
     assert(state.profileSpecimenCount === 0 && state.sceneryCount === 0 && state.finalClaimCount === 0, `Retired homepage marketing returned: ${JSON.stringify(state)}.`);
     assert(!state.headerLabels.includes('Roll') && !state.headerLabels.includes('Claim handle'), `Competing controls returned: ${JSON.stringify(state)}.`);
@@ -127,10 +128,12 @@ try {
         scoring: rect(document.querySelector('.homepage-collection')),
         nextSection: rect(document.querySelector('.profile-example')),
         start: rect(document.querySelector('.homepage-start')),
-        board: rect(document.querySelector('.homepage-community'))
+        board: rect(document.querySelector('.homepage-community')),
+        heroAmbient: getComputedStyle(document.querySelector('.roll-page--homepage'), '::after').backgroundImage.includes('homepage-hero-atmosphere-anime')
       };
     })()`);
     assert(state.scrollWidth <= width + 1 && state.bodyScrollWidth <= width + 1, `${width}x${height} homepage overflows: ${JSON.stringify(state)}.`);
+    assert(state.heroAmbient, `${width}x${height} homepage atmosphere is missing: ${JSON.stringify(state)}.`);
     assert(state.grid && state.grid.left >= -1 && state.grid.right <= width + 1, `${width}x${height} roll grid escapes: ${JSON.stringify(state)}.`);
     assert(Math.abs((state.grid.left + state.grid.right) / 2 - width / 2) <= 1, `${width}x${height} roll grid is not centered: ${JSON.stringify(state)}.`);
     assert(state.action && state.action.left >= -1 && state.action.right <= width + 1, `${width}x${height} roll action escapes: ${JSON.stringify(state)}.`);

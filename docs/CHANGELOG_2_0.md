@@ -1,5 +1,14 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-12 — Homepage hero atmosphere
+
+- Added generated wide and mobile flat anime-inspired hero atmospheres with
+  restrained rainbow clouds and ribbons around the homepage roll prompt.
+- Kept the generated atmosphere free of separate dice so the edge treatment
+  stays quiet around the roll prompt.
+- Faded the generated image into the graphite page background while preserving
+  a dark center for the interface copy.
+
 ## 2026-09-12 — Homepage pricing preview
 
 - Added a responsive free versus Chromadie Plus pricing section to the

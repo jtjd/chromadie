@@ -196,6 +196,15 @@ test('the homepage presents free and Plus pricing from the canonical feature mat
   assert.match(pricingData, /label: 'Up to 1 GB hosted media'/);
 });
 
+test('the homepage hero has a restrained color atmosphere that fades into the page', async () => {
+  const refinement = await read('src/lib/homepage/homepage-refinement.css');
+  assert.match(refinement, /roll-page\.roll-page--homepage::after/);
+  assert.match(refinement, /homepage-hero-atmosphere-anime-v1\.png/);
+  assert.match(refinement, /homepage-hero-atmosphere-anime-mobile-v1\.png/);
+  assert.match(refinement, /linear-gradient\(to bottom, transparent 0%/);
+  assert.match(refinement, /prefers-reduced-motion: reduce[\s\S]*roll-page\.roll-page--homepage::after \{ animation: none; \}/);
+});
+
 test('root and compatibility metadata identify one canonical playable entry', () => {
   const title = 'ChromaDie — Daily Random Color Game';
   const description = 'Roll one of 16,777,216 colors once a day.';

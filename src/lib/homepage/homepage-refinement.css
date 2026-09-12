@@ -1,5 +1,20 @@
 /* Keep the player's action anchored across reveal states. */
 #chromadie-homepage .roll-page { min-height: 0; padding: clamp(64px, 7vh, 96px) 24px 64px; }
+#chromadie-homepage .roll-page.roll-page--homepage::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: '';
+  pointer-events: none;
+  opacity: .76;
+  background-image:
+    linear-gradient(to bottom, transparent 0%, transparent 48%, rgba(14, 14, 16, .18) 72%, rgba(14, 14, 16, .96) 100%),
+    url('/homepage/homepage-hero-atmosphere-anime-v1.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center top;
+}
+
 #chromadie-homepage .roll-page .roll-page__game { width: min(100%, 1240px); grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); column-gap: clamp(72px, 7vw, 128px); }
 #chromadie-homepage .roll-page .roll-page__context,
 #chromadie-homepage .roll-page .game-container--dedicated { max-width: 560px !important; }
@@ -23,6 +38,13 @@
 }
 @media (max-width: 999px) {
   #chromadie-homepage .roll-page { padding: 40px 16px 48px; }
+  #chromadie-homepage .roll-page.roll-page--homepage::after {
+    background-image:
+      linear-gradient(to bottom, transparent 0%, transparent 48%, rgba(14, 14, 16, .18) 72%, rgba(14, 14, 16, .96) 100%),
+      url('/homepage/homepage-hero-atmosphere-anime-mobile-v1.png');
+    background-size: 100% 100%, auto 110%;
+    background-position: 0 0, center top;
+  }
   #chromadie-homepage .roll-page .roll-page__game { width: min(100%, 620px); grid-template-columns: minmax(0, 1fr); gap: 28px; }
   #chromadie-homepage .roll-page .roll-page__context { max-width: 620px !important; }
   #chromadie-homepage .roll-page .game-container--dedicated,
@@ -36,4 +58,8 @@
   #chromadie-homepage .roll-page .roll-page__context { max-width: 420px !important; }
   #chromadie-homepage .roll-page .game-container--dedicated,
   #chromadie-homepage .roll-page .homepage-best-roll { max-width: 420px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #chromadie-homepage .roll-page.roll-page--homepage::after { animation: none; }
 }

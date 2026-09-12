@@ -1,5 +1,17 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-12 — Give the homepage hero a quiet game atmosphere
+
+Use generated wide and mobile atmospheric rasters behind the homepage hero
+instead of stacking another card or illustration into the layout. Their flat,
+anime-inspired cloud and ribbon forms add restrained rainbow color while broad
+dark centers keep the roll prompt and public-roll card clear. Keep the hero
+focused on that atmosphere rather than adding separate dice, which made the
+edge treatment busier without improving the explanation of the product. A dark
+vertical gradient returns the image to the page background before the lower
+sections. Keep the visual in the homepage refinement boundary so explicit Roll
+pages and the initial JavaScript budget remain unchanged.
+
 ## 2026-09-12 — Add the current Plus offer to the homepage
 
 Use the existing pricing feature matrix as the single source for a two-card
