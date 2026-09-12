@@ -15,7 +15,11 @@ identity.
 Use browser navigation controls, a lock-marked address field, and restrained
 toolbar actions for the homepage profile preview so its frame reads as a
 browser window rather than a live-status panel. Keep the profile canvas flush
-with the browser content area so each background reaches the frame edges.
+with the browser content area so each background reaches the frame edges. Keep
+the section copy direct: explain the available profile controls without extra
+marketing language or repeated claims. Use the full desktop rail and generous
+spacing to let the homepage read as one continuous surface; reserve dividers
+for internal lists and data where they improve scanning.
 
 ## 2026-09-12 — Tune Simplistic decoration flow by artwork silhouette
 

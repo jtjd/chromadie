@@ -77,7 +77,6 @@
 <style>
   .homepage-start {
     padding-block: 96px 104px;
-    border-top: 1px solid var(--homepage-border);
   }
 
   .homepage-start__content {

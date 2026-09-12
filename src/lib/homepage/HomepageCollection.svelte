@@ -76,7 +76,6 @@
 <style>
   .homepage-collection {
     padding-block: 88px 100px;
-    border-top: 1px solid var(--homepage-border);
   }
 
   .homepage-collection__intro {

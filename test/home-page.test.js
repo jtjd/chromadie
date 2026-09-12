@@ -134,6 +134,9 @@ test('the profile preview features Tjz, with account actions kept in the closing
   assert.doesNotMatch(player, />Open profile|homepage-player__open/);
   assert.match(player, /aria-label=\{`Open \$\{name\}’s profile`\}/);
   assert.match(preview, /<figure aria-label="Profile customization preview">/);
+  assert.match(preview, /Examples of what<br \/>you can build\./);
+  assert.match(preview, /Choose a layout\. Add your colors, links, fonts, effects, and background\./);
+  assert.doesNotMatch(preview, /LIVE PROFILE PREVIEW|Your colors\.|Your own page\./);
   assert.match(preview, /let scenes = \[\];\s*\$:\s*scenes = \[/);
   assert.match(preview, /chm\.lol\/tjz/);
   assert.match(preview, /profile-example__browser-nav/);

@@ -195,7 +195,6 @@
   .homepage-community {
     position: relative;
     padding-block: 104px 112px;
-    border-top: 1px solid var(--homepage-border);
   }
 
   .homepage-community::before {

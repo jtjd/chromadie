@@ -9,7 +9,7 @@
 </section>
 
 <style>
-  .homepage-questions { display: grid; grid-template-columns: .7fr 1.3fr; gap: 72px; padding-block: 48px 64px; border-top: 1px solid var(--homepage-border); }
+  .homepage-questions { display: grid; grid-template-columns: .7fr 1.3fr; gap: 72px; padding-block: 48px 64px; }
   h2 { margin: 0; color: var(--homepage-secondary); font: 600 1.35rem / 1.3 var(--homepage-display); letter-spacing: -.025em; }
   details { border-bottom: 1px solid var(--homepage-border); }
   summary { min-height: 52px; padding: 14px 0; cursor: pointer; color: var(--homepage-secondary); font-size: .96rem; line-height: 1.5; }

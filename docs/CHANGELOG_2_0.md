@@ -9,7 +9,10 @@ canvas without outer parallax. The existing first Tjz preview keeps its
 original fixture, with join-date metadata hidden in both homepage demos.
 The preview chrome now uses browser-like navigation, address, and toolbar
 controls instead of a “LIVE” label, and the profile canvas fills the browser
-content area without top or bottom inset gaps.
+content area without top or bottom inset gaps. The section copy is now a plain
+“Examples of what you can build” heading with short instructions.
+The desktop rail is wider, and repeated outer section dividers have been
+removed so the page reads as one continuous surface.
 
 ## 2026-09-12 — Simplistic avatar spacing refinement
 

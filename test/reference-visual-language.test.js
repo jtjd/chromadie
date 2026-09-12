@@ -46,7 +46,8 @@ test('the homepage shell uses the Roll and Progression visual language without p
   ]);
 
   assert.match(styles, /--homepage-bg: #0e0e10/);
-  assert.match(styles, /--homepage-border: rgba\(255, 255, 255, 0\.11\)/);
+  assert.match(styles, /--homepage-border: rgba\(255, 255, 255, 0\.08\)/);
+  assert.match(styles, /\.homepage-section \{ width: min\(1380px, calc\(100% - 64px\)\)/);
   assert.match(styles, /--homepage-radius: 18px/);
   assert.match(styles, /\.homepage-content \{/);
   assert.doesNotMatch(styles, /--homepage-background-image|\.homepage-background|\.homepage-atmosphere/);

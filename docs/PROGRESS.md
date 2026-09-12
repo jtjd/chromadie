@@ -13,7 +13,11 @@ preview remains on its original fixture, with join-date metadata hidden in
 both homepage demos. The preview wrapper now uses browser navigation controls,
 a lock-marked address field, and toolbar actions instead of a “LIVE” label; the
 profile canvas runs flush to the browser content area so backgrounds do not
-leave inset gaps at the top or bottom.
+leave inset gaps at the top or bottom. The section copy now uses a direct
+“Examples of what you can build” heading with short instructions for the
+available profile controls.
+The wider desktop rail and open section flow also reduce the repeated full-width
+dividers that made the page feel boxed in.
 
 ## 2026-09-12 — Simplistic avatar spacing refinement
 

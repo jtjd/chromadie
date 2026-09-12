@@ -156,11 +156,14 @@ try {
         address: document.querySelector('.profile-example__browser-address').textContent.trim(),
         content: document.querySelector('.tjz-profile').textContent,
         joined: document.querySelector('.tjz-profile').textContent.includes('Joined'),
+        exampleWidth: document.querySelector('.profile-example')?.getBoundingClientRect().width || 0,
+        browserWidth: document.querySelector('.profile-example__browser')?.getBoundingClientRect().width || 0,
         overflow: document.documentElement.scrollWidth > innerWidth + 1,
         links: [...document.querySelectorAll('.tjz-profile a')].map(a => a.href)
       }))()`);
       assert(state.address === 'chm.lol/tjz' && state.content.includes('Tjz') && state.content.includes('why does this keep resetting'), 'Tjz identity does not match the published snapshot.');
       assert(!state.joined && !state.overflow && state.links.includes('https://github.com/jtjd'), 'Tjz preview metadata, geometry, or links drifted.');
+      if (width >= 1000) assert(state.exampleWidth >= width * .9 && state.browserWidth >= 800, `Desktop profile preview is too constrained: ${JSON.stringify(state)}.`);
       await capture(`homepage-tjz-${width}`);
     }
     assert(networkSnapshot().profileHydrationCount === 0, 'The captured profile added homepage hydration requests.');

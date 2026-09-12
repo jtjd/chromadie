@@ -1,8 +1,10 @@
 /* Keep the player's action anchored across reveal states. */
 #chromadie-homepage .roll-page { min-height: 0; padding: clamp(64px, 7vh, 96px) 24px 64px; }
-#chromadie-homepage .roll-page .roll-page__game { width: min(100%, 1040px); grid-template-columns: minmax(0, 440px) minmax(0, 460px); column-gap: clamp(64px, 5vw, 88px); }
+#chromadie-homepage .roll-page .roll-page__game { width: min(100%, 1240px); grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); column-gap: clamp(72px, 7vw, 128px); }
 #chromadie-homepage .roll-page .roll-page__context,
-#chromadie-homepage .roll-page .game-container--dedicated { max-width: 460px !important; }
+#chromadie-homepage .roll-page .game-container--dedicated { max-width: 560px !important; }
+#chromadie-homepage .roll-page .roll-page__context { max-width: 500px !important; }
+#chromadie-homepage .roll-page .homepage-best-roll { max-width: 560px !important; }
 #chromadie-homepage .roll-page--homepage-preroll .roll-page__context h1 { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; font-size: clamp(2rem, 3vw, 2.8rem); margin-top: 24px; }
 #chromadie-homepage .roll-page--homepage-preroll .roll-page__description { margin: 16px auto 0; }
 #chromadie-homepage .roll-page .roll-stage--results .roll-display { padding: 0 0 20px; border: 0; border-bottom: 1px solid var(--roll-border); border-radius: 0; background: transparent; }
@@ -21,8 +23,17 @@
 }
 @media (max-width: 999px) {
   #chromadie-homepage .roll-page { padding: 40px 16px 48px; }
-  #chromadie-homepage .roll-page .roll-page__game { width: min(100%, 460px); grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  #chromadie-homepage .roll-page .roll-page__game { width: min(100%, 620px); grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  #chromadie-homepage .roll-page .roll-page__context { max-width: 620px !important; }
+  #chromadie-homepage .roll-page .game-container--dedicated,
+  #chromadie-homepage .roll-page .homepage-best-roll { max-width: 620px !important; }
   #chromadie-homepage .roll-page .roll-page__context { grid-column: 1; grid-row: 1; }
   #chromadie-homepage .roll-page .game-container--dedicated { grid-column: 1; grid-row: 2; }
   #chromadie-homepage .roll-page .homepage-best-roll { grid-column: 1; grid-row: 3; margin-top: 0; }
+}
+@media (max-width: 600px) {
+  #chromadie-homepage .roll-page .roll-page__game { width: min(100%, 420px); }
+  #chromadie-homepage .roll-page .roll-page__context { max-width: 420px !important; }
+  #chromadie-homepage .roll-page .game-container--dedicated,
+  #chromadie-homepage .roll-page .homepage-best-roll { max-width: 420px !important; }
 }

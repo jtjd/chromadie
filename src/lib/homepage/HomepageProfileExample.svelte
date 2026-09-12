@@ -56,8 +56,8 @@
     {
       id: 'tjz',
       label: 'Tjz profile',
-      title: 'Start with your color.',
-      description: 'A daily roll becomes the first detail people remember.',
+      title: 'Add your profile details.',
+      description: 'Set a name, bio, avatar, links, and daily color.',
       address: 'chm.lol/tjz',
       colors: ['#99C1F1', '#FFFFFF', '#000000'],
       motionKey: '',
@@ -66,8 +66,8 @@
     {
       id: 'snow',
       label: 'Snowy theme',
-      title: 'Change the atmosphere.',
-      description: 'Change the atmosphere, type, and rhythm without rebuilding your page.',
+      title: 'Choose the style.',
+      description: 'Change the layout, background, font, and effects.',
       address: 'chm.lol/katt',
       colors: ['#8DDCFF', '#D7F5FF', '#0E1921'],
       motionKey: 'profile_motion_perspective_tilt',
@@ -95,8 +95,8 @@
     {
       id: 'full-bleed',
       label: 'Simplistic layout',
-      title: 'Let the page feel like you.',
-      description: 'Bring your name, links, and color story to one shareable canvas.',
+      title: 'Build the page.',
+      description: 'Put your profile details, colors, and links together.',
       address: 'chm.lol/mira',
       colors: tjzSimplisticColors,
       // Keep the browser stage stable. The source profile’s cosmetics still
@@ -184,11 +184,10 @@
 
 <section class="homepage-section profile-example" id="profiles" bind:this={host} aria-labelledby="profile-example-title">
   <div class="profile-example__copy">
-    <h2 id="profile-example-title" class="homepage-section-heading">Your colors.<br />Your own page.</h2>
-    <p class="homepage-section-sub">Pick a layout. Add your links. Change the fonts, effects, and background. Put your daily roll on a page you want to share.</p>
+    <h2 id="profile-example-title" class="homepage-section-heading">Examples of what<br />you can build.</h2>
+    <p class="homepage-section-sub">Choose a layout. Add your colors, links, fonts, effects, and background.</p>
 
     <div class="profile-example__scene-copy" aria-live="polite">
-      <span>LIVE PROFILE PREVIEW</span>
       <h3>{scene.title}</h3>
       <p>{scene.description}</p>
     </div>
@@ -262,31 +261,24 @@
 <style>
   .profile-example {
     display: grid;
-    grid-template-columns: minmax(340px, .78fr) minmax(0, 1.42fr);
+    grid-template-columns: minmax(380px, .78fr) minmax(0, 1.42fr);
     align-items: center;
     gap: clamp(42px, 4.5vw, 72px);
     padding-block: 82px 78px;
-    border-top: 1px solid var(--homepage-border);
     scroll-margin-top: 24px;
   }
 
   .profile-example__copy {
     position: relative;
     z-index: 2;
-    max-width: 430px;
+    max-width: 480px;
   }
 
   .profile-example__scene-copy {
     display: grid;
     gap: 8px;
     margin-top: 42px;
-    max-width: 320px;
-  }
-
-  .profile-example__scene-copy > span {
-    color: var(--homepage-muted);
-    font: 600 .68rem / 1.2 'Inter', sans-serif;
-    letter-spacing: .14em;
+    max-width: 380px;
   }
 
   .profile-example__scene-copy h3 {
@@ -366,7 +358,7 @@
 
   .profile-example__browser {
     position: relative;
-    width: min(100%, 780px);
+    width: min(100%, 920px);
     overflow: visible;
     border: 1px solid rgba(255,255,255,.15);
     border-radius: 18px;
@@ -468,7 +460,7 @@
   }
 
   .profile-example__motion-shell {
-    width: min(100%, 720px);
+    width: 100%;
     min-width: 0;
   }
 
@@ -567,7 +559,7 @@
       min-height: 400px;
     }
 
-    .profile-example__browser { width: min(100%, 720px); }
+    .profile-example__browser { width: min(100%, 860px); }
   }
 
   @media (max-width: 600px) {
