@@ -19,14 +19,21 @@
   let orbitBackCanvas;
   let orbitFrontCanvas;
   let orbitController;
-  let orbitRendererModule;
   let orbitRendererPromise;
   let orbitLoadVersion = 0;
   let mounted = false;
+  let authoredComponent;
+  let authoredPromise;
+  function syncAuthoredDecoration() {
+    if (!mounted || authoredComponent || !isAuthored) return;
+    authoredPromise ||= import('./AuthoredAvatarDecoration.svelte');
+    authoredPromise.then(module => { if (mounted) authoredComponent = module.default; }).catch(() => {});
+  }
   let host;
   let lastParallaxRotation = null;
   $: definition = getAvatarEffectDefinition(effectKey);
   $: activeDefinitionKey = definition?.disabled ? 'none' : (definition?.key || 'none');
+  $: isAuthored = Boolean(definition?.artwork || activeDefinitionKey === 'sakura-petals');
   $: compact = mode === 'compact' || mode === 'card';
   $: motionActive = Boolean(animated && (active || !compact));
   $: isParallax = activeDefinitionKey === '3d-parallax';
@@ -81,33 +88,18 @@
       orbitController = null;
       return;
     }
-    const install = renderer => {
-      if (!mounted || requestVersion !== orbitLoadVersion || !isOrbit || !orbitBackCanvas || !orbitFrontCanvas) return;
+    orbitRendererPromise ||= import('./avatarOrbitRenderer.js');
+    orbitRendererPromise.then(renderer => {
+      if (!mounted || requestVersion !== orbitLoadVersion) return;
+      const options = { effectKey: activeDefinitionKey, enabled: motionActive };
       if (!orbitController) {
         orbitController = renderer.createAvatarOrbitController({
           host: orbitBackCanvas.parentElement,
           backCanvas: orbitBackCanvas,
           frontCanvas: orbitFrontCanvas,
-          effectKey: activeDefinitionKey,
-          accentColor: colors[0],
-          enabled: motionActive
+          ...options
         });
-        return;
-      }
-      orbitController.update({
-        effectKey: activeDefinitionKey,
-        accentColor: colors[0],
-        enabled: motionActive
-      });
-    };
-    if (orbitRendererModule) {
-      install(orbitRendererModule);
-      return;
-    }
-    orbitRendererPromise ||= import('./avatarOrbitRenderer.js');
-    orbitRendererPromise.then(renderer => {
-      orbitRendererModule = renderer;
-      install(renderer);
+      } else orbitController.update(options);
     }).catch(() => {});
   }
 
@@ -115,10 +107,9 @@
     mounted = true;
     host?.addEventListener('pointermove', handleParallaxPointerMove, { passive: true });
     host?.addEventListener('pointerleave', handleParallaxPointerLeave, { passive: true });
-    syncOrbitController();
   });
 
-  afterUpdate(syncOrbitController);
+  afterUpdate(() => { syncOrbitController(); syncAuthoredDecoration(); });
 
   onDestroy(() => {
     mounted = false;
@@ -156,6 +147,10 @@
   {/if}
 
   <span class="avatar-effect__slot"><slot /></span>
+
+  {#if authoredComponent && isAuthored}
+    <svelte:component this={authoredComponent} {definition} animated={motionActive} />
+  {/if}
 
   {#if isOrbit}
     <canvas bind:this={orbitFrontCanvas} class="avatar-effect__orbit-canvas avatar-effect__orbit-canvas--front" aria-hidden="true"></canvas>

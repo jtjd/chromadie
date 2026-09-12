@@ -9,9 +9,9 @@ const debugPort = await findAvailablePort(9380);
 const server = await startVite({ appPort, evidenceDir });
 let browser;
 try {
-  browser = await startChromium({ appUrl: `http://127.0.0.1:${appPort}/`, debugPort, evidenceDir, width:1100, height:1050 });
+  browser = await startChromium({ appUrl: `http://127.0.0.1:${appPort}/scripts/browser/authored-decorations.html`, debugPort, evidenceDir, width:1100, height:1050 });
   const { page } = browser;
-  await page.navigate(`http://127.0.0.1:${appPort}/`);
+  await page.navigate(`http://127.0.0.1:${appPort}/scripts/browser/authored-decorations.html`);
   await page.evaluate(`(async()=>{
     let fixture;
     for(let attempt=0;attempt<5;attempt++) {

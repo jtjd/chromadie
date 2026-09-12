@@ -5962,3 +5962,19 @@ Each flight seeds a spaced position, heading, speed, waypoint, phase, and depth
 lane, so the first frame already belongs to the same wandering motion as the
 rest of the effect. Added a regression for varied startup radii, headings, and
 immediate movement; no schema or catalog changes were needed.
+
+### 2026-09-12 — Moonlit Clouds, Enchanted Garden, Prismatic Fracture
+
+Implemented three original illustrated avatar decorations with localized
+animation and static fallbacks. All share the production AvatarEffect component
+used by previews and profiles. Assets total 490,518 bytes and load only for the
+selected effect. See `milestones/AUTHORED_AVATAR_DECORATIONS.md` for scope,
+browser evidence, validation, and migration status.
+
+### 2026-09-12 — Six anime avatar effects
+
+Added Sakura Neko, Cloud Bunny, Crimson Ronin, Midnight Oni, Koi Current and
+Sakura Petals, including alpha artwork, per-effect motion, reduced-motion
+fallbacks and six additive catalog entries. Local database now has 15 active
+avatar effects and 107 active catalog rows. Implementation and browser evidence:
+`milestones/ANIME_AVATAR_DECORATIONS.md`. Not yet pushed or deployed.

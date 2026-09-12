@@ -4663,3 +4663,21 @@ and propagate to the existing refresh warning instead of appearing as empty data
   headings, with active waypoints from their first rendered frame.
 - Removed the visible synchronized ring that appeared while the persistent
   wandering flight initialized; separation and depth-lane safeguards remain.
+
+### 2026-09-12 — Three illustrated avatar decorations
+
+- Moonlit Clouds: painted violet clouds, an ivory crescent, and gold starlight.
+- Enchanted Garden: coral peonies, emerald vines, and rising pollen.
+- Prismatic Fracture: iridescent crystals with traveling reflections.
+- Each has localized animation, a seamless ambient loop, and a finished still
+  for reduced motion or unavailable graphics acceleration. Added three free
+  catalog entries through an additive database migration.
+
+### 2026-09-12 — Anime avatar collection
+
+- Added cute Sakura Neko and Cloud Bunny decorations, Crimson Ronin and
+  Midnight Oni designs, and Koi Current, each with original anime artwork.
+- Added animated Sakura Petals with scattered startup, varied falling paths
+  and independent tumbling.
+- Added six free catalog entries, mobile previews, reduced-motion behavior
+  and shared lazy loading. Delivery remains local pending publication.

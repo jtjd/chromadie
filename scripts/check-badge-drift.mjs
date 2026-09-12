@@ -360,6 +360,9 @@ const launchExpectedCosts = Object.freeze({
   avatar_effect_3d_parallax: 350000, avatar_effect_glitch_slicer: 340000,
   avatar_effect_liquid_blob: 380000, avatar_effect_cyber_hud: 520000,
   avatar_effect_fireflies: 0, avatar_effect_butterfly_orbit: 0, avatar_effect_bat_orbit: 0,
+  avatar_effect_moonlit_clouds: 0, avatar_effect_enchanted_garden: 0, avatar_effect_prismatic_fracture: 0,
+  avatar_effect_sakura_petals: 0,
+  avatar_effect_sakura_neko: 0, avatar_effect_cloud_bunny: 0, avatar_effect_crimson_ronin: 0, avatar_effect_midnight_oni: 0, avatar_effect_koi_current: 0,
   profile_layout_compact: 0,
   profile_layout_full_bleed: 0, profile_layout_sleek: 0, profile_layout_framed: 0, profile_layout_portfolio: 0,
   profile_motion_perspective_tilt: 0, profile_motion_halo_offset: 0, profile_motion_wavefront: 0,
@@ -380,6 +383,9 @@ const launchFreeKeys = new Set([
   'cursor_trail_text_flag',
   'cursor_trail_springy_emoji',
   'avatar_effect_fireflies',
+  'avatar_effect_sakura_petals',
+  'avatar_effect_moonlit_clouds', 'avatar_effect_enchanted_garden', 'avatar_effect_prismatic_fracture',
+  'avatar_effect_sakura_neko', 'avatar_effect_cloud_bunny', 'avatar_effect_crimson_ronin', 'avatar_effect_midnight_oni', 'avatar_effect_koi_current',
   'avatar_effect_butterfly_orbit',
   'avatar_effect_bat_orbit',
   'profile_atmosphere_prism_dust',
@@ -413,10 +419,10 @@ const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profi
   launchRows.filter(row => row.slot === slot).length
 ]));
 if (
-    launchRows.length !== 50
-    || new Set(launchRows.map(row => row.itemKey)).size !== 50
+    launchRows.length !== 59
+    || new Set(launchRows.map(row => row.itemKey)).size !== 59
     || launchInvalidRows.length > 0
-    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 23, avatar_effect: 6, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 })
+    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 })
 ) {
   console.error('Launch cosmetic catalog balance/drift check failed.');
   console.error(JSON.stringify({

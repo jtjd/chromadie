@@ -7307,3 +7307,25 @@ startup spacing prevents the creatures from entering as a formation, while
 their existing fixed-step steering, separation, bounds, and safe depth changes
 take over immediately. This removes the visible startup ring without adding
 frame randomness or changing the renderer, effect IDs, or backend contracts.
+
+### 2026-09-12 — Illustrated avatar decorations
+
+Moonlit Clouds, Enchanted Garden, and Prismatic Fracture use original generated
+painted assets with true alpha, not procedural approximations of their subjects.
+A lazy WebGL mesh moves local cloud banks, flower heads, leaves, and crystal
+clusters with 16-second periodic choreography; texture lighting and small
+highlights follow each concept. The image remains the static/no-GPU fallback.
+Reduced motion, disabled compact previews, hidden tabs, offscreen states, and
+context loss stop animation. Existing AvatarEffect and server-authoritative
+catalog/equip boundaries remain. Three free rows and an additive finite
+allowlist migration introduce the effects without deleting any existing IDs.
+
+### 2026-09-12 — Simple anime decorations and falling sakura
+
+Use original transparent anime plates with localized motion for Sakura Neko,
+Cloud Bunny, Crimson Ronin, Midnight Oni and Koi Current. Use a separate single
+petal sprite for Sakura Petals so particles can fall and tumble independently,
+starting already dispersed. Keep these six effects free and use existing
+validated catalog/equip interfaces. Share one lazy decoration entry point to
+keep the initial profile/dashboard download within enforced budgets.
+See `milestones/ANIME_AVATAR_DECORATIONS.md` and the artwork prompt record.

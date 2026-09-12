@@ -1,36 +1,18 @@
-/** Finite avatar-local decoration registry. */
-const definitions = {
-  '3d-parallax': {
-    key: '3d-parallax',
-    label: '3D Parallax Tilt'
-  },
-  'glitch-slicer': {
-    key: 'glitch-slicer',
-    label: 'Glitch Slicer'
-  },
-  'liquid-blob': {
-    key: 'liquid-blob',
-    label: 'Liquid Blob'
-  },
-  'cyber-hud': {
-    key: 'cyber-hud',
-    label: 'Cyber HUD'
-  },
-  'butterfly-orbit': {
-    key: 'butterfly-orbit',
-    label: 'Butterfly Orbit'
-  },
-  'fireflies': { key: 'fireflies', label: 'Fireflies' },
-  'bat-orbit': {
-    key: 'bat-orbit',
-    label: 'Bat Orbit',
-    disabled: true
-  }
-};
-
-const normalizedDefinitions = Object.fromEntries(
-  Object.entries(definitions).map(([key, definition]) => [key, Object.freeze({ ...definition })])
-);
+/** Finite avatar-local decoration registry. Choreography indices match the shader. */
+const labels = [
+  '3D Parallax Tilt', 'Glitch Slicer', 'Liquid Blob', 'Cyber HUD', 'Butterfly Orbit', 'Fireflies',
+  'Moonlit Clouds', 'Enchanted Garden', 'Prismatic Fracture',
+  'Sakura Neko', 'Cloud Bunny', 'Crimson Ronin', 'Midnight Oni', 'Koi Current',
+  'Sakura Petals', 'Bat Orbit'
+];
+const normalizedDefinitions = Object.fromEntries(labels.map((label, index) => {
+  const key = index === 0 ? '3d-parallax' : label.toLowerCase().replaceAll(' ', '-');
+  return [key, Object.freeze({ key, label,
+    ...(index >= 6 && index <= 13 ? { choreography: index - 6, artwork: `/avatar-decorations/${key}-v1.webp` } : {}),
+    ...(key === 'sakura-petals' ? { sprite: '/avatar-decorations/sakura-petal-v1.webp' } : {}),
+    ...(key === 'bat-orbit' ? { disabled: true } : {})
+  })];
+}));
 
 export const AVATAR_EFFECT_KEYS = Object.freeze(Object.keys(normalizedDefinitions));
 export const AVATAR_EFFECT_DEFINITIONS = Object.freeze(normalizedDefinitions);
