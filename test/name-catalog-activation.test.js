@@ -12,23 +12,24 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('the curated catalog keeps the approved active Name rows and eleven Profile Border rows', async () => {
   const seed = await read('supabase/seed.sql');
-  assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 12);
+  assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 17);
   assert.equal((seed.match(/^\s*\('name_material_[a-z0-9_]+'/gm) || []).length, 8);
   assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 15);
   assert.equal((seed.match(/^\s*\('border_[a-z0-9_]+'/gm) || []).length, 11);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
-    fonts: 13,
+    fonts: 18,
     materials: 9,
     motions: 16,
-    paidFonts: 12,
+    paidFonts: 17,
     paidMaterials: 8,
     paidMotions: 15,
-    paidTotal: 35
+    paidTotal: 40
   });
   assert.deepEqual(Object.keys(NAME_FONTS), [
     'industrial-stencil', 'marker-tag', 'soft-orbit', 'satoshi', 'fira-code', 'poppins',
-    'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit', 'kode-mono'
+    'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit', 'kode-mono',
+    'fredoka', 'baloo-2', 'bubblegum-sans', 'comic-neue', 'lilita-one'
   ]);
   assert.equal(NAME_FONTS['soft-grotesk'], undefined);
   assert.equal(NAME_FONTS['editorial-serif'], undefined);
@@ -41,7 +42,7 @@ test('the curated catalog keeps the approved active Name rows and eleven Profile
 });
 
 test('the active Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
-  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration] = await Promise.all([
+  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration, cuteFontMigration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
     read('supabase/migrations/20260803130000_use_reference_font_family_names.sql'),
@@ -50,14 +51,15 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     read('supabase/migrations/20260816120000_add_silkscreen_name_font.sql'),
     read('supabase/migrations/20260821090000_approved_cosmetic_effects.sql'),
     read('supabase/migrations/20260901120000_source_backed_expression_expansion.sql'),
-    read('supabase/migrations/20260901140000_source_backed_profile_expression_expansion.sql')
+    read('supabase/migrations/20260901140000_source_backed_profile_expression_expansion.sql'),
+    read('supabase/migrations/20260912100000_add_cute_name_fonts.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
   )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }))
     .filter(row => row.itemKey !== 'name_prism_atelier');
 
-  assert.equal(rows.length, 35);
+  assert.equal(rows.length, 40);
   assert.equal(new Set(rows.map(row => row.name)).size, rows.length);
 
   const registries = {
@@ -70,7 +72,7 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
     assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
     assert.equal(
-      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
+      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration, cuteFontMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
       true,
       `${row.itemKey} label is missing from the production migrations`
     );
@@ -94,10 +96,10 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
 });
 
 test('active Font families are real assets and legacy families remain readable', async () => {
-  const [fontsSource, stylesSource, assetReadme] = await Promise.all([
-    read('src/lib/name/nameFonts.js'),
+  const [stylesSource, assetReadme, assetLoadersSource] = await Promise.all([
     read('src/styles/fonts.css'),
-    read('src/assets/fonts/README.md')
+    read('src/assets/fonts/README.md'),
+    read('src/lib/name/nameFontAssetLoaders.js')
   ]);
   assert.deepEqual([...NAME_FONT_ASSET_KEYS].sort(), Object.keys(NAME_FONT_REGISTRY).sort());
   for (const definition of Object.values(NAME_FONTS)) {
@@ -134,9 +136,14 @@ test('active Font families are real assets and legacy families remain readable',
     '@fontsource/jetbrains-mono/latin-600.css',
     '@fontsource/silkscreen/latin-400.css',
     '@fontsource/outfit/latin-600.css',
-    '@fontsource/kode-mono/latin-400.css'
+    '@fontsource/kode-mono/latin-400.css',
+    '@fontsource/fredoka/latin-600.css',
+    '@fontsource/baloo-2/latin-700.css',
+    '@fontsource/bubblegum-sans/latin-400.css',
+    '@fontsource/comic-neue/latin-700.css',
+    '@fontsource/lilita-one/latin-400.css'
   ]) {
-    assert.match(fontsSource, new RegExp(familyImport.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(assetLoadersSource, new RegExp(familyImport.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 });
 

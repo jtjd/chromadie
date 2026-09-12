@@ -238,6 +238,41 @@ const ACTIVE_NAME_FONT_DEFINITIONS = Object.freeze({
     substitution: 'IBM Plex Mono',
     widthFactor: 0.62,
     label: 'Code Current', collection: 'Signal', rarity: 'Rare'
+  }),
+  'fredoka': font('fredoka', 'Fredoka', SYSTEM_DISPLAY, 600, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Fredoka',
+    substitution: 'Spline Sans',
+    widthFactor: 0.59,
+    label: 'Fredoka', collection: 'Prism', rarity: 'Uncommon'
+  }),
+  'baloo-2': font('baloo-2', 'Baloo 2', SYSTEM_DISPLAY, 700, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Baloo 2',
+    substitution: 'Spline Sans',
+    widthFactor: 0.60,
+    label: 'Baloo 2', collection: 'Prism', rarity: 'Rare'
+  }),
+  'bubblegum-sans': font('bubblegum-sans', 'Bubblegum Sans', SYSTEM_DISPLAY, 400, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Bubblegum Sans',
+    substitution: 'Spline Sans',
+    widthFactor: 0.59,
+    label: 'Bubblegum Sans', collection: 'Ember', rarity: 'Rare'
+  }),
+  'comic-neue': font('comic-neue', 'Comic Neue', SYSTEM_SANS, 700, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Comic Neue',
+    substitution: 'Instrument Sans',
+    widthFactor: 0.56,
+    label: 'Comic Neue', collection: 'Ember', rarity: 'Uncommon'
+  }),
+  'lilita-one': font('lilita-one', 'Lilita One', SYSTEM_DISPLAY, 400, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Lilita One',
+    substitution: 'Spline Sans',
+    widthFactor: 0.61,
+    label: 'Lilita One', collection: 'Prism', rarity: 'Epic'
   })
 });
 
@@ -265,39 +300,7 @@ export const NAME_FONT_REGISTRY = Object.freeze({
 // once that face is available. Fontshare and Velocity are declared by the
 // app-owned typography stylesheet, while Instrument Sans and IBM Plex Mono are
 // imported by the application shell.
-const NAME_FONT_ASSET_LOADERS = Object.freeze({
-  'editorial-serif': () => import('@fontsource/cormorant-garamond/latin-600.css'),
-  'condensed-sans': () => import('@fontsource/archivo-narrow/latin-700.css'),
-  'wide-geometric': () => import('@fontsource/syne/latin-700.css'),
-  'mono-compact': () => Promise.resolve(),
-  'rounded-mono': () => import('@fontsource/sono/latin-600.css'),
-  'soft-grotesk': () => Promise.resolve(),
-  'humanist-display': () => import('@fontsource/libre-franklin/latin-600.css'),
-  'modern-fraktur': () => import('@fontsource/pirata-one/latin-400.css'),
-  'pixel-display': () => import('@fontsource/pixelify-sans/latin-600.css'),
-  'high-contrast-italic': () => import('@fontsource/dm-serif-display/latin-400-italic.css'),
-  'neo-slab': () => import('@fontsource/roboto-slab/latin-700.css'),
-  'reverse-contrast': () => import('@fontsource/abril-fatface/latin-400.css'),
-  'industrial-stencil': () => import('@fontsource/black-ops-one/latin-400.css'),
-  'futurist-extended': () => import('@fontsource/michroma/latin-400.css'),
-  'terminal-bitmap': () => import('@fontsource/vt323/latin-400.css'),
-  'rounded-display': () => import('@fontsource/fredoka/latin-600.css'),
-  'marker-tag': () => import('@fontsource/permanent-marker/latin-400.css'),
-  'newspaper-black': () => import('@fontsource/archivo-black/latin-400.css'),
-  'satoshi': () => Promise.resolve(),
-  'fira-code': () => import('@fontsource/fira-code/latin-600.css'),
-  'poppins': () => import('@fontsource/poppins/latin-600.css'),
-  'jetbrains-mono': () => import('@fontsource/jetbrains-mono/latin-600.css'),
-  'array': () => Promise.resolve(),
-  'silkscreen': () => import('@fontsource/silkscreen/latin-400.css'),
-  'velocity': () => Promise.resolve(),
-  'outfit': () => import('@fontsource/outfit/latin-600.css'),
-  'chillax': () => Promise.resolve(),
-  'soft-orbit': () => Promise.resolve(),
-  'kode-mono': () => import('@fontsource/kode-mono/latin-400.css')
-});
-
-export const NAME_FONT_ASSET_KEYS = Object.freeze(Object.keys(NAME_FONT_ASSET_LOADERS));
+export const NAME_FONT_ASSET_KEYS = Object.freeze(Object.keys(NAME_FONT_REGISTRY));
 const nameFontAssetPromises = new Map();
 const readyFontKeys = new Set();
 
@@ -348,11 +351,11 @@ export function getNameFontCssFamily(fontKey) {
 
 export function loadNameFontAsset(fontKey) {
   const key = canonicalFontKey(fontKey);
-  const loader = NAME_FONT_ASSET_LOADERS[key];
-  if (!loader) return Promise.resolve(false);
+  if (!Object.prototype.hasOwnProperty.call(NAME_FONT_REGISTRY, key)) return Promise.resolve(false);
   if (!nameFontAssetPromises.has(key)) {
     nameFontAssetPromises.set(key, Promise.resolve()
-      .then(loader)
+      .then(() => import('./nameFontAssetLoaders.js'))
+      .then(({ NAME_FONT_ASSET_LOADERS }) => NAME_FONT_ASSET_LOADERS[key]?.())
       .then(() => true)
       .catch(() => {
         nameFontAssetPromises.delete(key);

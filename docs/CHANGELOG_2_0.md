@@ -1,5 +1,11 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-12 — Cute Name Font shelf
+
+Added five free Name Font choices: Fredoka, Baloo 2, Bubblegum Sans, Comic
+Neue, and Lilita One. They use bundled Fontsource assets with lazy loading and
+the existing bounded Canvas name renderer.
+
 ## 2026-09-12 — Avatar decoration fit across production layouts
 
 Replaced the shared 138% plate geometry with an explicit circular aperture

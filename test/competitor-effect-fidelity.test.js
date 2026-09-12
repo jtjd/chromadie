@@ -205,11 +205,12 @@ test('Guns parallax uses the observed ten-degree pointer envelope', () => {
 });
 
 test('the live-source ports remain explicit in the renderers and font registry', async () => {
-  const [motions, cursor, avatar, fonts] = await Promise.all([
+  const [motions, cursor, avatar, fonts, fontAssets] = await Promise.all([
     read('src/lib/name/render/composableMotions.js'),
     read('src/lib/cursor-trail/CursorTrailLayer.svelte'),
     read('src/lib/avatar-effect/AvatarEffect.svelte'),
-    read('src/lib/name/nameFonts.js')
+    read('src/lib/name/nameFonts.js'),
+    read('src/lib/name/nameFontAssetLoaders.js')
   ]);
 
   assert.match(motions, /getGunsFuzzyRowOffset/);
@@ -229,5 +230,5 @@ test('the live-source ports remain explicit in the renderers and font registry',
   assert.match(avatar, /transition: transform 700ms/);
   assert.match(fonts, /'chillax'/);
   assert.match(fonts, /'kode-mono'/);
-  assert.match(fonts, /@fontsource\/kode-mono\/latin-400\.css/);
+  assert.match(fontAssets, /@fontsource\/kode-mono\/latin-400\.css/);
 });

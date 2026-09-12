@@ -1,5 +1,13 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-12 — Cute Name Font shelf
+
+Use five bundled Fontsource faces for the new cute Name Font choices:
+Fredoka, Baloo 2, Bubblegum Sans, Comic Neue, and Lilita One. Keep each face
+behind the existing lazy asset loader and finite renderer registry so catalog
+values cannot provide CSS or font URLs. Add the rows as free expressions and
+keep all historical font aliases readable.
+
 ## 2026-09-12 — Avatar decoration fit across production layouts
 
 Replaced the shared 138% plate geometry with an explicit circular aperture
