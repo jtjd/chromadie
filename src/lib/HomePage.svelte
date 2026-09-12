@@ -3,6 +3,7 @@
   import './homepage/homepage-reference.css';
   import './homepage/homepage-refinement.css';
   import './homepage/homepage-footer.css';
+  import './homepage/homepage-atmosphere.css';
   import { ACCOUNT_STATES } from './authState.js';
   import SiteFooter from './SiteFooter.svelte';
   import RollPage from './RollPage.svelte';

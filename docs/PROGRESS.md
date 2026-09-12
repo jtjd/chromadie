@@ -1,5 +1,123 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-12 — Feathered atmosphere transition
+
+Addressed the user's visible horizontal-band feedback with an elliptical
+lower-background entrance and an independent footer mask. Removed intermediate
+hero fade intensities while preserving upper artwork. No assets, layout,
+gameplay, or data contracts changed. Reviewed transition evidence at desktop
+and mobile sizes. All mandatory checks pass, including 615 tests and
+zero-warning Svelte check. Homepage browser coverage passes at
+1440/768/390/320px. Final transition evidence is in
+`/tmp/chromadie-homepage-atmosphere-RAX2HG/`. Existing aggregate performance
+advisories remain non-blocking.
+
+## 2026-09-12 — Hero-to-homepage transition
+
+Implemented a broad crossfade between the existing hero and sparse lower
+background. Removed the opaque lower canvas and extended the atmosphere
+upward with graduated alpha, with a shorter mobile overlap. Hero art and
+section geometry remain intact. Browser coverage captures the boundary at
+four widths and verifies the transparent canvas.
+All required checks pass, including 615 tests and zero-warning Svelte check.
+Browser coverage passes at 1440/768/390/320px. Reviewed desktop and mobile
+transition screenshots in `/tmp/chromadie-homepage-atmosphere-2zMOVp/`.
+Existing aggregate performance advisories remain non-blocking.
+
+## 2026-09-12 — Continuous restrained lower atmosphere
+
+Generated and integrated `homepage-lower-continuous-v4.webp` with the imagegen
+skill, using the hero for palette/medium only. The single tall artwork contains
+three separated cloud fragments without mirrored framing, ribbons, or repeating
+sections. Preserved native aspect ratio and authored contrast; CSS never tiles
+the image. Prompt and provenance are in
+`public/homepage/CONTINUOUS_BACKGROUND_V4.md`. No schema/API/content changes.
+All mandatory checks pass, including 615 unit tests and zero-warning Svelte
+validation. Four-width browser checks pass for loaded background, no-repeat,
+unfiltered authored contrast, preview scenes, account/gallery states, keyboard
+and signup. Reviewed full-page desktop and 320px screenshots in
+`/tmp/chromadie-homepage-atmosphere-kSL0Tx/`. Existing aggregate performance
+advisories remain non-blocking.
+
+## 2026-09-12 — Lower homepage background visibility fix
+
+Corrected the lower atmosphere after the user's screenshot showed it reading
+as flat black. The companion background now uses an explicit nonnegative layer,
+with foreground children above it, full opacity, and brighter pigment.
+Retained existing artwork, content, controls, masks, and the hero.
+Browser coverage verifies successful image decoding and layer order.
+All mandatory code checks pass, including 615 tests. The initial browser run
+timed out on preview loading; the full rerun passed. Screenshot review confirmed
+visible clouds and exposed lossy blocks in the dark center after brightening;
+re-saved the same source as native-resolution lossless WebP (~914 KiB) to remove
+those artifacts. Browser and performance verification repeated for this asset.
+
+## 2026-09-12 — Flat artwork and lower atmosphere correction
+
+Responded to the user's screenshot feedback with three independently generated
+flat condition assets and a dedicated low-contrast lower-page atmosphere.
+The imagegen skill supplied simpler silhouettes and restrained palette/detail;
+prompts and paths are recorded in `public/homepage/CONDITION_ARTWORK.md`.
+Each condition now owns its image and labels, including stacked mobile rows.
+The cosmetic example is a supporting strip within one collection display;
+removed the separate avatar/bunny illustration. Lower sections share the new
+masked cloud setting, preserving a readable dark center. No schema/API changes.
+
+Validation includes all required checks and four-width browser coverage for
+loaded individual illustrations, emblem/label alignment, all preview scenes,
+keyboard FAQ, reduced motion, account/discovery states, and signup return.
+All checks pass, including 615 unit tests and zero-warning Svelte validation.
+The browser startup timed out once; the complete rerun passed. Reviewed desktop,
+320px collection, pricing, and full-page evidence at
+`/tmp/chromadie-homepage-atmosphere-5EaZdT/`. Existing aggregate performance
+advisories remain non-blocking.
+
+## 2026-09-12 — Illustrated collection follow-up
+
+Implemented the user's replacement direction following rejection of the
+background-only first pass. Removed repeated lower hero backgrounds; authored
+a transparent painted specimen illustration with built-in imagegen and saved
+it as `public/homepage/condition-collection-v1.webp` (1200×514, ~122 KiB).
+The imagegen workflow supplied the painterly artwork rather than a CSS stand-in;
+the source reference and prompt are recorded in `public/homepage/CONDITION_ARTWORK.md`.
+
+Collection now displays canonical conditions in one tray beside a styled
+example identity. Removed the fake collection counter and corrected the free
+Neon Particle cosmetic's milestone attribution after checking its catalog
+migration. Pricing, community portraits, signup, and footer have new compact
+compositions. No API/schema/security changes.
+
+Validation: build, zero-warning Svelte check, ESLint, all 615 unit tests,
+links, CSP, performance, username/balance/catalog drift, scoring parity, and
+database security pass. Existing aggregate performance advisories remain
+non-blocking. Browser smoke covers four widths, loaded illustration,
+profile scenes, canonical example labeling, keyboard/reduced motion,
+account states, discovery retry/empty states, and signup routing. Desktop,
+mobile, and full-page screenshots are saved in the printed temporary evidence
+directory; collection, pricing, community, and mobile geometry were reviewed.
+
+## 2026-09-12 — Homepage visual continuity
+
+Implemented the approved lower-homepage redesign within existing components.
+Reused the hero's desktop/mobile painted artwork with static masks, simplified
+the profile frame, replaced condition flares and pricing gradients, and aligned
+section spacing, claim controls, and footer styling. Profile cosmetics and the
+playable hero remain intact; no schema or API changes.
+
+Validation: 615 unit tests pass; build, Svelte check (zero errors/warnings),
+ESLint, links, CSP, performance, username/balance/catalog drift, scoring parity,
+and database security checks pass. Performance retains existing non-blocking
+aggregate catalog advisories. The new homepage-atmosphere browser smoke covers
+1440/768/390/320px geometry, lazy pricing alignment, keyboard scene selection
+and FAQ, reduced motion, account loading/error/guest/owner states, gallery
+failure/retry/empty states, and signup return routing. Desktop full-page and
+mobile section screenshots were visually reviewed. Browser evidence is saved
+to a printed temporary directory to avoid Vite reloads from Chromium files.
+
+During verification, corrected inherited smoke assumptions about the current
+claim form and hidden empty gallery; moved browser cache outside the watched
+workspace after a concurrent run caused a reload. Final browser checks pass.
+
 ## 2026-09-12 — Roll result action hierarchy
 
 Moved the dedicated result's image and reroll controls below the score summary

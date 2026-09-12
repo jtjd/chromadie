@@ -22,11 +22,10 @@
   style={`--player-accent:${accent}; --player-roll:${rollColor}; --player-rarity:${rarity.color}`}
   aria-label={`Open ${name}’s profile`}
 >
-  <div class="homepage-player__wash" aria-hidden="true"></div>
 
   <div class="homepage-player__identity">
     {#if avatar && failedAvatar !== avatar}
-      <img src={avatar} alt="" width="64" height="64" loading="lazy" decoding="async" on:error={() => failedAvatar = avatar} />
+      <img src={avatar} alt="" width="120" height="120" loading="lazy" decoding="async" on:error={() => failedAvatar = avatar} />
     {:else}
       <span class="homepage-player__initial" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
     {/if}
@@ -55,49 +54,39 @@
     position: relative;
     display: flex;
     min-width: 0;
-    min-height: 300px;
+    min-height: 0;
     flex-direction: column;
     overflow: hidden;
-    padding: 28px;
-    border-top: 1px solid color-mix(in srgb, var(--player-accent) 58%, var(--homepage-border));
-    background: linear-gradient(180deg, color-mix(in srgb, var(--player-accent) 5%, #111114), #111114 72%);
+    padding: 28px 12px;
+    background: transparent;
+    border-radius: 0;
+    border: 0;
+    border-bottom: 1px solid var(--homepage-border-strong);
+    text-align: center;
     color: var(--homepage-text);
     text-decoration: none;
     isolation: isolate;
     transition: transform .2s ease, border-color .2s ease;
   }
 
-  .homepage-player--featured { min-height: 338px; padding: 32px; }
+  .homepage-player--featured { padding: 28px 12px; }
 
-  .homepage-player__wash {
-    position: absolute;
-    z-index: -1;
-    width: 220px;
-    height: 220px;
-    top: -90px;
-    right: -60px;
-    border-radius: 50%;
-    background: var(--player-accent);
-    filter: blur(60px);
-    opacity: .12;
-    pointer-events: none;
-  }
 
   .homepage-player:hover { border-color: var(--player-accent); transform: translateY(-2px); }
   .homepage-player:focus-visible { outline: 2px solid var(--homepage-text); outline-offset: 5px; }
 
-  .homepage-player__identity { display: flex; align-items: center; gap: 15px; min-width: 0; }
+  .homepage-player__identity { display: flex; flex-direction: column; align-items: center; gap: 20px; min-width: 0; }
   .homepage-player__identity > div { min-width: 0; }
 
   img,
   .homepage-player__initial {
-    width: 64px;
-    height: 64px;
-    flex: 0 0 64px;
+    width: 120px;
+    height: 120px;
+    flex: 0 0 120px;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid color-mix(in srgb, var(--player-accent) 55%, rgba(255,255,255,.2));
-    box-shadow: 0 0 32px -16px var(--player-accent);
+    box-shadow: 0 0 0 8px #0e0e10, 0 0 0 9px var(--player-accent);
   }
 
   .homepage-player__initial {
@@ -105,7 +94,7 @@
     place-items: center;
     background: color-mix(in srgb, var(--player-accent) 18%, #1b1b20);
     color: #fff;
-    font: 600 1.35rem / 1 var(--homepage-display);
+    font: 600 2.6rem / 1 var(--homepage-display);
   }
 
   h3 {
@@ -124,7 +113,7 @@
   .homepage-player__bio {
     display: -webkit-box;
     max-width: 34ch;
-    margin: 24px 0 0;
+    margin: 18px auto 0;
     overflow: hidden;
     color: var(--homepage-secondary-muted);
     font-size: .93rem;
@@ -136,16 +125,17 @@
 
   .homepage-player__roll {
     display: grid;
-    grid-template-columns: 68px minmax(0, 1fr);
+    grid-template-columns: 28px minmax(0, 1fr);
+    text-align: left;
     align-items: center;
     gap: 16px;
     margin-top: auto;
-    padding-top: 32px;
+    padding-top: 24px;
   }
 
   .homepage-player__swatch {
-    width: 68px;
-    height: 68px;
+    width: 28px;
+    height: 28px;
     border-radius: 12px;
     background: var(--player-roll);
     box-shadow: 0 16px 38px -22px var(--player-roll);
@@ -175,8 +165,7 @@
 
   @media (max-width: 780px) {
     .homepage-player,
-    .homepage-player--featured { min-height: 260px; padding: 24px 0 22px; }
-    .homepage-player__wash { right: -90px; }
+    .homepage-player--featured { min-height: 0; padding: 28px 12px; }
   }
 
   @media (prefers-reduced-motion: reduce) {

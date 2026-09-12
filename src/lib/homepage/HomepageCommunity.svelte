@@ -197,14 +197,6 @@
     padding-block: 104px 112px;
   }
 
-  .homepage-community::before {
-    position: absolute;
-    inset: 14% -8% auto 46%;
-    height: 260px;
-    content: '';
-    background: radial-gradient(ellipse, rgba(255,255,255,.035), transparent 70%);
-    pointer-events: none;
-  }
 
   .homepage-community__copy {
     position: relative;
@@ -236,7 +228,7 @@
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 1.08fr .92fr .92fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18px;
     margin-top: 44px;
     align-items: stretch;

@@ -111,7 +111,7 @@ test('account actions are contextual before and after the guest roll', () => {
 test('the lower homepage uses canonical examples and direct copy with authentic discovery', () => {
   assert.match(loop, /getBadgeMeta/);
   assert.match(loop, /aria-label="Example high-rarity conditions found in rolls"/);
-  assert.match(loop, /aria-label="Example cosmetic reward unlocked from progression"/);
+  assert.match(loop, /aria-label="Example profile cosmetic"/);
   assert.match(scoring, /What makes a color score higher/);
   assert.match(scoring, /href="\/how-to-play"/);
   assert.match(community, /Players from today’s top rolls/);
@@ -139,8 +139,7 @@ test('the profile preview features Tjz, with account actions kept in the closing
   assert.doesNotMatch(preview, /LIVE PROFILE PREVIEW|Your colors\.|Your own page\./);
   assert.match(preview, /let scenes = \[\];\s*\$:\s*scenes = \[/);
   assert.match(preview, /chm\.lol\/tjz/);
-  assert.match(preview, /profile-example__browser-nav/);
-  assert.match(preview, /profile-example__browser-lock/);
+  assert.doesNotMatch(preview, /profile-example__browser-nav|profile-example__browser-lock|profile-example__browser-bar/);
   assert.doesNotMatch(preview, /profile-example__browser-status|● LIVE/);
   assert.match(preview, /import\('\.\/tjzCurrentProfileSnapshot\.json'\)/);
   assert.match(preview, /displayName: 'Mira'/);

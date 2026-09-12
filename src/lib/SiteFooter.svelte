@@ -15,9 +15,6 @@
           <p>A public profile that changes every day.</p>
         </div>
       </div>
-      <a class="site-footer__home-cta" href={isAuthenticated ? '/profile/settings' : '/signup?next=%2Fprofile%2Fsettings'}>
-        {isAuthenticated ? 'Customize your profile' : 'Create your profile'}
-      </a>
     </div>
 
     <div class="site-footer__home-grid">

@@ -204,24 +204,7 @@
 
   <figure aria-label="Profile customization preview">
     <div class="profile-example__stage" style={`--scene-color:${scene.colors[0]}`}>
-      <div class="profile-example__ambient" aria-hidden="true"></div>
       <div class="profile-example__browser">
-        <div class="profile-example__browser-bar" aria-hidden="true">
-          <span class="profile-example__browser-dots"><i></i><i></i><i></i></span>
-          <span class="profile-example__browser-nav">
-            <i class="profile-example__browser-nav-item profile-example__browser-nav-item--back"></i>
-            <i class="profile-example__browser-nav-item profile-example__browser-nav-item--forward"></i>
-            <i class="profile-example__browser-nav-item profile-example__browser-nav-item--reload"></i>
-          </span>
-          <span class="profile-example__browser-address">
-            <i class="profile-example__browser-lock"></i>
-            <span>{scene.address}</span>
-          </span>
-          <span class="profile-example__browser-actions">
-            <i class="profile-example__browser-action profile-example__browser-action--star">☆</i>
-            <i class="profile-example__browser-action profile-example__browser-action--menu">⋮</i>
-          </span>
-        </div>
         <div class="profile-example__canvas">
         {#if renderer}
           <div class="profile-example__motion-shell">
@@ -326,7 +309,7 @@
   }
 
   .profile-example__controls button.active { color: var(--homepage-text); }
-  .profile-example__controls button.active > span { width: 34px; opacity: 1; box-shadow: 0 0 16px color-mix(in srgb, var(--scene-color) 72%, transparent); }
+  .profile-example__controls button.active > span { width: 34px; opacity: 1; box-shadow: none; }
   .profile-example__controls button:hover > span,
   .profile-example__controls button:focus-visible > span { opacity: 1; }
   .profile-example__controls em { font-style: normal; }
@@ -344,17 +327,6 @@
     isolation: isolate;
   }
 
-  .profile-example__ambient {
-    position: absolute;
-    z-index: -1;
-    width: 82%;
-    height: 62%;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, color-mix(in srgb, var(--scene-color) 28%, transparent), transparent 70%);
-    filter: blur(38px);
-    opacity: .66;
-    animation: profile-example-ambient 8s ease-in-out infinite;
-  }
 
   .profile-example__browser {
     position: relative;
@@ -363,90 +335,9 @@
     border: 1px solid rgba(255,255,255,.15);
     border-radius: 18px;
     background: rgba(15,15,19,.86);
-    box-shadow: 0 28px 80px rgba(0,0,0,.42), 0 0 80px -40px var(--scene-color, #8DDCFF);
+    box-shadow: 0 20px 48px rgba(0,0,0,.32);
+    padding: 8px;
   }
-
-  .profile-example__browser-bar {
-    display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
-    min-height: 42px;
-    align-items: center;
-    gap: 14px;
-    padding: 0 15px;
-    border-bottom: 1px solid rgba(255,255,255,.1);
-    color: rgba(245,245,247,.52);
-    font: 500 .62rem / 1 'Inter', sans-serif;
-    letter-spacing: .04em;
-  }
-
-  .profile-example__browser-dots { display: inline-flex; gap: 5px; }
-  .profile-example__browser-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.22); }
-  .profile-example__browser-nav { display: inline-flex; gap: 2px; }
-  .profile-example__browser-nav-item,
-  .profile-example__browser-action {
-    position: relative;
-    display: grid;
-    width: 20px;
-    height: 20px;
-    place-items: center;
-    color: rgba(245,245,247,.54);
-    font-style: normal;
-  }
-  .profile-example__browser-nav-item::before,
-  .profile-example__browser-nav-item::after { content: ''; position: absolute; display: block; }
-  .profile-example__browser-nav-item--back::before,
-  .profile-example__browser-nav-item--forward::before {
-    top: 6px;
-    width: 7px;
-    height: 7px;
-    border-bottom: 1px solid currentColor;
-  }
-  .profile-example__browser-nav-item--back::before { left: 7px; border-left: 1px solid currentColor; transform: rotate(45deg); }
-  .profile-example__browser-nav-item--forward::before { left: 5px; border-right: 1px solid currentColor; transform: rotate(-45deg); }
-  .profile-example__browser-nav-item--back::after,
-  .profile-example__browser-nav-item--forward::after { top: 10px; width: 10px; height: 1px; background: currentColor; }
-  .profile-example__browser-nav-item--back::after { left: 7px; }
-  .profile-example__browser-nav-item--forward::after { left: 3px; }
-  .profile-example__browser-nav-item--reload::before { content: '↻'; font-size: .9rem; line-height: 1; }
-  .profile-example__browser-address {
-    display: flex;
-    width: min(100%, 34rem);
-    min-width: 0;
-    height: 25px;
-    align-items: center;
-    justify-self: center;
-    gap: 8px;
-    overflow: hidden;
-    padding: 0 10px;
-    border: 1px solid rgba(255,255,255,.09);
-    border-radius: 7px;
-    background: rgba(0,0,0,.18);
-    color: rgba(245,245,247,.58);
-    text-align: left;
-  }
-  .profile-example__browser-address > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-example__browser-lock {
-    position: relative;
-    flex: 0 0 auto;
-    width: 8px;
-    height: 7px;
-    border: 1px solid rgba(245,245,247,.5);
-    border-radius: 2px;
-  }
-  .profile-example__browser-lock::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: 1px;
-    width: 4px;
-    height: 5px;
-    border: 1px solid rgba(245,245,247,.5);
-    border-bottom: 0;
-    border-radius: 4px 4px 0 0;
-  }
-  .profile-example__browser-actions { display: inline-flex; align-items: center; gap: 3px; }
-  .profile-example__browser-action--star { font-size: 1rem; line-height: 1; }
-  .profile-example__browser-action--menu { width: 12px; font-size: 1.1rem; line-height: 1; }
 
   .profile-example__canvas {
     display: grid;
@@ -477,7 +368,7 @@
     place-items: center;
     overflow: hidden;
     isolation: isolate;
-    border-radius: 0 0 16px 16px;
+    border-radius: 12px;
     background: var(--profile-background-paint, var(--profile-background, #050506));
   }
 
@@ -516,10 +407,6 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  @keyframes profile-example-ambient {
-    0%, 100% { transform: translate3d(-3%, -2%, 0) scale(.96); opacity: .5; }
-    50% { transform: translate3d(4%, 3%, 0) scale(1.04); opacity: .78; }
-  }
 
   .profile-example__state {
     margin: 0;
@@ -537,7 +424,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .profile-example__ambient,
     .profile-example__frame { animation: none; }
     .profile-example__controls button > span { transition: none; }
   }
@@ -575,9 +461,6 @@
       min-height: 340px;
     }
 
-    .profile-example__browser-bar { grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 8px; padding-inline: 10px; }
-    .profile-example__browser-nav-item--forward,
-    .profile-example__browser-action--star { display: none; }
     .profile-example__swatches { right: 9px; bottom: 23px; }
   }
 </style>

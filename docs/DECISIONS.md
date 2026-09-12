@@ -1,5 +1,66 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-12 — Feather atmosphere without horizontal fade bands
+
+Replace the lower entrance's intermediate alpha stops with a broad elliptical
+feather, intersected with an independent footer fade. Simplify the hero tail
+to continuous fades without the intermediate intensity changes. Preserve the
+hero's upper artwork and existing section geometry.
+
+## 2026-09-12 — Crossfade the hero into the lower atmosphere
+
+Remove the opaque lower-canvas boundary and overlap its existing artwork with
+the hero tail by 240px (160px on mobile). Fade the hero pigment fully out and
+bring lower texture in through a broad graduated alpha mask. Preserve asset
+geometry, gameplay, first-section placement, and the accepted sparse lower
+composition. No hero regeneration is necessary for this compositing fix.
+
+## 2026-09-12 — Sparse continuous lower background
+
+Supersede the framed cloud/ribbon background with one bespoke tall composition
+of three disconnected cloud fragments and long charcoal gaps. Preserve the
+hero palette/painted medium without copying its edge framing or arcs. Render
+once with proportional sizing, no tiling, mirroring, or brightness adjustment.
+The user's accepted cloud allowance is sparse and asymmetric, not repeated
+hero framing. No content or behavior changes.
+
+## 2026-09-12 — Make lower-page atmosphere visibly present
+
+Following the user's screenshot showing an effectively black lower canvas,
+place the existing companion artwork at z-index 0 above the opaque canvas and
+the immediate content children at z-index 1. Replace the fragile negative layer
+and increase artwork brightness with full opacity; preserve the masked edges
+and dark text areas. Browser coverage must decode the asset and assert the
+foreground/background layer order, not just check for a CSS URL.
+
+## 2026-09-12 — Flatter condition art and subtle lower atmosphere
+
+The user's latest correction restores a subtle painted background below the
+hero, using a dedicated companion asset with a dark center and masked edges.
+Replace the shaded illustration strip with independent flatter emblems so
+each aligns with its own canonical label at every viewport. Consolidate the
+name cosmetic into a supporting row inside the collection display and remove
+the unrelated bunny/avatar example. Keep the cleaner profile preview frame.
+
+## 2026-09-12 — Illustrated collection supersedes background continuity
+
+The user rejected the first pass's repeated cloud backdrop and retained only
+the cleaner example frame. Rebuild the lower compositions around illustrated
+condition specimens, a styled example identity, a compact free/Plus comparison,
+and portrait-led public profiles. Remove fabricated 18/31 collection progress.
+Neon Particle is a free cosmetic in the approved catalog migration, not a
+milestone reward; identify it accurately. Decorations remain examples rather
+than player unlocks. Preserve the hero and actual public profile renderers.
+
+## 2026-09-12 — Continue the hero's painted setting through the homepage
+
+Use the existing desktop/mobile cloud artwork behind the lower homepage,
+with static masks and readable dark centers. Present profiles in a simple
+frame and conditions in compact charcoal displays with canonical rarity
+accents. Remove decorative flares and pricing gradients while retaining
+authored profile and reward effects. Keep section order, copy, account
+behavior, data boundaries, and the playable hero unchanged. No migrations.
+
 ## 2026-09-12 — Keep roll result tools below the score
 
 Keep the dedicated roll's share result, image preview, and reroll controls in

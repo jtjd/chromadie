@@ -1,5 +1,59 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-12 — Feathered atmosphere transition
+
+- Replaced horizontal multi-stop entrance bands with a broad curved feather.
+- Simplified the hero tail fade; retained the bright upper hero artwork.
+
+## 2026-09-12 — Hero-to-homepage transition
+
+- Removed the opaque boundary and overlapped the existing atmosphere layers.
+- Softened the hero's final fade and the lower background's entrance.
+- Added transition screenshots at desktop/mobile widths and a transparent
+  canvas regression check. No artwork or gameplay changes.
+
+## 2026-09-12 — Continuous restrained lower atmosphere
+
+- Integrated a bespoke tall background with sparse asymmetric cloud fragments.
+- Removed framed ribbons and artificial brightness; preserved aspect ratio
+  and explicitly disabled background repetition.
+- Retained the hero, profile examples, and collection compositions.
+
+## 2026-09-12 — Lower homepage background visibility
+
+- Explicitly layered the companion background above the opaque page canvas
+  and beneath the homepage sections.
+- Increased background pigment visibility while retaining the edge masks.
+- Added browser checks for asset decoding, opacity, and actual layer order.
+- Used lossless background delivery to prevent dark compression blocks.
+
+## 2026-09-12 — Homepage flat artwork and blended atmosphere
+
+- Replaced the detailed specimen strip with three simpler individual emblems.
+- Aligned each illustration directly with its condition name and rarity.
+- Integrated the name-motion example into the shared collection display.
+- Added a new subtle cloud/ribbon background behind lower sections, masked
+  into the hero and footer; retained the hero artwork and clean profile frame.
+
+## 2026-09-12 — Illustrated homepage collection redesign
+
+- Replaced lower cloud repetition with a dedicated painted collection illustration.
+- Rebuilt condition cards/progress into a shared specimen tray beside a styled
+  example identity, accurately labeling Neon Particle as a free cosmetic.
+- Rebuilt tall pricing cards as a compact comparison and community cards as
+  large portrait-led identity displays with smaller roll details.
+- Composed signup as a profile-name plate; removed the duplicate footer CTA
+  and reduced footer spacing. Retained the cleaner profile preview frame.
+
+## 2026-09-12 — Homepage visual continuity
+
+- Extended the hero's painted clouds into the lower homepage using existing assets.
+- Replaced the simulated browser toolbar with a simple profile frame.
+- Replaced glowing collectible titles and pricing washes with charcoal surfaces
+  and crisp color accents; preserved real cosmetic previews.
+- Unified section spacing, mobile gutters, claim controls, and footer treatments.
+- Added responsive browser coverage for pricing, scene controls, and footer.
+
 ## 2026-09-12 — Roll result action hierarchy
 
 - Moved View/share image and Reroll below the score breakdown beside Share

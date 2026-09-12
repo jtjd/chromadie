@@ -1,0 +1,77 @@
+/* The hero's painted setting continues behind the supporting content.
+   Keep these rules under the content boundary so roll states stay unchanged. */
+#chromadie-homepage .homepage-content {
+  isolation: isolate;
+  background: transparent;
+  --homepage-atmosphere-overlap: 240px;
+  --homepage-radius: 14px;
+}
+
+#chromadie-homepage .homepage-content::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--homepage-atmosphere-overlap)) 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url('/homepage/homepage-lower-continuous-v4.webp') center top / 100% auto no-repeat;
+  opacity: 1;
+  mask-image:
+    radial-gradient(ellipse 100% 560px at 50% -120px, transparent, #000),
+    linear-gradient(to top, transparent, #000 180px);
+  mask-composite: intersect;
+}
+
+/* Put the artwork above the opaque canvas, then the actual sections above it.
+   Do not rely on negative stacking beneath the canvas background. */
+#chromadie-homepage .homepage-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+#chromadie-homepage .homepage-content .homepage-section {
+  width: min(1240px, calc(100% - 64px));
+  padding-block: 64px;
+}
+
+#chromadie-homepage .homepage-content .homepage-section-heading {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1.08;
+}
+
+#chromadie-homepage .profile-example {
+  grid-template-columns: minmax(0, .75fr) minmax(0, 1.35fr);
+  gap: 48px;
+}
+
+#chromadie-homepage .profile-example__controls button { min-height: 44px; }
+#chromadie-homepage .homepage-start__field { background: #171719; }
+#chromadie-homepage .homepage-start__field input { color: var(--homepage-text); caret-color: var(--homepage-text); }
+#chromadie-homepage .homepage-start__field span { color: var(--homepage-muted); }
+#chromadie-homepage .homepage-start .homepage-button { background: #e4e8ad; }
+#chromadie-homepage .homepage-start .homepage-button:hover { background: #f0f2ce; }
+#chromadie-homepage .site-footer--home { width: min(1240px, calc(100% - 64px)); border-top-color: var(--homepage-border-strong); }
+#chromadie-homepage .site-footer__home-brand { background: #171719; border-radius: 14px; }
+#chromadie-homepage .site-footer__home-cta { border-radius: 9px; background: #e4e8ad; }
+
+@media (max-width: 980px) {
+  #chromadie-homepage .profile-example { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+}
+
+@media (max-width: 780px) {
+  #chromadie-homepage .homepage-content { --homepage-atmosphere-overlap: 160px; }
+  #chromadie-homepage .homepage-content::before {
+    background-size: auto 100%;
+    background-position: left top;
+  }
+  #chromadie-homepage .homepage-content .homepage-section { width: calc(100% - 32px); padding-block: 44px; }
+  #chromadie-homepage .site-footer--home { width: calc(100% - 32px); }
+
+  }
+#chromadie-homepage .homepage-start__content { width: min(100%, 800px); padding: 32px; border-block: 1px solid var(--homepage-border-strong); }
+#chromadie-homepage .site-footer--home { padding-top: 32px; }
+#chromadie-homepage .site-footer__home-heading { padding-bottom: 20px; }
+#chromadie-homepage .site-footer__home-grid { padding-block: 24px; }
+#chromadie-homepage .site-footer__home-identity strong { font-size: 1.2rem; }
+#chromadie-homepage .site-footer__home-brand { width: 48px; height: 48px; border: 0; background: transparent; }
+#chromadie-homepage .site-footer__home-brand img { width: 40px; }
+@media (max-width: 780px) { #chromadie-homepage .homepage-start__content { padding: 24px 0; } }
