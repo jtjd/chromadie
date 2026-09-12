@@ -10,9 +10,12 @@
   let sceneTimer;
   let sceneVisible = false;
   let reduceMotion = false;
+  let environmentRenderer = null;
+  let tjzSimplisticColors = ['#99C1F1', '#1A9CEB', '#000000'];
+  let tjzSimplisticSnapshot = null;
 
-  // The first scene captures Tjz’s published profile; the other scenes are
-  // marketing fixtures. All use existing renderers without profile hydration.
+  // The first scene keeps its existing Tjz profile. Simplistic uses a
+  // separate current-profile snapshot as the source for its template.
   const links = [
     { type: 'github', label: 'GitHub' },
     { type: 'youtube', label: 'YouTube' },
@@ -21,7 +24,35 @@
     { type: 'instagram', label: 'Instagram' }
   ];
 
-  const scenes = [
+  // The snapshot is filled in when the preview renderers load, keeping the
+  // profile source out of the initial homepage route payload.
+  let tjzSimplisticProps = Object.freeze({
+    displayName: 'Mira',
+    bio: 'collecting soft colors and quiet moments.',
+    linksInteractive: false,
+    layoutVariant: 'full-bleed',
+    headingTag: 'h2',
+    joinedLabel: '',
+    showJoinDate: false
+  });
+
+  function createTjzSimplisticProps(snapshot) {
+    const currentProps = { ...snapshot.props };
+    delete currentProps.profileMotionKey;
+    return Object.freeze({
+      ...currentProps,
+      displayName: 'Mira',
+      bio: 'collecting soft colors and quiet moments.',
+      linksInteractive: false,
+      layoutVariant: 'full-bleed',
+      headingTag: 'h2',
+      joinedLabel: '',
+      showJoinDate: false
+    });
+  }
+
+  let scenes = [];
+  $: scenes = [
     {
       id: 'tjz',
       label: 'Tjz profile',
@@ -29,6 +60,7 @@
       description: 'A daily roll becomes the first detail people remember.',
       address: 'chm.lol/tjz',
       colors: ['#99C1F1', '#FFFFFF', '#000000'],
+      motionKey: '',
       props: {}
     },
     {
@@ -38,6 +70,7 @@
       description: 'Change the atmosphere, type, and rhythm without rebuilding your page.',
       address: 'chm.lol/katt',
       colors: ['#8DDCFF', '#D7F5FF', '#0E1921'],
+      motionKey: 'profile_motion_perspective_tilt',
       props: {
         displayName: 'katt',
         bio: 'collecting quiet colors and good weather.',
@@ -62,29 +95,14 @@
     {
       id: 'full-bleed',
       label: 'Simplistic layout',
-      title: 'Let the page move with you.',
-      description: 'Your history, links, and latest color live on one shareable canvas.',
-      address: 'chm.lol/meilin',
-      colors: ['#FF9A66', '#FF4CD8', '#20131A'],
-      props: {
-        displayName: 'meilin',
-        bio: 'notes from a soft, noisy internet.',
-        location: 'Seoul, KR',
-        avatarSrc: '/homepage/fixtures/meilin/avatar.webp',
-        layoutVariant: 'full-bleed',
-        headingTag: 'h2',
-        avatarEffectKey: 'avatar_effect_liquid_blob',
-        roll: { hex_code: '#FF9A66', identity: 'Luminous Rich Amber', rarity: 'Rare' },
-        rollLabel: 'Daily color',
-        nameLoadout: { fontKey: 'name_font_velocity', motionKey: 'name_motion_neon_particle', materialKey: '' },
-        nameTodayColor: '#FF9A66',
-        profileBorderKey: 'border_prism',
-        accentColor: '#FF4CD8',
-        links,
-        linksInteractive: false,
-        linkStyle: { size: 2, glow: 2 },
-        surfaceStyle: '--profile-surface-fill: radial-gradient(circle at 50% 20%, rgba(255,154,102,.22), rgba(32,19,26,.92) 58%); --profile-text: #FFFFFF; --profile-border-radius: 26px; --profile-border-color: #FF4CD8; --profile-border-opacity: .62; --profile-username: #FFFFFF; --profile-secondary-text: #FFE8DB; --profile-description: rgba(255,244,239,.9);'
-      }
+      title: 'Let the page feel like you.',
+      description: 'Bring your name, links, and color story to one shareable canvas.',
+      address: 'chm.lol/mira',
+      colors: tjzSimplisticColors,
+      // Keep the browser stage stable. The source profile’s cosmetics still
+      // drive the template, but its card should sit inside this demo canvas.
+      motionKey: '',
+      props: tjzSimplisticProps
     }
   ];
 
@@ -120,11 +138,20 @@
   async function load() {
     failed = false;
     try {
-      const [fullBleed, tjz] = await Promise.all([
+      const [fullBleed, tjz, snapshotModule, environment] = await Promise.all([
         import('../profile-layout/ProfileFullBleedLayout.svelte'),
-        import('./HomepageTjzProfile.svelte')
+        import('./HomepageTjzProfile.svelte'),
+        import('./tjzCurrentProfileSnapshot.json'),
+        import('../ProfileEnvironmentLayer.svelte')
       ]);
-      if (!disposed) renderers = { fullBleed: fullBleed.default, tjz: tjz.default };
+      if (!disposed) {
+        const snapshot = snapshotModule.default;
+        tjzSimplisticSnapshot = snapshot;
+        tjzSimplisticProps = createTjzSimplisticProps(snapshot);
+        tjzSimplisticColors = [snapshot.colors.signature, snapshot.colors.nameToday, snapshot.environment.backgroundColor];
+        environmentRenderer = environment.default;
+        renderers = { fullBleed: fullBleed.default, tjz: tjz.default };
+      }
     } catch {
       if (!disposed) failed = true;
     }
@@ -182,16 +209,36 @@
       <div class="profile-example__browser">
         <div class="profile-example__browser-bar" aria-hidden="true">
           <span class="profile-example__browser-dots"><i></i><i></i><i></i></span>
-          <span class="profile-example__browser-address">{scene.address}</span>
-          <span class="profile-example__browser-status">● LIVE</span>
+          <span class="profile-example__browser-nav">
+            <i class="profile-example__browser-nav-item profile-example__browser-nav-item--back"></i>
+            <i class="profile-example__browser-nav-item profile-example__browser-nav-item--forward"></i>
+            <i class="profile-example__browser-nav-item profile-example__browser-nav-item--reload"></i>
+          </span>
+          <span class="profile-example__browser-address">
+            <i class="profile-example__browser-lock"></i>
+            <span>{scene.address}</span>
+          </span>
+          <span class="profile-example__browser-actions">
+            <i class="profile-example__browser-action profile-example__browser-action--star">☆</i>
+            <i class="profile-example__browser-action profile-example__browser-action--menu">⋮</i>
+          </span>
         </div>
         <div class="profile-example__canvas">
         {#if renderer}
           <div class="profile-example__motion-shell">
-            <ProfileMotionEffect motionKey={scene.id === 'tjz' ? '' : 'profile_motion_perspective_tilt'} inputSurface="viewport">
+            <ProfileMotionEffect motionKey={scene.motionKey} inputSurface="viewport">
               {#key scene.id}
                 <div class="profile-example__frame" style={`--scene-accent:${scene.colors[0]}`}>
-                  <svelte:component this={renderer} {...scene.props} reducedMotion={reduceMotion} />
+                  {#if scene.id === 'full-bleed' && environmentRenderer && tjzSimplisticSnapshot}
+                    <div class="profile-example__simplistic-shell" style={tjzSimplisticSnapshot.styles.page}>
+                      <svelte:component this={environmentRenderer} snapshot={tjzSimplisticSnapshot} mode="preview" reducedMotion={reduceMotion} />
+                      <div class="profile-example__simplistic-content">
+                        <svelte:component this={renderer} {...scene.props} reducedMotion={reduceMotion} />
+                      </div>
+                    </div>
+                  {:else}
+                    <svelte:component this={renderer} {...scene.props} reducedMotion={reduceMotion} />
+                  {/if}
                 </div>
               {/key}
             </ProfileMotionEffect>
@@ -329,7 +376,7 @@
 
   .profile-example__browser-bar {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
     min-height: 42px;
     align-items: center;
     gap: 14px;
@@ -342,8 +389,72 @@
 
   .profile-example__browser-dots { display: inline-flex; gap: 5px; }
   .profile-example__browser-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.22); }
-  .profile-example__browser-address { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-example__browser-status { color: var(--scene-color, #8DDCFF); font-size: .56rem; white-space: nowrap; }
+  .profile-example__browser-nav { display: inline-flex; gap: 2px; }
+  .profile-example__browser-nav-item,
+  .profile-example__browser-action {
+    position: relative;
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    color: rgba(245,245,247,.54);
+    font-style: normal;
+  }
+  .profile-example__browser-nav-item::before,
+  .profile-example__browser-nav-item::after { content: ''; position: absolute; display: block; }
+  .profile-example__browser-nav-item--back::before,
+  .profile-example__browser-nav-item--forward::before {
+    top: 6px;
+    width: 7px;
+    height: 7px;
+    border-bottom: 1px solid currentColor;
+  }
+  .profile-example__browser-nav-item--back::before { left: 7px; border-left: 1px solid currentColor; transform: rotate(45deg); }
+  .profile-example__browser-nav-item--forward::before { left: 5px; border-right: 1px solid currentColor; transform: rotate(-45deg); }
+  .profile-example__browser-nav-item--back::after,
+  .profile-example__browser-nav-item--forward::after { top: 10px; width: 10px; height: 1px; background: currentColor; }
+  .profile-example__browser-nav-item--back::after { left: 7px; }
+  .profile-example__browser-nav-item--forward::after { left: 3px; }
+  .profile-example__browser-nav-item--reload::before { content: '↻'; font-size: .9rem; line-height: 1; }
+  .profile-example__browser-address {
+    display: flex;
+    width: min(100%, 34rem);
+    min-width: 0;
+    height: 25px;
+    align-items: center;
+    justify-self: center;
+    gap: 8px;
+    overflow: hidden;
+    padding: 0 10px;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 7px;
+    background: rgba(0,0,0,.18);
+    color: rgba(245,245,247,.58);
+    text-align: left;
+  }
+  .profile-example__browser-address > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-example__browser-lock {
+    position: relative;
+    flex: 0 0 auto;
+    width: 8px;
+    height: 7px;
+    border: 1px solid rgba(245,245,247,.5);
+    border-radius: 2px;
+  }
+  .profile-example__browser-lock::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 1px;
+    width: 4px;
+    height: 5px;
+    border: 1px solid rgba(245,245,247,.5);
+    border-bottom: 0;
+    border-radius: 4px 4px 0 0;
+  }
+  .profile-example__browser-actions { display: inline-flex; align-items: center; gap: 3px; }
+  .profile-example__browser-action--star { font-size: 1rem; line-height: 1; }
+  .profile-example__browser-action--menu { width: 12px; font-size: 1.1rem; line-height: 1; }
 
   .profile-example__canvas {
     display: grid;
@@ -351,7 +462,7 @@
     min-width: 0;
     min-height: 430px;
     place-items: center;
-    padding: 4px 0;
+    padding: 0;
     overflow: visible;
     isolation: isolate;
   }
@@ -364,6 +475,27 @@
   .profile-example__frame {
     animation: profile-example-frame-in .7s cubic-bezier(.22, 1, .36, 1) both;
     transform-origin: 50% 70%;
+  }
+
+  .profile-example__simplistic-shell {
+    position: relative;
+    display: grid;
+    width: 100%;
+    min-height: 430px;
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: 0 0 16px 16px;
+    background: var(--profile-background-paint, var(--profile-background, #050506));
+  }
+
+  .profile-example__simplistic-content {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 52rem);
+    min-width: 0;
+    transform: scale(.82);
+    transform-origin: center;
   }
 
   .profile-example__swatches {
@@ -451,8 +583,9 @@
       min-height: 340px;
     }
 
-    .profile-example__browser-bar { grid-template-columns: auto minmax(0, 1fr); }
-    .profile-example__browser-status { display: none; }
+    .profile-example__browser-bar { grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 8px; padding-inline: 10px; }
+    .profile-example__browser-nav-item--forward,
+    .profile-example__browser-action--star { display: none; }
     .profile-example__swatches { right: 9px; bottom: 23px; }
   }
 </style>

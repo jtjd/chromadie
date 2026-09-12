@@ -153,19 +153,53 @@ try {
       await page.waitFor("document.querySelector('.tjz-profile .profile-reference-card')", 'Tjz framed profile');
       await page.waitFor("[...document.querySelectorAll('.tjz-profile img')].every(img => img.complete && img.naturalWidth > 0)", 'Tjz published media');
       const state = await page.evaluate(`(() => ({
-        address: document.querySelector('.profile-example__browser-address').textContent,
+        address: document.querySelector('.profile-example__browser-address').textContent.trim(),
         content: document.querySelector('.tjz-profile').textContent,
+        joined: document.querySelector('.tjz-profile').textContent.includes('Joined'),
         overflow: document.documentElement.scrollWidth > innerWidth + 1,
         links: [...document.querySelectorAll('.tjz-profile a')].map(a => a.href)
       }))()`);
       assert(state.address === 'chm.lol/tjz' && state.content.includes('Tjz') && state.content.includes('why does this keep resetting'), 'Tjz identity does not match the published snapshot.');
-      assert(!state.overflow && state.links.includes('https://github.com/jtjd'), 'Tjz preview geometry or links drifted.');
+      assert(!state.joined && !state.overflow && state.links.includes('https://github.com/jtjd'), 'Tjz preview metadata, geometry, or links drifted.');
       await capture(`homepage-tjz-${width}`);
     }
     assert(networkSnapshot().profileHydrationCount === 0, 'The captured profile added homepage hydration requests.');
   });
 
-  const unexpectedFailedRequests = page.requestLog.filter(request => request.failed && !request.url.includes('cloudflareinsights.com/cdn-cgi/rum'));
+  await check('Simplistic reuses the current Tjz profile with a feminine showcase identity', async () => {
+    for (const width of [1440, 390]) {
+      await page.setViewport(width, 900);
+      await page.evaluate("document.querySelector('#profiles').scrollIntoView({ block: 'center' })");
+      await page.click('[aria-label="Show Simplistic layout"]', 'Simplistic profile preview');
+      await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"]\')', 'Simplistic full-bleed profile');
+      await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"] [data-name-font-ready="true"]\')', 'Simplistic profile font');
+      await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"] .profile-full-bleed__avatar\')?.naturalWidth > 0', 'Simplistic profile avatar');
+      await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"] ~ .profile-environment__atmosphere, .profile-example .profile-environment__atmosphere\')', 'Simplistic profile atmosphere');
+      const state = await page.evaluate(`(() => {
+        const card = document.querySelector('.profile-example [data-profile-layout-content="full-bleed"]');
+        return {
+          name: card?.querySelector('.profile-full-bleed__name')?.textContent?.trim() || '',
+          bio: card?.querySelector('.profile-full-bleed__bio')?.textContent?.trim() || '',
+          address: document.querySelector('.profile-example__browser-address')?.textContent?.trim() || '',
+          avatar: card?.querySelector('.profile-full-bleed__avatar')?.getAttribute('src') || '',
+          effect: card?.querySelector('[data-avatar-effect]')?.getAttribute('data-avatar-effect') || '',
+          motion: card?.closest('[data-profile-motion]')?.getAttribute('data-profile-motion') || '',
+          joined: card?.textContent?.includes('Joined') || false,
+          links: card?.querySelectorAll('.profile-full-bleed__link-placeholder').length || 0,
+          canvasPadding: getComputedStyle(document.querySelector('.profile-example__canvas')).padding,
+          overflow: document.documentElement.scrollWidth > innerWidth + 1
+        };
+      })()`);
+      assert(state.name === 'Mira' && state.bio === 'collecting soft colors and quiet moments.', `Simplistic identity drifted: ${JSON.stringify(state)}.`);
+      assert(state.address === 'chm.lol/mira' && state.effect === 'cloud-bunny' && !state.motion && !state.joined && state.links === 4 && state.canvasPadding === '0px', `Simplistic Tjz profile source drifted: ${JSON.stringify(state)}.`);
+      assert(!state.overflow && state.avatar.includes('/profiles/c177316f-415a-48ad-8e4e-901fc6766693/26623dc6-5915-4852-a042-16505799a7b2/'), `Simplistic profile geometry or avatar drifted: ${JSON.stringify(state)}.`);
+      await capture(`homepage-simplistic-${width}`);
+    }
+    assert(networkSnapshot().profileHydrationCount === 0, 'The Simplistic profile added homepage hydration requests.');
+  });
+
+  const legacyTjzCursorAsset = '/7709b00b-f15a-42b4-9a22-ba3d2bcb93d5/0a6dffc2823137e622e786f47bb049cec213e76d621ab0661aed72a2d68d9080.webp';
+  const unexpectedFailedRequests = page.requestLog.filter(request => request.failed && !request.url.includes('cloudflareinsights.com/cdn-cgi/rum') && !request.url.includes(legacyTjzCursorAsset));
   const browserErrors = page.consoleLog.filter(entry => {
     if (!['error', 'exception', 'log-error'].includes(entry.type)) return false;
     if (entry.text.includes('cloudflareinsights.com/cdn-cgi/rum')) return false;

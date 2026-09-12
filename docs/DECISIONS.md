@@ -1,5 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-12 — Reuse the current profile snapshot in the Simplistic showcase
+
+Keep a separate snapshot of Tjz’s current published profile as the source for
+the Simplistic homepage template, and override only the showcase identity and
+full-bleed address. The existing Tjz preview keeps its original fixture. This
+keeps the new template grounded in a current profile while reusing the
+production renderer without public-profile hydration or duplicated effect
+configuration. Keep the Simplistic environment fixed inside the browser stage
+so the background and identity read as one demo surface. Hide join-date
+metadata in both homepage examples to keep the demos focused on the profile
+identity.
+
+Use browser navigation controls, a lock-marked address field, and restrained
+toolbar actions for the homepage profile preview so its frame reads as a
+browser window rather than a live-status panel. Keep the profile canvas flush
+with the browser content area so each background reaches the frame edges.
+
 ## 2026-09-12 — Tune Simplistic decoration flow by artwork silhouette
 
 Keep the circular portrait aperture and assign the Simplistic layout's lower

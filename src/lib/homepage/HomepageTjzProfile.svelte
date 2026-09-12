@@ -5,13 +5,18 @@
   import snapshot from './tjzProfileSnapshot.json';
 
   export let reducedMotion = false;
+
+  const demoProps = Object.freeze({
+    ...snapshot.props,
+    meta: String(snapshot.props.meta || '').replace(/\s*·\s*Joined\b.*$/i, '')
+  });
 </script>
 
 <div class="tjz-profile" style={snapshot.styles.page}>
   <ProfileEnvironmentLayer {snapshot} mode="preview" {reducedMotion} />
   <div class="tjz-profile__card">
     <ProfileMotionEffect motionKey="profile_motion_perspective_tilt" inputSurface="container">
-      <ProfileReferenceCard {...snapshot.props} entryAnimation={reducedMotion ? 'none' : snapshot.props.entryAnimation} />
+      <ProfileReferenceCard {...demoProps} entryAnimation={reducedMotion ? 'none' : demoProps.entryAnimation} />
     </ProfileMotionEffect>
   </div>
 </div>

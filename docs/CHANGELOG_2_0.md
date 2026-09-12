@@ -1,5 +1,16 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-12 — Homepage Simplistic profile refresh
+
+Only the Simplistic homepage preview now uses Tjz’s current published avatar,
+Cloud Bunny, Baloo 2, Rain Window, links, and palette, presented with the
+feminine name Mira and a short bio. Its environment fills the demo browser
+canvas without outer parallax. The existing first Tjz preview keeps its
+original fixture, with join-date metadata hidden in both homepage demos.
+The preview chrome now uses browser-like navigation, address, and toolbar
+controls instead of a “LIVE” label, and the profile canvas fills the browser
+content area without top or bottom inset gaps.
+
 ## 2026-09-12 — Simplistic avatar spacing refinement
 
 Reduced the gap between authored avatar decorations and profile names in the

@@ -1,0 +1,122 @@
+{
+  "capturedAt": "2026-09-12",
+  "source": "https://chm.lol/tjz",
+  "currentPublishedAt": "2026-09-12T18:47:26.262995+00:00",
+  "environment": {
+    "backgroundColor": "#000000",
+    "backgroundImagePath": null,
+    "backgroundImageUrl": "https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/c58bda95-13f8-4f53-96b6-9e60bea1f68c/36b9fc46c898fbe4b9facf7e91dbfa1929295cb093a42cd7162244f72001395b.webp",
+    "backgroundVideoPath": null,
+    "backgroundVideoUrl": "",
+    "backgroundImageOpacity": 100,
+    "backgroundBlur": 3,
+    "atmosphereKey": "profile_atmosphere_rain_window",
+    "cursorTrailKey": "",
+    "cursorUrl": "",
+    "pointerCursorUrl": "",
+    "pageStyle": "--profile-background-paint:#000000;--profile-background-image-opacity:1;--profile-background-blur:3px;--profile-background-overlay:rgba(98, 160, 234, 1);--profile-background-overlay-opacity:0.3;--profile-font-family:\"Baloo 2\", ui-sans-serif, system-ui, sans-serif"
+  },
+  "styles": {
+    "page": "--profile-background-paint:#000000;--profile-background-image-opacity:1;--profile-background-blur:3px;--profile-background-overlay:rgba(98, 160, 234, 1);--profile-background-overlay-opacity:0.3;--profile-font-family:\"Baloo 2\", ui-sans-serif, system-ui, sans-serif",
+    "surface": "--profile-accent:#99C1F1;--profile-surface-accent:#99C1F1;--profile-control-accent:#99C1F1;--profile-text:#F39CE2;--profile-secondary-text:#FFFFFF;--profile-username:#FFFFFF;--profile-description:#E5E5E5;--profile-background:#000000;--profile-background-paint:#000000;--profile-background-image-opacity:1;--profile-background-blur:3px;--profile-background-overlay:rgba(98, 160, 234, 1);--profile-background-overlay-opacity:0.3;--profile-surface:#000000;--profile-surface-fill:rgba(0, 0, 0, 0);--profile-highlight:#FFFFFF;--profile-surface-opacity:0;--profile-surface-blur:0px;--profile-border-color:#E01B24;--profile-border-width:4px;--profile-border-radius:22px;--profile-border-opacity:0.11;--color-ink-strong:#FFFFFF;--color-ink:#F39CE2;--color-ink-muted:#FFFFFF;--color-ink-faint:#E5E5E5;--color-accent:#99C1F1;--color-accent-bright:#FFFFFF;--surface-panel:#000000;--surface-inset:#000000;--color-canvas-deep:#000000"
+  },
+  "colors": {
+    "signature": "#99C1F1",
+    "nameBase": "#FFFFFF",
+    "nameToday": "#F99FCB",
+    "nameRecent": [
+      "#F99FCB",
+      "#1A9CEB",
+      "#5EBAE3",
+      "#C5A9BF",
+      "#84C1EA",
+      "#A1ABE3"
+    ],
+    "colorEffectsEnabled": false
+  },
+  "cosmetics": {
+    "nameFont": "name_font_baloo_2",
+    "avatarEffect": "avatar_effect_cloud_bunny",
+    "profileMotion": "profile_motion_perspective_tilt",
+    "profileAtmosphere": "profile_atmosphere_rain_window"
+  },
+  "props": {
+    "displayName": "Tjz",
+    "bio": "insert filler bio",
+    "meta": "Argentina · Joined Jul 2026",
+    "avatarSrc": "https://media.chm.lol/profiles/c177316f-415a-48ad-8e4e-901fc6766693/26623dc6-5915-4852-a042-16505799a7b2/7c5c91f015a9721c996c166a074cb94dc9e3bb28a7d6ad813cc37aa1606c9e1a.webp",
+    "avatarEffectKey": "avatar_effect_cloud_bunny",
+    "nameLoadout": {
+      "fontKey": "name_font_baloo_2",
+      "materialKey": "",
+      "motionKey": ""
+    },
+    "nameTodayColor": "#F99FCB",
+    "nameBaseColor": "#FFFFFF",
+    "profileBorderKey": "",
+    "surfaceStyle": "--profile-accent:#99C1F1;--profile-surface-accent:#99C1F1;--profile-control-accent:#99C1F1;--profile-text:#F39CE2;--profile-secondary-text:#FFFFFF;--profile-username:#FFFFFF;--profile-description:#E5E5E5;--profile-background:#000000;--profile-background-paint:#000000;--profile-background-image-opacity:1;--profile-background-blur:3px;--profile-background-overlay:rgba(98, 160, 234, 1);--profile-background-overlay-opacity:0.3;--profile-surface:#000000;--profile-surface-fill:rgba(0, 0, 0, 0);--profile-highlight:#FFFFFF;--profile-surface-opacity:0;--profile-surface-blur:0px;--profile-border-color:#E01B24;--profile-border-width:4px;--profile-border-radius:22px;--profile-border-opacity:0.11;--color-ink-strong:#FFFFFF;--color-ink:#F39CE2;--color-ink-muted:#FFFFFF;--color-ink-faint:#E5E5E5;--color-accent:#99C1F1;--color-accent-bright:#FFFFFF;--surface-panel:#000000;--surface-inset:#000000;--color-canvas-deep:#000000",
+    "showAvatar": true,
+    "descriptionMode": "plain",
+    "entryAnimation": "focus",
+    "profileMotionKey": "profile_motion_perspective_tilt",
+    "joinedLabel": "Jul 2026",
+    "links": [
+      {
+        "key": "lae086ea57a",
+        "type": "tiktok",
+        "label": "TikTok",
+        "url": "https://tiktok.com/gripgod",
+        "visible": true,
+        "order": 0
+      },
+      {
+        "key": "le66f24d83b",
+        "type": "instagram",
+        "label": "Insta",
+        "url": "https://instagram.com/gripgod",
+        "visible": true,
+        "order": 1
+      },
+      {
+        "key": "l04646be4af",
+        "type": "youtube",
+        "label": "Youtube",
+        "url": "https://youtube.com/@gripg",
+        "visible": true,
+        "order": 2
+      },
+      {
+        "key": "l43e9c82877",
+        "type": "twitch",
+        "label": "Twitch",
+        "url": "https://twitch.tv/vallu",
+        "visible": true,
+        "order": 3
+      }
+    ],
+    "linkStyle": {
+      "alignment": "left",
+      "monochrome": false,
+      "size": 0,
+      "glow": 2
+    },
+    "roll": null,
+    "accentColor": "#99C1F1",
+    "presentation": "profile",
+    "layoutVariant": "framed",
+    "headingTag": "h2",
+    "timezone": "Argentina",
+    "showJoinDate": true,
+    "location": "",
+    "nameRecentColors": [
+      "#F99FCB",
+      "#1A9CEB",
+      "#5EBAE3",
+      "#C5A9BF",
+      "#84C1EA",
+      "#A1ABE3"
+    ],
+    "linksInteractive": true,
+    "ariaLabel": "Tjz profile preview"
+  }
+}

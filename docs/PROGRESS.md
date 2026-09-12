@@ -1,5 +1,20 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-12 — Homepage Simplistic profile refresh
+
+Refreshed only the Simplistic homepage fixture from Tjz’s current published
+profile state, including the Cloud Bunny avatar, Baloo 2 name font, Rain
+Window atmosphere, current avatar asset, links, and palette. The
+showcase presents that source as Mira with the short bio “collecting soft
+colors and quiet moments.” through the existing full-bleed renderer, with no
+profile hydration requests. The browser stage stays fixed so the environment
+and identity read as one part of the demo browser. The existing first Tjz
+preview remains on its original fixture, with join-date metadata hidden in
+both homepage demos. The preview wrapper now uses browser navigation controls,
+a lock-marked address field, and toolbar actions instead of a “LIVE” label; the
+profile canvas runs flush to the browser content area so backgrounds do not
+leave inset gaps at the top or bottom.
+
 ## 2026-09-12 — Simplistic avatar spacing refinement
 
 Tuned the authored decoration reserve for the Simplistic layout per artwork
