@@ -21,6 +21,7 @@
   import { supabase } from './supabase';
   import { trackProductEvent } from './productAnalytics.js';
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer, getNamePreviewLoadoutForSlot } from './name/nameLoadout.js';
+  import { isCuratedNameMotion } from './name/nameMotions.js';
   import { isCustomNameFontKey } from './name/nameFonts.js';
   import { createFittingRoom, getShopAccessLabel, hasShopEntitlement, SHOP_SLOT_LABELS, isShopCosmetic } from './shopCatalog.js';
   import { isCuratedCursorTrail } from './cursor-trail/cursorTrails.js';
@@ -89,6 +90,8 @@
   // which rows can be previewed and applied.
   $: availableCosmetics = Object.values($cosmeticCatalogItems)
     .filter(item => isShopCosmetic(item) && item.catalog_status === 'active')
+    .filter(item => item.slot !== 'name_motion' || isCuratedNameMotion(item.css_value)
+      || item.item_key === previewLoadout.name_motion || item.item_key === $equippedItems['name_motion'])
     .sort((left, right) => (SHOP_SLOT_LABELS[left.slot] || left.slot).localeCompare(SHOP_SLOT_LABELS[right.slot] || right.slot)
       || left.name.localeCompare(right.name));
   $: borderItems = availableCosmetics.filter(item => item.slot === 'profile_border');

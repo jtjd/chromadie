@@ -16,10 +16,12 @@ import {
 import { getPaintedTextSurface, getNameGlyphLayout, drawSurfaceGlyph } from './textSurface.js';
 import {
   GUNS_FUZZY_BASE_INTENSITY,
-  getGunsFuzzyRowOffset,
-  getGunsShuffleCycleDuration,
-  getGunsShuffleTrackOffset
+  getGunsFuzzyRowOffset
 } from '../../competitor-effects/gunsEffectAlgorithms.js';
+
+import { getScrambleCharacter, getParticleEnvelope } from './motionTiming.js';
+import { drawAuthoredNameMotion } from './authoredMotions.js';
+import { getNameFontRevision } from '../nameFonts.js';
 
 const MOTION_TEXT_LIGHT = '#F7FBFF';
 
@@ -258,25 +260,47 @@ function drawGunsFuzzyMotion(ctx, model, drawBase) {
   ctx.restore?.();
 }
 
-function drawGunsShuffleMotion(ctx, model, drawBase) {
-  if (model.staticFrame || model.reducedMotion) {
+function drawScrambleMotion(ctx, model, drawBase) {
+  const glyphs = getNameGlyphLayout(ctx, model);
+  const replacements = glyphs.map((glyph, index) => getScrambleCharacter(
+    glyph.character, index, glyphs.length, model.time, model.seed
+  ));
+  if (replacements.every((character, index) => character === glyphs[index].character)) {
     drawBase(ctx, model);
     return;
   }
   const buffer = getPaintedTextSurface(ctx, model, drawBase);
-  const glyphs = getNameGlyphLayout(ctx, model);
-  if (!buffer || !glyphs.length) { drawBase(ctx, model); return; }
-  const cycleDuration = getGunsShuffleCycleDuration(glyphs.length);
-  const elapsed = ((Number(model.time) || 0) % cycleDuration + cycleDuration) % cycleDuration;
+  if (!buffer) { drawBase(ctx, model); return; }
+  const surfaceLeft = buffer.left;
+  const surfaceRight = buffer.left + buffer.width;
+  // Draw unchanged glyphs before painting replacements: drawBase reuses the
+  // same destination-owned material surface, so interleaving would overwrite
+  // the full-name buffer before its remaining glyphs had been copied.
   glyphs.forEach((glyph, index) => {
-    const offset = getGunsShuffleTrackOffset(index, elapsed, glyph.width, glyphs.length);
+    if (replacements[index] === glyph.character) {
+      drawSurfaceGlyph(ctx, buffer, glyph, 0, 0, index === 0, index === glyphs.length - 1);
+    }
+  });
+  glyphs.forEach((glyph, index) => {
+    if (replacements[index] === glyph.character) return;
+    // Replacements occupy the original advance: proportional fonts never
+    // reflow, and spaces/combining marks remain intact. Paint the chosen
+    // material on the replacement rather than cutting holes in the name.
     ctx.save?.();
     ctx.beginPath?.();
-    const left = index === 0 ? buffer.left : glyph.left;
-    const right = index === glyphs.length - 1 ? buffer.left + buffer.width : glyph.left + glyph.width;
-    ctx.rect?.(left, 0, right - left, model.height);
+    const clipLeft = index === 0 ? surfaceLeft : glyph.left;
+    const clipRight = index === glyphs.length - 1 ? surfaceRight : glyph.left + glyph.width;
+    ctx.rect?.(clipLeft, 0, clipRight - clipLeft, model.height);
     ctx.clip?.();
-    drawSurfaceGlyph(ctx, buffer, glyph, offset, 0, index === 0, index === glyphs.length - 1);
+    setTextContext(ctx, model);
+    const measured = ctx.measureText?.(replacements[index])?.width || glyph.width;
+    const scale = Math.min(1, glyph.width / Math.max(1, measured));
+    ctx.translate?.(glyph.center, 0);
+    ctx.scale?.(scale, 1);
+    ctx.translate?.(-glyph.center, 0);
+    drawBase(ctx, cloneTextModel(model, replacements[index], {
+      ...model.metrics, x: glyph.center, width: measured, rawWidth: measured
+    }));
     ctx.restore?.();
   });
 }
@@ -288,6 +312,9 @@ function getReferenceTextMask(ctx, model) {
     model.width,
     model.height,
     model.font.key,
+    model.font.family,
+    model.font.weight,
+    getNameFontRevision(model.font.key),
     model.metrics.fontSize,
     model.metrics.width,
     model.metrics.x,
@@ -368,6 +395,9 @@ function getRasterSignalBuffers(ctx, model) {
     width,
     height,
     model.font.key,
+    model.font.family,
+    model.font.weight,
+    getNameFontRevision(model.font.key),
     model.metrics.fontSize,
     model.metrics.x,
     model.metrics.y,
@@ -649,7 +679,7 @@ function drawNeonParticleName(ctx, model, drawBase) {
     const x = edge.x + edge.nx * distance - edge.ny * tangent;
     const y = edge.y + edge.ny * distance + edge.nx * tangent;
     const size = (0.55 + seededNoise(model.seed, index * 157 + 441) * 1.25) * particleScale;
-    const alpha = 0.14 + Math.sin(life * Math.PI) * 0.68;
+    const alpha = getParticleEnvelope(life) * 0.78;
     const color = colors[Math.floor(seededNoise(model.seed, index * 163 + 446) * colors.length) % colors.length];
     drawReferenceCircle(ctx, x, y, size * 2.5, color, alpha * 0.11);
     drawReferenceCircle(ctx, x, y, size, color, alpha * 0.64);
@@ -666,7 +696,7 @@ function drawNeonParticleName(ctx, model, drawBase) {
     if (phase > 0.16 || !mask.edgePoints.length) continue;
     const edge = mask.edgePoints[Math.floor(seededNoise(model.seed, index + 461) * mask.edgePoints.length) % mask.edgePoints.length];
     const size = (1.8 + seededNoise(model.seed, index + 471) * 2.8) * particleScale;
-    const alpha = (0.16 - phase) / 0.16;
+    const alpha = getParticleEnvelope(phase / 0.16);
     ctx.globalAlpha = alpha * 0.82;
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = Math.max(0.55, particleScale * 0.65);
@@ -699,16 +729,16 @@ function drawRasterSignal(ctx, model, drawBase) {
   const { metrics } = model;
   const time = Number.isFinite(model.time) ? model.time : 0;
   const rowHeight = Math.max(1.5, metrics.fontSize * 0.025);
-  const materialSurface = model.material.key === 'plain' ? null : getPaintedTextSurface(ctx, model, drawBase);
+  const materialSurface = getPaintedTextSurface(ctx, model, drawBase);
   const textTop = materialSurface ? 0 : metrics.y - metrics.fontSize * 0.47;
   const textBottom = materialSurface ? model.height : metrics.y + metrics.fontSize * 0.47;
   const rows = Math.min(256, Math.max(8, Math.ceil((textBottom - textTop) / rowHeight)));
   const buffers = getRasterSignalBuffers(ctx, model);
   const visualScale = Math.min(1, Math.max(0.42, metrics.fontSize / 111));
 
-  // Raster Signal is intentionally monochrome. It constructs the name from
-  // white glyph rows, so a vivid material cannot collapse it into Neon's
-  // colored energy fill.
+  // Displace the finished face, including a plain custom name color. The
+  // raster rhythm and neutral noise supply the signal character without
+  // replacing the selected material with a white mask.
   ctx.save?.();
   ctx.globalCompositeOperation = materialSurface ? 'source-over' : 'lighter';
   ctx.globalAlpha = 0.12;
@@ -806,6 +836,8 @@ export function drawComposableMotion(ctx, model, drawBase) {
     return true;
   }
 
+  if (drawAuthoredNameMotion(ctx, model, drawBase)) return true;
+
   switch (model.motion.key) {
     case 'haunt-glow': {
       const pulse = 0.65 + Math.sin(phase * 1.5 - 0.8) * 0.18;
@@ -833,7 +865,7 @@ export function drawComposableMotion(ctx, model, drawBase) {
       return true;
     }
     case 'letter-shuffle': {
-      drawGunsShuffleMotion(ctx, model, drawBase);
+      drawScrambleMotion(ctx, model, drawBase);
       return true;
     }
     case 'typewriter-name': {

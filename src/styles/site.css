@@ -15,45 +15,6 @@
   --site-brand-accent: var(--white);
   --site-brand-accent-soft: var(--border-soft);
   --site-brand-accent-glow: rgba(255, 255, 255, .16);
-  --site-atmosphere-image: url('/site/chromadie-roll-horizon.webp');
-  --site-atmosphere-veil: none;
-}
-
-.site-atmosphere-page,
-.app-shell--site {
-  background-color: var(--bg);
-  background-image: none;
-}
-
-.app-shell--site .site-footer,
-.site-atmosphere-page .site-footer {
-  --site-footer-border: var(--border);
-  --site-footer-muted: var(--text-muted);
-  --site-footer-ink: var(--text);
-}
-
-@media (max-width: 48rem) {
-  .site-atmosphere-page,
-  .app-shell--site {
-    background-position: 56% top;
-    background-attachment: scroll;
-  }
-}
-
-/* Covers route gaps and mobile browser compositing while keeping public
- * profile and homepage backgrounds on their own rendering boundaries. */
-body:has(.site-atmosphere-page),
-body:has(.app-shell--site) {
-  background-color: var(--bg);
-  background-image: none;
-}
-
-@media (max-width: 48rem) {
-  body:has(.site-atmosphere-page),
-  body:has(.app-shell--site) {
-    background-position: 56% top;
-    background-attachment: scroll;
-  }
 }
 
 .app-main--site .final-color-display {
@@ -221,18 +182,6 @@ body {
   background-image: none;
 }
 
-/* The generic shell reset above must not erase the normal route atmosphere. */
-.app-shell--site {
-  background-color: var(--bg);
-  background-image: none;
-}
-
-@media (max-width: 48rem) {
-  .app-shell--site {
-    background-position: 56% top;
-    background-attachment: scroll;
-  }
-}
 .app-main--site::before,
 .app-main--site::after {
   display: none;

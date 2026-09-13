@@ -214,7 +214,8 @@ test('the live-source ports remain explicit in the renderers and font registry',
   ]);
 
   assert.match(motions, /getGunsFuzzyRowOffset/);
-  assert.match(motions, /getGunsShuffleTrackOffset/);
+  // Scramble now uses authored cipher replacement; the old clipped track was incomplete.
+  assert.match(motions, /getScrambleCharacter/);
   assert.match(motions, /getPaintedTextSurface\(ctx, model, drawBase\)/);
   assert.match(motions, /getNameGlyphLayout\(ctx, model\)/);
   // Consolidated line/follower effects now resolve to authored particles.

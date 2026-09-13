@@ -172,7 +172,6 @@
     min-height: 100svh;
     flex-direction: column;
     background-color: var(--site-canvas);
-    background-image: none;
     color: var(--site-ink);
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }

@@ -29,7 +29,7 @@ export const NAME_MOTIONS = Object.freeze({
   // Curated paid motion definitions. These are complete, authored gestures;
   // the player never has to assemble a motion from a bag of generic parts.
   'haunt-glow': composableMotion('haunt-glow', 2800, { label: 'Glow', collection: 'Signal', rarity: 'Rare', description: 'A concentrated halo breathes around the name without washing out its edge.' }),
-  'letter-shuffle': composableMotion('letter-shuffle', 3400, { label: 'Scramble', collection: 'Static Bloom', rarity: 'Anomaly', description: 'Characters rearrange before locking into place.' }),
+  'letter-shuffle': composableMotion('letter-shuffle', 4800, { label: 'Scramble', collection: 'Static Bloom', rarity: 'Anomaly', description: 'A brief cipher flickers through the letters, then resolves left to right into a steady name.' }),
   'typewriter-name': composableMotion('typewriter-name', 3600, { label: 'Type In', collection: 'Archive', rarity: 'Rare', description: 'Characters arrive one by one with a precise editorial cursor.' }),
   'haunt-particles': composableMotion('haunt-particles', 3400, { label: 'Particles', collection: 'Signal', rarity: 'Epic', description: 'A bright particle field lifts from the name and dissolves into the surrounding color.' }),
   'haunt-rainbow': composableMotion('haunt-rainbow', 3600, { label: 'Rainbow', collection: 'Prism', rarity: 'Epic', description: 'A saturated spectrum travels across the letterforms with a polished light pass.' }),
@@ -42,7 +42,12 @@ export const NAME_MOTIONS = Object.freeze({
   'magnetic-type': composableMotion('magnetic-type', 3000, { label: 'Magnetic Type', collection: 'Prism', rarity: 'Epic', description: 'Each glyph responds to the pointer as if the name were suspended in a magnetic field.' }),
   'neon-particle': composableMotion('neon-particle', 3600, { label: 'Neon Particle', collection: 'Signal', rarity: 'Anomaly', description: 'A masked internal energy field, edge emission, and micro-particles keep the name electrically alive.' }),
   'raster-signal': composableMotion('raster-signal', 2800, { label: 'Raster Signal', collection: 'Static Bloom', rarity: 'Epic', description: 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.' }),
-  'spectrum-flow': composableMotion('spectrum-flow', 4000, { label: 'Spectrum Flow', collection: 'Prism', rarity: 'Epic', description: 'A full-spectrum color field travels continuously across the name with a clean, light-filled finish.' })
+  'spectrum-flow': composableMotion('spectrum-flow', 4000, { label: 'Spectrum Flow', collection: 'Prism', rarity: 'Epic', description: 'A full-spectrum color field travels continuously across the name with a clean, light-filled finish.' }),
+  'star-companions': composableMotion('star-companions', 6200, { label: 'Star Companions', collection: 'Prism', rarity: 'Rare', description: 'Two tiny star companions hop along the name with warm sparkle trails.' }),
+  'heart-pop': composableMotion('heart-pop', 6400, { label: 'Heart Pop', collection: 'Prism', rarity: 'Rare', description: 'Three glossy pink hearts bloom from the letters and float gently away.' }),
+  'ion-sweep': composableMotion('ion-sweep', 5200, { label: 'Ion Sweep', collection: 'Signal', rarity: 'Epic', description: 'A sharp cyan-violet light pass cuts across the finish with a tight trailing echo.' }),
+  'phase-fracture': composableMotion('phase-fracture', 5600, { label: 'Phase Fracture', collection: 'Static Bloom', rarity: 'Epic', description: 'Five signal slices separate in opposing directions and snap back into a crisp name.' }),
+  'letterpress': composableMotion('letterpress', 6000, { label: 'Letterpress', collection: 'Archive', rarity: 'Rare', description: 'A measured impression pass adds neutral depth and settles into crisp type.' })
 });
 
 // Removed catalog rows remain valid historical values. They resolve to the
@@ -110,4 +115,15 @@ export function resolveNameMotionKey(motionKey) {
 
 export function getNameMotion(motionKey) {
   return NAME_MOTIONS[canonicalMotionKey(motionKey)] || NAME_MOTIONS.none;
+}
+
+// The Studio shelf is curated independently of historical catalog ownership.
+// Keep retired choices renderable and visible when already selected.
+export const CURATED_NAME_MOTION_KEYS = Object.freeze([
+  'raster-signal', 'haunt-fuzzy', 'kinetic-echo', 'neon-particle', 'letter-shuffle',
+  'star-companions', 'heart-pop', 'ion-sweep', 'phase-fracture', 'letterpress'
+]);
+
+export function isCuratedNameMotion(value) {
+  return CURATED_NAME_MOTION_KEYS.includes(resolveNameMotionKey(value));
 }

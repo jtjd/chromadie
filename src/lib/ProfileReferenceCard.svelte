@@ -29,6 +29,7 @@
   export let descriptionMode = 'plain';
   export let entryAnimation = 'none';
   export let links = [];
+  export let linksInteractive = true;
   export let linkStyle = null;
   export let roll = null;
   export let accentColor = '#00FFB3';
@@ -163,13 +164,14 @@
       <nav class:profile-reference-card__links--icons={iconLinks} class="profile-reference-card__links" style={`--profile-reference-link-scale:${safeLinkScale};--profile-reference-link-glow:${safeLinkGlow};`} aria-label={`${safeDisplayName} profile links`}>
         {#each visibleLinks as link (link.key || link.order || link.url)}
           <a
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={linksInteractive ? link.url : undefined}
+            target={linksInteractive ? '_blank' : undefined}
+            rel={linksInteractive ? 'noopener noreferrer' : undefined}
+            class:profile-reference-card__link--demo={!linksInteractive}
             class:profile-reference-card__link--icon={iconLinks}
             aria-label={link.label || link.definition.label}
             title={iconLinks ? (link.label || link.definition.label) : undefined}
-            on:click={() => onEntryClick(link.key || `link-${link.order ?? link.url}`)}
+            on:click={() => { if (linksInteractive) onEntryClick(link.key || `link-${link.order ?? link.url}`); }}
           >
             {#if iconLinks}
               <img src={`/link-icons/${link.definition.icon}.svg`} alt="" loading="lazy" aria-hidden="true" />
@@ -185,6 +187,7 @@
 </ProfileBorderEffect>
 
 <style>
+  .profile-reference-card__links a.profile-reference-card__link--demo { cursor: default; pointer-events: none; }
   .profile-reference-card {
     --profile-reference-accent: #00FFB3;
     position: relative;

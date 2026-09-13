@@ -106,7 +106,12 @@ INSERT INTO public.shop_items (
   ('name_motion_magnetic_type', 'Magnetic Type', 'name_motion', 0, 'renderer', 'magnetic-type', NULL, NULL, 'Epic', 'Each glyph responds to the pointer as if the name were suspended in a magnetic field.', 'Prism', false, 'free', NULL, 'active'),
 ('name_motion_neon_particle', 'Neon Particle', 'name_motion', 0, 'renderer', 'neon-particle', NULL, NULL, 'Anomaly', 'A masked internal energy field, edge emission, and micro-particles keep the name electrically alive.', 'Signal', false, 'free', NULL, 'active'),
   ('name_motion_raster_signal', 'Raster Signal', 'name_motion', 0, 'renderer', 'raster-signal', NULL, NULL, 'Epic', 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.', 'Static Bloom', false, 'free', NULL, 'active'),
-  ('name_motion_spectrum_flow', 'Spectrum Flow', 'name_motion', 0, 'renderer', 'spectrum-flow', NULL, NULL, 'Epic', 'A full-spectrum color field travels continuously across the name with a clean, light-filled finish.', 'Prism', false, 'free', NULL, 'active')
+  ('name_motion_spectrum_flow', 'Spectrum Flow', 'name_motion', 0, 'renderer', 'spectrum-flow', NULL, NULL, 'Epic', 'A full-spectrum color field travels continuously across the name with a clean, light-filled finish.', 'Prism', false, 'free', NULL, 'active'),
+  ('name_motion_star_companions', 'Star Companions', 'name_motion', 0, 'renderer', 'star-companions', NULL, NULL, 'Rare', 'Two tiny star companions hop along the name with warm sparkle trails.', 'Prism', false, 'free', NULL, 'active'),
+  ('name_motion_heart_pop', 'Heart Pop', 'name_motion', 0, 'renderer', 'heart-pop', NULL, NULL, 'Rare', 'Three glossy pink hearts bloom from the letters and float gently away.', 'Prism', false, 'free', NULL, 'active'),
+  ('name_motion_ion_sweep', 'Ion Sweep', 'name_motion', 0, 'renderer', 'ion-sweep', NULL, NULL, 'Epic', 'A sharp cyan-violet light pass cuts across the finish with a tight trailing echo.', 'Signal', false, 'free', NULL, 'active'),
+  ('name_motion_phase_fracture', 'Phase Fracture', 'name_motion', 0, 'renderer', 'phase-fracture', NULL, NULL, 'Epic', 'Five signal slices separate in opposing directions and snap back into a crisp name.', 'Static Bloom', false, 'free', NULL, 'active'),
+  ('name_motion_letterpress', 'Letterpress', 'name_motion', 0, 'renderer', 'letterpress', NULL, NULL, 'Rare', 'A measured impression pass adds neutral depth and settles into crisp type.', 'Archive', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,

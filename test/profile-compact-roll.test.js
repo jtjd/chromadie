@@ -20,7 +20,7 @@ test('compact profiles compose identity and a static daily-roll summary as one s
   assert.match(card, /grid-template-columns: minmax\(0, 1fr\)/);
   assert.match(card, /width: min\(100%, 26rem\)/);
   assert.match(card, /@container profile-reference-card \(max-width: 36rem\)/);
-  assert.match(card, /on:click=\{\(\) => onEntryClick/);
+  assert.match(card, /if \(linksInteractive\) onEntryClick/);
   assert.match(summary, /data-profile-widget="roll"/);
   assert.match(summary, /data-profile-widget-mode="summary"/);
   assert.equal((summary.match(/data-profile-widget="roll"/g) || []).length, 1);

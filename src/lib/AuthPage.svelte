@@ -112,7 +112,7 @@
     min-height: 100svh;
     overflow: hidden;
     isolation: isolate;
-    background: var(--auth-page-canvas);
+    background-color: var(--auth-page-canvas);
     color: var(--text, #f5f5f6);
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }

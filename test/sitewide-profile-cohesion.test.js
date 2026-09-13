@@ -77,9 +77,13 @@ test('authentication lifecycle pages keep the same site chrome while status is p
 });
 
 test('supporting surfaces consume the profile visual tokens without changing route components', async () => {
-  const siteStyles = await read('src/styles/site.css');
-  const main = await read('src/main.js');
-  const siteHeader = await read('src/lib/SiteModeHeader.svelte');
+  const [siteStyles, atmosphereStyles, main, app, siteHeader] = await Promise.all([
+    read('src/styles/site.css'),
+    read('src/styles/site-atmosphere.css'),
+    read('src/main.js'),
+    read('src/App.svelte'),
+    read('src/lib/SiteModeHeader.svelte')
+  ]);
 
   assert.match(main, /styles\/site\.css/);
   assert.match(siteStyles, /--site-surface:/);
@@ -90,7 +94,14 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /--font-display-stack: 'Manrope Variable'/);
   assert.match(siteStyles, /--font-body-stack: 'Inter'/);
   assert.match(siteStyles, /--site-accent: var\(--white\)/);
-  assert.match(siteStyles, /--site-atmosphere-image: url\('\/site\/chromadie-roll-horizon\.webp'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-hero-image: url\('\/homepage\/homepage-hero-atmosphere-anime-v1\.png'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-hero-image-mobile: url\('\/homepage\/homepage-hero-atmosphere-anime-mobile-v1\.png'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-lower-image: url\('\/homepage\/homepage-lower-continuous-v4\.webp'\)/);
+  assert.match(atmosphereStyles, /\.site-atmosphere-page::before,[\s\S]*background-image:[\s\S]*var\(--site-homepage-hero-image\)/);
+  assert.match(atmosphereStyles, /\.site-atmosphere-page::after,[\s\S]*background: var\(--site-homepage-lower-image\)/);
+  assert.doesNotMatch(siteStyles, /site-atmosphere-(?:image|veil|glow)/);
+  assert.match(app, /import\('\.\/styles\/site-atmosphere\.css'\)/);
+  assert.match(app, /class:app-shell--site=\{[\s\S]*!profileSettingsModeVisible/);
   assert.doesNotMatch(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
   assert.match(siteHeader, /\.site-mode-header__brand-logo/);
   assert.match(siteStyles, /Homepage baseline for supporting routes/);

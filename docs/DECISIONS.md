@@ -1,5 +1,65 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-13 — Extend today’s homepage atmosphere to shared routes
+
+Normal application, auth, status, and error routes now reuse the current
+homepage atmosphere: the authored desktop/mobile hero artwork and the sparse
+continuous lower composition. The page and shell layers keep the same fade and
+mask treatment while leaving the homepage, public profiles, and Customize as
+separate rendering boundaries; Customize is also excluded from the shared
+shell class so its editable profile background continues to own the canvas.
+
+The superseded roll-horizon route asset and its CSS image stack were removed so
+normal pages cannot drift back to the older homepage styling.
+
+The homepage Sleek specimen projects the code-owned Permanent Marker face into
+its copied name loadout. The captured live snapshot remains unchanged for
+provenance, while the demo still resolves the font through the normal Name
+registry and lazy asset loader.
+
+## 2026-09-12 — Correct sample framing and content scale
+
+All sample surfaces use matching 12px corners, not bottom-only rounding left
+over from the removed browser toolbar. Restore the Simplistic demo's 82%
+content scale so its avatar and text read like a real profile viewport;
+the background and surrounding frame remain full-size. Present playback as a
+small outlined button with a play/pause icon, rather than an underlined link.
+
+## 2026-09-12 — Layout-led homepage showcase
+
+Treat names, bios, and locations as placeholder demo content, not marketing
+identities. Navigation leads with Modern, Sleek, and Simplistic; a short
+description explains each composition. Preserve the three existing asset and
+cosmetic sources, painterly atmosphere, and plain preview frame. Remove fake
+palette controls and tutorial-style headings. Autoplay has a ten-second dwell,
+explicit pause/play, and hover/focus/visibility suspension. Reduced motion
+defaults to paused; visitors can explicitly play with effects reduced.
+Demo social icons do not navigate; shared profile links remain interactive
+by default. No database changes or profile hydration are introduced.
+An import failure offers an explicit page reload: failed ES-module downloads
+can remain cached, so repeating the same dynamic import is not reliable recovery.
+
+## 2026-09-12 — Bind the custom demo to the live Tjz loadout
+
+The custom homepage scene uses a separately captured live Tjz snapshot rather
+than the existing Simplistic example snapshot. The snapshot was verified
+against the public `tjz` profile after the profile changed: it includes the
+current red anime background and avatar, Crimson Ronin decoration, Crystal
+border, Dust Light atmosphere, Baloo 2 name font, perspective motion, and
+Sleek layout. Only the demo identity is overridden to Aster, with a new bio
+and Lisbon location. The authentic Tjz scene and Simplistic source remain
+unchanged.
+
+## 2026-09-12 — Keep the authentic Tjz example separate from the custom demo
+
+Leave the first homepage profile scene backed by the original `tjz` snapshot
+and its actual identity. Replace only the former snow scene with a custom
+identity derived from the newer current-Tjz settings snapshot. Override the
+demo name, bio, and location, while retaining the current avatar, name font,
+atmosphere, palette, links, and motion cosmetics. This lets the homepage show
+both an authentic profile and a clearly labeled customization example without
+changing the real Tjz presentation.
+
 ## 2026-09-12 — Feather atmosphere without horizontal fade bands
 
 Replace the lower entrance's intermediate alpha stops with a broad elliptical
@@ -6576,14 +6636,12 @@ Profile Studio destination is redirected to `/login?next=/profile/settings`
 through the existing auth flow. The obsolete GuestLock presentation was removed
 without changing permission checks, profile contracts, RPCs, or media behavior.
 
-## 2026-08-18 — Use a generated roll horizon for the normal site atmosphere
+## 2026-08-18 — Use a generated roll horizon for the normal site atmosphere (superseded 2026-09-13)
 
-The normal application shell now uses a locally stored generated companion image
-at `public/site/chromadie-roll-horizon.webp`. It translates Chromadie’s daily
-roll loop into a pale atmospheric horizon where authored roll-color families
-accumulate into a calm visual world. The image is static and content-safe: it
-does not read live roll history, replace profile backgrounds, or alter public
-profile rendering.
+The normal application shell used a locally stored generated companion image
+for a pale atmospheric horizon. That treatment was static and content-safe,
+but it was superseded and removed on 2026-09-13 when shared routes adopted the
+current homepage hero and continuous lower artwork.
 
 Lavender (`#D8A6FF`) is the shared interface accent because it matches the
 homepage’s authored first fixture and keeps brand chrome distinct from semantic
@@ -7492,3 +7550,31 @@ starting already dispersed. Keep these six effects free and use existing
 validated catalog/equip interfaces. Share one lazy decoration entry point to
 keep the initial profile/dashboard download within enforced budgets.
 See `milestones/ANIME_AVATAR_DECORATIONS.md` and the artwork prompt record.
+
+
+## 2026-09-12 — Authored name motion shelf
+
+Keep Raster Signal, Fuzzy, Kinetic Echo, Neon Particle and Scramble, adding
+Star Companions/Heart Pop (cute), Ion Sweep/Phase Fracture (cool) and Letterpress
+(neutral). Studio filters the other ten historical motions while preserving
+an equipped choice and all saved renderer IDs. This is presentation curation,
+not inventory deletion. The five new effects have additive free catalog rows
+and a finite constraint extension, applied only to the local database.
+
+Scramble replaces glyphs at fixed advances with a readable hold; copy unchanged
+glyphs before material painting can reuse the full-name cache. Raster consumes
+the selected face even with a plain custom color. Neon births/deaths and
+glints use zero-ended envelopes, and reference mask caches track font revisions.
+See `milestones/NAME_MOTION_QUALITY.md`.
+
+
+## 2026-09-13 — Heart Pop in the Simplistic homepage demo
+
+The Simplistic/Mira showcase overrides only its copied name motion with
+`name_motion_heart_pop`, preserving its source font/material and other scenes.
+No snapshot, account data or schema change. The homepage browser check asserts
+Heart Pop is mounted at desktop and mobile sizes.
+
+The Modern homepage demo receives a preview-only snapshot projection with its
+captured cursor URL, pointer cursor URL, and cursor trail cleared. The source
+snapshot remains unchanged for provenance.

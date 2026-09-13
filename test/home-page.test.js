@@ -129,6 +129,7 @@ test('the lower homepage uses canonical examples and direct copy with authentic 
 
 test('the profile preview features Tjz, with account actions kept in the closing section', async () => {
   const preview = await read('src/lib/homepage/HomepageProfileExample.svelte');
+  const customPreview = await read('src/lib/homepage/HomepageCurrentTjzProfile.svelte');
   const start = await read('src/lib/homepage/HomepageStart.svelte');
   const player = await read('src/lib/homepage/HomepagePlayerCard.svelte');
   assert.doesNotMatch(player, />Open profile|homepage-player__open/);
@@ -138,12 +139,24 @@ test('the profile preview features Tjz, with account actions kept in the closing
   assert.match(preview, /Choose a layout\. Add your colors, links, fonts, effects, and background\./);
   assert.doesNotMatch(preview, /LIVE PROFILE PREVIEW|Your colors\.|Your own page\./);
   assert.match(preview, /let scenes = \[\];\s*\$:\s*scenes = \[/);
-  assert.match(preview, /chm\.lol\/tjz/);
   assert.doesNotMatch(preview, /profile-example__browser-nav|profile-example__browser-lock|profile-example__browser-bar/);
   assert.doesNotMatch(preview, /profile-example__browser-status|● LIVE/);
   assert.match(preview, /import\('\.\/tjzCurrentProfileSnapshot\.json'\)/);
+  assert.match(preview, /import\('\.\/tjzLiveProfileSnapshot\.json'\)/);
+  assert.match(preview, /import\('\.\/HomepageCurrentTjzProfile\.svelte'\)/);
   assert.match(preview, /displayName: 'Mira'/);
   assert.match(preview, /bio: 'collecting soft colors and quiet moments\.'/);
+  assert.match(preview, /label: 'Sleek'/);
+  assert.match(customPreview, /displayName: 'Aster'/);
+  assert.match(customPreview, /bio: 'making room for brighter days\.'/);
+  assert.match(customPreview, /location: 'Lisbon, PT'/);
+  assert.match(customPreview, /ProfileFullBleedLayout/);
+  assert.match(customPreview, /layoutVariant: snapshot\.props\.layoutVariant/);
+  assert.match(customPreview, /fontKey: 'name_font_marker_tag'/);
+  assert.match(customPreview, /snapshot\.props\.profileMotionKey/);
+  assert.match(customPreview, /ProfileEnvironmentLayer/);
+  assert.match(customPreview, /surfaceStyle=\{snapshot\.styles\.surface\}/);
+  assert.doesNotMatch(preview, /label: 'Snowy theme'|chm\.lol\/katt|Reykjavík, IS/);
   assert.match(preview, /\.\.\.snapshot\.props/);
   assert.match(preview, /layoutVariant: 'full-bleed'/);
   const tjz = JSON.parse(await read('src/lib/homepage/tjzProfileSnapshot.json'));
@@ -158,6 +171,16 @@ test('the profile preview features Tjz, with account actions kept in the closing
   assert.equal(currentTjz.environment.atmosphereKey, 'profile_atmosphere_rain_window');
   assert.equal(currentTjz.props.joinedLabel, 'Jul 2026');
   assert.equal(currentTjz.props.links.length, 4);
+  const liveTjz = JSON.parse(await read('src/lib/homepage/tjzLiveProfileSnapshot.json'));
+  assert.equal(liveTjz.props.avatarEffectKey, 'avatar_effect_crimson_ronin');
+  assert.equal(liveTjz.props.profileBorderKey, 'border_crystal');
+  assert.equal(liveTjz.props.layoutVariant, 'sleek');
+  assert.equal(liveTjz.environment.atmosphereKey, 'profile_atmosphere_dust_light');
+  assert.match(liveTjz.environment.backgroundImageUrl, /9f8f3ccb-abfa-43d0-9c63-593072faa9e9/);
+  assert.match(liveTjz.props.avatarSrc, /e6644e45-b138-4d5a-a514-a151ebe8cd8d/);
+  assert.equal(liveTjz.props.location, 'Ottawa');
+  assert.equal(liveTjz.props.timezone, 'Canada');
+  assert.equal(liveTjz.props.links.length, 4);
   assert.match(preview, /profile-example__controls/);
   assert.match(preview, /prefers-reduced-motion: reduce/);
   assert.doesNotMatch(preview, /<figcaption/);
@@ -175,6 +198,36 @@ test('the profile preview features Tjz, with account actions kept in the closing
   assert.doesNotMatch(preview + start + loop + scoring + community, /your story|journey|daily ritual/i);
   assert.doesNotMatch(preview + start + loop + scoring + community + rollPage, /[↗→↓]/);
   assert.doesNotMatch(preview + start + loop + community, /homepage-section-kicker/);
+});
+
+test('the showcase has layout-led controls, bounded loading, and accessible playback', async () => {
+  const preview = await read('src/lib/homepage/HomepageProfileExample.svelte');
+  const reference = await read('src/lib/ProfileReferenceCard.svelte');
+  const modern = await read('src/lib/homepage/HomepageTjzProfile.svelte');
+  for (const label of ['Modern', 'Sleek', 'Simplistic']) assert.ok(preview.includes(`label: '${label}'`));
+  assert.doesNotMatch(preview, /profile-example__swatches|profile-example__scene-copy|address:/);
+  assert.match(preview, /transform: scale\(\.82\)/);
+  assert.match(preview, /viewBox="0 0 16 16" aria-hidden="true"/);
+  assert.match(preview, /\.profile-example__playback \{[\s\S]*?border: 1px solid/);
+  const sleek = await read('src/lib/homepage/HomepageCurrentTjzProfile.svelte');
+  for (const sample of [modern, sleek]) {
+    assert.match(sample, /border-radius: 12px/);
+    assert.doesNotMatch(sample, /border-radius: 0 0/);
+  }
+  assert.match(preview, /setInterval\(nextScene, 10000\)/);
+  assert.match(preview, /paused \|\| hovered \|\| focused \|\| document\.hidden \|\| !renderers/);
+  assert.match(preview, /if \(renderers \|\| loading\) return loading/);
+  assert.match(preview, /motionPreference\.addEventListener\('change', handleMotion\)/);
+  assert.match(preview, /threshold: \.25/);
+  assert.match(preview, /Pause previews/);
+  assert.match(preview, /role="status">\{announcement\}/);
+  assert.doesNotMatch(preview, /aria-live="polite"/);
+  assert.match(reference, /export let linksInteractive = true/);
+  assert.match(reference, /href=\{linksInteractive \? link\.url : undefined\}/);
+  assert.match(modern, /linksInteractive=\{false\}/);
+  assert.match(modern, /cursorTrailKey: ''/);
+  assert.match(modern, /cursorUrl: ''/);
+  assert.match(modern, /stripCursorStyle/);
 });
 
 test('the homepage presents free and Plus pricing from the canonical feature matrix', async () => {

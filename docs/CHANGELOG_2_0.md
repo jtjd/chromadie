@@ -1,5 +1,55 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-13 — Extend homepage atmosphere to shared routes
+
+- Applied the current homepage hero and sparse continuous lower artwork, with
+  the same fade and masking contract, to normal application, auth, status, and
+  bootstrap-error pages.
+- Removed the superseded roll-horizon asset and CSS image stack so these routes
+  cannot fall back to the older homepage styling.
+- Kept the homepage, public profiles, and Customize rendering boundaries
+  independent, including an explicit Profile Studio shell exclusion.
+- Changed the homepage Sleek specimen's copied name to Permanent Marker through
+  the existing code-owned font registry; captured source data is unchanged.
+
+## 2026-09-12 — Polish homepage preview details
+
+- Rounded all four Modern and Sleek sample corners to match Simplistic.
+- Restored smaller Simplistic content without shrinking its background/frame.
+- Replaced underlined playback text with a restrained outlined icon button.
+- Added framing, scale, and playback presentation regression checks.
+
+## 2026-09-12 — Refine the homepage sample section
+
+- Replaced mixed identity/layout labels with Modern, Sleek, and Simplistic,
+  paired with short descriptions; removed redundant headings and faux swatches.
+- Fixed full-width preview wrappers, removed arbitrary Simplistic scaling,
+  consolidated the stacking breakpoint, and improved mobile selector sizing.
+- Added pause/play, ten-second autoplay, visibility and interaction suspension,
+  live reduced-motion handling, and intentional-selection announcements.
+- Disabled demo social navigation without changing real-profile link defaults.
+- Added six-viewport sample bounds/media/font checks and playback regressions;
+  updated browser checks that depended on removed browser chrome.
+
+## 2026-09-12 — Use the live Tjz profile for the custom demo
+
+- Added a separate `tjzLiveProfileSnapshot.json` captured from the current
+  public Tjz profile, including its exact avatar/background media and cosmetic
+  loadout.
+- Rendered the renamed custom example with the live Sleek layout instead of
+  reusing the Simplistic or generic framed renderer.
+- Kept the homepage's authentic Tjz scene and existing Simplistic snapshot
+  unchanged.
+
+## 2026-09-12 — Separate authentic and custom profile examples
+
+- Preserved the homepage's authentic `Tjz profile` scene and source snapshot.
+- Replaced the former `Snowy theme` scene with a `Custom profile` demo based on
+  Tjz's current equipped cosmetics.
+- Gave the custom demo a distinct Aster identity, bio, Lisbon location, and
+  address while keeping the current avatar, font, atmosphere, palette, links,
+  and motion treatment.
+
 ## 2026-09-12 — Feathered atmosphere transition
 
 - Replaced horizontal multi-stop entrance bands with a broad curved feather.
@@ -4822,3 +4872,24 @@ and propagate to the existing refresh warning instead of appearing as empty data
   and independent tumbling.
 - Added six free catalog entries, mobile previews, reduced-motion behavior
   and shared lazy loading. Delivery remains local pending publication.
+
+
+## 2026-09-12 — Curated name motions
+
+- Added Star Companions and Heart Pop, Ion Sweep and Phase Fracture, and Letterpress.
+- Kept Raster Signal, Fuzzy, Kinetic Echo, Neon Particle and Scramble on the
+  customization shelf; preserve older equipped effects without promoting them.
+- Fixed Scramble's disappearing glyphs and added a steady readable hold.
+- Raster Signal now preserves plain custom name colors as well as materials.
+- Neon particles and glints fade cleanly at lifecycle boundaries.
+- Five new catalog rows are free; the additive migration is local only.
+
+
+## 2026-09-13 — Heart Pop in the Simplistic homepage demo
+
+The Simplistic/Mira showcase overrides only its copied name motion with
+`name_motion_heart_pop`, preserving its source font/material and other scenes.
+No snapshot, account data or schema change. The homepage browser check asserts
+Heart Pop is mounted at desktop and mobile sizes.
+
+The Modern demo no longer applies the captured custom cursor or cursor trail.

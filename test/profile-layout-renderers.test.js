@@ -356,7 +356,7 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(layoutEditor, /data-roll-widget-toggle/);
   assert.match(layoutEditor, /setProfileRollVisible/);
   assert.match(layoutEditor, /createProfileLayoutPatch\(layoutVariant, staged\)/);
-  assert.match(card, /on:click=\{\(\) => onEntryClick/);
+  assert.match(card, /if \(linksInteractive\) onEntryClick/);
   assert.doesNotMatch(preview, /profile-studio-preview__scroll-cue|previewContentOverflow|previewOpeningOverflow|overflow-y:\s*auto/);
   assert.doesNotMatch(shell, /data-preview-opening-overflow/);
   assert.match(preview, /export let previewRenderSnapshot/);

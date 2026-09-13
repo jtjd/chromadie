@@ -30,6 +30,7 @@
   const initialRoute = typeof window !== 'undefined'
     ? parseRouteLocation(window.location.pathname, window.location.search)
     : null;
+
   let view = initialRoute?.view || 'home';
   let leaderboardTab = initialRoute?.leaderboardTab || 'today';
   let progressionTab = initialRoute?.progressionTab || 'journey';
@@ -430,6 +431,7 @@
   }
 
   onMount(() => {
+    import('./styles/site-atmosphere.css');
     void loadFounderAnnouncementState();
     parseRoute();
     window.addEventListener('popstate', handlePopState);
@@ -844,7 +846,7 @@
       loadingLabel={routeTarget.loadingLabel}
     />
   {:else}
-  <div class="app-shell" class:app-shell--site={!['auth', 'auth-callback', 'reset-password'].includes(routeMode) && view !== 'profile' && !homeModeVisible} class:app-shell--home={homeModeVisible} class:app-shell--leaderboard={leaderboardModeVisible}>
+  <div class="app-shell" class:app-shell--site={!['auth', 'auth-callback', 'reset-password'].includes(routeMode) && view !== 'profile' && !homeModeVisible && !profileSettingsModeVisible} class:app-shell--home={homeModeVisible} class:app-shell--leaderboard={leaderboardModeVisible}>
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div id="header-mount">

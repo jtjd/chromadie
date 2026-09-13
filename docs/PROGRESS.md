@@ -1,5 +1,60 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-13 — Shared route atmosphere and Sleek type treatment
+
+Applied the current homepage hero and sparse continuous lower artwork to normal
+app, auth, status, and bootstrap-error routes with the same fade and masking
+contract. Removed the superseded roll-horizon asset and CSS image stack. Public
+profiles, the homepage, and Customize remain isolated; the App shell now
+excludes Profile Studio from the site atmosphere class. The homepage Sleek
+specimen projects Permanent Marker through the existing name-font registry
+without changing the captured live snapshot or persisted profile data.
+
+Targeted source tests and Svelte validation pass. Homepage browser coverage
+now verifies the Sleek font projection alongside the existing Modern cursor and
+Simplistic Heart Pop checks.
+
+## 2026-09-12 — Sample framing and playback polish
+
+Fixed bottom-only Modern/Sleek rounding, restored the Simplistic content's
+smaller 82% scale, and finished the playback action as an outlined icon button.
+Existing sample assets, cosmetics, and playback behavior remain unchanged.
+Full mandatory validation passes, including 616 unit tests. Both homepage
+browser suites pass; reviewed desktop/mobile screenshots confirm the smaller
+content scale and finished control. All three samples pass four-corner and
+geometry checks at six viewport widths. Existing asset-catalog advisories
+remain non-blocking.
+
+## 2026-09-12 — Homepage sample showcase refinement
+
+Implemented layout-led selectors and concise composition descriptions while
+preserving the sample asset/cosmetic sources and shared painterly background.
+Preview wrappers now fill the frame; Simplistic no longer uses arbitrary
+scaling. Added pause/play and interaction/visibility-aware autoplay, with
+reduced-motion defaults and non-navigating demo social icons. Six-width visual
+checks and playback regressions pass, including hover/focus, offscreen/hidden
+tabs, dynamic reduced motion, and import-failure/reload recovery. The canonical
+homepage browser suite and the full mandatory validation suite pass, including
+616 unit tests. Performance budgets pass; existing aggregate asset-catalog
+advisories remain non-blocking. No migrations or server behavior changed.
+
+## 2026-09-12 — Reconcile the custom demo with live Tjz
+
+Verified the current public `tjz` profile and replaced the custom demo's
+stale source with a separate live snapshot. The renamed Aster demo now uses
+Tjz's actual red anime avatar/background, Crimson Ronin, Crystal border, Dust
+Light atmosphere, Baloo 2 font, perspective motion, and Sleek layout. The
+original Tjz scene and the existing Simplistic example remain unchanged.
+Targeted Svelte, lint, unit, and desktop/mobile browser checks pass.
+
+## 2026-09-12 — Authentic Tjz and custom cosmetics demo
+
+Kept the first homepage scene as the actual `tjz` profile and changed only
+the former snow scene. The replacement is labeled `Custom profile`, uses the
+current Tjz settings snapshot for its equipped cosmetics, and presents a
+separate Aster name, bio, Lisbon location, and demo address. No public profile
+data, gameplay, or server behavior changed.
+
 ## 2026-09-12 — Feathered atmosphere transition
 
 Addressed the user's visible horizontal-band feedback with an elliptical
@@ -5476,14 +5531,12 @@ media requests, and no polling.
   database-security check remains blocked by the existing local test database
   state (`guest roll wrote a score`), not by this UI-only change.
 
-## Roll horizon atmosphere — 2026-08-18
+## Roll horizon atmosphere — 2026-08-18 (superseded 2026-09-13)
 
-- Generated and stored a light companion atmosphere for normal site routes at
-  `public/site/chromadie-roll-horizon.webp`, inspired by Chromadie’s daily color
-  history rather than a CSS-only gradient.
-- Applied the image through the shared app/auth/status shell, kept content-safe
-  dark glass surfaces, and changed shared interface chrome from mint to the
-  homepage lavender accent (`#D8A6FF`).
+- Generated and stored a light companion atmosphere for normal site routes,
+  inspired by Chromadie’s daily color history rather than a CSS-only gradient.
+- Applied the image through the shared app/auth/status shell. This treatment
+  was later removed when the routes adopted the current homepage artwork.
 - Preserved actual roll/reward colors, homepage fixture composition, public
   profile rendering, auth/backend authorities, and profile media contracts.
 
@@ -6193,3 +6246,35 @@ Sakura Petals, including alpha artwork, per-effect motion, reduced-motion
 fallbacks and six additive catalog entries. Local database now has 15 active
 avatar effects and 107 active catalog rows. Implementation and browser evidence:
 `milestones/ANIME_AVATAR_DECORATIONS.md`. Not yet pushed or deployed.
+
+
+## 2026-09-12 — Name motion quality and five additions
+
+Implemented a ten-effect Studio shelf with two new cute motions (Star Companions,
+Heart Pop), two cool motions (Ion Sweep, Phase Fracture), and one neutral motion
+(Letterpress). Rebuilt Scramble's missing-character behavior, preserved Raster
+name colors/materials, and polished Neon's particle lifecycle. Historical
+loadouts and server authority remain intact. Additive migration applied locally;
+no production migration or deployment. Validation is recorded in
+`milestones/NAME_MOTION_QUALITY.md`.
+
+Validation complete locally: 619 tests and every mandatory check pass, including
+database reset/lint and security. Browser evidence covers 13,608 matrix frames
+and 812 focused frames, with desktop/mobile screenshot review and mounted
+reduced-motion checks. Production migration/deployment remains unapplied.
+
+
+## 2026-09-13 — Heart Pop in the Simplistic homepage demo
+
+The Simplistic/Mira showcase overrides only its copied name motion with
+`name_motion_heart_pop`, preserving its source font/material and other scenes.
+No snapshot, account data or schema change. The homepage browser check asserts
+Heart Pop is mounted at desktop and mobile sizes.
+
+Validation: all mandatory commands pass (619 tests), and the homepage browser
+smoke passes with Heart Pop asserted on Simplistic at 1440px and 390px.
+Evidence: `/tmp/chromadie-homepage-heart-pop/`. Not deployed.
+
+The Modern homepage demo's cursor URL and cursor trail are now disabled in its
+preview projection. Homepage browser smoke confirms no cursor style or cursor
+trail layer at desktop and mobile sizes.

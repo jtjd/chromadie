@@ -152,7 +152,7 @@ try {
     const components=await page.command('Page.captureScreenshot',{format:'png'});
     await writeFile(`${evidenceDir}/mobile-components-reduced.png`,Buffer.from(components.data,'base64'));
     await page.evaluate(`Promise.all(window.componentNames.map(instance=>window.nameApi.unmount(instance)))`);
-    await writeFile(`${evidenceDir}/validation.json`,JSON.stringify({frames,fonts:fontKeys.length,materials:9,motions:16,edits},null,2));
+    await writeFile(`${evidenceDir}/validation.json`,JSON.stringify({frames,fonts:fontKeys.length,materials:9,motions:await page.evaluate('Object.keys(window.nameApi.NAME_MOTIONS).length'),edits},null,2));
     console.log(`Passed ${frames} frames plus edit, resize, pointer and reduced-motion checks.`);
   }
   assert.deepEqual(page.consoleLog.filter(entry=>entry.type==='exception'),[]);

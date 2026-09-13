@@ -168,35 +168,60 @@ try {
     }
   });
 
-  await check('Tjz published profile replaces the Sleek homepage example', async () => {
+  await check('Modern preserves the curated profile assets', async () => {
     for (const width of [1440, 390]) {
       await page.setViewport(width, 900);
       await page.evaluate("document.querySelector('#profiles').scrollIntoView({ block: 'center' })");
-      await page.click('[aria-label="Show Tjz profile"]', 'Tjz profile preview');
+      await page.click('[aria-label="Show Modern"]', 'Tjz profile preview');
       await page.waitFor("document.querySelector('.tjz-profile .profile-reference-card')", 'Tjz framed profile');
       await page.waitFor("[...document.querySelectorAll('.tjz-profile img')].every(img => img.complete && img.naturalWidth > 0)", 'Tjz published media');
       const state = await page.evaluate(`(() => ({
-        address: document.querySelector('.profile-example__browser-address').textContent.trim(),
+        selected: document.querySelector('.profile-example__controls button.active').textContent.trim(),
         content: document.querySelector('.tjz-profile').textContent,
+        cursorTrail: Boolean(document.querySelector('.tjz-profile .profile-environment__cursor')),
+        pageStyle: document.querySelector('.tjz-profile')?.getAttribute('style') || '',
         joined: document.querySelector('.tjz-profile').textContent.includes('Joined'),
         exampleWidth: document.querySelector('.profile-example')?.getBoundingClientRect().width || 0,
         browserWidth: document.querySelector('.profile-example__browser')?.getBoundingClientRect().width || 0,
         overflow: document.documentElement.scrollWidth > innerWidth + 1,
-        links: [...document.querySelectorAll('.tjz-profile a')].map(a => a.href)
+        links: document.querySelectorAll('.tjz-profile a[href]').length
       }))()`);
-      assert(state.address === 'chm.lol/tjz' && state.content.includes('Tjz') && state.content.includes('why does this keep resetting'), 'Tjz identity does not match the published snapshot.');
-      assert(!state.joined && !state.overflow && state.links.includes('https://github.com/jtjd'), 'Tjz preview metadata, geometry, or links drifted.');
-      if (width >= 1000) assert(state.exampleWidth >= width * .9 && state.browserWidth >= 800, `Desktop profile preview is too constrained: ${JSON.stringify(state)}.`);
+      assert(state.selected === 'Modern' && state.content.includes('Tjz') && state.content.includes('why does this keep resetting'), 'Tjz identity does not match the published snapshot.');
+      assert(!state.cursorTrail && !/\bcursor\s*:/.test(state.pageStyle) && !state.joined && !state.overflow && state.links === 0, 'Tjz preview metadata, cursor, geometry, or links drifted.');
+      if (width >= 1000) assert(state.exampleWidth >= 1200 && state.browserWidth >= 700, `Desktop profile preview is too constrained: ${JSON.stringify(state)}.`);
       await capture(`homepage-tjz-${width}`);
     }
     assert(networkSnapshot().profileHydrationCount === 0, 'The captured profile added homepage hydration requests.');
   });
 
-  await check('Simplistic reuses the current Tjz profile with a feminine showcase identity', async () => {
+  await check('Sleek uses the handwritten Permanent Marker name face', async () => {
     for (const width of [1440, 390]) {
       await page.setViewport(width, 900);
       await page.evaluate("document.querySelector('#profiles').scrollIntoView({ block: 'center' })");
-      await page.click('[aria-label="Show Simplistic layout"]', 'Simplistic profile preview');
+      await page.click('[aria-label="Show Sleek"]', 'Sleek profile preview');
+      await page.waitFor("document.querySelector('.current-tjz-profile [data-name-font-ready=\"true\"]')", 'Sleek profile font');
+      const state = await page.evaluate(`(() => {
+        const canvas = document.querySelector('.current-tjz-profile [data-name-font]');
+        const semantic = canvas?.querySelector('.name-effect-canvas__semantic');
+        return {
+          selected: document.querySelector('.profile-example__controls button.active').textContent.trim(),
+          nameFont: canvas?.getAttribute('data-name-font') || '',
+          nameFontReady: canvas?.getAttribute('data-name-font-ready') || '',
+          fontFamily: semantic ? getComputedStyle(semantic).fontFamily : '',
+          overflow: document.documentElement.scrollWidth > innerWidth + 1
+        };
+      })()`);
+      assert(state.selected === 'Sleek' && state.nameFont === 'marker-tag' && state.nameFontReady === 'true' && /Permanent Marker/i.test(state.fontFamily) && !state.overflow, `Sleek type treatment drifted: ${JSON.stringify(state)}.`);
+      await capture(`homepage-sleek-${width}`);
+    }
+    assert(networkSnapshot().profileHydrationCount === 0, 'The Sleek profile added homepage hydration requests.');
+  });
+
+  await check('Simplistic preserves its existing showcase assets', async () => {
+    for (const width of [1440, 390]) {
+      await page.setViewport(width, 900);
+      await page.evaluate("document.querySelector('#profiles').scrollIntoView({ block: 'center' })");
+      await page.click('[aria-label="Show Simplistic"]', 'Simplistic profile preview');
       await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"]\')', 'Simplistic full-bleed profile');
       await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"] [data-name-font-ready="true"]\')', 'Simplistic profile font');
       await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"] .profile-full-bleed__avatar\')?.naturalWidth > 0', 'Simplistic profile avatar');
@@ -205,8 +230,9 @@ try {
         const card = document.querySelector('.profile-example [data-profile-layout-content="full-bleed"]');
         return {
           name: card?.querySelector('.profile-full-bleed__name')?.textContent?.trim() || '',
+          nameMotion: card?.querySelector('[data-name-motion]')?.getAttribute('data-name-motion') || '',
           bio: card?.querySelector('.profile-full-bleed__bio')?.textContent?.trim() || '',
-          address: document.querySelector('.profile-example__browser-address')?.textContent?.trim() || '',
+          selected: document.querySelector('.profile-example__controls button.active').textContent.trim(),
           avatar: card?.querySelector('.profile-full-bleed__avatar')?.getAttribute('src') || '',
           effect: card?.querySelector('[data-avatar-effect]')?.getAttribute('data-avatar-effect') || '',
           motion: card?.closest('[data-profile-motion]')?.getAttribute('data-profile-motion') || '',
@@ -217,7 +243,8 @@ try {
         };
       })()`);
       assert(state.name === 'Mira' && state.bio === 'collecting soft colors and quiet moments.', `Simplistic identity drifted: ${JSON.stringify(state)}.`);
-      assert(state.address === 'chm.lol/mira' && state.effect === 'cloud-bunny' && !state.motion && !state.joined && state.links === 4 && state.canvasPadding === '0px', `Simplistic Tjz profile source drifted: ${JSON.stringify(state)}.`);
+      assert(state.nameMotion === 'name_motion_heart_pop', `Simplistic Heart Pop motion missing: ${JSON.stringify(state)}.`);
+      assert(state.selected === 'Simplistic' && state.effect === 'cloud-bunny' && !state.motion && !state.joined && state.links === 4 && state.canvasPadding === '0px', `Simplistic Tjz profile source drifted: ${JSON.stringify(state)}.`);
       assert(!state.overflow && state.avatar.includes('/profiles/c177316f-415a-48ad-8e4e-901fc6766693/26623dc6-5915-4852-a042-16505799a7b2/'), `Simplistic profile geometry or avatar drifted: ${JSON.stringify(state)}.`);
       await capture(`homepage-simplistic-${width}`);
     }

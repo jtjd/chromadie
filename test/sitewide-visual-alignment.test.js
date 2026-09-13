@@ -4,14 +4,19 @@ import { readFile, stat } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [app, header, footer, homepage, siteStyles] = await Promise.all([
+const [app, header, footer, homepage, siteStyles, atmosphereStyles] = await Promise.all([
   read('src/App.svelte'),
   read('src/lib/SiteModeHeader.svelte'),
   read('src/lib/SiteFooter.svelte'),
   read('src/lib/HomePage.svelte'),
-  read('src/styles/site.css')
+  read('src/styles/site.css'),
+  read('src/styles/site-atmosphere.css')
 ]);
-const atmosphereAsset = await stat(new URL('../public/site/chromadie-roll-horizon.webp', import.meta.url));
+const [heroAsset, heroMobileAsset, lowerAsset] = await Promise.all([
+  stat(new URL('../public/homepage/homepage-hero-atmosphere-anime-v1.png', import.meta.url)),
+  stat(new URL('../public/homepage/homepage-hero-atmosphere-anime-mobile-v1.png', import.meta.url)),
+  stat(new URL('../public/homepage/homepage-lower-continuous-v4.webp', import.meta.url))
+]);
 
 test('signed-out chrome hides inaccessible Customize actions', () => {
   assert.ok(header.includes('{#if isAuthenticated}'));
@@ -45,12 +50,18 @@ test('normal site surfaces inherit the homepage type, canvas, and button contrac
   assert.match(siteStyles, /--text-muted: #8d8c92/);
   assert.match(siteStyles, /--text-faint: #59585e/);
   assert.match(siteStyles, /--white: #ffffff/);
-  assert.match(siteStyles, /--site-atmosphere-image: url\('\/site\/chromadie-roll-horizon\.webp'\)/);
-  assert.match(siteStyles, /\.app-shell--site/);
+  assert.match(atmosphereStyles, /--site-homepage-hero-image: url\('\/homepage\/homepage-hero-atmosphere-anime-v1\.png'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-hero-image-mobile: url\('\/homepage\/homepage-hero-atmosphere-anime-mobile-v1\.png'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-lower-image: url\('\/homepage\/homepage-lower-continuous-v4\.webp'\)/);
+  assert.match(atmosphereStyles, /\.site-atmosphere-page::before,[\s\S]*\.app-shell--site::before[\s\S]*var\(--site-homepage-hero-image\)/);
+  assert.match(atmosphereStyles, /\.site-atmosphere-page::after,[\s\S]*\.app-shell--site::after[\s\S]*var\(--site-homepage-lower-image\)/);
+  assert.match(atmosphereStyles, /\.app-shell--site/);
   assert.match(app, /class:app-shell--site=\{/);
   assert.match(app, /\.app-shell--site,[\s\S]*font-family: 'Inter'/);
   assert.match(app, /\.app-shell--home \.skip-link/);
-  assert.ok(atmosphereAsset.size > 1000, 'roll horizon should be a real local image asset');
+  assert.ok(heroAsset.size > 1000, 'desktop homepage atmosphere should be a real local image asset');
+  assert.ok(heroMobileAsset.size > 1000, 'mobile homepage atmosphere should be a real local image asset');
+  assert.ok(lowerAsset.size > 1000, 'lower homepage atmosphere should be a real local image asset');
   assert.match(siteStyles, /background: var\(--white\)/);
   assert.match(header, /\.site-mode-header--home \.site-mode-header__nav button:not\(\.site-mode-header__claim-link\)/);
   assert.match(header, /\.site-mode-header--home-route \.site-mode-header__nav \.site-mode-header__claim-link \{[\s\S]*background: transparent !important;[\s\S]*color: rgba\(255, 255, 255, \.94\) !important;/);
