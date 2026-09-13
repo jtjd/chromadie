@@ -6255,13 +6255,16 @@ Heart Pop), two cool motions (Ion Sweep, Phase Fracture), and one neutral motion
 (Letterpress). Rebuilt Scramble's missing-character behavior, preserved Raster
 name colors/materials, and polished Neon's particle lifecycle. Historical
 loadouts and server authority remain intact. Additive migration applied locally;
-no production migration or deployment. Validation is recorded in
+the linked production migration was subsequently applied on 2026-09-13.
+Validation is recorded in
 `milestones/NAME_MOTION_QUALITY.md`.
 
 Validation complete locally: 619 tests and every mandatory check pass, including
 database reset/lint and security. Browser evidence covers 13,608 matrix frames
 and 812 focused frames, with desktop/mobile screenshot review and mounted
-reduced-motion checks. Production migration/deployment remains unapplied.
+reduced-motion checks. Remote migration history and catalog rows were verified
+after the production migration was applied; application-hosting deployment is
+managed by the main-branch delivery path.
 
 
 ## 2026-09-13 — Heart Pop in the Simplistic homepage demo

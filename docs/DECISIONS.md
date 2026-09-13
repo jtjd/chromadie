@@ -7559,7 +7559,8 @@ Star Companions/Heart Pop (cute), Ion Sweep/Phase Fracture (cool) and Letterpres
 (neutral). Studio filters the other ten historical motions while preserving
 an equipped choice and all saved renderer IDs. This is presentation curation,
 not inventory deletion. The five new effects have additive free catalog rows
-and a finite constraint extension, applied only to the local database.
+and a finite constraint extension, applied locally first and then to linked
+production on 2026-09-13 after migration-history verification.
 
 Scramble replaces glyphs at fixed advances with a readable hold; copy unchanged
 glyphs before material painting can reuse the full-name cache. Raster consumes

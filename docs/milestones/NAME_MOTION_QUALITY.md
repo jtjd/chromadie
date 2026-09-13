@@ -17,7 +17,8 @@
 The shelf curation follows the cursor shelf precedent. The five new motions
 use additive free catalog rows and a finite shop constraint extension in
 `20260912120000_authored_name_motions.sql`; no ownership deletion, reward or
-purchase-authority change. The migration is applied locally, not remotely.
+purchase-authority change. The migration was applied locally first, then to
+linked production on 2026-09-13.
 Old IDs remain valid and saved motions still render. An equipped older choice
 stays available in the editor so owners can keep it or deliberately replace it.
 Existing unrelated homepage work is outside this slice. Five new stable
@@ -40,6 +41,10 @@ at lifecycle boundaries. Fuzzy and Kinetic Echo retain their current gestures.
   catalog drift, scoring parity and database-security checks: pass locally.
 - `npm run db:reset` and
   `supabase db lint --local --level warning --fail-on warning`: pass.
+- Remote verification: `supabase migration list --linked` reports
+  `20260912120000` applied; a read-only catalog query reports 20 active Name
+  Motions, all five authored free rows, and `shop_version`
+  `2026-09-12T12:00:00Z`.
 - The database audit now checks 117 active rows, 20 historically supported
   Name Motions, and the five new free rows explicitly. Earlier audit failures
   were stale expected catalog counts; no security assertion was removed.
@@ -53,6 +58,8 @@ at lifecycle boundaries. Fuzzy and Kinetic Echo retain their current gestures.
   `node scripts/browser/name-motion-quality-smoke.mjs` to regenerate.
 
 No production catalog comparison was performed: the catalog checker ran its
-local mode. No production migration, application deployment or account-data
-change was made. Historical effects are hidden from the Studio shelf except
-an existing selection; their server catalog rows remain compatible.
+local mode. The production database migration was applied after linked-history
+verification; no separate application-hosting deployment or account-data
+change was performed by this agent. Historical effects are hidden from the
+Studio shelf except an existing selection; their server catalog rows remain
+compatible.

@@ -4882,7 +4882,8 @@ and propagate to the existing refresh warning instead of appearing as empty data
 - Fixed Scramble's disappearing glyphs and added a steady readable hold.
 - Raster Signal now preserves plain custom name colors as well as materials.
 - Neon particles and glints fade cleanly at lifecycle boundaries.
-- Five new catalog rows are free; the additive migration is local only.
+- Five new catalog rows are free; the additive migration was applied locally
+  first and to linked production on 2026-09-13.
 
 
 ## 2026-09-13 — Heart Pop in the Simplistic homepage demo
