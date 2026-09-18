@@ -25,7 +25,6 @@
   {logoutInProgress}
   isHomeMode={true}
   isHomepageStyle={true}
-  showClaim={false}
   on:navigate={forward}
   on:login={forward}
   on:logout={forward}

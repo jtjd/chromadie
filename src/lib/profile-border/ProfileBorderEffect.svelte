@@ -1,6 +1,6 @@
 <script>
-  import { afterUpdate, onDestroy, onMount } from 'svelte';
-  import { getProfileBorderDefinition, getProfileBorderKey } from './profileBorders.js';
+  import { afterUpdate, onMount } from 'svelte';
+  import { AUTHORED_PROFILE_BORDER_KEYS, getProfileBorderDefinition, getProfileBorderKey } from './profileBorders.js';
 
   export let borderKey = '';
   export let className = '';
@@ -13,21 +13,20 @@
   let reducedMotion = false;
   let mediaQuery;
   let observer;
+  let documentVisible = true;
   let mounted = false;
-  let ElasticFrameEffect;
-  let elasticComponentPromise;
-  let ShimmerFrameEffect;
-  let shimmerComponentPromise;
+  let AuthoredBorderLayers;
+  let artworkPromise;
 
   $: definition = getProfileBorderDefinition(borderKey);
   $: resolvedKey = getProfileBorderKey(borderKey);
-  $: shouldAnimate = Boolean(definition && animated && visible && !reducedMotion);
-  $: elasticActive = resolvedKey === 'elastic' && shouldAnimate;
-  $: shimmerActive = resolvedKey === 'shimmer-track' && shouldAnimate;
+  $: shouldAnimate = Boolean(definition && animated && visible && documentVisible && !reducedMotion);
+  $: authored = AUTHORED_PROFILE_BORDER_KEYS.includes(resolvedKey);
   $: hostClass = [
     'profile-border-effect',
     `profile-border-effect--${resolvedKey || 'none'}`,
     compact ? 'profile-border-effect--compact' : '',
+    authored && AuthoredBorderLayers ? 'profile-border-effect--authored' : '',
     shouldAnimate ? '' : 'profile-border-effect--static',
     className
   ].filter(Boolean).join(' ');
@@ -36,24 +35,23 @@
     reducedMotion = Boolean(event?.matches ?? mediaQuery?.matches);
   }
 
-  function loadElasticComponent() {
-    if (!mounted || resolvedKey !== 'elastic' || ElasticFrameEffect || elasticComponentPromise) return;
-    elasticComponentPromise = import('./ElasticFrameEffect.svelte')
-      .then(module => { ElasticFrameEffect = module.default; })
-      .catch(() => {});
+  // Illustration geometry is loaded only for profiles that actually equip it.
+  // Celestial, Crystal and no-border profiles keep their existing small path.
+  function loadArtwork() {
+    if (!mounted || !authored || artworkPromise) return;
+    artworkPromise = import('./AuthoredBorderLayers.svelte')
+      .then(module => { if (mounted) AuthoredBorderLayers = module.default; })
+      .catch(() => { /* Keep the static frame if the optional artwork fails. */ });
   }
 
-  function loadShimmerComponent() {
-    if (!mounted || resolvedKey !== 'shimmer-track' || ShimmerFrameEffect || shimmerComponentPromise) return;
-    shimmerComponentPromise = import('./ProfileShimmerFrameEffect.svelte')
-      .then(module => { ShimmerFrameEffect = module.default; })
-      .catch(() => {});
-  }
+  afterUpdate(loadArtwork);
 
   onMount(() => {
     mounted = true;
-    loadElasticComponent();
-    loadShimmerComponent();
+    loadArtwork();
+    const updateVisibility = () => { documentVisible = !document.hidden; };
+    updateVisibility();
+    document.addEventListener('visibilitychange', updateVisibility);
     mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     updateReducedMotion();
     mediaQuery?.addEventListener?.('change', updateReducedMotion);
@@ -67,40 +65,20 @@
 
     return () => {
       mounted = false;
+      document.removeEventListener('visibilitychange', updateVisibility);
       mediaQuery?.removeEventListener?.('change', updateReducedMotion);
       observer?.disconnect();
       observer = null;
-      elasticComponentPromise = null;
-      shimmerComponentPromise = null;
     };
   });
 
-  afterUpdate(() => {
-    loadElasticComponent();
-    loadShimmerComponent();
-  });
-
-  onDestroy(() => {
-    mounted = false;
-    mediaQuery?.removeEventListener?.('change', updateReducedMotion);
-    observer?.disconnect();
-    elasticComponentPromise = null;
-    shimmerComponentPromise = null;
-  });
 </script>
 
 <div bind:this={host} class={hostClass} style={surfaceStyle} data-profile-border={resolvedKey || 'none'} data-profile-surface="true">
-  {#if resolvedKey === 'elastic' && ElasticFrameEffect}
-    <svelte:component this={ElasticFrameEffect} {host} enabled={elasticActive}>
-      <slot />
-    </svelte:component>
-  {:else if resolvedKey === 'shimmer-track' && ShimmerFrameEffect}
-    <svelte:component this={ShimmerFrameEffect} {host} enabled={shimmerActive}>
-      <slot />
-    </svelte:component>
-  {:else}
-    <div class="profile-border-effect__content"><slot /></div>
+  {#if authored && AuthoredBorderLayers}
+    <svelte:component this={AuthoredBorderLayers} borderKey={resolvedKey} active={shouldAnimate} {compact} />
   {/if}
+  <div class="profile-border-effect__content"><slot /></div>
 </div>
 
 <style>
@@ -176,24 +154,7 @@
 
   .profile-border-effect__content { overflow: visible; }
 
-  .profile-border-effect--elastic {
-    border-color: transparent;
-  }
-
-  .profile-border-effect--shimmer-track {
-    --border-accent: transparent;
-    border-color: transparent;
-  }
-
-  .profile-border-effect--shimmer-track::before {
-    display: none;
-  }
-
-  .profile-border-effect--elastic::before {
-    box-shadow: none;
-  }
-
-  .profile-border-effect:not(.profile-border-effect--none)::before {
+  .profile-border-effect:not(.profile-border-effect--none):not(.profile-border-effect--authored)::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -223,88 +184,22 @@
     box-shadow: 0 0 35px rgba(161, 196, 253, 0.6), inset 0 0 25px rgba(255, 255, 255, 0.3);
   }
 
-  .profile-border-effect--chroma {
-    --border-accent: #ff8fca;
-    --border-shadow: rgba(97, 226, 255, 0.34);
-    box-shadow: 0 0 0 1px rgba(255, 238, 132, 0.2), 0 0 17px var(--border-shadow);
-  }
-
   .profile-border-effect--crystal {
     --border-accent: #bfeaff;
     --border-shadow: rgba(171, 222, 255, 0.32);
     box-shadow: 0 0 15px var(--border-shadow), inset 0 0 10px rgba(185, 242, 255, 0.3);
   }
 
-  .profile-border-effect--glitch {
-    --border-accent: #ff679b;
-    --border-shadow: rgba(89, 235, 255, 0.32);
-    box-shadow: 0 0 0 1px rgba(89, 235, 255, 0.25), 0 0 14px var(--border-shadow);
-  }
-
-  .profile-border-effect--gold {
-    --border-accent: #e4bc68;
-    --border-shadow: rgba(228, 188, 104, 0.28);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.1);
-  }
-
-  .profile-border-effect--neon {
-    --border-accent: #77fff0;
-    --border-shadow: rgba(48, 255, 224, 0.34);
-    box-shadow: 0 0 15px rgba(48, 255, 224, 0.4), inset 0 0 10px rgba(48, 255, 224, 0.1);
-  }
-
-  .profile-border-effect--prism {
-    --border-accent: #cdd2ff;
-    --border-shadow: rgba(205, 210, 255, 0.34);
-    box-shadow: 0 0 15px rgba(194, 233, 251, 0.34);
-  }
-
-  .profile-border-effect--void {
-    --border-accent: #9482d9;
-    --border-shadow: rgba(107, 74, 198, 0.34);
-    box-shadow: 0 0 2px rgba(230, 240, 255, 0.82), 0 0 14px rgba(123, 72, 218, 0.48), 0 0 34px rgba(0, 0, 0, 1), inset 0 0 32px rgba(0, 0, 0, 0.98);
-  }
-
-  .profile-border-effect--signal {
-    --border-accent: #b7fd4d;
-    --border-shadow: rgba(183, 253, 77, 0.25);
-    box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.2), 0 0 12px var(--border-shadow);
-  }
-
   .profile-border-effect--celestial:not(.profile-border-effect--static) {
     animation: profile-border-celestial 4s ease-in-out infinite;
-  }
-
-  .profile-border-effect--chroma:not(.profile-border-effect--static) {
-    animation: profile-border-chroma 4.8s ease-in-out infinite;
-  }
-
-  .profile-border-effect--prism:not(.profile-border-effect--static) {
-    animation: profile-border-prism 5.2s ease-in-out infinite;
   }
 
   .profile-border-effect--crystal:not(.profile-border-effect--static) {
     animation: profile-border-crystal 3.8s ease-in-out infinite;
   }
 
-  .profile-border-effect--glitch:not(.profile-border-effect--static) {
-    animation: profile-border-glitch 2.8s steps(2, end) infinite;
-  }
-
-  .profile-border-effect--gold:not(.profile-border-effect--static) {
-    animation: profile-border-gold 4.4s ease-in-out infinite;
-  }
-
-  .profile-border-effect--neon:not(.profile-border-effect--static) {
-    animation: profile-border-neon 2.6s ease-in-out infinite;
-  }
-
-  .profile-border-effect--void:not(.profile-border-effect--static) {
-    animation: profile-border-void 4.6s ease-in-out infinite;
-  }
-
-  .profile-border-effect--signal:not(.profile-border-effect--static) {
-    animation: profile-border-signal 3.2s ease-in-out infinite;
+  .profile-border-effect--authored {
+    border-color: transparent;
   }
 
   .profile-border-effect--compact {
@@ -321,32 +216,6 @@
     50% { box-shadow: 0 0 50px rgba(194, 233, 251, 0.9), inset 0 0 35px rgba(255, 255, 255, 0.5); }
   }
 
-  @keyframes profile-border-chroma {
-    0%, 100% {
-      border-color: #ff8fca;
-      box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
-    }
-    33% {
-      border-color: #61e2ff;
-      box-shadow: 0 0 15px rgba(46, 211, 201, 0.5);
-    }
-    66% {
-      border-color: #ffe27a;
-      box-shadow: 0 0 15px rgba(161, 92, 255, 0.5);
-    }
-  }
-
-  @keyframes profile-border-prism {
-    0%, 100% {
-      border-color: #cdd2ff;
-      box-shadow: 0 0 15px rgba(194, 233, 251, 0.24);
-    }
-    50% {
-      border-color: #f7b7e2;
-      box-shadow: 0 0 24px rgba(247, 183, 226, 0.42);
-    }
-  }
-
   @keyframes profile-border-crystal {
     0%, 100% {
       border-color: #bfeaff;
@@ -356,51 +225,6 @@
       border-color: #ffffff;
       box-shadow: 0 0 25px #ffffff, inset 0 0 15px rgba(255, 255, 255, 0.5);
     }
-  }
-
-  @keyframes profile-border-glitch {
-    0%, 82%, 100% {
-      border-color: #ff679b;
-      box-shadow: 1px 0 10px rgba(255, 0, 193, 0.3), -1px 0 10px rgba(0, 255, 249, 0.3);
-    }
-    84% {
-      border-color: #59ebff;
-      box-shadow: 5px 0 #ff00c1, -4px 0 #00fff9;
-    }
-    87% {
-      border-color: #ffef7a;
-      box-shadow: -5px 0 #ff00c1, 4px 0 #00fff9;
-    }
-  }
-
-  @keyframes profile-border-gold {
-    0%, 20% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.1); }
-    70%, 100% { box-shadow: 0 0 28px rgba(255, 235, 164, 0.5), inset 0 0 15px rgba(255, 235, 164, 0.18); }
-  }
-
-  @keyframes profile-border-neon {
-    0%, 100% {
-      border-color: #77fff0;
-      box-shadow: 0 0 15px rgba(145, 70, 255, 0.4), inset 0 0 10px rgba(145, 70, 255, 0.1);
-    }
-    45% {
-      border-color: #b3fff5;
-      box-shadow: 0 0 26px rgba(0, 255, 249, 0.55), inset 0 0 16px rgba(0, 255, 249, 0.18);
-    }
-    70% {
-      border-color: #4fe8d7;
-      box-shadow: 0 0 12px rgba(48, 255, 224, 0.34);
-    }
-  }
-
-  @keyframes profile-border-void {
-    0%, 100% { box-shadow: 0 0 2px rgba(230, 240, 255, 0.65), 0 0 12px rgba(123, 72, 218, 0.35), 0 0 32px rgba(0, 0, 0, 1), inset 0 0 28px rgba(0, 0, 0, 0.94); }
-    50% { box-shadow: 0 0 3px rgba(255, 255, 255, 0.95), 0 0 22px rgba(123, 72, 218, 0.72), 0 0 46px rgba(0, 0, 0, 1), inset 0 0 42px rgba(0, 0, 0, 1); }
-  }
-
-  @keyframes profile-border-signal {
-    0%, 100% { box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.18), 0 0 14px var(--border-shadow), inset 0 0 8px rgba(183, 253, 77, 0.08); }
-    50% { box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.4), 0 0 25px rgba(183, 253, 77, 0.48), inset 0 0 14px rgba(183, 253, 77, 0.16); }
   }
 
   @media (prefers-reduced-motion: reduce) {

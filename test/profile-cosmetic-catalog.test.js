@@ -106,8 +106,6 @@ test('the profile card has a neutral no-border edge while valid border effects r
   assert.match(card, /color-mix\(in srgb, #ffffff/);
   assert.match(renderer, /isProfileBorderKey\(cosmetics\.profile_border\)/);
   assert.match(border, /profile-border-effect--none/);
-  assert.match(border, /profile-border-effect--chroma/);
-  assert.match(border, /profile-border-effect--glitch/);
-  assert.match(border, /profile-border-effect--shimmer-track/);
-  assert.match(border, /ProfileShimmerFrameEffect/);
+  assert.match(border, /AUTHORED_PROFILE_BORDER_KEYS.includes\(resolvedKey\)/);
+  assert.match(border, /this=\{AuthoredBorderLayers\} borderKey=\{resolvedKey\}/);
 });

@@ -1,7 +1,7 @@
 <script>
   import { afterUpdate, onMount } from 'svelte';
   import AvatarEffect from '../avatar-effect/AvatarEffect.svelte';
-  import ProfileAvatarFallback from '../ProfileAvatarFallback.svelte';
+  import UserAvatarFallback from '../UserAvatarFallback.svelte';
   import NameEffectCanvas from '../name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from '../profile-border/ProfileBorderEffect.svelte';
   import ProfileRollSummary from '../ProfileRollSummary.svelte';
@@ -180,7 +180,7 @@
               on:error={() => failedAvatarSource = avatarSrc}
             />
           {:else}
-            <ProfileAvatarFallback initial={safeInitial} className="profile-full-bleed__avatar-fallback" />
+            <UserAvatarFallback initial={safeInitial} className="profile-full-bleed__avatar-fallback" />
           {/if}
         </AvatarEffect>
       </div>

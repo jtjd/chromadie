@@ -6,7 +6,7 @@
   const reward = { name: 'Neon Particle', loadout: { motionKey: 'name_motion_neon_particle' } };
 </script>
 
-<section class="homepage-section homepage-collection" id="how" aria-labelledby="collection-title">
+<section class="homepage-section homepage-collection" id="how" data-homepage-reveal aria-labelledby="collection-title">
   <div class="homepage-collection__intro">
     <h2 class="homepage-section-heading" id="collection-title">More to collect.<br />More to customize.</h2>
     <p class="homepage-section-sub">Find unusual color combinations. Keep the conditions you discover, and give your profile a look of its own.</p>

@@ -58,6 +58,7 @@ try {
 
   chromium = await startChromium({ appUrl, debugPort, evidenceDir, width: 1440, height: 900 });
   page = chromium.page;
+  await page.navigate(appUrl, 'stable homepage entry');
   await page.setReducedMotion(true);
   await page.waitFor('Boolean(document.querySelector(".homepage-reference .roll-page") && document.querySelector(".roll-stage--preroll, .roll-stage--results"))', 'playable homepage');
   await page.evaluate('document.fonts.ready.then(() => true)');
@@ -105,6 +106,33 @@ try {
     return state;
   });
 
+  await check('homepage motion reveals once and becomes static for reduced motion', async () => {
+    await page.setReducedMotion(false);
+    await page.navigate(appUrl, 'motion-enabled homepage');
+    await page.waitFor("document.querySelector('#chromadie-homepage.homepage-motion-ready.homepage-motion-active')", 'homepage motion controller');
+    const initial = await page.evaluate(`(() => ({
+      heroAnimation: getComputedStyle(document.querySelector('.roll-page--homepage'), '::after').animationName,
+      profileRevealed: document.querySelector('.profile-example')?.hasAttribute('data-homepage-revealed') || false
+    }))()`);
+    assert(initial.heroAnimation === 'homepage-hero-camera', `Homepage camera motion did not start: ${JSON.stringify(initial)}.`);
+    assert(!initial.profileRevealed, `Offscreen profile content revealed before entering the viewport: ${JSON.stringify(initial)}.`);
+
+    await page.evaluate("document.querySelector('.profile-example').scrollIntoView({ block: 'center' })");
+    await page.waitFor("document.querySelector('.profile-example')?.hasAttribute('data-homepage-revealed')", 'one-time profile reveal');
+    await page.evaluate('window.scrollTo(0, 0)');
+    assert(await page.evaluate("document.querySelector('.profile-example')?.hasAttribute('data-homepage-revealed')"), 'Profile reveal replay state was discarded after leaving the viewport.');
+
+    await page.setReducedMotion(true);
+    const reduced = await page.evaluate(`(() => ({
+      preferred: matchMedia('(prefers-reduced-motion: reduce)').matches,
+      heroAnimation: getComputedStyle(document.querySelector('.roll-page--homepage'), '::after').animationName,
+      profileOpacity: getComputedStyle(document.querySelector('.profile-example__copy')).opacity,
+      profileTransform: getComputedStyle(document.querySelector('.profile-example__copy')).transform
+    }))()`);
+    assert(reduced.preferred && reduced.heroAnimation === 'none' && reduced.profileOpacity === '1' && reduced.profileTransform === 'none', `Reduced-motion homepage remained animated or hidden: ${JSON.stringify(reduced)}.`);
+    return { initial, reduced };
+  });
+
   for (const [width, height] of [[2048, 1024], [1440, 900], [1280, 720], [1280, 800], [1024, 900], [768, 1024], [390, 844], [375, 812], [320, 812]]) {
     await page.setViewport(width, height);
     await page.waitFor('Boolean(document.querySelector(".homepage-reference .roll-page") && document.querySelector(".roll-stage--preroll, .roll-stage--results"))', `${width}x${height} playable homepage`);
@@ -115,6 +143,11 @@ try {
       const action = document.querySelector('.roll-stage--preroll .roll-action__button, .roll-stage--results .roll-action__button--claimed');
       const bestRoll = document.querySelector('.homepage-best-roll');
       const game = document.querySelector('.game-container--dedicated');
+      const actionStyle = action ? getComputedStyle(action) : null;
+      const actionBefore = action ? getComputedStyle(action, '::before') : null;
+      const actionAfter = action ? getComputedStyle(action, '::after') : null;
+      const actionBox = action?.getBoundingClientRect();
+      const actionHit = actionBox ? document.elementFromPoint(actionBox.left + actionBox.width / 2, actionBox.top + actionBox.height / 2) : null;
       return {
         width: innerWidth,
         height: innerHeight,
@@ -123,6 +156,14 @@ try {
         columns: getComputedStyle(rollGrid).gridTemplateColumns,
         grid: rect(rollGrid),
         action: rect(action),
+        actionPaint: actionStyle ? {
+          backgroundColor: actionStyle.backgroundColor,
+          backgroundImage: actionStyle.backgroundImage,
+          appearance: actionStyle.appearance,
+          beforeDisplay: actionBefore.display,
+          afterDisplay: actionAfter.display,
+          centerHitsAction: actionHit === action || action?.contains(actionHit)
+        } : null,
         bestRoll: rect(bestRoll),
         game: rect(game),
         scoring: rect(document.querySelector('.homepage-collection')),
@@ -137,6 +178,8 @@ try {
     assert(state.grid && state.grid.left >= -1 && state.grid.right <= width + 1, `${width}x${height} roll grid escapes: ${JSON.stringify(state)}.`);
     assert(Math.abs((state.grid.left + state.grid.right) / 2 - width / 2) <= 1, `${width}x${height} roll grid is not centered: ${JSON.stringify(state)}.`);
     assert(state.action && state.action.left >= -1 && state.action.right <= width + 1, `${width}x${height} roll action escapes: ${JSON.stringify(state)}.`);
+    assert(state.actionPaint?.backgroundColor === 'rgb(255, 255, 255)' && state.actionPaint.backgroundImage === 'none' && state.actionPaint.appearance === 'none', `${width}x${height} roll action paint is obscured: ${JSON.stringify(state)}.`);
+    assert(state.actionPaint.beforeDisplay === 'none' && state.actionPaint.afterDisplay === 'none' && state.actionPaint.centerHitsAction, `${width}x${height} roll action is covered by another layer: ${JSON.stringify(state)}.`);
     // The community section intentionally disappears when the bounded feed is empty.
     assert(state.scoring && state.nextSection && state.start, `${width}x${height} supporting content is missing: ${JSON.stringify(state)}.`);
     if (state.board) assert(state.board.left >= -1 && state.board.right <= width + 1, `${width}x${height} community content escapes the viewport.`);

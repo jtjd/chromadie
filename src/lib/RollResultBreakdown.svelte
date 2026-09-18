@@ -6,6 +6,7 @@
   export let contributors = [];
   export let baseScore = 0;
   export let totalScore = 0;
+  export let showScore = true;
 
   const dispatch = createEventDispatcher();
   const SUMMARY_LIMIT = 3;
@@ -108,13 +109,15 @@
   });
 </script>
 
-<section class="roll-result-summary" aria-label="Roll score summary">
-  <div class="roll-result-summary__scoreline">
-    <div class="roll-result-summary__score">
-      <span>Score</span>
-      <strong>{formatScore(totalScore)}</strong>
+<section class:roll-result-summary--conditions-only={!showScore} class="roll-result-summary" aria-label="Roll score summary">
+  {#if showScore}
+    <div class="roll-result-summary__scoreline">
+      <div class="roll-result-summary__score">
+        <span>Score</span>
+        <strong>{formatScore(totalScore)}</strong>
+      </div>
     </div>
-  </div>
+  {/if}
 
   {#if summaryRows.length}
     <div class="roll-result-summary__conditions">
@@ -215,6 +218,15 @@
     background: var(--surface-2, #1d1d21);
   }
 
+  .roll-result-summary--conditions-only {
+    gap: 10px;
+    padding: 16px 0 0;
+    border: 0;
+    border-top: 1px solid var(--roll-border, rgba(255, 255, 255, .1));
+    border-radius: 0;
+    background: transparent;
+  }
+
   .roll-result-summary__scoreline {
     display: grid;
     align-items: center;
@@ -269,6 +281,11 @@
     gap: 7px;
     padding-top: 10px;
     border-top: 1px solid var(--roll-border, rgba(255, 255, 255, .1));
+  }
+
+  .roll-result-summary--conditions-only .roll-result-summary__conditions {
+    padding-top: 0;
+    border-top: 0;
   }
 
   .roll-result-summary__condition-list {
@@ -534,7 +551,16 @@
 
   @media (max-width: 600px) {
     .roll-result-summary { padding: 14px; }
-    .roll-result-summary__condition { grid-template-columns: 26px minmax(0, 1fr) auto auto; gap: 6px; }
+    .roll-result-summary--conditions-only { padding: 14px 0 0; }
+    .roll-result-summary__condition {
+      grid-template-columns: 26px minmax(0, 1fr) auto;
+      grid-template-rows: auto auto;
+      gap: 4px 6px;
+      padding-block: 7px;
+    }
+    .roll-result-summary__condition-icon { grid-row: 1 / 3; }
+    .roll-result-summary__condition-rarity { grid-column: 2; grid-row: 2; justify-self: start; }
+    .roll-result-summary__condition-points { grid-column: 3; grid-row: 1 / 3; }
     .roll-result-summary__condition strong { font-size: .72rem; }
     .roll-result-summary__condition-rarity { font-size: .52rem; }
     .roll-result-summary__condition-points { font-size: .62rem; }

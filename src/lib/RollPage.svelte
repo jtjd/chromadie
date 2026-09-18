@@ -236,15 +236,6 @@
     font-family: var(--site-font, 'Inter', sans-serif);
   }
 
-  .roll-page::before {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    content: '';
-    background: var(--roll-bg);
-    pointer-events: none;
-  }
-
   .roll-page__game {
     --roll-rarity: var(--roll-accent);
     --roll-score-color: var(--color-earned, #f5c26f);
@@ -558,6 +549,59 @@
     white-space: nowrap;
   }
 
+  .roll-page :global(.game-container--dedicated .roll-result-hero) {
+    display: grid;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero__heading) {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero__eyebrow) {
+    display: grid;
+    justify-items: center;
+    gap: 9px;
+    color: var(--roll-text);
+    font: 700 .76rem/1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero__eyebrow::before) {
+    width: 28px;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--roll-accent);
+    box-shadow: 0 0 16px var(--roll-accent-glow);
+    content: '';
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero__score) {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 3px;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero__score span) {
+    color: var(--roll-muted);
+    font: 700 .64rem/1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero__score strong) {
+    color: var(--roll-score-color);
+    font: 800 clamp(1.8rem, 4.5vw, 2.15rem)/1 var(--site-display, 'Manrope', sans-serif);
+    letter-spacing: -.045em;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 18px color-mix(in srgb, var(--roll-score-color) 30%, transparent);
+  }
+
   .roll-page :global(.game-container--dedicated .roll-mode-pill) {
     grid-column: 3;
     justify-self: end;
@@ -580,6 +624,29 @@
     border: 1px solid var(--roll-border);
     border-radius: 16px;
     background: var(--surface-2);
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero .roll-display) {
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero .roll-tile) {
+    width: 112px;
+    height: 112px;
+    flex-basis: 112px;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero .roll-color-info) {
+    align-items: flex-start;
+    gap: 6px;
+    max-width: 230px;
   }
 
   .roll-page :global(.game-container--dedicated .roll-tile) {
@@ -643,6 +710,21 @@
     letter-spacing: -.035em;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero .roll-color-name) {
+    display: -webkit-box;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-result-hero .roll-result-meta),
+  .roll-page :global(.game-container--dedicated .roll-result-hero .roll-attr-tags) {
+    justify-content: flex-start;
   }
 
   .roll-page :global(.game-container--dedicated .roll-color-hex) {
@@ -817,12 +899,19 @@
     margin: 0;
   }
 
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-display) { order: 0; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-result-hero) { order: 0; }
   .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-result-summary) { order: 1; }
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-action__button) { order: 2; }
-  .roll-page :global(.roll-countdown) { order: 2; margin: 0; text-align: center; color: var(--roll-muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
-  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-acquisition-actions) { order: 3; }
+  .roll-page :global(.game-container--dedicated .roll-stage--results > .roll-result-footer) { order: 2; }
+  .roll-page :global(.roll-countdown) { margin: 0; text-align: center; color: var(--roll-muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
   .roll-page :global(.game-container--dedicated .roll-stage--results > .cotw-success-banner) { order: 4; }
+
+  .roll-page :global(.game-container--dedicated .roll-result-footer) {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+    padding-top: 16px;
+    border-top: 1px solid var(--roll-border);
+  }
   .roll-page__context :global(.progression-reward-preview--wide .progression-reward-preview__trigger) { min-height:4.8rem; padding:.3rem .65rem .3rem .3rem; border-color:var(--roll-border); background:var(--roll-panel-card); }
   .roll-page__context :global(.progression-reward-preview--wide .progression-reward-preview__thumbnail) { flex:0 0 min(8.5rem, 46%); width:min(8.5rem, 46%); height:4.2rem; border-color:var(--roll-border); background:var(--roll-bg); }
   .roll-page__context :global(.progression-reward-preview--wide .progression-reward-preview__thumbnail .shop-preview-area) { min-height:4.2rem; height:4.2rem; padding:.35rem .55rem; }
@@ -936,6 +1025,10 @@
     .roll-page :global(.game-container--dedicated) { max-width: 420px; }
     .roll-page :global(.game-container--dedicated .roll-stage) { padding: 20px; border-radius: 20px; }
     .roll-page :global(.game-container--dedicated .roll-display) { align-items: flex-start; gap: 14px; padding: 16px; }
+    .roll-page :global(.game-container--dedicated .roll-result-hero) { gap: 16px; }
+    .roll-page :global(.game-container--dedicated .roll-result-hero .roll-display) { align-items: center; justify-content: center; gap: 14px; padding: 0; }
+    .roll-page :global(.game-container--dedicated .roll-result-hero__score strong) { font-size: 1.8rem; }
+    .roll-page :global(.game-container--dedicated .roll-result-hero .roll-tile) { width: 88px; height: 88px; flex-basis: 88px; }
     .roll-page :global(.game-container--dedicated .roll-color-name) { font-size: 1.35rem !important; }
     .roll-page :global(.game-container--dedicated .roll-attr-tags) { gap: 6px; }
     .roll-page :global(.game-container--dedicated .roll-attr-tag) { font-size: .64rem; }
@@ -947,7 +1040,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     .roll-page.roll-page--homepage-preroll .roll-page__unknown-mark { animation: none; }
-    .roll-page::before { position: absolute; }
     .roll-page :global(.game-container--dedicated .roll-stage--results) { animation: none; }
     .roll-page :global(.game-container--dedicated .roll-tile__surface) { transform: none; }
     .roll-page__guest-cta button { transition: none; }
@@ -1069,11 +1161,16 @@
   .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-display) { display: none; }
 
   .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button) {
+    position: relative;
+    z-index: 3;
     width: min(100%, 320px);
     min-height: 66px;
     border: 1px solid rgba(255, 255, 255, .92);
     border-radius: 10px;
-    background: #fff;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #fff !important;
+    background-image: none !important;
     color: #111114;
     box-shadow: 0 14px 32px -22px rgba(255, 255, 255, .55), 0 14px 32px -24px rgba(0, 0, 0, .95);
     font-size: .92rem;
@@ -1081,16 +1178,22 @@
     transition: transform .18s ease, box-shadow .18s ease;
   }
 
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button::before),
+  .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button::after) {
+    display: none !important;
+    content: none !important;
+  }
+
   .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button:hover:not(:disabled)) {
     border-color: #fff;
-    background: #e9e9ec;
+    background: #e9e9ec !important;
     box-shadow: 0 17px 34px -23px rgba(255, 255, 255, .62), 0 17px 34px -23px rgba(0, 0, 0, .95);
     transform: translateY(-2px);
   }
 
   .roll-page.roll-page--homepage-preroll :global(.game-container--dedicated .roll-stage--preroll .roll-action__button:disabled) {
     border-color: rgba(255, 255, 255, .14);
-    background: #1b1b1f;
+    background: #1b1b1f !important;
     box-shadow: none;
   }
 
@@ -1237,6 +1340,11 @@
   }
 
   .roll-page.roll-page--result :global(.game-container--dedicated .roll-stage--results > .roll-acquisition-actions .result-action) {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .roll-page.roll-page--result :global(.game-container--dedicated .roll-result-footer .result-action) {
     justify-content: center;
     text-align: center;
   }

@@ -1,0 +1,26 @@
+/* Roll's solid charcoal surfaces and earned-score treatment, scoped to the board. */
+
+#main-content .roll-leaderboard .leaderboard-row,
+#main-content .roll-leaderboard .rival-row,
+#main-content .roll-leaderboard .roll-leaderboard__state {
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.roll-leaderboard .leaderboard-row::before,
+.roll-leaderboard .rival-row::before { display: none; }
+
+#main-content .roll-leaderboard .leaderboard-row:hover,
+#main-content .roll-leaderboard .leaderboard-row:focus-visible,
+#main-content .roll-leaderboard .roll-leaderboard__tabs button:hover,
+#main-content .roll-leaderboard .roll-leaderboard__tabs button:focus-visible { transform: none; }
+
+#main-content .roll-leaderboard .leaderboard-row__score,
+#main-content .roll-leaderboard .rival-row__today strong { color: var(--color-earned, #f5c26f); }
+
+#main-content .roll-leaderboard .leaderboard-row__avatar { border-color: var(--leaderboard-line); box-shadow: none; }
+#main-content .roll-leaderboard .leaderboard-row__roll-swatch { box-shadow: none; }
+#main-content .roll-leaderboard .roll-leaderboard__retry,
+#main-content .roll-leaderboard .rival-row__actions a,
+#main-content .roll-leaderboard .rival-row__actions button { min-height: 44px; border-radius: 9px; }

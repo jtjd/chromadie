@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createSupabaseHeaders, getSupabaseCredentials } from '../functions/_supabaseApi.js';
 import { progressionRewardKeys, readProgressionManifest } from './progression-manifest.mjs';
+import { PROFILE_BORDER_KEYS, PROFILE_BORDER_DEFINITIONS } from '../src/lib/profile-border/profileBorders.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -347,7 +348,7 @@ const rendererKeys = Object.freeze({
   profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare', 'prism-dust']),
   profile_motion: new Set(['perspective-tilt', 'halo-offset', 'wavefront'])
 });
-const expectedCounts = Object.freeze({ name_font: 17, name_material: 8, name_motion: 20, profile_border: 11, cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 });
+const expectedCounts = Object.freeze({ name_font: 17, name_material: 8, name_motion: 20, profile_border: 12, cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 });
 const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0, profile_motion: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
@@ -356,7 +357,7 @@ for (const item of seed.catalog.values()) {
   if (!Number.isSafeInteger(Number(item.cost)) || Number(item.cost) < 0) fail(`${item.item_key} has invalid cost ${item.cost}`);
   if (item.css_type === 'renderer') {
     const allowedRendererKeys = item.slot === 'profile_border'
-      ? new Set(['celestial', 'chroma', 'crystal', 'glitch', 'gold', 'neon', 'prism', 'void', 'signal', 'elastic', 'shimmer-track'])
+      ? new Set(PROFILE_BORDER_KEYS)
       : rendererKeys[item.slot];
     if (!allowedRendererKeys?.has(item.css_value)) fail(`${item.item_key} references an unknown ${item.slot} renderer ${item.css_value}`);
     if (!['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'].includes(item.slot)) {
@@ -377,8 +378,14 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 117) {
-  fail(`expected 117 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 118) {
+  fail(`expected 118 active catalog rows, found ${seed.catalog.size}`);
+}
+for (const definition of Object.values(PROFILE_BORDER_DEFINITIONS)) {
+  const row = seed.catalog.get(definition.itemKey);
+  if (!row || ![definition.label, definition.label + ' Border'].includes(row.name) || row.css_value !== definition.key) {
+    fail(`border definition differs from seed: ${definition.itemKey}`);
+  }
 }
 if ([...seed.catalog.values()].some(item => obsoleteSlots.includes(item.slot))) {
   fail('the seed still contains an obsolete cosmetic slot');

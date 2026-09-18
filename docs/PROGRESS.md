@@ -1,5 +1,28 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-18 — Profile border curation
+
+Implemented ten illustrated designs across five tastes, retaining Celestial
+and Crystal. Shared preview/public rendering now includes bows, hearts,
+blossoms, manga ink, roses, thorns, pixel wings, torn tape, shells and leaves.
+The finite catalog migration updates names/descriptions and adds Wildflower;
+existing equipped IDs render their new designs. Production has not been changed.
+
+Browser evidence: `artifacts/profile-borders/desktop.png`, `mobile-*.png`,
+`profile-*.png`, `reduced-motion.png`, `light-surface.png`, `square-radius.png`
+and `results.json`. All ten animate independently of content geometry; the
+actual catalog thumbnails contain their ornaments; profile buttons work with
+keyboard input. Motion toggles, reduced motion, offscreen/hidden-document
+pausing and unmount behavior pass. Desktop/mobile screenshots were reviewed.
+
+Validation: 628 unit tests pass. Build, Svelte check, ESLint, links, CSP,
+performance, username/balance/catalog drift, scoring parity and database
+security checks pass locally. The local database reset and strict schema lint
+pass; the active catalog also matches the local running database. Existing
+aggregate asset-catalog size advisories remain non-blocking. See
+[`milestones/PROFILE_BORDER_CURATION.md`](milestones/PROFILE_BORDER_CURATION.md).
+
+
 ## 2026-09-13 — Shared route atmosphere and Sleek type treatment
 
 Applied the current homepage hero and sparse continuous lower artwork to normal
@@ -6281,3 +6304,84 @@ Evidence: `/tmp/chromadie-homepage-heart-pop/`. Not deployed.
 The Modern homepage demo's cursor URL and cursor trail are now disabled in its
 preview projection. Homepage browser smoke confirms no cursor style or cursor
 trail layer at desktop and mobile sizes.
+
+# Reference-aligned site header — 2026-09-15
+
+Implemented the supplied desktop header states in `SiteModeHeader`: a 968px
+glass capsule, centered navigation, Login/Create profile guest actions, and an
+avatar/name account menu for authenticated players. Existing auth events,
+route prefetching, mobile navigation, keyboard focus, and
+reduced-motion behavior remain intact. Homepage screenshots passed at 2048,
+1440, 1280, 1024, 768, 390, 375, and 320px. No schema or RPC changes.
+
+# Leaderboard Roll styling — 2026-09-13
+
+Aligned the Leaderboard palette, heading, controls and rows with Roll.
+Updated the existing presentation regression assertions. The required suite
+passes (619 tests, build, Svelte, ESLint, links, CSP, performance, policy,
+balance, catalog, scoring parity and local DB security). Browser fixture
+review covers 1440px, 390px and 320px with no horizontal overflow.
+No schema changes; application deployment has not been performed for this change.
+
+# Shared non-profile atmosphere — 2026-09-15
+
+Roll, Leaderboard, and Progression now expose the shared homepage atmosphere
+instead of painting route-level opaque canvases. Removing Roll's fixed paint
+layer also restores the shared capsule header above the dedicated roll route.
+Desktop and mobile browser captures cover all three routes. No schema, RPC,
+authentication, scoring, or profile-rendering changes were required.
+
+# Owner-surface capsule headers — 2026-09-15
+
+Profile Studio and the signed-in player's own profile now use the reference
+glass capsule at desktop and mobile sizes. Their existing navigation and
+keyboard behavior remain intact. Focused component tests and owner-profile
+browser captures pass; no schema, RPC, or authorization changes were needed.
+
+# Signed-in homepage CTA removal — 2026-09-15
+
+The redundant “Make it yours” block is no longer mounted for authenticated
+players. The signed-out handle claim remains unchanged.
+
+# Cinematic homepage motion — 2026-09-15
+
+Implemented a homepage-only ambient and reveal system using the existing hero
+and lower-page artwork. The hero stages in on load; supporting sections reveal
+once as they enter view; collection, pricing, and community receive restrained
+product-specific gestures. Lazy content is registered without another observer,
+and reduced-motion/no-observer fallbacks remain fully visible. Homepage browser
+coverage verifies active camera motion, one-time reveal persistence, and the
+static reduced-motion result at desktop and mobile presentation widths.
+
+# Auth-page navigation — 2026-09-16
+
+Restored the shared capsule navigation on standalone Login and Create profile
+routes. Auth callback and password-reset routes already used the complete
+header; focused routing assertions now protect all auth entry states from
+regressing to a logo-only header.
+
+# Daily Roll score-first result — 2026-09-16
+
+Rebalanced the completed Daily Roll card around one integrated result hero. A
+larger swatch and color identity lead while the compact score metric anchors the
+same cluster beneath the rarity and traits. Conditions now read as secondary
+detail, and the countdown/share/reroll controls share a compact footer.
+Focused source tests and the roll browser audit cover 1440px, the supplied
+738×817 reference size, 390px, and 320px without horizontal overflow. No schema,
+RPC, scoring, reward, or authentication behavior changed.
+
+Follow-up: the homepage “Today’s top roll” card now uses the same integrated
+swatch/name/points hierarchy instead of the former standalone score band. The
+pre-roll button explicitly disables native and legacy pseudo-element paint and
+sits above ambient layers. Homepage browser coverage verifies its solid white
+paint, center hit target, and unobstructed stacking from 2048px through 320px.
+
+# Sitewide no-avatar fallback — 2026-09-16
+
+Added one shared neutral avatar fallback and adopted it across the account
+header, homepage top roller and player cards, leaderboard and rival rows,
+public-profile layouts, Profile Studio's avatar state, and avatar-effect
+previews. The fallback now stays independent of roll/profile accent colors and
+uses the same lowercase single-initial treatment at every size. Focused source
+tests and the homepage browser suite pass, including desktop and mobile visual
+captures. No data, RPC, auth, media, or cosmetic entitlement contract changed.

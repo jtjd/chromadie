@@ -10,12 +10,12 @@ import { NAME_MOTIONS } from '../src/lib/name/nameMotions.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the curated catalog keeps the approved active Name rows and eleven Profile Border rows', async () => {
+test('the curated catalog keeps the approved active Name rows and twelve Profile Border rows', async () => {
   const seed = await read('supabase/seed.sql');
   assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 17);
   assert.equal((seed.match(/^\s*\('name_material_[a-z0-9_]+'/gm) || []).length, 8);
   assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 20);
-  assert.equal((seed.match(/^\s*\('border_[a-z0-9_]+'/gm) || []).length, 11);
+  assert.equal((seed.match(/^\s*\('border_[a-z0-9_]+'/gm) || []).length, 12);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 18,

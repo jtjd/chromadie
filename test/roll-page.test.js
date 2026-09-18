@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [page, pageContext, game, preRoll, reveal, app, routeMetadata, routes, header, homepageHeader, footer, breakdown] = await Promise.all([
+const [page, pageContext, game, preRoll, reveal, app, routeMetadata, routes, header, homepageHeader, footer, breakdown, resultHero] = await Promise.all([
   read('src/lib/RollPage.svelte'),
   read('src/lib/rollPageContext.js'),
   read('src/lib/Game.svelte'),
@@ -16,7 +16,8 @@ const [page, pageContext, game, preRoll, reveal, app, routeMetadata, routes, hea
   read('src/lib/SiteModeHeader.svelte'),
   read('src/lib/homepage/HomepageHeader.svelte'),
   read('src/lib/SiteFooter.svelte'),
-  read('src/lib/RollResultBreakdown.svelte')
+  read('src/lib/RollResultBreakdown.svelte'),
+  read('src/lib/RollResultHero.svelte')
 ]);
 
 test('the Roll experience has a canonical page and shared navigation entry', () => {
@@ -27,10 +28,10 @@ test('the Roll experience has a canonical page and shared navigation entry', () 
   assert.match(header, /navigate\('game'\)/);
   assert.doesNotMatch(header, />Discover</);
   assert.match(header, />Pricing</);
-  assert.match(header, /Claim handle/);
-  assert.match(header, />Sign in</);
+  assert.match(header, />Create profile</);
+  assert.match(header, />Login</);
   assert.match(homepageHeader, /SiteModeHeader/);
-  assert.match(homepageHeader, /showClaim=\{false\}/);
+  assert.doesNotMatch(homepageHeader, /showClaim/);
   assert.match(footer, /href="\/roll">Roll/);
 });
 
@@ -48,9 +49,7 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.ok(page.indexOf('class="roll-page__guest-cta"') < page.indexOf('<Game'), 'guest CTA belongs to the left context before the game card');
   assert.match(game, /export let dedicated = false/);
   assert.match(game, /game-container--dedicated/);
-  assert.match(game, /roll-card-header/);
-  assert.match(game, /roll-card-header__copy/);
-  assert.match(game, /<h2 class="roll-card-header__title">Daily Roll<\/h2>/);
+  assert.match(resultHero, /roll-result-hero/);
   assert.match(game, /RollTile/);
   assert.match(game, /<RollPreRoll/);
   assert.match(preRoll, /roll-pre-roll__unknown/);
@@ -64,6 +63,12 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(page + game, /roll-tile/);
   assert.match(page + game, /roll-display/);
   assert.match(game, /RollResultBreakdown/);
+  assert.match(game, /RollResultHero/);
+  assert.match(game, /showScore=\{false\}/);
+  assert.match(resultHero, /<span class="roll-result-hero__eyebrow">Daily Roll<\/span>/);
+  assert.match(resultHero, /roll-display[\s\S]*roll-color-name[\s\S]*roll-result-hero__score[\s\S]*<strong>\{formattedScore\}<\/strong>[\s\S]*<span>pts<\/span>/);
+  assert.ok(resultHero.indexOf('roll-color-name') < resultHero.indexOf('roll-result-hero__score'), 'score is attached beneath the earned color identity');
+  assert.match(resultHero, /<h2 id="roll-result-title" class="roll-color-name">/);
   assert.doesNotMatch(game, /roll-breakdown--preview|roll-breakdown--result|REFERENCE_PREVIEW_ROWS|15,013|28,798/);
   assert.match(preRoll, /No result yet/);
   assert.match(preRoll, /Roll to generate today’s color/);
@@ -94,16 +99,16 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(page, /color-mix\(in srgb, var\(--roll-result-color, var\(--white\)\) 30%, transparent\)/);
   assert.match(page, /roll-result-glow/);
   assert.match(page, /color: var\(--roll-action-ink, #fff\)/);
-  assert.match(game, /roll-result-meta/);
-  assert.doesNotMatch(game, /roll-color-rarity__icon/);
+  assert.match(resultHero, /roll-result-meta/);
+  assert.doesNotMatch(resultHero, /roll-color-rarity__icon/);
   assert.match(game, /export function beginGuestSignupFromParent/);
   assert.match(game, /if !\$isAuthenticated && !dedicated/);
   assert.match(game, /--roll-rarity: \$\{getRarityPresentation\(rarity \|\| 'Common'\)\.color\}/);
   assert.doesNotMatch(game, /New color every day|Score after reveal/);
   assert.match(game, /dedicated \? traits\.slice\(0, 2\) : traits/);
-  assert.match(game, /Next roll · \{countdownString\}/);
+  assert.match(game, /Next roll in <strong>\{countdownString\}<\/strong>/);
   assert.match(game, /if !dedicated/);
-  assert.doesNotMatch(game, /roll-color-rarity">\{rarity \|\| 'Common'\} Roll/);
+  assert.doesNotMatch(resultHero, /roll-color-rarity">\{rarity \|\| 'Common'\} Roll/);
   assert.doesNotMatch(page, /on:pointermove|perspective:|rotateX|rotateY|translate3d/);
   assert.doesNotMatch(page, /roll-liquid-blob-morph|60% 40% 30% 70% \/ 60% 30% 70% 40%/);
   assert.match(page, /prefers-reduced-motion/);
@@ -121,15 +126,18 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.doesNotMatch(page, /Keep your color story|Roll before the timer resets/);
   assert.match(page, /roll-page__description-rarity/);
   assert.match(page, /roll-page__description-score/);
-  assert.match(page, /roll-card-header__copy::before/);
-  assert.match(page, /grid-template-columns: minmax\(0, 1fr\) auto minmax\(0, 1fr\)/);
+  assert.match(page, /roll-result-hero__eyebrow::before/);
+  assert.match(page, /roll-result-hero__score strong/);
+  assert.match(page, /roll-result-hero \.roll-display\)[\s\S]*align-items: center;[\s\S]*justify-content: center;/);
+  assert.doesNotMatch(page, /roll-result-hero \.roll-display\)[\s\S]{0,100}flex-direction: column;/);
+  assert.match(page, /roll-result-hero \.roll-color-info\)[\s\S]*align-items: flex-start;/);
   assert.match(page, /--roll-rarity: \$\{contextHasResult \? contextRarity\.color/);
   assert.match(page, /--roll-score-color: var\(--color-earned, #f5c26f\)/);
   assert.match(page, /description-score[\s\S]*text-shadow: 0 0 14px color-mix\(in srgb, var\(--roll-score-color\)/);
   assert.match(page, /roll-color-rarity[\s\S]*filter: saturate\(1\.2\)/);
   assert.match(breakdown, /--condition-rarity-color: #54f2a0/);
-  assert.match(breakdown, /roll-result-summary__scoreline[\s\S]*justify-content: center/);
-  assert.match(breakdown, /roll-result-summary__scoreline[\s\S]*justify-items: center/);
+  assert.match(breakdown, /export let showScore = true/);
+  assert.match(breakdown, /\{#if showScore\}[\s\S]*roll-result-summary__scoreline/);
   assert.match(breakdown, /roll-result-summary__score strong[\s\S]*color: var\(--roll-score-color/);
   assert.match(breakdown, /roll-result-summary__condition-points[\s\S]*color: var\(--roll-score-color/);
   assert.match(breakdown, /roll-result-breakdown-dialog__points[\s\S]*color: var\(--roll-score-color/);

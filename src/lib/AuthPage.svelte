@@ -81,10 +81,8 @@
         isAuthenticated={$isAuthenticated}
         isHomeMode={true}
         isHomepageStyle={true}
-        showClaim={false}
         on:navigate={navigateFromAuth}
         on:login={openAuthRoute}
-        on:claim={() => openAuthRoute({ detail: { mode: 'signup' } })}
       />
     </div>
 
@@ -122,20 +120,14 @@
   .auth-page__layout { display: grid; flex: 1 1 auto; min-height: 0; place-items: center; padding: 2rem 1rem 3.5rem; }
   .auth-page__stage { display: grid; width: min(100%, 23rem); place-items: center; }
 
-  /* Auth is a focused task. Keep the shared header mounted for route
-     consistency while reducing it to the quiet brand mark used on this page. */
-  :global(.auth-page .site-mode-header) { height: 4.25rem; }
-  :global(.auth-page .site-mode-header__inner) { width: min(1080px, calc(100% - 2rem)); justify-content: flex-start; }
-  :global(.auth-page .site-mode-header__nav), :global(.auth-page .site-mode-header__right) { display: none; }
-  :global(.auth-page .site-mode-header .site-mode-header__mobile-menu) { display: none !important; }
-  :global(.auth-page .site-mode-header__brand-logo) { width: 3.6rem; }
+  /* Keep the complete shared capsule and navigation on both login and signup.
+     Auth remains a focused task through its content card, not by removing
+     route navigation from the surrounding site chrome. */
   :global(.auth-page .auth-container) { border-color: rgba(255, 255, 255, 0.09) !important; background: #141416 !important; box-shadow: 0 1.75rem 4.5rem rgba(0, 0, 0, 0.36) !important; }
   .auth-page__chrome-footer { display: none; }
 
   @media (max-width: 30rem) {
     .auth-page__layout { padding: 1rem 0.75rem 2rem; }
-    :global(.auth-page .site-mode-header) { height: 3.75rem; }
-    :global(.auth-page .site-mode-header__inner) { width: calc(100% - 1.5rem); }
   }
 
   @media (prefers-reduced-motion: reduce) {

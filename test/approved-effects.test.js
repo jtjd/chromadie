@@ -156,7 +156,7 @@ test('every approved effect resolves through its existing finite renderer regist
     if (slot === 'cursor_trail') assert.equal(getCursorTrailKey(itemKey), rendererKey);
     if (slot === 'avatar_effect') assert.equal(getAvatarEffectDefinition(itemKey)?.key, rendererKey);
   }
-  assert.equal(getProfileBorderDefinition('border_elastic')?.label, 'Elastic Frame');
+  assert.equal(getProfileBorderDefinition('border_elastic')?.label, 'Afterhours');
   assert.equal(getProfileMotionDefinition('profile_motion_wavefront')?.name, 'Wavefront');
 });
 

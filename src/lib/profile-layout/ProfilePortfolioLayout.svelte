@@ -1,6 +1,6 @@
 <script>
   import AvatarEffect from '../avatar-effect/AvatarEffect.svelte';
-  import ProfileAvatarFallback from '../ProfileAvatarFallback.svelte';
+  import UserAvatarFallback from '../UserAvatarFallback.svelte';
   import NameEffectCanvas from '../name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from '../profile-border/ProfileBorderEffect.svelte';
   import ProfileRollSummary from '../ProfileRollSummary.svelte';
@@ -98,7 +98,7 @@
             {#if activeAvatarSource}
               <img class="profile-portfolio__avatar" src={activeAvatarSource} alt={`${safeDisplayName} avatar`} loading="eager" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
             {:else}
-              <ProfileAvatarFallback initial={safeInitial} className="profile-portfolio__avatar-fallback" />
+              <UserAvatarFallback initial={safeInitial} className="profile-portfolio__avatar-fallback" />
             {/if}
           </AvatarEffect>
         </div>

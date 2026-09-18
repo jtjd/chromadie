@@ -49,16 +49,16 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, available_from, available_until, rarity, description, collection, stackable) VALUES
 ('border_celestial', 'Celestial Border', 'profile_border', 600000, 'renderer', 'celestial', NULL, NULL, 'Mythic', 'A precise celestial edge with a restrained star-like pulse.', 'Prism', false),
-('border_chroma', 'Chroma Border', 'profile_border', 0, 'renderer', 'chroma', NULL, NULL, 'Mythic', 'A spectrum edge that moves through the profile without overwhelming it.', 'Prism', false),
+('border_chroma', 'Rosette', 'profile_border', 0, 'renderer', 'chroma', NULL, NULL, 'Mythic', 'Satin pink bows, a fine pearl edge and tiny floating hearts.', 'Prism', false),
 ('border_crystal', 'Crystal Border', 'profile_border', 450000, 'renderer', 'crystal', NULL, NULL, 'Mythic', 'A cool faceted edge with a clean crystalline glint.', 'Prism', false),
-('border_glitch', 'Glitch Border', 'profile_border', 500000, 'renderer', 'glitch', NULL, NULL, 'Mythic', 'A clipped signal edge with brief cyan and rose interruptions.', 'Static Bloom', false),
-('border_gold', 'Gold Border', 'profile_border', 350000, 'renderer', 'gold', NULL, NULL, 'Mythic', 'A warm archival metal edge with a measured glint.', 'Archive', false),
-('border_neon', 'Neon Border', 'profile_border', 180000, 'renderer', 'neon', NULL, NULL, 'Epic', 'A clean electric edge that breathes between cyan and mint.', 'Signal', false),
-('border_prism', 'Prism Border', 'profile_border', 300000, 'renderer', 'prism', NULL, NULL, 'Epic', 'Refracted light travels around the profile edge in a compact spectrum.', 'Prism', false),
-('border_void', 'Void Border', 'profile_border', 550000, 'renderer', 'void', NULL, NULL, 'Mythic', 'A dark violet edge that absorbs light around the card.', 'Nocturne', false),
-('border_signal', 'Signal Border', 'profile_border', 0, 'renderer', 'signal', NULL, NULL, 'Rare', 'A quiet lime edge with a bounded signal pulse.', 'Signal', false),
-('border_elastic', 'Elastic Frame', 'profile_border', 0, 'renderer', 'elastic', NULL, NULL, 'Epic', 'A tensioned perimeter bends toward the pointer while keeping the profile boundary in place.', 'Signal', false),
-('border_shimmer_track', 'Shimmer Track', 'profile_border', 0, 'renderer', 'shimmer-track', NULL, NULL, 'Epic', 'Ten soft highlights travel the rounded profile edge in a continuous light track.', 'Prism', false),
+('border_glitch', 'Love Letter', 'profile_border', 500000, 'renderer', 'glitch', NULL, NULL, 'Mythic', 'Lipstick-red wax hearts and a blush stitched stationery border.', 'Static Bloom', false),
+('border_gold', 'Sakura Diary', 'profile_border', 350000, 'renderer', 'gold', NULL, NULL, 'Mythic', 'Painted cherry blossoms on warm branches with drifting pink petals.', 'Archive', false),
+('border_neon', 'Manga Panel', 'profile_border', 180000, 'renderer', 'neon', NULL, NULL, 'Epic', 'Off-white ink panels, red impact marks and animated screentone details.', 'Signal', false),
+('border_prism', 'Midnight Rose', 'profile_border', 300000, 'renderer', 'prism', NULL, NULL, 'Epic', 'Crimson roses and dark leaves entwine a tarnished silver edge.', 'Prism', false),
+('border_void', 'Blackthorn', 'profile_border', 550000, 'renderer', 'void', NULL, NULL, 'Mythic', 'Sharp silver thorn vines wrap a dark rim with blood-red glints.', 'Nocturne', false),
+('border_signal', 'Web Angel', 'profile_border', 0, 'renderer', 'signal', NULL, NULL, 'Rare', 'Pixel wings, a lavender heart and nostalgic old-web chrome.', 'Signal', false),
+('border_elastic', 'Afterhours', 'profile_border', 0, 'renderer', 'elastic', NULL, NULL, 'Epic', 'Torn photocopy tape, pencil scratches and acid-yellow zine doodles.', 'Signal', false),
+('border_shimmer_track', 'Sea Glass', 'profile_border', 0, 'renderer', 'shimmer-track', NULL, NULL, 'Epic', 'Translucent tide lines, pearly shells and gently floating water drops.', 'Prism', false),
 ('streak_freeze', 'Streak Freeze', 'consumable', 50000, 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL, true),
 ('title_founder', 'Founder Title', 'title', 0, 'text', '✦ FOUNDER ✦', NULL, '2026-07-10', 'Mythic', 'Reserved for people whose early contributions helped shape ChromaDie.', 'Project Legacy', false)
 ON CONFLICT (item_key) DO NOTHING;
@@ -343,3 +343,13 @@ WHERE item_key IN ('name_prism_atelier', 'bg_prism_atmosphere')
 UPDATE public.shop_items
 SET description = 'A centered glass profile card that leaves the user background in charge.'
 WHERE item_key = 'profile_layout_compact';
+
+INSERT INTO public.shop_items (
+  item_key, name, slot, cost, css_type, css_value, available_from, available_until,
+  rarity, description, collection, stackable, access_tier, entitlement_key, catalog_status
+) VALUES
+  ('border_aurora', 'Wildflower', 'profile_border', 0, 'renderer', 'aurora', NULL, NULL,
+   'Epic', 'Garden vines with periwinkle, butter-yellow and ivory flowers.', 'Prism', false, 'free', NULL, 'active')
+ON CONFLICT (item_key) DO UPDATE SET
+  name = EXCLUDED.name, description = EXCLUDED.description,
+  css_type = EXCLUDED.css_type, css_value = EXCLUDED.css_value;

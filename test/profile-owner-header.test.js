@@ -14,10 +14,16 @@ test('profile navigation only mounts for the owner after homepage transition', (
 
 test('owner header exposes canonical home and customize links with accessible controls', () => {
   assert.match(header, /<nav aria-label="Your profile navigation">/);
+  assert.match(header, /src="\/brand\/am-mark-v1\.webp"/);
   assert.match(header, /href="\/">Home<\/a>/);
   assert.doesNotMatch(header, /[←→↗↓]/);
   assert.match(header, /href="\/profile\/settings">Customize profile<\/a>/);
   assert.match(header, /min-height: 44px/);
+  assert.match(header, /width: min\(968px, calc\(100% - 48px\)\)/);
+  assert.match(header, /height: 54px/);
+  assert.match(header, /border-radius: 999px/);
+  assert.match(header, /background: rgba\(13, 14, 17, 0\.76\)/);
+  assert.match(header, /backdrop-filter: blur\(22px\) saturate\(118%\)/);
   assert.match(header, /:focus-visible/);
   const result = compile(header, { filename: 'ProfileOwnerHeader.svelte', generate: 'server' });
   assert.deepEqual(result.warnings, []);

@@ -17,7 +17,7 @@ test('the rounded edge light track keeps the inspected offsets and speed', () =>
   assert.deepEqual(PROFILE_SHIMMER_OFFSETS, [0, 8, 17, 29, 44, 62, 84, 110, 140, 174]);
   assert.equal(PROFILE_SHIMMER_SPEED, 210);
   assert.equal(PROFILE_BORDER_KEYS.includes('shimmer-track'), true);
-  assert.equal(getProfileBorderDefinition('border_shimmer_track')?.label, 'Shimmer Track');
+  assert.equal(getProfileBorderDefinition('border_shimmer_track')?.label, 'Sea Glass');
 });
 
 test('shimmer geometry follows one clockwise rounded rectangle perimeter', () => {

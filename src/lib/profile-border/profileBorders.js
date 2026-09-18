@@ -16,7 +16,8 @@ const definitions = {
   chroma: {
     key: 'chroma',
     itemKey: 'border_chroma',
-    label: 'Chroma',
+    label: 'Rosette',
+    taste: 'Girly',
     collection: 'Prism',
     rarity: 'Mythic'
   },
@@ -30,60 +31,79 @@ const definitions = {
   glitch: {
     key: 'glitch',
     itemKey: 'border_glitch',
-    label: 'Glitch',
+    label: 'Love Letter',
+    taste: 'Girly',
     collection: 'Static Bloom',
     rarity: 'Mythic'
   },
   gold: {
     key: 'gold',
     itemKey: 'border_gold',
-    label: 'Gold',
+    label: 'Sakura Diary',
+    taste: 'Anime',
     collection: 'Archive',
     rarity: 'Mythic'
   },
   neon: {
     key: 'neon',
     itemKey: 'border_neon',
-    label: 'Neon',
+    label: 'Manga Panel',
+    taste: 'Anime',
     collection: 'Signal',
     rarity: 'Epic'
   },
   prism: {
     key: 'prism',
     itemKey: 'border_prism',
-    label: 'Prism',
+    label: 'Midnight Rose',
+    taste: 'Dark romance',
     collection: 'Prism',
     rarity: 'Epic'
   },
   void: {
     key: 'void',
     itemKey: 'border_void',
-    label: 'Void',
+    label: 'Blackthorn',
+    taste: 'Dark romance',
     collection: 'Nocturne',
     rarity: 'Mythic'
   },
   signal: {
     key: 'signal',
     itemKey: 'border_signal',
-    label: 'Signal',
+    label: 'Web Angel',
+    taste: 'Old internet',
     collection: 'Signal',
     rarity: 'Rare'
   },
   elastic: {
     key: 'elastic',
     itemKey: 'border_elastic',
-    label: 'Elastic Frame',
+    label: 'Afterhours',
+    taste: 'Old internet',
     collection: 'Signal',
     rarity: 'Epic'
   },
   'shimmer-track': {
     key: 'shimmer-track',
     itemKey: 'border_shimmer_track',
-    label: 'Shimmer Track',
+    label: 'Sea Glass',
+    taste: 'Natural',
     collection: 'Prism',
     rarity: 'Epic'
   }
 };
+
+definitions.aurora = {
+  key: 'aurora', itemKey: 'border_aurora', label: 'Wildflower',
+  taste: 'Natural',
+  collection: 'Prism', rarity: 'Epic'
+};
+
+// Historical IDs are retained because inventory and journey rewards refer to them.
+export const AUTHORED_PROFILE_BORDER_KEYS = Object.freeze([
+  'chroma', 'glitch', 'gold', 'neon', 'prism', 'void', 'signal', 'elastic', 'shimmer-track', 'aurora'
+]);
 
 const normalizedDefinitions = Object.fromEntries(
   Object.entries(definitions).map(([key, definition]) => [key, Object.freeze({ ...definition })])

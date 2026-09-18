@@ -2,6 +2,7 @@
   import { getProfileMediaUrl } from '../profileMedia.js';
   import { getCanonicalProfilePath } from '../routeContract.js';
   import { getRarityPresentation } from '../rarityPresentation.js';
+  import UserAvatarFallback from '../UserAvatarFallback.svelte';
 
   export let player;
   export let position = 0;
@@ -24,11 +25,13 @@
 >
 
   <div class="homepage-player__identity">
-    {#if avatar && failedAvatar !== avatar}
-      <img src={avatar} alt="" width="120" height="120" loading="lazy" decoding="async" on:error={() => failedAvatar = avatar} />
-    {:else}
-      <span class="homepage-player__initial" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
-    {/if}
+    <span class="homepage-player__avatar">
+      {#if avatar && failedAvatar !== avatar}
+        <img src={avatar} alt="" width="120" height="120" loading="lazy" decoding="async" on:error={() => failedAvatar = avatar} />
+      {:else}
+        <UserAvatarFallback initial={name} />
+      {/if}
+    </span>
     <div>
       <h3>{name}</h3>
       <span>chm.lol/{player.username}</span>
@@ -78,24 +81,16 @@
   .homepage-player__identity { display: flex; flex-direction: column; align-items: center; gap: 20px; min-width: 0; }
   .homepage-player__identity > div { min-width: 0; }
 
-  img,
-  .homepage-player__initial {
+  .homepage-player__avatar {
+    display: block;
     width: 120px;
     height: 120px;
     flex: 0 0 120px;
+    overflow: hidden;
     border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid color-mix(in srgb, var(--player-accent) 55%, rgba(255,255,255,.2));
-    box-shadow: 0 0 0 8px #0e0e10, 0 0 0 9px var(--player-accent);
   }
 
-  .homepage-player__initial {
-    display: grid;
-    place-items: center;
-    background: color-mix(in srgb, var(--player-accent) 18%, #1b1b20);
-    color: #fff;
-    font: 600 2.6rem / 1 var(--homepage-display);
-  }
+  .homepage-player__avatar img { box-sizing: border-box; width: 100%; height: 100%; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; object-fit: cover; }
 
   h3 {
     margin: 0 0 5px;

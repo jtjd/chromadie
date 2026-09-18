@@ -187,7 +187,7 @@
   });
 </script>
 
-<section class="homepage-section profile-example" id="profiles" bind:this={host} aria-labelledby="profile-example-title"
+<section class="homepage-section profile-example" id="profiles" bind:this={host} data-homepage-reveal aria-labelledby="profile-example-title"
   on:mouseenter={() => { hovered = true; stopSceneTimer(); }}
   on:mouseleave={() => { hovered = false; restartSceneTimer(); }}
   on:focusin={() => { focused = true; stopSceneTimer(); }}

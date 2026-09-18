@@ -870,7 +870,6 @@
         isOwner={profileModeOwner}
         on:navigate={handleNavigation}
         on:login={navigateToAuth}
-        on:claim={() => navigateToAuth('signup')}
         on:logout={handleLogout}
         on:retry={() => window.location.reload()}
         on:edit={handleProfileHeaderEdit}

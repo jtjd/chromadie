@@ -2,7 +2,7 @@
   import { normalizeHexColor } from './utils.js';
   import { PROFILE_IDENTITY_DESCRIPTION_MODES, PROFILE_IDENTITY_ENTRY_ANIMATIONS } from './profileIdentityPresentation.js';
   import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
-  import ProfileAvatarFallback from './ProfileAvatarFallback.svelte';
+  import UserAvatarFallback from './UserAvatarFallback.svelte';
   import { getAvatarEffectDefinition } from './avatar-effect/avatarEffects.js';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
@@ -118,7 +118,7 @@
               {#if activeAvatarSource}
                 <img class="profile-reference-card__avatar" src={activeAvatarSource} alt={`${safeDisplayName} avatar`} loading="eager" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
               {:else}
-                <ProfileAvatarFallback initial={safeInitial} className="profile-reference-card__avatar-fallback" />
+                <UserAvatarFallback initial={safeInitial} className="profile-reference-card__avatar-fallback" />
               {/if}
             </AvatarEffect>
           </div>
@@ -553,12 +553,14 @@
     place-items: center;
     border-radius: 50%;
     background: rgba(255,255,255,.06);
+    container-type: inline-size;
   }
 
   .profile-reference-card--homepage:not(.profile-reference-card--framed) .profile-reference-card__avatar-shell {
     width: 100px;
     height: 100px;
     margin: 24px auto 15px;
+    container-type: inline-size;
   }
 
   .profile-reference-card__avatar {

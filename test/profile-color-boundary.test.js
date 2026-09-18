@@ -12,7 +12,7 @@ import { getProfileAppearanceStyle, getProfileCanvasStyle } from '../src/lib/pro
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('all retained Profile Border keys resolve through the finite registry', () => {
-  assert.equal(PROFILE_BORDER_KEYS.length, 11);
+  assert.equal(PROFILE_BORDER_KEYS.length, 12);
   for (const key of PROFILE_BORDER_KEYS) {
     assert.equal(isProfileBorderKey(key), true);
     assert.equal(getProfileBorderDefinition(key)?.key, key);
@@ -34,8 +34,8 @@ test('profile color presentation remains bounded and the retained border is shar
   assert.match(registry, /PROFILE_BORDER_KEYS/);
   assert.match(border, /prefers-reduced-motion/);
   assert.match(border, /profile-border-effect--none[\s\S]*--border-accent: transparent/);
-  assert.match(border, /@keyframes profile-border-chroma/);
-  assert.match(border, /@keyframes profile-border-prism/);
+  assert.match(border, /this=\{AuthoredBorderLayers\} borderKey=\{resolvedKey\}/);
+  assert.match(border, /animated && visible && documentVisible && !reducedMotion/);
   assert.doesNotMatch(border, /profile-border-spectrum|filter:\s*hue-rotate/);
   assert.doesNotMatch(border, /@keyframes profile-border-glitch[\s\S]*transform/);
   assert.doesNotMatch(border, /@keyframes profile-border-crystal[\s\S]*opacity/);

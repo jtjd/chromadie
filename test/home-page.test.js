@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [home, rollPage, rollPageContext, game, preRoll, bestRoll, loop, scoring, community, board, header, sharedHeader, footer, app, routeMetadata, rootFunction, rollFunction, index] = await Promise.all([
+const [home, motion, rollPage, rollPageContext, game, preRoll, bestRoll, loop, scoring, community, board, header, sharedHeader, footer, app, routeMetadata, rootFunction, rollFunction, index] = await Promise.all([
   read('src/lib/HomePage.svelte'),
+  read('src/lib/homepage/homepage-motion.css'),
   read('src/lib/RollPage.svelte'),
   read('src/lib/rollPageContext.js'),
   read('src/lib/Game.svelte'),
@@ -24,6 +25,21 @@ const [home, rollPage, rollPageContext, game, preRoll, bestRoll, loop, scoring, 
   read('functions/roll.js'),
   read('index.html')
 ]);
+
+test('homepage motion is progressive, one-shot, and reduced-motion safe', () => {
+  assert.match(home, /import '\.\/homepage\/homepage-motion\.css'/);
+  assert.match(home, /querySelectorAll\('\[data-homepage-reveal\]'\)/);
+  assert.match(home, /new IntersectionObserver/);
+  assert.match(home, /observer\.unobserve\(entry\.target\)/);
+  assert.match(home, /new MutationObserver/);
+  assert.match(home, /if \(!canObserve\) return/);
+  assert.match(home, /matchMedia\('\(prefers-reduced-motion: reduce\)'\)/);
+  assert.match(home, /homepage-motion-ready/);
+  assert.match(motion, /homepage-hero-camera 28s/);
+  assert.match(motion, /homepage-lower-camera 36s/);
+  assert.match(motion, /homepage-swatch-bloom 900ms/);
+  assert.match(motion, /prefers-reduced-motion: reduce[\s\S]*animation: none !important/);
+});
 
 test('the homepage leads from the real roll to profiles, collection, discovery, and signup', () => {
   for (const component of ['HomepageHeader', 'RollPage', 'HomepageProfileExample', 'HomepageCollection', 'HomepagePricingLoader', 'HomepageCommunity', 'HomepageStart', 'HomepageQuestions', 'SiteFooter']) {
@@ -75,6 +91,9 @@ test('the first viewport states the game plainly and has one authoritative roll 
   assert.match(bestRoll, /homepage-best-roll__identity-name \{[\s\S]*overflow-wrap: anywhere;[\s\S]*white-space: normal;/);
   assert.match(bestRoll, /homepage-best-roll__color-meta/);
   assert.match(bestRoll, /homepage-best-roll__rarity/);
+  assert.match(bestRoll, /homepage-best-roll__score/);
+  assert.match(bestRoll, /<strong>\{score\.toLocaleString\(\)\}<\/strong>[\s\S]*<span>pts<\/span>/);
+  assert.match(bestRoll, /showScore=\{false\}/);
   assert.match(bestRoll, /homepage-best-roll__result-summary/);
   assert.match(bestRoll, /--roll-score-color: var\(--color-earned, #f5c26f\)/);
   assert.match(bestRoll, /resets in/);
@@ -86,6 +105,8 @@ test('the first viewport states the game plainly and has one authoritative roll 
   assert.match(rollPage, /One of 16,777,216 colors/);
   assert.match(rollPage, /<Game[\s\S]*dedicated=\{true\}/);
   assert.match(preRoll, /Roll today’s color/);
+  assert.match(rollPage, /homepage-preroll[\s\S]*roll-action__button\)[\s\S]*appearance: none;[\s\S]*background: #fff !important;/);
+  assert.match(rollPage, /roll-action__button::after\)[\s\S]*display: none !important;/);
   assert.match(game, /<RollPreRoll/);
   assert.match(game, /on:roll=\{\(\) => initiateRoll\(false\)\}/);
   assert.match(game, /phase = 'rolling';[\s\S]{0,800}dispatchRollState\(\);/);
@@ -95,9 +116,10 @@ test('the first viewport states the game plainly and has one authoritative roll 
 });
 
 test('account actions are contextual before and after the guest roll', () => {
-  assert.match(header, /showClaim=\{false\}/);
-  assert.match(sharedHeader, /export let showClaim = true/);
-  assert.match(sharedHeader, /!isAuthenticated && showClaim/);
+  assert.doesNotMatch(header, /showClaim/);
+  assert.match(sharedHeader, /!isAuthenticated/);
+  assert.match(sharedHeader, />Login</);
+  assert.match(sharedHeader, />Create profile</);
   assert.match(preRoll, /Sign up/);
   assert.match(preRoll, /to start your profile history\./);
   assert.match(game, /on:signup=\{\(\) => beginGuestSignup\(signupNext\)\}/);
@@ -194,7 +216,8 @@ test('the profile preview features Tjz, with account actions kept in the closing
   assert.match(start, /encodeURIComponent\(normalizedUsername\)/);
   assert.match(start, /pattern=\{'\[A-Za-z0-9_\]\{1,20\}'\}/);
   assert.match(start, /window.location.href = signupHref/);
-  assert.match(start, /href="\/profile\/settings"/);
+  assert.match(home, /\{#if !isAuthenticated\}\s*<HomepageStart/);
+  assert.doesNotMatch(start, /Make it yours|homepage-start__owned|Customize your profile/);
   assert.doesNotMatch(preview + start + loop + scoring + community, /your story|journey|daily ritual/i);
   assert.doesNotMatch(preview + start + loop + scoring + community + rollPage, /[↗→↓]/);
   assert.doesNotMatch(preview + start + loop + community, /homepage-section-kicker/);

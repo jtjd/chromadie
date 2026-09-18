@@ -4,13 +4,16 @@ import { readFile, stat } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [app, header, footer, homepage, siteStyles, atmosphereStyles] = await Promise.all([
+const [app, header, footer, homepage, siteStyles, atmosphereStyles, rollPage, progressionPage, leaderboardOverrides] = await Promise.all([
   read('src/App.svelte'),
   read('src/lib/SiteModeHeader.svelte'),
   read('src/lib/SiteFooter.svelte'),
   read('src/lib/HomePage.svelte'),
   read('src/styles/site.css'),
-  read('src/styles/site-atmosphere.css')
+  read('src/styles/site-atmosphere.css'),
+  read('src/lib/RollPage.svelte'),
+  read('src/lib/ProgressionPage.svelte'),
+  read('src/styles/leaderboard-game.css')
 ]);
 const [heroAsset, heroMobileAsset, lowerAsset] = await Promise.all([
   stat(new URL('../public/homepage/homepage-hero-atmosphere-anime-v1.png', import.meta.url)),
@@ -18,12 +21,13 @@ const [heroAsset, heroMobileAsset, lowerAsset] = await Promise.all([
   stat(new URL('../public/homepage/homepage-lower-continuous-v4.webp', import.meta.url))
 ]);
 
-test('signed-out chrome hides inaccessible Customize actions', () => {
-  assert.ok(header.includes('{#if isAuthenticated}'));
-  assert.ok(header.includes('>Customize</button>{/if}'));
-  assert.ok(header.includes('{#if !isAuthenticated && showClaim}'));
-  assert.ok(header.includes('class="site-mode-header__claim-link"'));
-  assert.ok(header.includes('>Claim handle</a>'));
+test('signed-out chrome keeps the reference destinations and gates protected routes through login', () => {
+  assert.match(header, /navigateProtected\('progression'\)/);
+  assert.match(header, /navigateProtected\('profile-settings'\)/);
+  assert.match(header, /dispatch\('login', \{ mode: 'login' \}\)/);
+  assert.ok(header.includes('{#if !isAuthenticated}'));
+  assert.ok(header.includes('class="site-mode-header__create-profile"'));
+  assert.ok(header.includes('>Create profile</button>'));
   assert.ok(footer.includes('{#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}'));
   assert.match(homepage, /<SiteFooter \{isAuthenticated\} variant="home" \/>/);
 });
@@ -57,15 +61,19 @@ test('normal site surfaces inherit the homepage type, canvas, and button contrac
   assert.match(atmosphereStyles, /\.site-atmosphere-page::after,[\s\S]*\.app-shell--site::after[\s\S]*var\(--site-homepage-lower-image\)/);
   assert.match(atmosphereStyles, /\.app-shell--site/);
   assert.match(app, /class:app-shell--site=\{/);
+  assert.match(app, /!profileModeVisible && !homeModeVisible && !profileSettingsModeVisible/);
   assert.match(app, /\.app-shell--site,[\s\S]*font-family: 'Inter'/);
   assert.match(app, /\.app-shell--home \.skip-link/);
   assert.ok(heroAsset.size > 1000, 'desktop homepage atmosphere should be a real local image asset');
   assert.ok(heroMobileAsset.size > 1000, 'mobile homepage atmosphere should be a real local image asset');
   assert.ok(lowerAsset.size > 1000, 'lower homepage atmosphere should be a real local image asset');
   assert.match(siteStyles, /background: var\(--white\)/);
-  assert.match(header, /\.site-mode-header--home \.site-mode-header__nav button:not\(\.site-mode-header__claim-link\)/);
-  assert.match(header, /\.site-mode-header--home-route \.site-mode-header__nav \.site-mode-header__claim-link \{[\s\S]*background: transparent !important;[\s\S]*color: rgba\(255, 255, 255, \.94\) !important;/);
+  assert.match(header, /\.site-mode-header:not\(\.site-mode-header--profile\) \.site-mode-header__nav button/);
+  assert.match(header, /\.site-mode-header__create-profile \{[\s\S]*border-radius: 999px !important;[\s\S]*background: #f4f4f5 !important;/);
   assert.match(siteStyles, /\.site-state-card/);
   assert.match(siteStyles, /prefers-reduced-motion/);
   assert.doesNotMatch(siteStyles, /--site-accent: #00ffb3/);
+  assert.doesNotMatch(rollPage, /\.roll-page::before/);
+  assert.match(progressionPage, /\.progression-page \{[\s\S]*background: transparent;/);
+  assert.doesNotMatch(leaderboardOverrides, /\.app-shell--leaderboard::before|\.app-shell--leaderboard::after/);
 });

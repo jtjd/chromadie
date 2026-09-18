@@ -293,7 +293,7 @@ const d2NameBySlot = Object.fromEntries(Object.keys(expectedNameSlotCounts).map(
   return [slot, { count: rows.length, total: rows.reduce((total, row) => total + row.cost, 0) }];
 }));
 const borderRows = [...seed.matchAll(
-  /^\('(border_[a-z0-9_]+)',\s*'([^']+)',\s*'profile_border',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)'(?:,\s*(?:true|false))?\),?$/gm
+  /^\s*\('(border_[a-z0-9_]+)',\s*'([^']+)',\s*'profile_border',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)'(?:,\s*(?:true|false))?(?:,\s*'(?:free|earned)',\s*NULL,\s*'active')?\),?$/gm
 )].map(([, itemKey, name, cost, rendererKey, rarity, description, collection]) => ({
   itemKey,
   name,
@@ -314,7 +314,8 @@ const expectedBorderPrices = Object.freeze({
   border_void: 550000,
   border_signal: 160000,
   border_elastic: 0,
-  border_shimmer_track: 0
+  border_shimmer_track: 0,
+  border_aurora: 0
 });
 const expectedBorderKeys = new Set(Object.values(profileBorders.PROFILE_BORDER_DEFINITIONS).map(definition => definition.itemKey));
 const borderKeySet = new Set(borderRows.map(row => row.itemKey));
@@ -326,7 +327,7 @@ const borderInvalidRows = borderRows.filter(row => (
     || !row.description.trim()
     || !row.collection.trim()
 ));
-if (borderRows.length !== 11 || borderKeySet.size !== 11 || borderInvalidRows.length > 0) {
+if (borderRows.length !== expectedBorderKeys.size || borderKeySet.size !== expectedBorderKeys.size || borderInvalidRows.length > 0) {
   console.error('Profile Border balance/drift check failed.');
   console.error(JSON.stringify({
     rowCount: borderRows.length,

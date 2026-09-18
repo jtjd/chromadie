@@ -1,5 +1,23 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-18 — Profile borders express different tastes
+
+Replace the nine weak border treatments with Rosette, Love Letter, Sakura
+Diary, Manga Panel, Midnight Rose, Blackthorn, Web Angel, Afterhours and Sea
+Glass; add Wildflower. Keep Celestial and Crystal. The ten new designs cover
+girly, anime, dark romance, underground internet and natural aesthetics, with
+illustrated silhouettes and material-specific motion. A uniform futuristic
+direction is explicitly outside the approved scope.
+
+Keep the existing nine item IDs as implementation continuity; a launch progress
+reset is expected and does not constrain the artwork. Catalog names and
+descriptions are updated by a local-tested migration. No account data, reward
+rules, RLS or equip authority changes. Only the finite border renderer allowlist
+gains a new entry. Artwork loads on demand, is isolated from profile content,
+and stops for reduced motion, hidden documents and offscreen profiles. The
+catalog preview reserves space for the ornaments inside its clipping boundary.
+
+
 ## 2026-09-13 — Extend today’s homepage atmosphere to shared routes
 
 Normal application, auth, status, and error routes now reuse the current
@@ -7579,3 +7597,80 @@ Heart Pop is mounted at desktop and mobile sizes.
 The Modern homepage demo receives a preview-only snapshot projection with its
 captured cursor URL, pointer cursor URL, and cursor trail cleared. The source
 snapshot remains unchanged for provenance.
+
+# Shared header auth presentation — 2026-09-15
+
+The shared non-profile header follows the supplied signed-in and signed-out
+references through one component. Progression and Customize remain visible to
+guests for stable geometry and product discovery, but their handlers preserve
+the authentication boundary by opening Login. The
+signed-in trigger reuses bounded account data already present in the client;
+it does not add a profile-configuration request or change session authority.
+
+# Leaderboard Roll styling — 2026-09-13
+
+The Leaderboard consumes the Roll page's existing visual tokens and heading
+scale. Route-scoped CSS keeps shared homepage entry previews independent.
+Scores use the earned-color token; rank medals and rarity retain their own
+semantic colors. This presentation change requires no migration or RPC change.
+
+# Shared site atmosphere boundary — 2026-09-15
+
+The homepage artwork is owned by the shared `app-shell--site` boundary for all
+non-profile routes. Route components must keep their page canvas transparent
+and may style their own cards, but cannot cover or disable the shell's
+atmosphere layers. Public profiles and Profile Studio remain excluded because
+their player-authored and editing canvases have separate rendering contracts.
+
+# Owner-surface capsule headers — 2026-09-15
+
+Profile Studio and the owner-only public-profile header use the same capsule
+geometry as the site header, but continue to own their existing navigation.
+Studio retains its authoring actions and accessible More menu; the profile
+header retains Home and Customize profile. Shared appearance does not merge
+their distinct navigation or authority boundaries.
+
+# Authenticated homepage closing state — 2026-09-15
+
+The homepage handle-claim section is acquisition content and renders only for
+visitors without an authenticated account. Signed-in players already have
+direct profile and Customize access in the header, so a second customization
+call to action is omitted instead of replaced.
+
+# Homepage motion language — 2026-09-15
+
+Homepage motion uses the existing painted assets as slow camera planes rather
+than adding new layered media. Supporting sections reveal once on first entry,
+and only product evidence receives short bespoke gestures. One native observer
+owns all reveal state, including lazy-mounted pricing content, to stay within
+the route's tight JavaScript budget. Reduced motion, missing observer support,
+and server rendering always present a complete static page.
+
+# Auth route navigation — 2026-09-16
+
+Standalone login and signup use the same shared site header as the homepage.
+The auth card remains visually focused, but route navigation and responsive
+account actions stay available; auth-specific CSS must not hide the shared
+header's desktop or mobile navigation.
+
+# Daily Roll result hierarchy — 2026-09-16
+
+The completed Roll result uses one integrated identity hero instead of separate
+score and color bands. A large canonical swatch and the name, rarity, traits, and
+compact score metric form one cluster beneath the Daily Roll label; conditions
+remain secondary, and the countdown plus existing actions form one footer. The
+shared breakdown keeps its standalone score by default for the homepage top-roll
+card only when explicitly requested; the homepage top-roll feature now uses the
+same integrated hierarchy as the player result. The homepage pre-roll action is
+also isolated from ambient and legacy pseudo-element paint so it remains a solid,
+unobscured control. This is a presentation boundary only and does not change
+roll, score, reward, or eligibility authority.
+
+# Sitewide no-avatar identity — 2026-09-16
+
+Every site-owned user identity surface uses one restrained fallback when no
+uploaded avatar is available: a neutral dark circle with one lowercase initial.
+Roll color, profile accent, rank, and cosmetic palette do not recolor or add a
+glow to that fallback. Uploaded media and explicitly equipped avatar effects
+retain their existing rendering contracts; only the underlying missing-media
+state is standardized.

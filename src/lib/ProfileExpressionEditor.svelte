@@ -11,6 +11,7 @@
   import Module from './foundation/Module.svelte';
   import Media from './foundation/Media.svelte';
   import ProfileAudioWaveform from './ProfileAudioWaveform.svelte';
+  import UserAvatarFallback from './UserAvatarFallback.svelte';
 
   export let profileId = null;
   export let config = {};
@@ -703,7 +704,7 @@
       {#if avatarSrc}
         <Media src={avatarSrc} alt="Avatar preview" aspect="square" loading="eager" className="profile-expression-editor__avatar" fallbackLabel="Avatar unavailable" allowLocalPreview={true} />
       {:else}
-        <div class="profile-expression-editor__avatar profile-expression-editor__avatar--fallback" style="display:grid;place-items:center;width:7rem;aspect-ratio:1;border-radius:50%;background:var(--profile-accent);color:var(--color-ink-strong);font-size:2.8rem" aria-label="Initials fallback">{fallbackInitial.slice(0, 1).toUpperCase() || '✦'}</div>
+        <div class="profile-expression-editor__avatar profile-expression-editor__avatar--fallback" style="width:7rem;aspect-ratio:1" aria-label="Initials fallback"><UserAvatarFallback initial={fallbackInitial} /></div>
       {/if}
     </div>
     <div class="profile-expression-editor__copy" style="display:grid;gap:.5rem;min-width:12rem;flex:1">

@@ -2,6 +2,7 @@
   import RollTile from './RollTile.svelte';
   import RollPreRoll from './RollPreRoll.svelte';
   import RollResultBreakdown from './RollResultBreakdown.svelte';
+  import RollResultHero from './RollResultHero.svelte';
   import { supabase } from './supabase';
   import { session, profile, authUser, authInitialized, accountState, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
   import { ACCOUNT_STATES } from './authState.js';
@@ -1007,83 +1008,65 @@
 
   {:else if phase === 'results'}
     <div class="card roll-stage roll-stage--results" style={`--roll-action-ink: ${rollActionInk}; --roll-result-color: ${normalizeHexColor(displayColor, '#ffffff')}; --roll-rarity: ${getRarityPresentation(rarity || 'Common').color};`} aria-labelledby="roll-result-title">
-      <div class="roll-card-header">
-        <div class="roll-card-header__copy">
-          <h2 class="roll-card-header__title">Daily Roll</h2>
-        </div>
-      </div>
-      <div class="roll-display" aria-live="polite">
-        <RollTile displayColor={displayColor} rarity={rarity || 'Common'} label="Rolled color" />
-        <div class="roll-color-info">
-          <h2 id="roll-result-title" class="roll-color-name">{identity || 'Today’s color'}</h2>
-          <div class="roll-result-meta">
-            <div class="roll-color-hex">{displayColor}</div>
-            <div class="roll-color-rarity" aria-label={`${rarity || 'Common'} rarity`} title={`${rarity || 'Common'} rarity`}>
-              <span>{rarity || 'Common'}</span>
-            </div>
-          </div>
-          {#if traits.length > 0}
-            <div class="roll-attr-tags" aria-label="Color traits">
-              {#each (dedicated ? traits.slice(0, 2) : traits) as trait (trait.id)}
-                <span class="roll-attr-tag">{trait.label}</span>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      </div>
+      <RollResultHero
+        {displayColor}
+        rarity={rarity || 'Common'}
+        identity={identity || 'Today’s color'}
+        traits={dedicated ? traits.slice(0, 2) : traits}
+        totalScore={displayScore}
+      />
 
       <RollResultBreakdown
         contributors={rollContributors}
         baseScore={getBaseRollScore()}
         totalScore={displayScore}
+        showScore={false}
       />
 
-      {#if !dedicated}<button
-        type="button"
-        class="roll-btn roll-action__button roll-action__button--claimed"
-        style={`--roll-action-ink: ${rollActionInk};`}
-        disabled
-        aria-label={dedicated ? `Next roll in ${countdownString}` : `Today's roll claimed for ${displayScore.toLocaleString()} score`}
-      >
-        <span class="roll-button-glyph" aria-hidden="true">{dedicated ? '◷' : '✓'}</span>
-        {#if dedicated}
-          Next roll · {countdownString}
-        {:else}
+      <div class="roll-result-footer">
+        {#if !dedicated}<button
+          type="button"
+          class="roll-btn roll-action__button roll-action__button--claimed"
+          style={`--roll-action-ink: ${rollActionInk};`}
+          disabled
+          aria-label={`Today's roll claimed for ${displayScore.toLocaleString()} score`}
+        >
+          <span class="roll-button-glyph" aria-hidden="true">✓</span>
           Claimed! +{displayScore.toLocaleString()}
+        </button>{:else}
+          <p class="roll-countdown" role="timer" aria-live="off">Next roll in <strong>{countdownString}</strong></p>
         {/if}
-      </button>{:else}
-        <p class="roll-countdown" role="timer" aria-live="off">Next roll in <strong>{countdownString}</strong></p>
-      {/if}
 
-      {#if dedicated}
-        <div class="roll-acquisition-actions roll-acquisition-actions--dedicated" aria-label="Roll result actions">
-          {#if showAcquisitionActions && $isAuthenticated}
-            <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
-          {/if}
-          <div class="post-score-actions post-score-actions--dedicated" aria-label="Share and continue">
-            <button type="button" class="chroma-btn result-action roll-acquisition-actions__tool" on:click={shareResultsText}>
-              {copied ? 'Copied' : 'Share result'}
-            </button>
-            <button type="button" class="chroma-btn result-action roll-acquisition-actions__tool" data-roll-action="share-image" on:click={generateShareImage}>View / share image</button>
-            {#if $isAuthenticated && $rerollShards > 0}
-              <button type="button" class="reroll-btn result-action result-action--reroll roll-acquisition-actions__tool" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}>Reroll · {$rerollShards} left</button>
+        {#if dedicated}
+          <div class="roll-acquisition-actions roll-acquisition-actions--dedicated" aria-label="Roll result actions">
+            {#if showAcquisitionActions && $isAuthenticated}
+              <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
+            {/if}
+            <div class="post-score-actions post-score-actions--dedicated" aria-label="Share and continue">
+              <button type="button" class="chroma-btn result-action roll-acquisition-actions__tool" on:click={shareResultsText}>
+                {copied ? 'Copied' : 'Share result'}
+              </button>
+              <button type="button" class="chroma-btn result-action roll-acquisition-actions__tool" data-roll-action="share-image" on:click={generateShareImage}>View / share image</button>
+              {#if $isAuthenticated && $rerollShards > 0}
+                <button type="button" class="reroll-btn result-action result-action--reroll roll-acquisition-actions__tool" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}>Reroll · {$rerollShards} left</button>
+              {/if}
+            </div>
+          </div>
+        {:else if showAcquisitionActions}
+          <div class="roll-acquisition-actions" aria-label="Roll result actions">
+            {#if $isAuthenticated}
+              <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
+              <button class="roll-acquisition-actions__quiet" on:click={shareResultsText}>
+                {copied ? 'Copied' : 'Share result'}
+              </button>
+            {:else if $accountState === ACCOUNT_STATES.SIGNED_OUT}
+              <button class="roll-acquisition-actions__quiet" type="button" on:click={shareResultsText}>
+                {copied ? 'Copied' : 'Share result'}
+              </button>
             {/if}
           </div>
-        </div>
-      {:else if showAcquisitionActions}
-        <div class="roll-acquisition-actions" aria-label="Roll result actions">
-          {#if $isAuthenticated}
-            <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
-            <button class="roll-acquisition-actions__quiet" on:click={shareResultsText}>
-              {copied ? 'Copied' : 'Share result'}
-            </button>
-          {:else if $accountState === ACCOUNT_STATES.SIGNED_OUT}
-            <button class="roll-acquisition-actions__quiet" type="button" on:click={shareResultsText}>
-              {copied ? 'Copied' : 'Share result'}
-            </button>
-          {/if}
-        </div>
-      {/if}
+        {/if}
+      </div>
 
       {#if cotwHit}
         <div class="cotw-success-banner">

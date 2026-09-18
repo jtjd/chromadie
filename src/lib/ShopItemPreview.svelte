@@ -7,6 +7,7 @@
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import { PROFILE_RENDER_CONTEXTS, resolveProfileRenderContext } from './profile-studio/previewContexts.js';
+  import UserAvatarFallback from './UserAvatarFallback.svelte';
 
   export let item;
   export let username = 'CHM';
@@ -106,7 +107,7 @@
         {#if avatarSrc}
           <img class="shop-avatar-preview__media" src={avatarSrc} alt="" loading="lazy" decoding="async" />
         {:else}
-          <span class="shop-avatar-preview__fallback" aria-hidden="true">{String(username || 'Y').slice(0, 1).toUpperCase()}</span>
+          <UserAvatarFallback initial={username || 'Y'} className="shop-avatar-preview__fallback" />
         {/if}
       </AvatarEffect>
     </div>
@@ -140,6 +141,7 @@
 <style>
   .shop-preview-area { position:relative; aspect-ratio:16 / 9; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 0; border-radius: 12px; background: var(--preview-surface, #020306); overflow: hidden; }
   .shop-preview-area[data-render-context="effect-card"] { aspect-ratio: auto; height: 4.25rem; min-height: 4.25rem; padding: .35rem; border-radius: 0; }
+  .shop-preview-area--border[data-render-context="effect-card"] { padding: 16px 12px 10px; }
   .shop-preview-area[data-render-context="name-control"] { aspect-ratio: auto; height: 100%; min-height: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
   .shop-preview-area[data-render-context="live-profile"] { aspect-ratio: auto; min-height: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
   .shop-preview-area[data-render-context="name-control"] .shop-preview-text { height: 100%; margin: 0; }
@@ -157,7 +159,7 @@
   .shop-avatar-preview { display:grid; place-items:center; width:8rem; height:8rem; }
   .shop-avatar-preview :global(.avatar-effect) { display:grid; place-items:center; width:6.7rem; height:6.7rem; }
   .shop-avatar-preview__media { position:relative; z-index:2; display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; }
-  .shop-avatar-preview__fallback { position:relative; z-index:2; display:grid; place-items:center; width:100%; height:100%; color:#f3f3ef; font:650 3rem/1 var(--shop-display, var(--font-display)); letter-spacing:-.08em; }
+  :global(.shop-avatar-preview__fallback) { position:relative; z-index:2; }
   .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border-radius:5px; background:transparent; }
   .shop-preview-area[data-render-context="effect-card"] .shop-atmosphere-preview { min-height: 100%; }
   .shop-atmosphere-preview :global(.profile-atmosphere) { inset:0; width:100%; height:100%; opacity:.9; }

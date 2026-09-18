@@ -24,18 +24,13 @@
   }
 </script>
 
-<section class="homepage-section homepage-start" aria-labelledby="homepage-start-title">
+<section class="homepage-section homepage-start" data-homepage-reveal aria-labelledby="homepage-start-title">
   <div class="homepage-start__content">
     <h2 class="homepage-section-heading" id="homepage-start-title">
-      {isAuthenticated ? 'Make it yours.' : 'Make your own profile.'}
+      Make your own profile.
     </h2>
 
-    {#if accountState === ACCOUNT_STATES.AUTHENTICATED && isAuthenticated}
-      <div class="homepage-start__owned">
-        <span class="homepage-start__owned-address">chm.lol/<strong>you</strong></span>
-        <a class="homepage-button" href="/profile/settings">Customize your profile</a>
-      </div>
-    {:else if accountState === ACCOUNT_STATES.SIGNED_OUT && !isAuthenticated}
+    {#if accountState === ACCOUNT_STATES.SIGNED_OUT && !isAuthenticated}
       <form class="homepage-start__claim" on:submit={handleSubmit} novalidate>
         <label class="homepage-start__field" class:homepage-start__field--invalid={!usernameIsValid}>
           <span>chm.lol/</span>
@@ -177,22 +172,10 @@
     text-align: left;
   }
 
-  .homepage-start__owned,
   .homepage-start__status {
     display: grid;
     justify-items: center;
     gap: 18px;
-  }
-
-  .homepage-start__owned-address {
-    color: var(--homepage-muted);
-    font: 500 clamp(2rem, 4vw, 3.4rem) / 1 var(--homepage-display);
-    letter-spacing: -.045em;
-  }
-
-  .homepage-start__owned-address strong {
-    color: var(--homepage-text);
-    font-weight: 600;
   }
 
   a:focus-visible,

@@ -9,18 +9,17 @@ test('all routes use one cohesive application header', async () => {
 
   assert.match(siteHeader, /site-mode-header__brand-logo/);
   assert.match(siteHeader, /background: transparent/);
-  assert.match(siteHeader, /\{#if !minimalMode\}\s*<nav class="site-mode-header__nav"/);
-  assert.match(siteHeader, /\{#if !minimalMode\}\s*<div class="site-mode-header__mobile-primary"/);
+  assert.match(siteHeader, /\{#if !isProfileMode\}\s*<nav class="site-mode-header__nav"/);
+  assert.match(siteHeader, /\{#if !isProfileMode\}\s*<div class="site-mode-header__mobile-primary"/);
   assert.match(siteHeader, /isProfileMode \? 'Open profile actions' : isHomeMode \|\| isHomepageStyle \? 'Open account actions'/);
   assert.match(siteHeader, /navigate\('home'\)/);
   assert.match(siteHeader, /class:site-mode-header--profile/);
   assert.match(siteHeader, /class:site-mode-header--profile-settings/);
-  assert.match(siteHeader, /\(isHomeMode \|\| isHomepageStyle \|\| isProfileMode\) && !isAuthenticated/);
+  assert.match(siteHeader, /\{:else if !isAuthenticated\}/);
   assert.match(siteHeader, /width: 100%;/);
   assert.doesNotMatch(siteHeader, /width: min\(100%, 92rem\)/);
   assert.match(siteHeader, /site-mode-header__context/);
   assert.match(siteHeader, /site-mode-header__mobile-primary/);
-  assert.match(siteHeader, /\$: minimalMode = isProfileMode;/);
   assert.match(siteHeader, /activeView === 'leaderboard'[\s\S]*>Leaderboard</);
   assert.match(siteHeader, /activeView === 'pricing'[\s\S]*>Pricing</);
   assert.match(siteHeader, /site-mode-header__mobile-primary"[\s\S]*activeView === 'pricing'/);
@@ -33,12 +32,19 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /--site-header-font: 'Inter'/);
   assert.match(siteHeader, /--site-header-display: 'Manrope Variable'/);
   assert.match(siteHeader, /src="\/brand\/am-mark-v1\.webp"/);
-  assert.match(siteHeader, /\.site-mode-header--home \.site-mode-header__nav button/);
-  assert.match(siteHeader, /color: rgba\(255, 255, 255, 0\.94\) !important/);
+  assert.match(siteHeader, /\.site-mode-header:not\(\.site-mode-header--profile\) \.site-mode-header__nav button/);
+  assert.match(siteHeader, /color: rgba\(255, 255, 255, 0\.9\) !important/);
   assert.match(siteHeader, /data-site-chrome="header"/);
-  assert.match(siteHeader, /height: 88px/);
-  assert.match(siteHeader, /width: min\(1480px, calc\(100% - 64px\)\)/);
-  assert.match(siteHeader, /Claim handle/);
+  assert.match(siteHeader, /height: 54px/);
+  assert.match(siteHeader, /width: min\(968px, calc\(100% - 48px\)\)/);
+  assert.match(siteHeader, /grid-template-columns: minmax\(0, 1fr\) auto minmax\(0, 1fr\)/);
+  assert.match(siteHeader, /background: rgba\(13, 14, 17, 0\.76\)/);
+  assert.match(siteHeader, />Login</);
+  assert.match(siteHeader, />Create profile</);
+  assert.match(siteHeader, /site-mode-header__account-menu/);
+  assert.match(siteHeader, /site-mode-header__avatar/);
+  assert.match(siteHeader, /background: rgba\(8, 9, 12, 0\.72\)/);
+  assert.doesNotMatch(siteHeader, /linear-gradient\(145deg, #69616f/);
   assert.doesNotMatch(siteHeader, /Satoshi|IBM Plex Mono|text-transform: lowercase/);
 });
 
@@ -149,8 +155,8 @@ test('leaderboard owns a focused flat ranked-column presentation contract', asyn
   assert.match(leaderboardEntry, /leaderboard-row/);
   assert.match(leaderboard, /--leaderboard-accent:/);
   assert.match(leaderboard, /Manrope Variable/);
-  assert.match(leaderboard, /--leaderboard-panel: #111115/);
-  assert.match(leaderboard, /--leaderboard-muted: #b7b8c2/);
+  assert.match(leaderboard, /--leaderboard-panel: var\(--surface/);
+  assert.match(leaderboard, /--leaderboard-muted: var\(--text-muted/);
   assert.match(leaderboardEntry, /leaderboard-row__rank-mark/);
   assert.match(leaderboardEntry, /visiblePosition === 1/);
   assert.match(leaderboardEntry, /leaderboard-row::before/);

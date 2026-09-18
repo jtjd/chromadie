@@ -10,7 +10,7 @@
   const plusFeatures = pricingComparisonRows.filter(row => !row.free && row.plus);
 </script>
 
-<section class="homepage-section homepage-pricing" id={sectionId} aria-labelledby="homepage-pricing-title">
+<section class="homepage-section homepage-pricing" id={sectionId} data-homepage-reveal aria-labelledby="homepage-pricing-title">
   <div class="homepage-pricing__intro">
     <div>
       <p class="homepage-pricing__eyebrow">PRICING</p>

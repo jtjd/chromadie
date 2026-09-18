@@ -1,8 +1,8 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { ACCOUNT_STATES } from './authState';
-  import { trackProductEvent } from './productAnalytics.js';
   import { prefetchRouteComponent } from './routeLoaders.js';
+  import UserAvatarFallback from './UserAvatarFallback.svelte';
 
   export let activeView = 'game';
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.SIGNED_OUT);
@@ -17,17 +17,23 @@
   // application navigation and account event contracts.
   export let isHomepageStyle = false;
   export let isOwner = false;
-  export let claimHref = '';
-  export let showClaim = true;
 
   const dispatch = createEventDispatcher();
   let mobileMenuOpen = false;
-  $: minimalMode = isProfileMode;
 
   function navigate(view) {
     mobileMenuOpen = false;
-    if (view === 'leaderboard' && isHomeMode && !isAuthenticated) trackProductEvent('explore_clicked');
     dispatch('navigate', { view, ...(view === 'leaderboard' ? { tab: 'today' } : {}) });
+  }
+
+  function navigateProtected(view) {
+    if (isAuthenticated) {
+      navigate(view);
+      return;
+    }
+
+    mobileMenuOpen = false;
+    dispatch('login', { mode: 'login' });
   }
 
   function navigateHome() {
@@ -40,10 +46,7 @@
   }
 
   function prefetch(view) {
-    const loaderKey = view === 'profile' ? 'profileShell' : view;
-    if (['game', 'profileShell', 'leaderboard', 'progression', 'profileSettings', 'pricing'].includes(loaderKey)) {
-      void prefetchRouteComponent(loaderKey);
-    }
+    void prefetchRouteComponent(view);
   }
 </script>
 
@@ -53,20 +56,13 @@
       <img class="site-mode-header__brand-logo" src="/brand/am-mark-v1.webp" alt="" width="72" height="58" decoding="async" />
     </a>
 
-    {#if !minimalMode}
+    {#if !isProfileMode}
       <nav class="site-mode-header__nav" aria-label="Primary application navigation">
         {#if !isHomeMode}<button type="button" class:active={activeView === 'game'} aria-current={activeView === 'game' ? 'page' : undefined} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>{/if}
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
-        {#if isAuthenticated}<button type="button" class:active={activeView === 'progression'} aria-current={activeView === 'progression' ? 'page' : undefined} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigate('progression')}>Progression</button>{/if}
-        {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
+        <button type="button" class:active={activeView === 'progression'} aria-current={activeView === 'progression' ? 'page' : undefined} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigateProtected('progression')}>Progression</button>
+        <button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigateProtected('profile-settings')}>Customize</button>
         <button type="button" class:active={activeView === 'pricing'} aria-current={activeView === 'pricing' ? 'page' : undefined} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
-        {#if !isAuthenticated && showClaim}
-          {#if claimHref}
-            <a class="site-mode-header__claim-link" href={claimHref}>Claim handle</a>
-          {:else}
-            <button type="button" class="site-mode-header__claim-link" on:click={() => dispatch('claim')}>Claim handle</button>
-          {/if}
-        {/if}
       </nav>
     {:else}
       <div class="site-mode-header__nav-space" aria-hidden="true"></div>
@@ -83,18 +79,26 @@
 
       <div class="site-mode-header__account">
         {#if accountState === ACCOUNT_STATES.AUTHENTICATED && isAuthenticated}
-          <button type="button" class="site-mode-header__account-name" on:click={() => navigate('profile')} aria-label="Open your profile">
-            {username || 'Your profile'}
-          </button>
-          <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('logout')} disabled={logoutInProgress}>
-            {logoutInProgress ? 'Signing out…' : 'Sign out'}
-          </button>
+          <details class="site-mode-header__account-menu">
+            <summary aria-label="Open account menu">
+              <span class="site-mode-header__avatar" aria-hidden="true">
+                <UserAvatarFallback initial={username || 'C'} />
+              </span>
+              <span class="site-mode-header__account-name">{username || 'Your profile'}</span>
+              <svg class="site-mode-header__chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+            </summary>
+            <div class="site-mode-header__account-panel">
+              <button type="button" on:click={() => navigate('profile')}>View profile</button>
+              <button type="button" on:click={() => dispatch('logout')} disabled={logoutInProgress}>{logoutInProgress ? 'Signing out…' : 'Sign out'}</button>
+            </div>
+          </details>
         {:else if accountState === ACCOUNT_STATES.PROFILE_ERROR}
           <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('retry')}>Retry account</button>
         {:else if accountState === ACCOUNT_STATES.BOOTING || accountState === ACCOUNT_STATES.PROFILE_LOADING}
           <!-- Keep account controls visually quiet while session data hydrates. -->
-        {:else if (isHomeMode || isHomepageStyle || isProfileMode) && !isAuthenticated}
-          <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('login', { mode: 'login' })}>Sign in</button>
+        {:else if !isAuthenticated}
+          <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('login', { mode: 'login' })}>Login</button>
+          <button type="button" class="site-mode-header__create-profile" on:click={() => dispatch('login', { mode: 'signup' })}>Create profile</button>
         {:else}
           <button type="button" class="site-mode-header__account-action site-mode-header__account-action--light" on:click={() => dispatch('login', { mode: 'login' })}>Sign in / Sign up</button>
         {/if}
@@ -104,17 +108,15 @@
     <details class="site-mode-header__mobile-menu" bind:open={mobileMenuOpen}>
       <summary aria-expanded={mobileMenuOpen} aria-label={isProfileMode ? 'Open profile actions' : isHomeMode || isHomepageStyle ? 'Open account actions' : 'Open application navigation'}>Menu</summary>
       <div class="site-mode-header__mobile-panel" aria-hidden={!mobileMenuOpen}>
-        {#if !minimalMode}
+        {#if !isProfileMode}
           <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
             {#if !isHomeMode}<button type="button" class:active={activeView === 'game'} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>{/if}
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
-            {#if isAuthenticated}<button type="button" class:active={activeView === 'progression'} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigate('progression')}>Progression</button>{/if}
-            {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
+            <button type="button" class:active={activeView === 'progression'} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigateProtected('progression')}>Progression</button>
+            <button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigateProtected('profile-settings')}>Customize</button>
             <button type="button" class:active={activeView === 'pricing'} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
-            {#if !isAuthenticated && showClaim && claimHref}
-              <a class="site-mode-header__claim-link" href={claimHref}>Claim handle</a>
-            {:else if !isAuthenticated && showClaim}
-              <button type="button" class="site-mode-header__claim-link" on:click={() => { mobileMenuOpen = false; dispatch('claim'); }}>Claim handle</button>
+            {#if !isAuthenticated}
+              <button type="button" class="site-mode-header__create-profile" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Create profile</button>
             {/if}
           </div>
         {/if}
@@ -127,13 +129,14 @@
 
         <div class="site-mode-header__mobile-account">
           {#if accountState === ACCOUNT_STATES.AUTHENTICATED && isAuthenticated}
+            <button type="button" on:click={() => navigate('profile')}>View profile</button>
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('logout'); }} disabled={logoutInProgress}>{logoutInProgress ? 'Signing out…' : 'Sign out'}</button>
           {:else if accountState === ACCOUNT_STATES.PROFILE_ERROR}
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('retry'); }}>Retry account</button>
           {:else if accountState === ACCOUNT_STATES.BOOTING || accountState === ACCOUNT_STATES.PROFILE_LOADING}
             <!-- Keep account controls visually quiet while session data hydrates. -->
-          {:else if (isHomeMode || isHomepageStyle || isProfileMode) && !isAuthenticated}
-            <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in</button>
+          {:else if !isAuthenticated}
+            <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Login</button>
           {:else}
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in / Sign up</button>
           {/if}
@@ -159,11 +162,8 @@
 
   .site-mode-header__inner {
     display: flex;
-    width: min(1480px, calc(100% - 64px));
-    height: 100%;
     align-items: center;
     justify-content: space-between;
-    gap: 28px;
     margin-inline: auto;
   }
 
@@ -282,44 +282,6 @@
     color: var(--site-header-accent);
   }
 
-  /* The homepage-style header sits over photographic backgrounds. Keep its
-   * navigation and account labels bright enough to read without hover. */
-  .site-mode-header--home .site-mode-header__nav button:not(.site-mode-header__claim-link),
-  .site-mode-header--home .site-mode-header__context button,
-  .site-mode-header--home .site-mode-header__account-name,
-  .site-mode-header--home .site-mode-header__account-action,
-  .site-mode-header--home .site-mode-header__mobile-menu summary,
-  .site-mode-header--home .site-mode-header__mobile-panel button:not(.site-mode-header__claim-link) {
-    color: rgba(255, 255, 255, 0.94) !important;
-    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
-  }
-
-  .site-mode-header--home .site-mode-header__nav button:hover:not(.site-mode-header__claim-link),
-  .site-mode-header--home .site-mode-header__nav button.active:not(.site-mode-header__claim-link),
-  .site-mode-header--home .site-mode-header__account-name:hover,
-  .site-mode-header--home .site-mode-header__account-action:hover,
-  .site-mode-header--home .site-mode-header__mobile-panel button:hover:not(.site-mode-header__claim-link),
-  .site-mode-header--home .site-mode-header__mobile-panel button.active {
-    color: var(--white, #ffffff) !important;
-  }
-
-  .site-mode-header--home-route .site-mode-header__nav .site-mode-header__claim-link {
-    min-height: 0 !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    color: rgba(255, 255, 255, .94) !important;
-    font: var(--site-header-control-weight) var(--site-header-control-size) / 1 var(--site-header-font) !important;
-    text-shadow: none !important;
-    -webkit-text-fill-color: currentColor !important;
-    transform: none;
-  }
-
-  .site-mode-header--home-route .site-mode-header__nav .site-mode-header__claim-link:hover {
-    background: transparent !important;
-    color: #fff !important;
-  }
-
   .site-mode-header__nav button:focus-visible,
   .site-mode-header__context button:focus-visible,
   .site-mode-header__account button:focus-visible,
@@ -336,67 +298,9 @@
   .site-mode-header__account-action--light { color: var(--text) !important; }
   .site-mode-header__account-action:disabled { cursor: wait; opacity: 0.55; }
 
-  .site-mode-header--leaderboard .site-mode-header__brand,
-  .site-mode-header--leaderboard .site-mode-header__nav button,
-  .site-mode-header--leaderboard .site-mode-header__context button,
-  .site-mode-header--leaderboard .site-mode-header__account-name,
-  .site-mode-header--leaderboard .site-mode-header__account-action {
-    color: var(--text) !important;
-  }
-
-  .site-mode-header--leaderboard .site-mode-header__nav button.active {
-    color: var(--site-header-accent) !important;
-  }
-
-  .site-mode-header--leaderboard .site-mode-header__nav button:hover,
-  .site-mode-header--leaderboard .site-mode-header__nav button:focus-visible,
-  .site-mode-header--leaderboard .site-mode-header__account-name:hover,
-  .site-mode-header--leaderboard .site-mode-header__account-action:hover {
-    color: var(--text) !important;
-  }
-
-  .site-mode-header--leaderboard .site-mode-header__claim-link {
-    border: 0 !important;
-    background: var(--white) !important;
-    color: var(--bg) !important;
-    box-shadow: none;
-  }
-
-  .site-mode-header--leaderboard .site-mode-header__nav .site-mode-header__claim-link {
-    color: var(--bg) !important;
-  }
-
-  .site-mode-header--leaderboard .site-mode-header__claim-link:hover {
-    background: var(--site-header-accent) !important;
-  }
-
   .site-mode-header--leaderboard .site-mode-header__mobile-menu summary {
     border-color: rgba(255, 255, 255, .16);
     color: var(--text);
-  }
-
-  .site-mode-header__claim-link {
-    display: inline-flex;
-    min-height: 42px !important;
-    align-items: center;
-    justify-content: center;
-    padding: 0 18px !important;
-    border-radius: 9px !important;
-    background: var(--white) !important;
-    color: var(--bg, #0e0e10) !important;
-    font: 600 0.88rem / 1 var(--site-header-display) !important;
-    transition: transform 0.18s ease, background 0.18s ease;
-    text-decoration: none;
-  }
-
-  .site-mode-header__claim-link:hover {
-    transform: translateY(-1px);
-    background: var(--site-header-accent) !important;
-  }
-
-  .site-mode-header__claim-link:focus-visible {
-    outline: 2px solid var(--site-header-accent);
-    outline-offset: 4px;
   }
 
   .site-mode-header__mobile-menu { display: none; position: relative; }
@@ -431,21 +335,8 @@
     color: var(--text-muted, #8d8c92);
     text-align: left;
   }
-  .site-mode-header__mobile-panel .site-mode-header__claim-link {
-    width: 100%;
-    justify-content: flex-start;
-    min-height: 2.7rem !important;
-    padding: 0.75rem !important;
-  }
-  .site-mode-header--home-route .site-mode-header__mobile-panel .site-mode-header__claim-link {
-    background: transparent !important;
-    color: rgba(255, 255, 255, .94) !important;
-    -webkit-text-fill-color: currentColor !important;
-    font: inherit !important;
-  }
   .site-mode-header__mobile-panel button:hover,
-  .site-mode-header__mobile-panel button.active,
-  .site-mode-header__mobile-panel .site-mode-header__claim-link:hover { background: var(--surface-3, #28282c); }
+  .site-mode-header__mobile-panel button.active { background: var(--surface-3, #28282c); }
   .site-mode-header__mobile-primary,
   .site-mode-header__mobile-context,
   .site-mode-header__mobile-account { display: grid; gap: 0.25rem; }
@@ -456,24 +347,189 @@
   .site-mode-header__mobile-context button,
   .site-mode-header__mobile-account button { width: 100%; }
 
+  /* Reference header: a compact, centered glass capsule with a balanced
+     three-part layout. The equal outer columns keep navigation centered even
+     when the signed-in and signed-out account controls have different widths. */
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    width: min(968px, calc(100% - 48px));
+    height: 54px;
+    margin-top: 22px;
+    padding: 0 12px 0 26px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 999px;
+    background: rgba(13, 14, 17, 0.76);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    backdrop-filter: blur(22px) saturate(118%);
+    -webkit-backdrop-filter: blur(22px) saturate(118%);
+  }
+
+  .site-mode-header--home-route {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__brand { justify-self: start; }
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__nav {
+    justify-self: center;
+    gap: 40px;
+    margin: 0;
+  }
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__right {
+    justify-self: end;
+    gap: 0;
+  }
+
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__brand-logo {
+    width: 44px;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.08));
+  }
+
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__nav,
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__account {
+    font-size: 0.78rem;
+  }
+
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__nav button,
+  .site-mode-header:not(.site-mode-header--profile) .site-mode-header__account-action {
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-shadow: none;
+  }
+
+  .site-mode-header__create-profile {
+    display: inline-flex;
+    min-height: 38px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 21px !important;
+    border: 1px solid rgba(255, 255, 255, 0.78) !important;
+    border-radius: 999px !important;
+    background: #f4f4f5 !important;
+    color: #111216 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 2px 8px rgba(0, 0, 0, 0.14);
+    font: 600 0.78rem / 1 var(--site-header-font) !important;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 180ms ease, transform 180ms ease;
+  }
+
+  .site-mode-header__create-profile:hover {
+    background: #ffffff !important;
+    transform: translateY(-1px);
+  }
+
+  .site-mode-header__create-profile:focus-visible {
+    outline: 2px solid var(--site-header-accent);
+    outline-offset: 3px;
+  }
+
+  .site-mode-header__account { gap: 22px; }
+  .site-mode-header__account-menu { position: relative; }
+  .site-mode-header__account-menu > summary {
+    display: flex;
+    min-height: 38px;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px 0 4px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.94);
+    font: 500 0.78rem / 1 var(--site-header-font);
+    list-style: none;
+    cursor: pointer;
+  }
+  .site-mode-header__account-menu > summary::-webkit-details-marker { display: none; }
+  .site-mode-header__account-menu > summary:hover { background: rgba(255, 255, 255, 0.055); }
+  .site-mode-header__account-menu > summary:focus-visible {
+    outline: 2px solid var(--site-header-accent);
+    outline-offset: 2px;
+  }
+
+  .site-mode-header__avatar {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    overflow: hidden;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(8, 9, 12, 0.72);
+    color: #f8f8f8;
+    font: 600 0.72rem / 1 var(--site-header-font);
+  }
+  .site-mode-header__account-name {
+    max-width: 8.5rem;
+    color: rgba(255, 255, 255, 0.94) !important;
+  }
+
+  .site-mode-header__chevron {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.62);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.25;
+    transition: transform 180ms ease;
+  }
+  .site-mode-header__account-menu[open] .site-mode-header__chevron { transform: rotate(180deg); }
+
+  .site-mode-header__account-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    display: grid;
+    width: 10.5rem;
+    padding: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.75rem;
+    background: rgba(17, 18, 22, 0.94);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .site-mode-header__account-panel button {
+    width: 100%;
+    min-height: 2.45rem;
+    padding: 0 0.7rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    font: 500 0.76rem / 1 var(--site-header-font);
+    text-align: left;
+    cursor: pointer;
+  }
+  .site-mode-header__account-panel button:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+  .site-mode-header__account-panel button:focus-visible { outline: 2px solid var(--site-header-accent); outline-offset: -2px; }
+  .site-mode-header__account-panel button:disabled { cursor: wait; opacity: 0.5; }
+
   @media (max-width: 1100px) {
-    .site-mode-header__inner { width: min(calc(100% - 40px), 980px); }
+    .site-mode-header:not(.site-mode-header--profile) .site-mode-header__inner { width: min(968px, calc(100% - 40px)); }
   }
 
   @media (max-width: 980px) {
-    .site-mode-header__nav { gap: 20px; }
+    .site-mode-header:not(.site-mode-header--profile) .site-mode-header__nav { gap: 24px; }
     .site-mode-header__account { gap: 14px; }
   }
 
   @media (max-width: 780px) {
     .site-mode-header,
     .site-mode-header--home { height: 70px; }
-    .site-mode-header__inner { width: calc(100% - 30px); }
+    .site-mode-header:not(.site-mode-header--profile) .site-mode-header__inner {
+      display: flex;
+      width: calc(100% - 24px);
+      height: 52px;
+      margin-top: 9px;
+      padding: 0 10px 0 18px;
+    }
     .site-mode-header__nav { gap: 10px; }
-    .site-mode-header__nav button:not(.site-mode-header__claim-link),
+    .site-mode-header__nav button,
     .site-mode-header__account-action,
     .site-mode-header__account-name { display: none; }
-    .site-mode-header__claim-link { min-height: 38px !important; padding-inline: 14px !important; font-size: 0.8rem !important; }
     .site-mode-header__account { gap: 10px; }
     /* Keep the full navigation and account actions available on small home
      * screens through the same menu used by supporting routes. */
@@ -490,15 +546,15 @@
   }
 
   @media (max-width: 460px) {
-    .site-mode-header__brand-logo { width: 58px; }
-    .site-mode-header__claim-link { padding-inline: 11px !important; }
+    .site-mode-header:not(.site-mode-header--profile) .site-mode-header__brand-logo { width: 42px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .site-mode-header__claim-link,
     .site-mode-header__nav button,
     .site-mode-header__context button,
     .site-mode-header__account button,
-    .site-mode-header__mobile-panel button { transition-duration: 0.001ms; }
+    .site-mode-header__mobile-panel button,
+    .site-mode-header__create-profile,
+    .site-mode-header__chevron { transition-duration: 0.001ms; }
   }
 </style>

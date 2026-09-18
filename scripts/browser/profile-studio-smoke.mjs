@@ -630,7 +630,7 @@ async function capturePublishedLayouts() {
       const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
       return Boolean(
         shell?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
-          && shell?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+          && shell?.querySelector('[data-profile-border="elastic"] .border-art[data-border-style="zine"] .illustration')
           && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
           && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
           && shell?.querySelector('[data-atmosphere="prism-dust"] canvas')
@@ -1841,7 +1841,7 @@ try {
           const environment = document.querySelector('.profile-environment--studio');
           return Boolean(
             preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
-              && preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+              && preview?.querySelector('[data-profile-border="elastic"] .border-art[data-border-style="zine"] .illustration')
               && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
               && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
               && environment?.querySelector('[data-atmosphere="prism-dust"] canvas')
@@ -1860,7 +1860,7 @@ try {
             environmentCount: document.querySelectorAll('.profile-environment').length,
             name: Boolean(preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')),
             border: Boolean(preview?.querySelector('[data-profile-border="elastic"]')),
-            borderPath: Boolean(preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')),
+            borderPath: Boolean(preview?.querySelector('[data-profile-border="elastic"] .border-art[data-border-style="zine"] .illustration')),
             avatar: preview?.querySelectorAll('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas').length || 0,
             atmosphere: Boolean(environment?.querySelector('[data-atmosphere="prism-dust"]')),
             atmosphereCanvas: Boolean(environment?.querySelector('[data-atmosphere="prism-dust"] canvas')),
@@ -1914,7 +1914,7 @@ try {
         const environment = document.querySelector('.profile-environment--studio');
         return Boolean(
           preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
-            && preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+            && preview?.querySelector('[data-profile-border="elastic"] .border-art[data-border-style="zine"] .illustration')
             && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
             && preview?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
             && environment?.querySelector('[data-atmosphere="prism-dust"] canvas')
@@ -1928,7 +1928,7 @@ try {
         const environment = document.querySelector('.profile-environment--studio');
         return {
           name: Boolean(preview?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')),
-          border: Boolean(preview?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')),
+          border: Boolean(preview?.querySelector('[data-profile-border="elastic"] .border-art[data-border-style="zine"] .illustration')),
           avatarLayers: preview?.querySelectorAll('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas').length || 0,
           atmosphere: Boolean(environment?.querySelector('[data-atmosphere="prism-dust"] canvas')),
           cursor: Boolean(environment?.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),
@@ -2676,7 +2676,7 @@ try {
         const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
         return Boolean(
           shell?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
-            && shell?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+            && shell?.querySelector('[data-profile-border="elastic"] .border-art[data-border-style="zine"] .illustration')
             && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
             && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
             && shell?.querySelector('[data-atmosphere="prism-dust"] canvas')
@@ -2691,7 +2691,7 @@ try {
         const shell = document.querySelector('.profile-shell-page[aria-busy="false"]');
         return Boolean(
           shell?.querySelector('[data-name-motion="name_motion_kinetic_echo"]')
-            && shell?.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')
+            && shell?.querySelector('[data-profile-border="elastic"] .border-art[data-border-style="zine"] .illustration')
             && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--back')
             && shell?.querySelector('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas--front')
             && shell?.querySelector('[data-atmosphere="prism-dust"] canvas')
@@ -2704,7 +2704,7 @@ try {
         viewport: innerWidth,
         effectLayers: {
           name: Boolean(document.querySelector('[data-name-motion="name_motion_kinetic_echo"]')),
-          border: Boolean(document.querySelector('[data-profile-border="elastic"] .elastic-frame-effect__path--outer')),
+          border: Boolean(document.querySelector('[data-profile-border="elastic"] .border-art[data-border-style="zine"] .illustration')),
           avatarLayers: document.querySelectorAll('[data-avatar-effect="butterfly-orbit"] .avatar-effect__orbit-canvas').length,
           atmosphere: Boolean(document.querySelector('[data-atmosphere="prism-dust"] canvas')),
           cursor: Boolean(document.querySelector('.cursor-trail-layer[data-trail-key="plasma-swarm"] canvas')),

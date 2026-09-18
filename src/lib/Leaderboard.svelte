@@ -1,4 +1,5 @@
 <script>
+  import '../styles/leaderboard-game.css';
   import { createEventDispatcher, onMount } from 'svelte';
   import { supabase } from './supabase';
   import LeaderboardEntry from './LeaderboardEntry.svelte';
@@ -200,11 +201,11 @@
 <style>
   .roll-leaderboard {
     --leaderboard-bg: var(--bg, #0e0e10);
-    --leaderboard-panel: #111115;
-    --leaderboard-line: #30313b;
-    --leaderboard-muted: #b7b8c2;
-    --leaderboard-text: #f7f7fa;
-    --leaderboard-accent: #aab1ff;
+    --leaderboard-panel: var(--surface, #161619);
+    --leaderboard-line: var(--border, rgba(255, 255, 255, .09));
+    --leaderboard-muted: var(--text-muted, #8d8c92);
+    --leaderboard-text: var(--text, #f5f5f6);
+    --leaderboard-accent: var(--white, #fff);
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: clamp(2.5rem, 5.5vw, 4.5rem) 0 4.5rem;
@@ -217,10 +218,10 @@
   .roll-leaderboard__intro { display: flex; flex-direction: column; align-items: center; text-align: center; }
   .roll-leaderboard__tabs { display: flex; justify-content: center; gap: .7rem; margin-top: 1.5rem; }
   .roll-leaderboard__tabs button {
-    min-height: 2.55rem;
+    min-height: 44px;
     padding: .65rem 1.3rem;
     border: 1px solid var(--leaderboard-line);
-    border-radius: 999px;
+    border-radius: 9px;
     background: transparent;
     color: var(--leaderboard-muted);
     cursor: pointer;
@@ -229,9 +230,9 @@
   }
   .roll-leaderboard__tabs button:hover,
   .roll-leaderboard__tabs button:focus-visible { border-color: var(--leaderboard-accent); color: var(--leaderboard-text); background: color-mix(in srgb, var(--leaderboard-accent) 9%, transparent); transform: translateY(-1px); }
-  .roll-leaderboard__tabs button.active { border-color: var(--leaderboard-accent); background: color-mix(in srgb, var(--leaderboard-accent) 12%, transparent); color: var(--leaderboard-text); }
-  .roll-leaderboard__intro h1 { margin: 0; color: var(--leaderboard-text); font: 750 clamp(3.4rem, 6.3vw, 5.5rem)/.94 'Manrope Variable', var(--font-display-stack, sans-serif) !important; letter-spacing: -.055em; }
-  .roll-leaderboard__scope { max-width: 30rem; margin: .85rem auto 0; color: var(--leaderboard-muted); font: 600 .88rem/1.45 'Inter', sans-serif; }
+  .roll-leaderboard__tabs button.active { border-color: var(--leaderboard-accent); background: var(--leaderboard-accent); color: var(--leaderboard-bg); }
+  .roll-leaderboard__intro h1 { margin: 0; color: var(--leaderboard-text); font: 700 clamp(2.6rem, 4vw, 3.5rem)/.96 var(--site-display, 'Manrope Variable', sans-serif) !important; letter-spacing: -.06em; }
+  .roll-leaderboard__scope { max-width: 30rem; margin: 24px auto 0; color: var(--leaderboard-muted); font: 400 .95rem/1.55 var(--site-font, 'Inter', sans-serif); }
   .roll-leaderboard__board { margin-top: 2.9rem; }
   .roll-leaderboard__list { margin: 0; padding: 0; list-style: none; }
   .roll-leaderboard__results { width: min(960px, 100%); margin-inline: auto; }
@@ -262,7 +263,7 @@
     .roll-leaderboard__shell { width: calc(100% - 30px); }
     .roll-leaderboard__tabs { width: 100%; margin-top: 1.3rem; }
     .roll-leaderboard__tabs button { flex: 1; }
-    .roll-leaderboard__intro h1 { font-size: clamp(2.8rem, 13vw, 4rem) !important; }
+    .roll-leaderboard__intro h1 { font-size: clamp(2.3rem, 10vw, 3.5rem) !important; }
     .roll-leaderboard__scope { max-width: 18rem; }
     .roll-leaderboard__board { margin-top: 2.65rem; }
     .roll-leaderboard__column-headings { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .65rem; padding-inline: .8rem; }

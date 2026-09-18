@@ -157,7 +157,7 @@
 </script>
 
 {#if showSection}
-  <section class="homepage-section homepage-community" id="community" aria-labelledby="homepage-community-title" aria-busy={loading}>
+  <section class="homepage-section homepage-community" id="community" data-homepage-reveal aria-labelledby="homepage-community-title" aria-busy={loading}>
     <div class="homepage-community__copy">
       <div>
         <p class="homepage-community__eyebrow">COMMUNITY</p>

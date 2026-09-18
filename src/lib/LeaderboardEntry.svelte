@@ -3,6 +3,7 @@
   import { getPublicProfilePath } from './discoveryData.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { getRarityPresentation } from './rarityPresentation.js';
+  import UserAvatarFallback from './UserAvatarFallback.svelte';
 
   export let item;
   export let position = 0;
@@ -70,7 +71,7 @@
       {#if avatarSrc && avatarSrc !== failedAvatarSource}
         <img src={avatarSrc} alt="" loading="lazy" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
       {:else}
-        <span class="leaderboard-row__avatar-initial" aria-hidden="true">{displayName.slice(0, 1).toUpperCase() || '✦'}</span>
+        <UserAvatarFallback initial={displayName} />
       {/if}
     </span>
     <span class="leaderboard-row__identity">
@@ -133,9 +134,8 @@
   .leaderboard-row--first .leaderboard-row__rank-mark { width: 1.55rem; height: 1.55rem; }
   .leaderboard-row__rank-number { color: var(--row-accent); font-weight: 800; }
   .leaderboard-row__profile { display: flex; align-items: center; gap: .85rem; min-width: 0; }
-  .leaderboard-row__avatar { display: grid; flex: 0 0 auto; place-items: center; width: 3rem; height: 3rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--row-accent) 28%, var(--row-line)); border-radius: 50%; background: var(--surface, #161619); color: var(--leaderboard-text, #f5f5f6); box-shadow: 0 0 0 .16rem color-mix(in srgb, var(--row-accent) 8%, transparent); }
-  .leaderboard-row__avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .leaderboard-row__avatar-initial { color: var(--row-accent); font: 700 1rem/1 'Inter', sans-serif; }
+  .leaderboard-row__avatar { display: grid; flex: 0 0 auto; place-items: center; width: 3rem; height: 3rem; overflow: hidden; border-radius: 50%; }
+  .leaderboard-row__avatar img { box-sizing: border-box; width: 100%; height: 100%; border: 1px solid color-mix(in srgb, var(--row-accent) 28%, var(--row-line)); border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 .16rem color-mix(in srgb, var(--row-accent) 8%, transparent); }
   .leaderboard-row__identity { display: grid; min-width: 0; max-width: 100%; gap: .35rem; }
   .leaderboard-row__identity strong { display: block; max-width: 100%; min-width: 0; overflow: hidden; color: var(--leaderboard-text, #f5f5f7); font: 750 1rem/1.1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
   .leaderboard-row__identity small { display: block; max-width: 100%; min-width: 0; overflow: hidden; color: var(--leaderboard-muted, #b7b8c2); font: 600 .72rem/1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }

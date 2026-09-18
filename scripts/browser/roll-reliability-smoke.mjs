@@ -13,6 +13,7 @@ try {
   server=await startVite({appPort,evidenceDir});
   chromium=await startChromium({appUrl,debugPort:await findAvailablePort(9254),evidenceDir,width:1440,height:900});
   const page=chromium.page;
+  await page.navigate(appUrl,'stable guest entry');
   await page.waitFor('document.querySelector(".roll-stage--preroll, .roll-stage--results")','guest mounted');
   await page.evaluate("localStorage.removeItem('chromadie-roll');window.dispatchEvent(new StorageEvent('storage',{key:'chromadie-roll'}))");
   await page.waitFor('document.querySelector(".roll-btn:not(:disabled)")','guest ready');
@@ -76,8 +77,8 @@ try {
   await page.pressKey('Escape');
   await page.waitFor('!document.querySelector(".image-modal-content")','share image closes with Escape');
   checks.push('share image opens and keyboard dismissal releases the dialog');
-  for(const width of [1440,390]){
-    await page.setViewport(width,900);
+  for(const {width,height} of [{width:1440,height:900},{width:738,height:817},{width:390,height:900},{width:320,height:760}]){
+    await page.setViewport(width,height);
     assert.ok(await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'));
     const actionLayout=await page.evaluate(`(()=>{
       const summary=document.querySelector('.roll-result-summary')?.getBoundingClientRect();

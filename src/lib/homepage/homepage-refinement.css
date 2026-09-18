@@ -1,5 +1,5 @@
 /* Keep the player's action anchored across reveal states. */
-#chromadie-homepage .roll-page { min-height: 0; padding: clamp(64px, 7vh, 96px) 24px 64px; }
+#chromadie-homepage .roll-page { min-height: 0; padding: clamp(96px, 11vh, 128px) 24px 64px; }
 #chromadie-homepage .roll-page.roll-page--homepage::after {
   position: absolute;
   inset: 0;
@@ -23,7 +23,7 @@
 #chromadie-homepage .roll-page .homepage-best-roll { max-width: 560px !important; }
 #chromadie-homepage .roll-page--homepage-preroll .roll-page__context h1 { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; font-size: clamp(2rem, 3vw, 2.8rem); margin-top: 24px; }
 #chromadie-homepage .roll-page--homepage-preroll .roll-page__description { margin: 16px auto 0; }
-#chromadie-homepage .roll-page .roll-stage--results .roll-display { padding: 0 0 20px; border: 0; border-bottom: 1px solid var(--roll-border); border-radius: 0; background: transparent; }
+#chromadie-homepage .roll-page .roll-stage--results .roll-result-hero .roll-display { align-items: center; padding: 0; border: 0; border-radius: 0; background: transparent; }
 #chromadie-homepage .roll-page .roll-stage--results > .roll-result-summary { padding: 0; border: 0; background: transparent; }
 #chromadie-homepage .roll-countdown { margin: 0; color: var(--roll-muted); text-align: center; font-size: .85rem; font-variant-numeric: tabular-nums; }
 #chromadie-homepage .roll-countdown strong { color: var(--roll-text); }
@@ -31,14 +31,14 @@
 #chromadie-homepage .homepage-best-roll .homepage-best-roll__state { min-height: 0; padding: 24px 12px; border: 0; }
 #chromadie-homepage .homepage-best-roll__result-summary { background: transparent; border: 0; }
 #chromadie-homepage .homepage-best-roll__result-summary .roll-result-summary { padding: 0; border: 0; background: transparent; }
-#chromadie-homepage .homepage-best-roll__color-display { border: 0; border-bottom: 1px solid var(--homepage-border); border-radius: 0; background: transparent; }
+#chromadie-homepage .homepage-best-roll__color-display { border: 0; border-radius: 0; background: transparent; }
 @media (min-width: 1000px) {
-  /* The shared desktop header is 88px. Keep the next section below the fold,
+  /* The capsule overlays the atmosphere. Keep the hero at one full viewport
      while allowing tall result cards to grow naturally on short screens. */
-  #chromadie-homepage .roll-page { min-height: calc(100svh - 88px); }
+  #chromadie-homepage .roll-page { min-height: 100svh; }
 }
 @media (max-width: 999px) {
-  #chromadie-homepage .roll-page { padding: 40px 16px 48px; }
+  #chromadie-homepage .roll-page { padding: 110px 16px 48px; }
   #chromadie-homepage .roll-page.roll-page--homepage::after {
     background-image:
       linear-gradient(to bottom, transparent 0%, transparent 48%, rgba(14, 14, 16, .96) 100%),

@@ -1,5 +1,60 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-18 — Ten illustrated profile borders
+
+- Added Rosette and Love Letter: satin bows, pearls, red hearts and stitching.
+- Added Sakura Diary and Manga Panel: blossoms, drifting petals and ink accents.
+- Added Midnight Rose and Blackthorn: crimson flowers, silver vines and thorns.
+- Added Web Angel and Afterhours: pixel wings, old-web chrome and torn zine tape.
+- Added Sea Glass and Wildflower: shells, water drops, garden vines and flowers.
+- Replaced the nine basic renderers, retained Celestial/Crystal, and synchronized
+  catalog names/descriptions. Twelve active borders remain available.
+- Added static/reduced-motion states, offscreen/hidden-document pausing, lazy
+  artwork loading and clipped-thumbnail fit checks.
+
+
+## 2026-09-15 — Remove redundant signed-in homepage CTA
+
+- Removed the signed-in “Make it yours” customization block from the homepage.
+- Kept the profile-claim section available to signed-out visitors.
+
+## 2026-09-15 — Capsule headers for owner surfaces
+
+- Applied the shared glass-capsule header geometry to Profile Studio while
+  preserving View profile, Progression, Publish profile, and More.
+- Reworked the owner-only public-profile header into the same capsule while
+  retaining its Home and Customize profile navigation.
+- Added matching compact mobile layouts without changing profile ownership or
+  authoring behavior.
+
+## 2026-09-15 — Shared atmosphere across site routes
+
+- Extended the homepage atmosphere to Roll, Leaderboard, Progression, Pricing,
+  and the remaining non-profile site routes through the shared app shell.
+- Removed opaque Roll and Progression layers plus the Leaderboard override that
+  covered or disabled the shared artwork.
+- Restored the Roll header by removing its full-viewport paint layer while
+  keeping public profiles and Profile Studio on their own visual canvases.
+
+## 2026-09-15 — Reference-aligned site header
+
+- Rebuilt the shared desktop header as the supplied compact glass capsule with
+  centered Leaderboard, Progression, Customize, and Pricing navigation.
+- Added the requested signed-out Login and Create profile controls and a
+  signed-in avatar, username, and chevron account menu. The avatar fallback is
+  a simple flat profile mark without a gradient or decorative glow.
+- Kept protected navigation visible while routing signed-out visitors through
+  authentication, preserved mobile menu access, and placed the homepage
+  capsule over the existing atmosphere.
+
+## 2026-09-13 — Align Leaderboard with Roll
+
+- Use Roll's shared charcoal surface, border, text and white control tokens.
+- Match the Roll heading scale, description typography and rounded controls.
+- Remove board scenery, glass blur, row shadows and decorative rank rails;
+  retain vivid color swatches, rarity colors and rank medals.
+- Present scores in the shared earned-color token and keep mobile rows bounded.
+
 ## 2026-09-13 — Extend homepage atmosphere to shared routes
 
 - Applied the current homepage hero and sparse continuous lower artwork, with
@@ -4894,3 +4949,40 @@ No snapshot, account data or schema change. The homepage browser check asserts
 Heart Pop is mounted at desktop and mobile sizes.
 
 The Modern demo no longer applies the captured custom cursor or cursor trail.
+
+## 2026-09-15 — Cinematic homepage motion
+
+- Added slow independent camera drift to the existing hero and lower-page
+  artwork without introducing new image payloads.
+- Added one-time viewport reveals for the profile, collection, pricing,
+  community, guest claim, FAQ, and footer sections.
+- Added restrained condition, Plus-plan, and community-color gestures while
+  preserving the roll and profile preview's existing authored motion.
+- Reduced-motion visitors receive the complete static composition immediately;
+  no-observer and no-JavaScript rendering also remains visible.
+
+## 2026-09-16 — Restore auth-page navigation
+
+- Login and signup now retain the shared capsule navigation and mobile menu.
+- Auth-specific styling continues to focus the account card without removing
+  access to Leaderboard, Progression, Customize, Pricing, or account actions.
+
+## 2026-09-16 — Rebalance the Daily Roll result
+
+- Combined the score and rolled-color identity into one compact hero with a
+  larger swatch and an attached, quieter points metric.
+- Reduced nested result chrome, kept conditions secondary, and grouped the
+  countdown and result actions into one footer.
+- Preserved the homepage top-roll score, full breakdown dialog, responsive
+  behavior, and all server-authoritative gameplay contracts.
+- Applied the same result hierarchy to “Today’s top roll” and removed the
+  ambient/legacy paint that visually obscured the homepage roll button.
+
+## 2026-09-16 — Standardize missing user avatars
+
+- Added a shared neutral, lowercase initial fallback for users without an
+  uploaded avatar.
+- Replaced roll/profile-color fallbacks in the top-roll card, homepage player
+  cards, leaderboard, rivals, public profiles, header, avatar editor, and
+  avatar-effect previews.
+- Preserved uploaded avatar media and equipped avatar-effect behavior.

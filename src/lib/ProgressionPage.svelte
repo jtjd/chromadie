@@ -385,7 +385,7 @@
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: 1.1rem 0 4rem;
-    background: var(--bg, #0e0e10);
+    background: transparent;
     color: var(--progression-text);
     font-family: var(--site-font, var(--font-body-stack, sans-serif));
     color-scheme: dark;

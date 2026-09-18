@@ -75,9 +75,10 @@ test('Profile Studio header uses the centered homepage shell geometry', async ()
   assert.match(shell, /\.profile-studio-shell \{[\s\S]*display: flex;[\s\S]*flex-direction: column;/);
   assert.match(shell, /\.profile-studio-shell__workspace \{[\s\S]*flex: 1 0 auto;/);
   assert.match(shell, /<div class="profile-studio-shell__header-inner">/);
-  assert.match(shell, /\.profile-studio-shell__header-inner \{[\s\S]*width: min\(1480px, calc\(100% - 64px\)\);[\s\S]*margin-inline: auto;/);
-  assert.match(shell, /@media \(max-width: 1100px\) \{[\s\S]*\.profile-studio-shell__header-inner \{ width: min\(calc\(100% - 40px\), 980px\); \}/);
-  assert.match(shell, /@media \(max-width: 700px\) \{[\s\S]*\.profile-studio-shell__header-inner \{ width: calc\(100% - 30px\); \}/);
+  assert.match(shell, /\.profile-studio-shell__header-inner \{[\s\S]*width: min\(968px, calc\(100% - 48px\)\);[\s\S]*height: 54px;[\s\S]*border-radius: 999px;[\s\S]*background: rgba\(13, 14, 17, \.76\);/);
+  assert.match(shell, /backdrop-filter: blur\(22px\) saturate\(118%\)/);
+  assert.match(shell, /@media \(max-width: 700px\) \{[\s\S]*\.profile-studio-shell__header-inner \{[\s\S]*width: calc\(100% - 20px\);/);
+  assert.match(shell, /\.profile-studio-shell__brand-logo \{[\s\S]*width: 44px;/);
 });
 
 test('Profile Studio preview centers the specimen without auxiliary chrome', async () => {

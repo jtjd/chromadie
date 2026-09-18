@@ -4,6 +4,7 @@
   import { getPublicProfilePath } from '../discoveryData.js';
   import { getProfileMediaUrl } from '../profileMedia.js';
   import RollResultBreakdown from '../RollResultBreakdown.svelte';
+  import UserAvatarFallback from '../UserAvatarFallback.svelte';
   import { getRarityPresentation } from '../rarityPresentation.js';
   import { normalizeHexColor } from '../utils.js';
 
@@ -21,15 +22,13 @@
   $: displayName = bestRoll?.displayName || bestRoll?.username || 'Unknown player';
   $: avatarSrc = getProfileMediaUrl(bestRoll?.avatarReference || bestRoll?.avatarPath);
   $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
-  $: avatarInitials = getAvatarInitials(displayName);
-  $: avatarAccent = normalizeHexColor(bestRoll?.profileAccent || bestRoll?.hexCode, '#a855f7');
   $: rollHex = bestRoll?.hexCode ? normalizeHexColor(bestRoll.hexCode, '') : '';
   $: rollColor = normalizeHexColor(bestRoll?.hexCode || bestRoll?.profileAccent, '#77747f');
   $: score = Number.isSafeInteger(Number(bestRoll?.score)) ? Number(bestRoll.score) : 0;
   $: rarity = getRarityPresentation(bestRoll?.rarity || 'Common');
   $: identity = bestRoll?.identity || 'Unidentified color';
   $: rankLabel = bestRoll?.rank ? `#${bestRoll.rank} TODAY` : 'TOP TODAY';
-  $: spotlightStyle = `--best-roll-color: ${rollColor}; --best-roll-rarity: ${rarity.color}; --best-roll-avatar-accent: ${avatarAccent};`;
+  $: spotlightStyle = `--best-roll-color: ${rollColor}; --best-roll-rarity: ${rarity.color};`;
 
   function getBestRoll(items) {
     if (!Array.isArray(items)) return null;
@@ -40,14 +39,6 @@
       const bestScore = Number(best.score);
       return Number.isFinite(itemScore) && (!Number.isFinite(bestScore) || itemScore > bestScore) ? item : best;
     }, null);
-  }
-
-  function getAvatarInitials(value) {
-    const parts = String(value || '').trim().split(/\s+/).filter(Boolean);
-    const initials = parts.length > 1
-      ? parts.slice(0, 2).map(part => part[0]).join('')
-      : String(parts[0] || '✦').slice(0, 2);
-    return initials.toUpperCase();
   }
 
   function updateResetLabel() {
@@ -88,7 +79,7 @@
             {#if avatarSrc && avatarSrc !== failedAvatarSource}
               <img src={avatarSrc} alt="" loading="lazy" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
             {:else}
-              <span aria-hidden="true">{avatarInitials}</span>
+              <UserAvatarFallback initial={displayName} />
             {/if}
           </span>
           <span class="homepage-best-roll__identity-copy">
@@ -107,6 +98,10 @@
             <span class="homepage-best-roll__color-hex">{rollHex || '—'}</span>
             <span class="homepage-best-roll__rarity" style={`--homepage-best-rarity: ${rarity.color};`}>{rarity.name}</span>
           </span>
+          <span class="homepage-best-roll__score" aria-label={`${score.toLocaleString()} score`}>
+            <strong>{score.toLocaleString()}</strong>
+            <span>pts</span>
+          </span>
         </span>
       </a>
 
@@ -114,6 +109,7 @@
         <RollResultBreakdown
           contributors={bestRoll.contributors}
           totalScore={score}
+          showScore={false}
         />
       </div>
 
@@ -228,17 +224,10 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border: 2px solid var(--best-roll-avatar-accent);
     border-radius: 50%;
-    background: color-mix(in srgb, var(--best-roll-avatar-accent) 42%, #25252c);
-    color: #fff;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--best-roll-avatar-accent) 12%, transparent);
-    font: 800 .82rem / 1 var(--font-mono-stack, monospace);
-    text-align: center;
-    text-transform: lowercase;
   }
 
-  .homepage-best-roll__avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .homepage-best-roll__avatar img { box-sizing: border-box; width: 100%; height: 100%; border: 1px solid rgba(255, 255, 255, .1); border-radius: 50%; object-fit: cover; }
 
   .homepage-best-roll__identity-copy {
     display: grid;
@@ -299,9 +288,9 @@
   }
 
   .homepage-best-roll__color-tile {
-    width: 88px;
-    height: 88px;
-    flex: 0 0 88px;
+    width: 112px;
+    height: 112px;
+    flex: 0 0 112px;
     border: 1px solid rgba(255, 255, 255, .2);
     border-radius: 14px;
     box-shadow:
@@ -353,6 +342,25 @@
     filter: saturate(1.2);
   }
 
+  .homepage-best-roll__score {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 3px;
+    color: var(--homepage-muted);
+    font: 700 .64rem / 1 'Inter', sans-serif;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .homepage-best-roll__score strong {
+    color: var(--color-earned, #f5c26f);
+    font: 800 clamp(1.8rem, 4.5vw, 2.15rem) / 1 var(--homepage-display);
+    letter-spacing: -.045em;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 18px color-mix(in srgb, var(--color-earned, #f5c26f) 30%, transparent);
+  }
+
   .homepage-best-roll__result-summary { margin-top: 16px; }
 
   .homepage-best-roll__footer {
@@ -378,7 +386,8 @@
     .homepage-best-roll__identity-row { gap: 10px; padding: 12px; }
     .homepage-best-roll__avatar { width: 44px; height: 44px; flex-basis: 44px; }
     .homepage-best-roll__color-display { gap: 14px; padding: 14px; }
-    .homepage-best-roll__color-tile { width: 80px; height: 80px; flex-basis: 80px; }
+    .homepage-best-roll__color-tile { width: 88px; height: 88px; flex-basis: 88px; }
+    .homepage-best-roll__score strong { font-size: 1.8rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {

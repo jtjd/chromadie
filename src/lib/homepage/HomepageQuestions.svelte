@@ -1,4 +1,4 @@
-<section class="homepage-section homepage-questions" aria-labelledby="homepage-questions-title">
+<section class="homepage-section homepage-questions" data-homepage-reveal aria-labelledby="homepage-questions-title">
   <h2 id="homepage-questions-title">A few things to know</h2>
   <div>
     <details><summary>Is it free?</summary><p>Daily rolls and a customizable profile are free. Optional paid media features are listed on the <a href="/pricing">pricing page</a>.</p></details>
