@@ -23,6 +23,10 @@ const definitions = {
     key: 'snowfall', label: 'Snowfall', collection: 'Nocturne', rarity: 'Rare',
     description: 'Layered flakes drift through a blue winter field, from soft foreground crystals to distant pinpricks.'
   },
+  'sakura-afterglow': {
+    key: 'sakura-afterglow', label: 'Sakura Afterglow', collection: 'Prism', rarity: 'Rare',
+    description: 'Painted cherry blossoms and wind-driven petals sweep across a soft anime dusk.'
+  },
   'silk-folds': {
     key: 'silk-folds', label: 'Silk Folds', collection: 'Prism', rarity: 'Rare',
     description: 'Moving folds of black silk carry a restrained sheen through the profile without adding a frame.'

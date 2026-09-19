@@ -345,10 +345,10 @@ const rendererKeys = Object.freeze({
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing', 'plasma-swarm', 'bubble-wake', 'character-bloom', 'emoji-bloom', 'following-dot', 'text-flag', 'springy-emoji']),
   avatar_effect: new Set(['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'fireflies', 'moonlit-clouds', 'enchanted-garden', 'prismatic-fracture', 'sakura-neko', 'cloud-bunny', 'crimson-ronin', 'midnight-oni', 'koi-current', 'sakura-petals', 'bat-orbit']),
   profile_layout: new Set(['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']),
-  profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare', 'prism-dust']),
+  profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'sakura-afterglow', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare', 'prism-dust']),
   profile_motion: new Set(['perspective-tilt', 'halo-offset', 'wavefront'])
 });
-const expectedCounts = Object.freeze({ name_font: 17, name_material: 8, name_motion: 20, profile_border: 12, cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 });
+const expectedCounts = Object.freeze({ name_font: 17, name_material: 8, name_motion: 20, profile_border: 12, cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 14, profile_motion: 3 });
 const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0, profile_motion: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
@@ -378,8 +378,8 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 118) {
-  fail(`expected 118 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 119) {
+  fail(`expected 119 active catalog rows, found ${seed.catalog.size}`);
 }
 for (const definition of Object.values(PROFILE_BORDER_DEFINITIONS)) {
   const row = seed.catalog.get(definition.itemKey);

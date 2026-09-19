@@ -17,7 +17,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('launch renderer registries contain exactly the requested finite keys', () => {
   assert.equal(CURSOR_TRAIL_KEYS.length, 23);
   assert.deepEqual(AVATAR_EFFECT_KEYS, ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'fireflies', 'moonlit-clouds', 'enchanted-garden', 'prismatic-fracture', 'sakura-neko', 'cloud-bunny', 'crimson-ronin', 'midnight-oni', 'koi-current', 'sakura-petals', 'bat-orbit']);
-  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 13);
+  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 14);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 23);
   assert.doesNotMatch(Object.values(CURSOR_TRAIL_DEFINITIONS).map(definition => definition.label).join(' '), /\b(?:guns|vaults|haunt|carrd|linktree)\b/i);
   assert.deepEqual(
@@ -184,7 +184,7 @@ test('seed and migrations contain the launch products and version bumps', async 
   assert.equal((seed.match(/^\s+\('cursor_trail_[a-z0-9_]+'/gm) || []).length, 23);
   assert.equal((seed.match(/^\s+\('avatar_effect_[a-z0-9_]+'/gm) || []).length, 16);
   assert.equal((seed.match(/^\s+\('profile_layout_[a-z0-9_]+'/gm) || []).length, 5);
-  assert.equal((seed.match(/^\s+\('profile_atmosphere_[a-z0-9_]+'/gm) || []).length, 13);
+  assert.equal((seed.match(/^\s+\('profile_atmosphere_[a-z0-9_]+'/gm) || []).length, 14);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');
   const atmosphereExpansionMigration = await read('supabase/migrations/20260804210000_atmosphere_expansion.sql');

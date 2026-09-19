@@ -1,5 +1,5 @@
 /** Finite authored compositions. No remote assets or owner-provided drawing code. */
-export const AUTHORED_ATMOSPHERES = Object.freeze(['dust-light', 'snowfall', 'ink-bloom', 'paper-shadow']);
+export const AUTHORED_ATMOSPHERES = Object.freeze(['dust-light', 'snowfall', 'sakura-afterglow', 'ink-bloom', 'paper-shadow']);
 const TAU = Math.PI * 2;
 const fract = n => n - Math.floor(n);
 const random = n => fract(Math.sin(n * 127.1 + 311.7) * 43758.5453);
@@ -111,6 +111,33 @@ function snowfall(c, w, h, t) {
   }
 }
 
+function sakura(c, w, h, t) {
+  glow(c, w * .05, h * .08, w * .6, '#fb68b2', .14);
+  glow(c, w * .96, h * .65, w * .32, '#aa6eff', .12);
+  const unit = Math.min(w / 900, 1);
+  c.save(); c.scale(unit, unit); c.lineCap = 'round';
+  c.strokeStyle = '#5b314c'; c.lineWidth = 3;
+  c.beginPath(); c.moveTo(-20, 155); c.bezierCurveTo(70, 90, 138, 115, 230, 8); c.stroke();
+  const blossoms = [[2, 131], [27, 113], [58, 112], [83, 88], [117, 78], [133, 53], [165, 39], [193, 6]];
+  for (let i = 0; i < blossoms.length; i++) {
+    const [x, y] = blossoms[i];
+    c.strokeStyle = '#80415f'; c.lineWidth = 1.3; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 20, y - 26); c.stroke();
+    for (let j = 0; j < 5; j++) {
+      const a = j * TAU / 5;
+      petal(c, x + 20 + Math.sin(a) * 7, y - 26 + Math.cos(a) * 7, i % 3 === 0 ? 9 : 6, -a + i * .18, 1, .8);
+    }
+    glow(c, x + 20, y - 26, 3, '#ffe6af', .9);
+  }
+  c.restore();
+  for (let i = 0; i < 62; i++) {
+    const p = particles[i];
+    const gust = Math.sin(t * .24 + p.y * 4);
+    const x = fract(p.x + t * (.016 + p.z * .018) + gust * .045) * (w + 70) - 35;
+    const y = fract(p.y + t * (.018 + p.z * .018)) * (h + 60) - 30;
+    petal(c, x, y, (3 + p.z * 9) * Math.min(1, w / 600), t * (.4 + p.z) + p.phase, .25 + Math.abs(Math.cos(t * .8 + p.phase)) * .75, .25 + p.z * .65);
+  }
+}
+
 function crimson(c, w, h, t) {
   // Ink currents form a broken eclipse around the profile rather than a veil.
   const scale = Math.min(w, h), cx = w * .5, cy = h * .49;
@@ -203,7 +230,7 @@ function cyber(c, w, h, t) {
   }
 }
 
-const painters = { 'dust-light': loveglass, snowfall, 'ink-bloom': crimson, 'paper-shadow': cyber };
+const painters = { 'dust-light': loveglass, snowfall, 'sakura-afterglow': sakura, 'ink-bloom': crimson, 'paper-shadow': cyber };
 export function drawAuthoredAtmosphere(context, key, width, height, seconds = 0) {
   context.clearRect(0, 0, width, height);
   if (!painters[key] || width <= 0 || height <= 0) return;
