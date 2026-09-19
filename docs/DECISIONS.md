@@ -1,5 +1,27 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-19 — Author atmosphere motion in the renderer
+
+Replace four video plates with bounded Canvas compositions: Loveglass, Sakura
+Afterglow, Crimson Ink and Cyber Silk. Each owns its palette, material, silhouette
+and motion; these are taste choices available to everyone, not gender gates.
+The shared environment layer serves Customize and public profiles. A paused scene
+retains its composition; reduced motion and compact cards draw a still. Limit
+animation to 30fps and allocation to 1.8 million pixels, pause hidden/offscreen,
+and dispose every observer and animation frame. No external textures or video
+requests are needed for these four scenes.
+
+Keep item and renderer IDs, prices, progression references and entitlements.
+Only names/descriptions and the catalog version change in the metadata migration.
+Retain the former assets for rollback. Rollback restores the previous renderer
+and four prior metadata values from the preceding seed revision; no ownership or
+profile data restoration is necessary.
+
+Retained videos stay mounted across ordinary visibility changes. Recover unexpected
+pauses, bound retries, and invalidate queued callbacks/rejected promises on teardown
+or scene change. Posters remain available without destroying the recovering node.
+
+
 ## 2026-09-18 — Profile borders express different tastes
 
 Replace the nine weak border treatments with Rosette, Love Letter, Sakura

@@ -1,58 +1,48 @@
 const MAX_RETRIES = 3;
 
-/**
- * Keep recovery state outside the Svelte render path. Atmosphere media can
- * stall independently of the dashboard, so this small controller owns the
- * bounded retry timer and lets the component only project poster state.
- */
+/** Bounded recovery, with every callback invalidated on scene change/teardown. */
 export function createAtmosphereRecovery({ canRecover, getVideo, setPosterFallback }) {
-  let retryTimer;
-  let retryCount = 0;
-
+  let retryTimer = 0, frame = 0, retryCount = 0, generation = 0;
+  let destroyed = false;
   function clear() {
-    if (retryTimer) window.clearTimeout(retryTimer);
-    retryTimer = null;
+    window.clearTimeout(retryTimer);
+    window.cancelAnimationFrame(frame);
+    retryTimer = 0; frame = 0;
+    generation += 1;
   }
-
+  function play(reload = false) {
+    const current = generation;
+    frame = window.requestAnimationFrame(() => {
+      frame = 0;
+      if (destroyed || current !== generation || !canRecover()) return;
+      const video = getVideo();
+      if (!video) return;
+      if (reload) video.load?.();
+      video.play?.().catch?.(() => {
+        if (!destroyed && current === generation) schedule();
+      });
+    });
+  }
   function schedule() {
-    if (!canRecover() || retryCount >= MAX_RETRIES) {
-      setPosterFallback(true);
-      return;
-    }
-
+    if (destroyed || !canRecover() || retryTimer) return;
+    if (retryCount >= MAX_RETRIES) { setPosterFallback(true); return; }
     retryCount += 1;
     clear();
     retryTimer = window.setTimeout(() => {
-      retryTimer = null;
-      if (!canRecover()) return;
+      retryTimer = 0;
+      if (destroyed || !canRecover()) return;
       setPosterFallback(false);
-      window.requestAnimationFrame(() => {
-        const video = getVideo();
-        if (!video) return;
-        video.load?.();
-        video.play?.().catch?.(schedule);
-      });
+      play(true);
     }, Math.min(2400, 450 * retryCount));
   }
-
-  function recover() {
-    if (!canRecover()) return;
-    clear();
-    setPosterFallback(false);
-    window.requestAnimationFrame(() => {
-      const video = getVideo();
-      if (!video) return;
-      video.play?.().catch?.(schedule);
-    });
-  }
-
   return {
-    recover,
-    stalled: schedule,
-    ready() {
-      retryCount = 0;
-      setPosterFallback(false);
+    recover() {
+      if (destroyed || !canRecover() || frame || retryTimer) return;
+      if (retryCount >= MAX_RETRIES) return;
+      setPosterFallback(false); play();
     },
-    destroy: clear
+    stalled: schedule,
+    ready() { clear(); retryCount = 0; setPosterFallback(false); },
+    destroy() { destroyed = true; clear(); }
   };
 }

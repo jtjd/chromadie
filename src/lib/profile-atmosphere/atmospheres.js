@@ -12,16 +12,16 @@ const definitions = {
     description: 'Realistic beads and trails cling to a pane, catching the daily color without obscuring the profile.'
   },
   'dust-light': {
-    key: 'dust-light', label: 'Dustlight', collection: 'Archive', rarity: 'Rare',
-    description: 'Fine particles drift through a single beam of light, revealing depth without filling the page.'
+    key: 'dust-light', label: 'Loveglass', collection: 'Archive', rarity: 'Rare',
+    description: 'Rose glass hearts rise through pearly pin lights, catching reflections as they turn.'
   },
   'ink-bloom': {
-    key: 'ink-bloom', label: 'Ink Bloom', collection: 'Prism', rarity: 'Epic',
-    description: 'A slow plume of ink unfurls like a living cloud, turning the profile into a moving study in density.'
+    key: 'ink-bloom', label: 'Crimson Ink', collection: 'Prism', rarity: 'Epic',
+    description: 'A broken crimson eclipse breathes with calligraphic ink currents and rising embers.'
   },
   snowfall: {
-    key: 'snowfall', label: 'Snowfall', collection: 'Nocturne', rarity: 'Rare',
-    description: 'Quiet flakes cross a black winter field in a soft, unhurried descent.'
+    key: 'snowfall', label: 'Sakura Afterglow', collection: 'Nocturne', rarity: 'Rare',
+    description: 'Blush petals tumble through changing winds beneath a flowering cherry branch.'
   },
   'silk-folds': {
     key: 'silk-folds', label: 'Silk Folds', collection: 'Prism', rarity: 'Rare',
@@ -40,8 +40,8 @@ const definitions = {
     description: 'A dense field of suspended lights folds through a deep nocturnal tunnel.'
   },
   'paper-shadow': {
-    key: 'paper-shadow', label: 'Chromatic Tangle', collection: 'Prism', rarity: 'Rare',
-    description: 'Bright colored trails knot and release across a black field like a living light study.'
+    key: 'paper-shadow', label: 'Cyber Silk', collection: 'Prism', rarity: 'Rare',
+    description: 'Liquid chrome ribbons twist between lilac and cyan beneath old-web star glints.'
   },
   'smoke-spiral': {
     key: 'smoke-spiral', label: 'Smoke Spiral', collection: 'Prism', rarity: 'Anomaly',

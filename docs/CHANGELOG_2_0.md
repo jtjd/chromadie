@@ -1,5 +1,19 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-19 — Authored atmospheres and playback recovery
+
+- Loveglass: rose glass hearts, reflective rims and pearly glints.
+- Sakura Afterglow: a blossom spray and tumbling, wind-driven petals.
+- Crimson Ink: tapered ink currents, a broken eclipse and rising embers.
+- Cyber Silk: twisting chrome ribbons with lilac/cyan reflections and web stars.
+- These four atmospheres render without video downloads, retain existing owned
+  IDs and work in Customize and public profiles. Compact/reduced-motion views
+  remain still; hidden/offscreen scenes suspend their work.
+- Retained video atmospheres recover unexpected pauses and preserve their media
+  nodes during normal hide/show. Queued recovery is bounded and teardown-safe.
+- Catalog metadata migration included and validated locally; no production deploy.
+
+
 ## 2026-09-18 — Ten illustrated profile borders
 
 - Added Rosette and Love Letter: satin bows, pearls, red hearts and stitching.

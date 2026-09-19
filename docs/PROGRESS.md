@@ -1,5 +1,28 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-19 — Authored profile atmospheres
+
+Implemented Loveglass, Sakura Afterglow, Crimson Ink and Cyber Silk as four
+asset-free Canvas scenes, replacing the corresponding video plates behind stable
+owned IDs. Retained clips now keep their nodes across hide/show, recover unexpected
+pauses and cancel stale recovery work. Motion honors visibility, explicit pause,
+reduced motion and compact previews, with a 30fps / 1.8M-pixel cap.
+
+The focused browser study uses the production shared environment in both Studio
+and public modes. Frame comparisons cover switching, hide/show, explicit pause,
+reduced motion, hidden documents, offscreen suspension and video pause recovery;
+mobile and desktop screenshots are under `artifacts/profile-atmospheres/`.
+These are shared-renderer checks, not an end-to-end authenticated publishing audit.
+Existing authentication, ownership/equip authority and profile state are untouched.
+
+Validation: 631 unit tests; build, Svelte check, ESLint, links, CSP, performance,
+username/balance/catalog drift, scoring parity and database security passed.
+Local database reset and strict schema lint passed. Existing aggregate asset-size
+advisories remain non-blocking. The metadata-only migration is applied locally;
+production has not been changed. See
+[`milestones/AUTHORED_PROFILE_ATMOSPHERES.md`](milestones/AUTHORED_PROFILE_ATMOSPHERES.md).
+
+
 ## 2026-09-18 — Profile border curation
 
 Implemented ten illustrated designs across five tastes, retaining Celestial

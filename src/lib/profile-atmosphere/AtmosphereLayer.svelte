@@ -1,6 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { getAtmosphereDefinition } from './atmospheres.js';
+  import AuthoredAtmosphereLayer from './AuthoredAtmosphereLayer.svelte';
+  import { AUTHORED_ATMOSPHERES } from './authoredScenes.js';
   import PrismDustLayer from './PrismDustLayer.svelte';
 
   export let atmosphereKey = '';
@@ -25,24 +27,6 @@
       poster: '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.png',
       className: 'droplets'
     }),
-    'dust-light': Object.freeze({
-      video: '/atmospheres/dust-light/dust-light-loop-v1.webm',
-      fallback: '/atmospheres/dust-light/dust-light-loop-v1.mp4',
-      poster: '/atmospheres/dust-light/dust-light-loop-v1-poster.png',
-      className: 'dust'
-    }),
-    'ink-bloom': Object.freeze({
-      video: '/atmospheres/ink-bloom/ink-bloom-loop-v1.webm',
-      fallback: '/atmospheres/ink-bloom/ink-bloom-loop-v1.mp4',
-      poster: '/atmospheres/ink-bloom/ink-bloom-loop-v1-poster.png',
-      className: 'ink'
-    }),
-    snowfall: Object.freeze({
-      video: '/atmospheres/snowfall/snowfall-loop-v1.webm',
-      fallback: '/atmospheres/snowfall/snowfall-loop-v1.mp4',
-      poster: '/atmospheres/snowfall/snowfall-loop-v1-poster.png',
-      className: 'snow'
-    }),
     'silk-folds': Object.freeze({
       video: '/atmospheres/silk-folds/silk-folds-loop-v1.webm',
       fallback: '/atmospheres/silk-folds/silk-folds-loop-v1.mp4',
@@ -66,12 +50,6 @@
       fallback: '/atmospheres/night-pollen/night-pollen-loop-v2.mp4',
       poster: '/atmospheres/night-pollen/night-pollen-loop-v2-poster.png',
       className: 'pollen'
-    }),
-    'paper-shadow': Object.freeze({
-      video: '/atmospheres/paper-shadow/paper-shadow-loop-v2.webm',
-      fallback: '/atmospheres/paper-shadow/paper-shadow-loop-v2.mp4',
-      poster: '/atmospheres/paper-shadow/paper-shadow-loop-v2-poster.png',
-      className: 'paper'
     }),
     'smoke-spiral': Object.freeze({
       video: '/atmospheres/smoke-spiral/smoke-spiral-loop-v1.webm',
@@ -103,7 +81,8 @@
   let resumeFrame = 0;
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
-  $: media = definition ? MEDIA[definition.key] : null;
+  $: isAuthored = AUTHORED_ATMOSPHERES.includes(definition?.key);
+  $: media = definition && !isAuthored ? MEDIA[definition.key] : null;
   $: isProcedural = definition?.key === 'prism-dust';
   $: compact = mode === 'card' || mode === 'compact';
   $: if ((definition?.key || '') !== renderedDefinitionKey) {
@@ -172,14 +151,16 @@
   function updateHostVisibility() {
     if (!host) return;
     const rect = host.getBoundingClientRect();
-    const nextInViewport = rect.width > 0 && rect.height > 0;
+    const nextInViewport = rect.width > 0 && rect.height > 0 && rect.bottom > -160 && rect.top < window.innerHeight + 160;
     inViewport = nextInViewport;
     if (nextInViewport) recoverVideo();
     else if (videoElement) videoElement.pause?.();
   }
 
-  function handleVideoReady() {
-    recovery?.ready();
+  function handleVideoReady(event) {
+    if (!motionActive) { videoElement?.pause(); return; }
+    if (event.type === 'playing') recovery?.ready();
+    else recoverVideo();
   }
 
   function handleVideoStall(event) {
@@ -199,6 +180,7 @@
   // video element and its observers. Re-entering the viewport must explicitly
   // resume the decorative media after Svelte has restored the video node.
   $: if (mounted && motionActive && videoElement) recoverVideo();
+  $: if (mounted && !motionActive && videoElement) videoElement.pause();
 
   onMount(() => {
     mounted = true;
@@ -253,17 +235,20 @@
   });
 </script>
 
-{#if definition && (media || isProcedural)}
-  {#if isProcedural}
+{#if definition && (media || isProcedural || isAuthored)}
+  {#if isAuthored}
+    <AuthoredAtmosphereLayer atmosphereKey={definition.key} {mode} {active} {animated} {className} />
+  {:else if isProcedural}
     <PrismDustLayer {todayColor} {recentColors} {mode} {active} {animated} {className} />
   {:else}
   <div bind:this={host} class={classes} style={style} aria-hidden="true" data-atmosphere={definition.key} data-atmosphere-state={motionActive ? 'animated' : 'poster'}>
     {#key definition.key}
-      {#if motionActive}
-        <video bind:this={videoElement} class={`profile-atmosphere__video profile-atmosphere__video--${media.className}`} autoplay muted loop playsinline poster={media.poster} on:canplay={handleVideoReady} on:playing={handleVideoReady} on:stalled={handleVideoStall} on:waiting={handleVideoStall} on:error={handleVideoStall}>
+      {#if !compact && !reducedMotion && !constrainedConnection}
+        <video bind:this={videoElement} class={`profile-atmosphere__video profile-atmosphere__video--${media.className}`} style:visibility={posterFallback ? 'hidden' : 'visible'} autoplay muted loop playsinline preload="metadata" on:pause={recoverVideo} poster={media.poster} on:canplay={handleVideoReady} on:playing={handleVideoReady} on:stalled={handleVideoStall} on:waiting={handleVideoStall} on:error={handleVideoStall}>
           <source src={media.video} type="video/webm" />
           <source src={media.fallback} type="video/mp4" />
         </video>
+        {#if posterFallback}<img class={`profile-atmosphere__video profile-atmosphere__video--${media.className}`} src={media.poster} alt="" />{/if}
       {:else}
         <img class={`profile-atmosphere__video profile-atmosphere__video--${media.className} profile-atmosphere__video--poster`} src={media.poster} alt="" />
       {/if}
@@ -283,14 +268,10 @@
   .profile-atmosphere__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; mix-blend-mode: screen; }
   .profile-atmosphere__video--rain { opacity: .5; filter: drop-shadow(0 0 5px var(--atmosphere-color-2)); }
   .profile-atmosphere__video--droplets { opacity: .34; filter: sepia(.2) saturate(1.15) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
-  .profile-atmosphere__video--dust { opacity: .24; filter: grayscale(1) contrast(1.12) brightness(1.08) drop-shadow(0 0 6px var(--atmosphere-color-1)); }
-  .profile-atmosphere__video--ink { opacity: .17; filter: saturate(1.2) drop-shadow(0 0 8px var(--atmosphere-color-1)); }
-  .profile-atmosphere__video--snow { opacity: .23; filter: contrast(1.12) brightness(1.08) drop-shadow(0 0 6px var(--atmosphere-color-2)); }
   .profile-atmosphere__video--silk { opacity: .22; filter: contrast(1.14) brightness(1.05) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--caustics { opacity: .14; filter: contrast(1.04) brightness(.92) drop-shadow(0 0 5px var(--atmosphere-color-2)); }
   .profile-atmosphere__video--cinder { opacity: .24; filter: sepia(.16) saturate(1.1) brightness(1.08) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--pollen { opacity: .28; filter: contrast(1.18) brightness(1.12) drop-shadow(0 0 6px var(--atmosphere-color-4)); }
-  .profile-atmosphere__video--paper { opacity: .24; filter: saturate(1.12) contrast(1.12) brightness(1.04) drop-shadow(0 0 6px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--smoke { opacity: .16; filter: contrast(1.08) brightness(1.05) drop-shadow(0 0 8px var(--atmosphere-color-2)); }
   .profile-atmosphere__video--lumen { opacity: .13; filter: contrast(1.12) brightness(1.1) drop-shadow(0 0 9px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--poster { opacity: .14; }
