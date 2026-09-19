@@ -369,7 +369,7 @@ const launchExpectedCosts = Object.freeze({
   profile_motion_perspective_tilt: 0, profile_motion_halo_offset: 0, profile_motion_wavefront: 0,
   profile_atmosphere_rain_window: 260000, profile_atmosphere_droplets_glass: 240000,
   profile_atmosphere_dust_light: 280000, profile_atmosphere_ink_bloom: 520000,
-  profile_atmosphere_snowfall: 300000, profile_atmosphere_silk_folds: 320000,
+  profile_atmosphere_snowfall: 300000, profile_atmosphere_sakura_afterglow: 300000, profile_atmosphere_silk_folds: 320000,
   profile_atmosphere_glass_caustics: 460000, profile_atmosphere_cinder_drift: 430000,
   profile_atmosphere_night_pollen: 340000, profile_atmosphere_paper_shadow: 300000,
   profile_atmosphere_smoke_spiral: 580000, profile_atmosphere_lumen_flare: 640000,
@@ -389,7 +389,7 @@ const launchFreeKeys = new Set([
   'avatar_effect_sakura_neko', 'avatar_effect_cloud_bunny', 'avatar_effect_crimson_ronin', 'avatar_effect_midnight_oni', 'avatar_effect_koi_current',
   'avatar_effect_butterfly_orbit',
   'avatar_effect_bat_orbit',
-  'profile_atmosphere_prism_dust',
+  'profile_atmosphere_prism_dust', 'profile_atmosphere_sakura_afterglow',
   'profile_motion_halo_offset',
   'profile_motion_wavefront'
 ]);
@@ -423,7 +423,7 @@ if (
     launchRows.length !== 59
     || new Set(launchRows.map(row => row.itemKey)).size !== 59
     || launchInvalidRows.length > 0
-    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 13, profile_motion: 3 })
+    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 14, profile_motion: 3 })
 ) {
   console.error('Launch cosmetic catalog balance/drift check failed.');
   console.error(JSON.stringify({
