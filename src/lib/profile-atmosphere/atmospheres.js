@@ -20,8 +20,8 @@ const definitions = {
     description: 'A broken crimson eclipse breathes with calligraphic ink currents and rising embers.'
   },
   snowfall: {
-    key: 'snowfall', label: 'Sakura Afterglow', collection: 'Nocturne', rarity: 'Rare',
-    description: 'Blush petals tumble through changing winds beneath a flowering cherry branch.'
+    key: 'snowfall', label: 'Snowfall', collection: 'Nocturne', rarity: 'Rare',
+    description: 'Layered flakes drift through a blue winter field, from soft foreground crystals to distant pinpricks.'
   },
   'silk-folds': {
     key: 'silk-folds', label: 'Silk Folds', collection: 'Prism', rarity: 'Rare',
