@@ -5,6 +5,8 @@
 The authenticated shared header now renders the user's selected uploaded avatar
 when one is available, using the same provider-neutral media resolver as public
 profile surfaces. Missing or failed media keeps the restrained shared fallback.
+The header reads the hydrated owner profile directly, so this decision does not
+depend on a second App-level avatar state or asynchronous loader.
 Selecting or removing an avatar updates the owner profile store after the
 existing server-authoritative expression RPC, so the header changes immediately
 without a reload. The owner projection adds only the selected public media

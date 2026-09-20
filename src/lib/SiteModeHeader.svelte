@@ -1,7 +1,9 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { ACCOUNT_STATES } from './authState';
+  import { getProfileMediaUrl } from './profileMedia.js';
   import { prefetchRouteComponent } from './routeLoaders.js';
+  import { profile } from './stores';
   import UserAvatarFallback from './UserAvatarFallback.svelte';
 
   export let activeView = 'game';
@@ -23,10 +25,12 @@
   let mobileMenuOpen = false;
   let failedAvatarSource = '';
 
-  $: activeAvatarSource = avatarSrc && failedAvatarSource !== avatarSrc ? avatarSrc : '';
+  $: accountAvatarReference = $profile?.avatar_reference || $profile?.media_references?.avatar;
+  $: resolvedAvatarSource = accountAvatarReference ? getProfileMediaUrl(accountAvatarReference) : avatarSrc;
+  $: activeAvatarSource = resolvedAvatarSource && failedAvatarSource !== resolvedAvatarSource ? resolvedAvatarSource : '';
 
   function handleAvatarError() {
-    failedAvatarSource = avatarSrc;
+    failedAvatarSource = resolvedAvatarSource;
   }
 
   function navigate(view) {

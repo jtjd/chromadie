@@ -5,6 +5,8 @@
 - The authenticated shared header now uses the user's selected uploaded avatar.
 - Avatar media comes from the existing provider-neutral owner projection and safe
   resolver; missing or failed media falls back to the shared identity mark.
+- The header reads the hydrated signed-in profile directly, keeping the runtime
+  behavior to avatar-or-placeholder without an intermediate async loader.
 - Avatar selection and removal update account chrome immediately after the
   existing server-authoritative expression save, without exposing private media
   library data.

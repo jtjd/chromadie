@@ -60,8 +60,6 @@
   let lastTrackedRouteKey = '';
   let profileVisualFixture = getProfileVisualFixture();
   let routeTarget;
-  let headerAvatarRequestId = 0;
-  let headerAvatarSrc = '';
   let homepageHeaderTransitionPending = false;
   // Public profile data arrives after the route shell. Keep a profile noindex
   // until its bounded identity projection explicitly allows discovery.
@@ -744,22 +742,6 @@
   });
 
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
-  $: headerAvatarReference = $profile?.avatar_reference || $profile?.media_references?.avatar;
-
-  async function refreshHeaderAvatar(reference) {
-    const requestId = ++headerAvatarRequestId;
-    headerAvatarSrc = '';
-    if (!reference) return;
-    try {
-      const { getProfileMediaUrl } = await import('./lib/profileMedia.js');
-      if (requestId !== headerAvatarRequestId) return;
-      headerAvatarSrc = getProfileMediaUrl(reference);
-    } catch {
-      if (requestId === headerAvatarRequestId) headerAvatarSrc = '';
-    }
-  }
-
-  $: refreshHeaderAvatar(headerAvatarReference);
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
   $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && view !== 'home' && view !== 'profile' && view !== 'profile-settings' && (!$authUser || !$profileLoading);
   $: profileTitle = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || 'Profile';
@@ -878,7 +860,6 @@
         activeView={routeMode === 'app' ? view : routeMode}
         accountState={$accountState}
         username={headerUsername}
-        avatarSrc={headerAvatarSrc}
         isAuthenticated={$isAuthenticated}
         logoutInProgress={logoutInProgress}
         isProfileMode={profileModeVisible}

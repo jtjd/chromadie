@@ -6,8 +6,11 @@ The authenticated shared header consumes the selected avatar through the
 existing owner profile projection. Add only a provider-neutral
 `avatar_reference` from the owner's profile configuration to `get_my_profile`;
 do not expose media-library rows, storage credentials or private public-profile
-data. Resolve the reference through the existing safe media resolver, and use
-the shared no-avatar mark when the reference is absent or the image fails.
+data. Let the shared header read the already-hydrated owner profile directly,
+resolve the reference through the existing safe media resolver, and use the
+shared no-avatar mark when the reference is absent or the image fails. This
+keeps the behavior to one rule: signed-in account data supplies the avatar;
+otherwise the placeholder is rendered.
 
 Avatar selection and removal also update the in-memory owner profile after the
 existing server-authoritative expression RPC succeeds, so account chrome does
