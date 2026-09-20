@@ -4,11 +4,11 @@
 <main>
   <h1>Avatar creatures</h1>
   <p>Shared production component · glowing butterflies / fireflies / disabled bats</p>
-  {#each ['butterfly-orbit', 'fireflies', 'bat-orbit'] as effectKey}
+  {#each ['butterfly-orbit', 'fireflies', 'bat-orbit'] as effectKey (effectKey)}
     <section>
       <h2>{effectKey}</h2>
       <div class="samples">
-        {#each [86, 108, 180] as size}
+        {#each [86, 108, 180] as size (size)}
           <div class="sample">
             <span>{size}px</span>
             <div style={`width:${size}px;height:${size}px`}>

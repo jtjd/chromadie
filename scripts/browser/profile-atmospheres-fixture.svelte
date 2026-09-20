@@ -9,7 +9,7 @@
   let mode = 'studio';
   let compact = false;
 </script>
-<nav><select bind:value={key}>{#each Object.values(PROFILE_ATMOSPHERE_DEFINITIONS) as d}<option value={d.key}>{d.label}</option>{/each}</select><button id="motion" on:click={() => animated = !animated}>Motion</button><button id="hide" on:click={() => hidden = !hidden}>Hide/show</button><button id="surface" on:click={() => mode = mode === 'studio' ? 'public' : 'studio'}>{mode}</button><button id="compact" on:click={() => compact = !compact}>Card</button><button id="action" on:click={() => clicks++}>Action {clicks}</button></nav>
+<nav><select bind:value={key}>{#each Object.values(PROFILE_ATMOSPHERE_DEFINITIONS) as d (d.key)}<option value={d.key}>{d.label}</option>{/each}</select><button id="motion" on:click={() => animated = !animated}>Motion</button><button id="hide" on:click={() => hidden = !hidden}>Hide/show</button><button id="surface" on:click={() => mode = mode === 'studio' ? 'public' : 'studio'}>{mode}</button><button id="compact" on:click={() => compact = !compact}>Card</button><button id="action" on:click={() => clicks++}>Action {clicks}</button></nav>
 <main style:display={hidden ? 'none' : 'grid'}>
   <ProfileEnvironmentLayer snapshot={{ environment: { atmosphereKey: key }, styles: { page: '--profile-background:radial-gradient(ellipse at 50% 40%,#21152e,#080910 80%)' } }} {mode} reducedMotion={!animated} />
   <div class="identity"><p class="eyebrow">CHROMADIE / ATMOSPHERE STUDIES</p><div class="avatar">a</div><h1>afterglow</h1><p>somewhere between a dream and a memory</p><a href="#links">my corner of the internet ↗</a><div class="swatch"></div><small>today’s color · #D872C7</small></div>

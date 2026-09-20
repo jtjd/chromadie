@@ -32,7 +32,7 @@ test('confirmed guest results persist before an interruptible reveal, on the req
   const save=game.indexOf('saveGuestRoll(createCanonicalRollData(data, requestDate))',start);
   const reveal=game.indexOf('await presentRollResult(data, requestIsCurrent)',start);
   assert.ok(start>=0 && save>start && reveal>save);
-  assert.match(game,/initialStateRequestId \+= 1;\n    rollRequestId \+= 1;/);
+  assert.match(game,/initialStateRequestId \+= 1;\n\s{4}rollRequestId \+= 1;/);
 });
 
 const initialHandler = game.slice(game.indexOf('  async function syncInitialState()'), game.indexOf('  function handleGuestStorageChange'));

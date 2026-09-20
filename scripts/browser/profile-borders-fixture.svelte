@@ -16,7 +16,7 @@
     <button id="toggle" on:click={() => animated = !animated}>{animated ? 'Pause' : 'Play'} motion</button>
   </header>
   <div class="gallery">
-    {#each AUTHORED_PROFILE_BORDER_KEYS as key, index}
+    {#each AUTHORED_PROFILE_BORDER_KEYS as key, index (key)}
       <section data-sample={key}>
         <div class="sample-heading"><span>{String(index + 1).padStart(2, '0')}</span><h2>{PROFILE_BORDER_DEFINITIONS[key].label}</h2><small>{PROFILE_BORDER_DEFINITIONS[key].taste}</small></div>
         <ProfileBorderEffect borderKey={key} {animated} className="profile-border-effect--content" surfaceStyle="--profile-border-radius:22px">
@@ -36,7 +36,7 @@
   <section class="actual">
     <h2>Production profile · {PROFILE_BORDER_DEFINITIONS[selected].label}</h2>
     <select aria-label="Production profile border" bind:value={selected}>
-      {#each Object.values(PROFILE_BORDER_DEFINITIONS) as definition}<option value={definition.key}>{definition.label}</option>{/each}
+      {#each Object.values(PROFILE_BORDER_DEFINITIONS) as definition (definition.key)}<option value={definition.key}>{definition.label}</option>{/each}
     </select>
     <ProfileReferenceCard profileBorderKey={selected} displayName="alex" avatarSrc="/homepage/fixtures/compact-avatar.png" bio="Collecting colors. Making things. Finding my people." secondaryLine="Brooklyn, NY" presentation="profile" surfaceStyle="--profile-border-radius:24px;--profile-surface-fill:#0b0d16;--profile-surface:#0b0d16;--profile-surface-opacity:1;--profile-avatar-border-radius:50%" links={[{ type:'website', url:'https://example.com', label:'My website' }]} />
   </section>
