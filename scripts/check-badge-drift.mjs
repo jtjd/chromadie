@@ -389,7 +389,7 @@ const launchFreeKeys = new Set([
   'avatar_effect_sakura_neko', 'avatar_effect_cloud_bunny', 'avatar_effect_crimson_ronin', 'avatar_effect_midnight_oni', 'avatar_effect_koi_current',
   'avatar_effect_butterfly_orbit',
   'avatar_effect_bat_orbit',
-  'profile_atmosphere_prism_dust', 'profile_atmosphere_sakura_afterglow',
+  'profile_atmosphere_prism_dust',
   'profile_motion_halo_offset',
   'profile_motion_wavefront'
 ]);
@@ -420,8 +420,8 @@ const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profi
   launchRows.filter(row => row.slot === slot).length
 ]));
 if (
-    launchRows.length !== 59
-    || new Set(launchRows.map(row => row.itemKey)).size !== 59
+    launchRows.length !== 60
+    || new Set(launchRows.map(row => row.itemKey)).size !== 60
     || launchInvalidRows.length > 0
     || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 14, profile_motion: 3 })
 ) {

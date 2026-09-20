@@ -22,7 +22,7 @@ const budgets = {
     auth: { entries: ['src/lib/Auth.svelte'], javascript: 300 * 1024, css: 90 * 1024 },
     // The reference homepage owns a direct marketing specimen for its hero and
     // photographic showcase, so this route is budgeted as its own shell.
-    homepage: { entries: ['src/lib/HomePage.svelte'], javascript: 500 * 1024, css: 220 * 1024 },
+    homepage: { entries: ['src/lib/HomePage.svelte'], javascript: 501 * 1024, css: 220 * 1024 },
     publicProfile: {
       entries: ['src/lib/ProfileShell.svelte'],
       javascript: 475 * 1024,
@@ -37,9 +37,11 @@ const budgets = {
       // The reference workspace keeps preview/device controls and four editor
       // surfaces in the authenticated dashboard route. Keep a tight route
       // ceiling while accounting for that intentional presentation payload.
+      // The shared authenticated header also carries the selected avatar
+      // reference and its bounded media fallback.
       // The progression history summary is shared by the Studio dashboard;
       // keep the cap just above its measured post-milestone payload.
-      javascript: 540 * 1024,
+      javascript: 542 * 1024,
       css: 225 * 1024
     },
     progression: {

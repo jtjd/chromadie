@@ -413,9 +413,9 @@ SELECT pg_temp.audit_assert(
   AND (SELECT count(*) = 23 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
   AND (SELECT count(*) = 15 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
   AND (SELECT count(*) = 5 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
-  AND (SELECT count(*) = 13 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
+  AND (SELECT count(*) = 14 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
   AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 118 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 119 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -438,7 +438,7 @@ SELECT pg_temp.audit_assert(
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 116
+    AND (SELECT count(*) = 117
          FROM public.get_shop_catalog()
          WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),
@@ -1740,6 +1740,13 @@ SELECT pg_temp.audit_assert(
          FROM public.profile_configurations
          WHERE user_id = '10000000-0000-0000-0000-000000000001'),
   'selecting a static avatar left the animated avatar active'
+);
+INSERT INTO audit_results VALUES ('owner_avatar_projection', public.get_my_profile()::jsonb);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->'avatar_reference'->>'storage_provider' = 'r2'
+      AND payload->'avatar_reference'->>'r2_public_key' = 'profiles/a-selected.webp'
+   FROM audit_results WHERE name = 'owner_avatar_projection'),
+  'authenticated owner profile projection omitted the selected public avatar reference'
 );
 CREATE TEMP TABLE profile_media_delete_state AS
 SELECT user_id, updated_at

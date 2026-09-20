@@ -7,6 +7,7 @@
   export let activeView = 'game';
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.SIGNED_OUT);
   export let username = '';
+  export let avatarSrc = '';
   export let isAuthenticated = false;
   export let logoutInProgress = false;
   export let isProfileMode = false;
@@ -20,6 +21,13 @@
 
   const dispatch = createEventDispatcher();
   let mobileMenuOpen = false;
+  let failedAvatarSource = '';
+
+  $: activeAvatarSource = avatarSrc && failedAvatarSource !== avatarSrc ? avatarSrc : '';
+
+  function handleAvatarError() {
+    failedAvatarSource = avatarSrc;
+  }
 
   function navigate(view) {
     mobileMenuOpen = false;
@@ -82,7 +90,11 @@
           <details class="site-mode-header__account-menu">
             <summary aria-label="Open account menu">
               <span class="site-mode-header__avatar" aria-hidden="true">
-                <UserAvatarFallback initial={username || 'C'} />
+                {#if activeAvatarSource}
+                  <img class="site-mode-header__avatar-image" src={activeAvatarSource} alt="" width="32" height="32" decoding="async" on:error={handleAvatarError} />
+                {:else}
+                  <UserAvatarFallback initial={username || 'C'} />
+                {/if}
               </span>
               <span class="site-mode-header__account-name">{username || 'Your profile'}</span>
               <svg class="site-mode-header__chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
@@ -459,6 +471,12 @@
     background: rgba(8, 9, 12, 0.72);
     color: #f8f8f8;
     font: 600 0.72rem / 1 var(--site-header-font);
+  }
+  .site-mode-header__avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
   .site-mode-header__account-name {
     max-width: 8.5rem;

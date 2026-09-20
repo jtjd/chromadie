@@ -34,6 +34,32 @@ test('site-owned user identity surfaces share the same no-avatar component', asy
   }
 });
 
+test('authenticated account chrome renders uploaded avatar media before the fallback', async () => {
+  const header = await read('src/lib/SiteModeHeader.svelte');
+  const app = await read('src/App.svelte');
+  const migration = await read('supabase/migrations/20260920100000_authenticated_avatar_projection.sql');
+
+  assert.match(header, /export let avatarSrc = ''/);
+  assert.match(header, /class="site-mode-header__avatar-image"/);
+  assert.match(header, /on:error=\{handleAvatarError\}/);
+  assert.match(header, /UserAvatarFallback initial=\{username \|\| 'C'\}/);
+  assert.match(app, /headerAvatarReference = \$profile\?\.avatar_reference/);
+  assert.match(app, /import\('\.\/lib\/profileMedia\.js'\)/);
+  assert.match(app, /headerAvatarSrc = getProfileMediaUrl\(reference\)/);
+  assert.match(app, /avatarSrc=\{headerAvatarSrc\}/);
+  assert.match(migration, /'avatar_reference', public\.profile_media_public_reference\(c\.avatar_asset_id, c\.avatar_path\)/);
+  assert.match(migration, /LEFT JOIN public\.profile_configurations c ON c\.user_id = p\.id/);
+});
+
+test('avatar selection and removal update authenticated chrome state without a reload', async () => {
+  const settings = await read('src/lib/ProfileSettings.svelte');
+
+  assert.match(settings, /const mediaReferences = fields\.media_references/);
+  assert.match(settings, /Object\.prototype\.hasOwnProperty\.call\(mediaReferences, 'avatar'\)/);
+  assert.match(settings, /profile\.update\(currentProfile => currentProfile && currentProfile\.id === context\.profileId/);
+  assert.match(settings, /avatar_reference: nextAvatarReference/);
+});
+
 test('top roll fallback no longer derives its presentation from the roll or profile accent', async () => {
   const topRoll = await read('src/lib/homepage/HomepageBestRoll.svelte');
 

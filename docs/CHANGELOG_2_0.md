@@ -1,12 +1,23 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-20 — Uploaded avatars in account chrome
+
+- The authenticated shared header now uses the user's selected uploaded avatar.
+- Avatar media comes from the existing provider-neutral owner projection and safe
+  resolver; missing or failed media falls back to the shared identity mark.
+- Avatar selection and removal update account chrome immediately after the
+  existing server-authoritative expression save, without exposing private media
+  library data.
+
+
 ## 2026-09-19 — Authored atmospheres and playback recovery
 
 - Loveglass: rose glass hearts, reflective rims and pearly glints.
+- Snowfall: layered flakes with soft foreground crystals and distant pinpricks.
 - Sakura Afterglow: a blossom spray and tumbling, wind-driven petals.
 - Crimson Ink: tapered ink currents, a broken eclipse and rising embers.
 - Cyber Silk: twisting chrome ribbons with lilac/cyan reflections and web stars.
-- These four atmospheres render without video downloads, retain existing owned
+- These five atmospheres render without video downloads, retain existing owned
   IDs and work in Customize and public profiles. Compact/reduced-motion views
   remain still; hidden/offscreen scenes suspend their work.
 - Retained video atmospheres recover unexpected pauses and preserve their media

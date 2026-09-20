@@ -1,20 +1,36 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-20 — Surface uploaded avatars in account chrome
+
+The authenticated shared header consumes the selected avatar through the
+existing owner profile projection. Add only a provider-neutral
+`avatar_reference` from the owner's profile configuration to `get_my_profile`;
+do not expose media-library rows, storage credentials or private public-profile
+data. Resolve the reference through the existing safe media resolver, and use
+the shared no-avatar mark when the reference is absent or the image fails.
+
+Avatar selection and removal also update the in-memory owner profile after the
+existing server-authoritative expression RPC succeeds, so account chrome does
+not require a reload. The server remains authoritative for selection and media
+access; this change adds no client-owned identity or security boundary.
+
+
 ## 2026-09-19 — Author atmosphere motion in the renderer
 
-Replace four video plates with bounded Canvas compositions: Loveglass, Sakura
-Afterglow, Crimson Ink and Cyber Silk. Each owns its palette, material, silhouette
-and motion; these are taste choices available to everyone, not gender gates.
+Replace five atmosphere plates with bounded Canvas compositions: Loveglass,
+Snowfall, Sakura Afterglow, Crimson Ink and Cyber Silk. Each owns its palette,
+material, silhouette and motion; these are taste choices available to everyone,
+not gender gates.
 The shared environment layer serves Customize and public profiles. A paused scene
 retains its composition; reduced motion and compact cards draw a still. Limit
 animation to 30fps and allocation to 1.8 million pixels, pause hidden/offscreen,
 and dispose every observer and animation frame. No external textures or video
-requests are needed for these four scenes.
+requests are needed for these five scenes.
 
 Keep item and renderer IDs, prices, progression references and entitlements.
 Only names/descriptions and the catalog version change in the metadata migration.
 Retain the former assets for rollback. Rollback restores the previous renderer
-and four prior metadata values from the preceding seed revision; no ownership or
+and five prior metadata values from the preceding seed revision; no ownership or
 profile data restoration is necessary.
 
 Retained videos stay mounted across ordinary visibility changes. Recover unexpected

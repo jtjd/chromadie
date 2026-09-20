@@ -17,7 +17,7 @@ test('authored scenes preserve owned IDs and draw distinct finite compositions',
     signatures.push(JSON.stringify(calls));
     assert.ok(calls.length > 200);
   }
-  assert.equal(new Set(signatures).size, 4);
+  assert.equal(new Set(signatures).size, 5);
 });
 
 test('video recovery is bounded and teardown invalidates queued work and rejected plays', async () => {

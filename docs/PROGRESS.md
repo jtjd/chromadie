@@ -1,10 +1,28 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-20 — Uploaded avatars in account chrome
+
+The authenticated shared header now renders the user's selected uploaded avatar
+when one is available, using the same provider-neutral media resolver as public
+profile surfaces. Missing or failed media keeps the restrained shared fallback.
+Selecting or removing an avatar updates the owner profile store after the
+existing server-authoritative expression RPC, so the header changes immediately
+without a reload. The owner projection adds only the selected public media
+reference; private media-library data and storage credentials remain excluded.
+
+Validation: focused avatar tests, build, Svelte check, ESLint, unit tests,
+links, CSP, performance, username/balance/catalog drift, scoring parity,
+database security, local database reset and strict schema lint pass. Existing
+aggregate asset-size advisories remain non-blocking. Production has not been
+changed. The small route-budget adjustment accounts for the authenticated
+avatar chrome while keeping the route payloads bounded.
+
+
 ## 2026-09-19 — Authored profile atmospheres
 
-Implemented Loveglass, Sakura Afterglow, Crimson Ink and Cyber Silk as four
-asset-free Canvas scenes, replacing the corresponding video plates behind stable
-owned IDs. Retained clips now keep their nodes across hide/show, recover unexpected
+Implemented Loveglass, Snowfall, Sakura Afterglow, Crimson Ink and Cyber Silk as
+five asset-free Canvas scenes, replacing the corresponding video plates behind
+stable owned IDs. Retained clips now keep their nodes across hide/show, recover unexpected
 pauses and cancel stale recovery work. Motion honors visibility, explicit pause,
 reduced motion and compact previews, with a 30fps / 1.8M-pixel cap.
 
@@ -15,7 +33,7 @@ mobile and desktop screenshots are under `artifacts/profile-atmospheres/`.
 These are shared-renderer checks, not an end-to-end authenticated publishing audit.
 Existing authentication, ownership/equip authority and profile state are untouched.
 
-Validation: 631 unit tests; build, Svelte check, ESLint, links, CSP, performance,
+Validation: 633 unit tests; build, Svelte check, ESLint, links, CSP, performance,
 username/balance/catalog drift, scoring parity and database security passed.
 Local database reset and strict schema lint passed. Existing aggregate asset-size
 advisories remain non-blocking. The metadata-only migration is applied locally;

@@ -748,6 +748,16 @@
   function updateExpression(event) {
     if (!configurationWriteAvailable) return;
     const fields = event.detail || {};
+    const mediaReferences = fields.media_references;
+    const nextAvatarReference = mediaReferences && typeof mediaReferences === 'object'
+      && Object.prototype.hasOwnProperty.call(mediaReferences, 'avatar')
+      ? mediaReferences.avatar || null
+      : undefined;
+    if (nextAvatarReference !== undefined) {
+      profile.update(currentProfile => currentProfile && currentProfile.id === context.profileId
+        ? { ...currentProfile, avatar_reference: nextAvatarReference }
+        : currentProfile);
+    }
     const updatedAt = fields.updatedAt || fields.updated_at || context.profileConfig?.updatedAt || null;
     const nextDraft = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.draft), ...fields }, FALLBACK_PROFILE_COLOR);
     const nextPublished = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.published), ...fields }, FALLBACK_PROFILE_COLOR);
