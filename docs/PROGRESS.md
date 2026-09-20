@@ -13,9 +13,17 @@ reference; private media-library data and storage credentials remain excluded.
 Validation: focused avatar tests, build, Svelte check, ESLint, unit tests,
 links, CSP, performance, username/balance/catalog drift, scoring parity,
 database security, local database reset and strict schema lint pass. Existing
-aggregate asset-size advisories remain non-blocking. Production has not been
-changed. The small route-budget adjustment accounts for the authenticated
-avatar chrome while keeping the route payloads bounded.
+aggregate asset-size advisories remain non-blocking. The owner projection and
+catalog reconciliation migrations are applied to the linked production
+database; the frontend release remains subject to the main-branch gates. The
+small route-budget adjustment accounts for the authenticated avatar chrome
+while keeping the route payloads bounded.
+
+
+The production catalog drift found during the follow-up release check was
+reconciled with an additive migration: Sakura Afterglow now matches the seed's
+free non-progression expression baseline. No profile, inventory, or media data
+was changed.
 
 
 ## 2026-09-19 — Authored profile atmospheres

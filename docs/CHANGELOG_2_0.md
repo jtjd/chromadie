@@ -8,6 +8,8 @@
 - Avatar selection and removal update account chrome immediately after the
   existing server-authoritative expression save, without exposing private media
   library data.
+- Reconciled the production Sakura Afterglow catalog row with the free
+  non-progression expression baseline used by the seed.
 
 
 ## 2026-09-19 — Authored atmospheres and playback recovery
@@ -22,7 +24,8 @@
   remain still; hidden/offscreen scenes suspend their work.
 - Retained video atmospheres recover unexpected pauses and preserve their media
   nodes during normal hide/show. Queued recovery is bounded and teardown-safe.
-- Catalog metadata migration included and validated locally; no production deploy.
+- Catalog metadata migration and the follow-up free-access reconciliation are
+  applied to the linked production database.
 
 
 ## 2026-09-18 — Ten illustrated profile borders

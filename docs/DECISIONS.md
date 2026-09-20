@@ -15,6 +15,15 @@ not require a reload. The server remains authoritative for selection and media
 access; this change adds no client-owned identity or security boundary.
 
 
+## 2026-09-20 — Reconcile the authored atmosphere catalog contract
+
+The additive Sakura Afterglow row inherited its initial earned price from the
+atmosphere migration, while the final seed contract intentionally makes
+non-progression profile expressions free. Reconcile only that row's cost and
+access tier through an additive migration; keep its stable item key, renderer,
+ownership records and server-side catalog authority intact.
+
+
 ## 2026-09-19 — Author atmosphere motion in the renderer
 
 Replace five atmosphere plates with bounded Canvas compositions: Loveglass,
