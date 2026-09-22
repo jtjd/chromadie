@@ -62,4 +62,16 @@ An initial reset caught a seed trailing comma; catalog count/order assertions
 were updated for the additions. An initial route overage was resolved by
 removing superseded code and compacting canonical metadata. Final gates pass.
 
-Release: main push and linked database migration verification pending.
+Release verified on 2026-09-22: implementation commit `34ebdf3` pushed to
+`origin/main`; linked migration `20260922120000` applied and confirmed in remote
+history. The public production catalog matches all 134 active seeded rows.
+Only this migration was pushed from an isolated checkout; the unrelated local
+Tjz test-access migration was excluded. A clean checkout also passes build,
+route budgets, all 633 tests, links and catalog checks. GitHub CI for the
+implementation commit passed.
+
+The separate public-release preflight failed because the repository has no
+`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_PAGES_PROJECT` or `CLOUDFLARE_API_TOKEN`
+secrets available to that workflow. No hosting configuration was changed and
+frontend deployment is not claimed. This does not prevent the verified main
+and database pushes requested for this milestone.
