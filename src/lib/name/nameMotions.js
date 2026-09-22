@@ -1,3 +1,5 @@
+import { NAME_MOTION_COLLECTION, NEW_NAME_MOTION_KEYS } from './nameMotionCollection.js';
+
 /*
  * Motions are a finite, code-owned vocabulary. A renderer receives normalized
  * progress from the shared clock; no catalog row can supply executable motion
@@ -38,16 +40,13 @@ export const NAME_MOTIONS = Object.freeze({
   'haunt-reveal': composableMotion('haunt-reveal', 3000, { label: 'Reveal', collection: 'Archive', rarity: 'Rare', description: 'A clean light curtain unveils the name from left to right.' }),
   'haunt-split': composableMotion('haunt-split', 3200, { label: 'Split Reveal', collection: 'Archive', rarity: 'Epic', description: 'Two halves of the name enter on separate planes and meet on the centerline.' }),
   'haunt-flash': composableMotion('haunt-flash', 2600, { label: 'Flash', collection: 'Signal', rarity: 'Rare', description: 'A sharp white exposure rolls over the name before the color settles.' }),
-  'kinetic-echo': composableMotion('kinetic-echo', 3200, { label: 'Kinetic Echo', collection: 'Signal', rarity: 'Epic', description: 'Controlled afterimages follow the name in two offset, color-separated echoes.' }),
   'magnetic-type': composableMotion('magnetic-type', 3000, { label: 'Magnetic Type', collection: 'Prism', rarity: 'Epic', description: 'Each glyph responds to the pointer as if the name were suspended in a magnetic field.' }),
-  'neon-particle': composableMotion('neon-particle', 3600, { label: 'Neon Particle', collection: 'Signal', rarity: 'Anomaly', description: 'A masked internal energy field, edge emission, and micro-particles keep the name electrically alive.' }),
   'raster-signal': composableMotion('raster-signal', 2800, { label: 'Raster Signal', collection: 'Static Bloom', rarity: 'Epic', description: 'Monochrome scan rows jitter, duplicate, and displace while the name stays compact and legible.' }),
   'spectrum-flow': composableMotion('spectrum-flow', 4000, { label: 'Spectrum Flow', collection: 'Prism', rarity: 'Epic', description: 'A full-spectrum color field travels continuously across the name with a clean, light-filled finish.' }),
   'star-companions': composableMotion('star-companions', 6200, { label: 'Star Companions', collection: 'Prism', rarity: 'Rare', description: 'Two tiny star companions hop along the name with warm sparkle trails.' }),
   'heart-pop': composableMotion('heart-pop', 6400, { label: 'Heart Pop', collection: 'Prism', rarity: 'Rare', description: 'Three glossy pink hearts bloom from the letters and float gently away.' }),
-  'ion-sweep': composableMotion('ion-sweep', 5200, { label: 'Ion Sweep', collection: 'Signal', rarity: 'Epic', description: 'A sharp cyan-violet light pass cuts across the finish with a tight trailing echo.' }),
-  'phase-fracture': composableMotion('phase-fracture', 5600, { label: 'Phase Fracture', collection: 'Static Bloom', rarity: 'Epic', description: 'Five signal slices separate in opposing directions and snap back into a crisp name.' }),
-  'letterpress': composableMotion('letterpress', 6000, { label: 'Letterpress', collection: 'Archive', rarity: 'Rare', description: 'A measured impression pass adds neutral depth and settles into crisp type.' })
+  ...Object.fromEntries(Object.entries(NAME_MOTION_COLLECTION).map(([key, definition]) =>
+    [key, composableMotion(key, definition.durationMs, definition)]))
 });
 
 // Removed catalog rows remain valid historical values. They resolve to the
@@ -121,7 +120,8 @@ export function getNameMotion(motionKey) {
 // Keep retired choices renderable and visible when already selected.
 export const CURATED_NAME_MOTION_KEYS = Object.freeze([
   'raster-signal', 'haunt-fuzzy', 'kinetic-echo', 'neon-particle', 'letter-shuffle',
-  'star-companions', 'heart-pop', 'ion-sweep', 'phase-fracture', 'letterpress'
+  'star-companions', 'heart-pop', 'ion-sweep', 'phase-fracture', 'letterpress',
+  ...NEW_NAME_MOTION_KEYS
 ]);
 
 export function isCuratedNameMotion(value) {

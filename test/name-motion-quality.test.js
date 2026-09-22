@@ -1,11 +1,12 @@
+import { NEW_NAME_MOTION_KEYS } from '../src/lib/name/nameMotionCollection.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { CURATED_NAME_MOTION_KEYS, isCuratedNameMotion, resolveNameMotionKey } from '../src/lib/name/nameMotions.js';
 import { getScrambleCharacter, getParticleEnvelope, SCRAMBLE_CYCLE_MS } from '../src/lib/name/render/motionTiming.js';
 
-test('Studio curates ten motions while historical saved keys still resolve', async () => {
-  assert.deepEqual(CURATED_NAME_MOTION_KEYS, ['raster-signal', 'haunt-fuzzy', 'kinetic-echo', 'neon-particle', 'letter-shuffle', 'star-companions', 'heart-pop', 'ion-sweep', 'phase-fracture', 'letterpress']);
+test('Studio curates twenty-five motions while historical saved keys still resolve', async () => {
+  assert.deepEqual(CURATED_NAME_MOTION_KEYS, ['raster-signal', 'haunt-fuzzy', 'kinetic-echo', 'neon-particle', 'letter-shuffle', 'star-companions', 'heart-pop', 'ion-sweep', 'phase-fracture', 'letterpress', ...NEW_NAME_MOTION_KEYS]);
   assert.equal(isCuratedNameMotion('name_motion_raster_signal'), true);
   assert.equal(isCuratedNameMotion('haunt-flash'), false);
   assert.equal(isCuratedNameMotion('unknown'), false);

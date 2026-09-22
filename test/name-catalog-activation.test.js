@@ -1,3 +1,4 @@
+import { NEW_NAME_MOTION_KEYS } from '../src/lib/name/nameMotionCollection.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -14,17 +15,17 @@ test('the curated catalog keeps the approved active Name rows and twelve Profile
   const seed = await read('supabase/seed.sql');
   assert.equal((seed.match(/^\s*\('name_font_[a-z0-9_]+'/gm) || []).length, 17);
   assert.equal((seed.match(/^\s*\('name_material_[a-z0-9_]+'/gm) || []).length, 8);
-  assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 20);
+  assert.equal((seed.match(/^\s*\('name_motion_[a-z0-9_]+'/gm) || []).length, 35);
   assert.equal((seed.match(/^\s*\('border_[a-z0-9_]+'/gm) || []).length, 12);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 18,
     materials: 9,
-    motions: 21,
+    motions: 36,
     paidFonts: 17,
     paidMaterials: 8,
-    paidMotions: 20,
-    paidTotal: 45
+    paidMotions: 35,
+    paidTotal: 60
   });
   assert.deepEqual(Object.keys(NAME_FONTS), [
     'industrial-stencil', 'marker-tag', 'soft-orbit', 'satoshi', 'fira-code', 'poppins',
@@ -33,17 +34,17 @@ test('the curated catalog keeps the approved active Name rows and twelve Profile
   ]);
   assert.equal(NAME_FONTS['soft-grotesk'], undefined);
   assert.equal(NAME_FONTS['editorial-serif'], undefined);
-  assert.deepEqual(Object.keys(NAME_MOTIONS).filter(key => key !== 'none'), [
+  assert.deepEqual(Object.keys(NAME_MOTIONS).filter(key => key !== 'none').sort(), [
     'haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles',
     'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal',
     'haunt-split', 'haunt-flash', 'kinetic-echo', 'magnetic-type',
     'neon-particle', 'raster-signal', 'spectrum-flow',
-    'star-companions', 'heart-pop', 'ion-sweep', 'phase-fracture', 'letterpress'
-  ]);
+    'star-companions', 'heart-pop', 'ion-sweep', 'phase-fracture', 'letterpress', ...NEW_NAME_MOTION_KEYS
+  ].sort());
 });
 
 test('the active Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
-  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration, cuteFontMigration, authoredMotionMigration] = await Promise.all([
+  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration, cuteFontMigration, authoredMotionMigration, collectionMigration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
     read('supabase/migrations/20260803130000_use_reference_font_family_names.sql'),
@@ -54,14 +55,15 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     read('supabase/migrations/20260901120000_source_backed_expression_expansion.sql'),
     read('supabase/migrations/20260901140000_source_backed_profile_expression_expansion.sql'),
     read('supabase/migrations/20260912100000_add_cute_name_fonts.sql'),
-    read('supabase/migrations/20260912120000_authored_name_motions.sql')
+    read('supabase/migrations/20260912120000_authored_name_motions.sql'),
+    read('supabase/migrations/20260922120000_name_motion_collection.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
   )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }))
     .filter(row => row.itemKey !== 'name_prism_atelier');
 
-  assert.equal(rows.length, 45);
+  assert.equal(rows.length, 60);
   assert.equal(new Set(rows.map(row => row.name)).size, rows.length);
 
   const registries = {
@@ -74,7 +76,7 @@ test('the active Name catalog uses distinctive labels synchronized with each ren
     assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
     assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
     assert.equal(
-      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration, cuteFontMigration, authoredMotionMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
+      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration, silkscreenFontMigration, approvedEffectsMigration, sourceExpansionMigration, profileExpansionMigration, cuteFontMigration, authoredMotionMigration, collectionMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
       true,
       `${row.itemKey} label is missing from the production migrations`
     );

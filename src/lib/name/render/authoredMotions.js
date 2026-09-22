@@ -1,4 +1,4 @@
-import { createLinearGradient, drawText, easeInOut, seededNoise } from './primitives.js';
+import { createLinearGradient } from './primitives.js';
 import { getParticleEnvelope } from './motionTiming.js';
 
 const TAU = Math.PI * 2;
@@ -99,92 +99,10 @@ function drawHeartPop(ctx, model, drawBase) {
   }
 }
 
-function clipBase(ctx, model, drawBase, x, y, width, height, offset, alpha = 1) {
-  ctx.save?.();
-  ctx.beginPath?.();
-  ctx.rect?.(x, y, width, height);
-  ctx.clip?.();
-  ctx.globalAlpha = alpha;
-  ctx.translate?.(offset, 0);
-  drawBase(ctx, model);
-  ctx.restore?.();
-}
-
-function drawIonSweep(ctx, model, drawBase) {
-  drawBase(ctx, model);
-  const p = model.progress;
-  const local = (p - 0.3) / 0.34;
-  if (local <= 0 || local >= 1) return;
-  const { metrics: m } = model;
-  const x = m.x - m.rawWidth * 0.62 + easeInOut(local) * m.rawWidth * 1.24;
-  const band = Math.max(5, m.fontSize * 0.32);
-  const alpha = getParticleEnvelope(local);
-  ctx.save?.();
-  ctx.beginPath?.();
-  ctx.rect?.(x - band, 0, band * 1.4, model.height);
-  ctx.clip?.();
-  drawText(ctx, model, '#8056FF', alpha * 0.45, -m.fontSize * 0.07);
-  ctx.globalCompositeOperation = 'source-atop';
-  ctx.globalAlpha = alpha * 0.72;
-  ctx.fillStyle = createLinearGradient(ctx, ['rgba(82,65,255,0)', '#6753FF', '#37EFFF', '#EFFFFF', 'rgba(38,235,255,0)'], x - band, 0, x + band * 0.4, 0, '#37EFFF');
-  ctx.fillRect?.(x - band, 0, band * 1.4, model.height);
-  ctx.restore?.();
-}
-
-function drawPhaseFracture(ctx, model, drawBase) {
-  const p = model.progress;
-  const local = (p - 0.4) / 0.22;
-  if (local <= 0 || local >= 1) { drawBase(ctx, model); return; }
-  const { metrics: m } = model;
-  const textTop = m.y - m.fontSize * 0.52;
-  const row = m.fontSize * 1.04 / 5;
-  for (let i = 0; i < 5; i++) {
-    const bandPhase = Math.max(0, Math.min(1, (local - i * 0.035) / 0.86));
-    const split = Math.sin(Math.PI * bandPhase) ** 2;
-    const top = i === 0 ? 0 : textTop + i * row;
-    const bottom = i === 4 ? model.height : textTop + (i + 1) * row;
-    const height = bottom - top;
-    const direction = i % 2 ? 1 : -1;
-    const offset = direction * split * m.fontSize * (0.055 + seededNoise(model.seed, i + 113) * 0.075);
-    clipBase(ctx, model, drawBase, 0, top, model.width, height, offset);
-    if (i > 0) {
-      ctx.save?.();
-      ctx.beginPath?.();
-      ctx.rect?.(0, top, model.width, Math.max(0.5, m.fontSize * 0.018));
-      ctx.clip?.();
-      drawText(ctx, model, i % 2 ? '#FF43BD' : '#30E5FF', split * 0.8, offset);
-      ctx.restore?.();
-    }
-  }
-}
-
-function drawLetterpress(ctx, model, drawBase) {
-  const p = model.progress;
-  const local = (p - 0.28) / 0.36;
-  if (local <= 0 || local >= 1) { drawBase(ctx, model); return; }
-  const { metrics: m } = model;
-  const strength = Math.sin(local * Math.PI) ** 2;
-  const depth = strength * Math.min(1.5, m.fontSize * 0.035);
-  drawText(ctx, model, '#050609', strength * 0.58, depth, depth);
-  ctx.save?.();
-  ctx.translate?.(0, -depth * 0.32);
-  drawBase(ctx, model);
-  const x = m.x - m.rawWidth * 0.65 + easeInOut(local) * m.rawWidth * 1.3;
-  const band = m.fontSize * 0.65;
-  ctx.globalCompositeOperation = 'source-atop';
-  ctx.globalAlpha = strength * 0.2;
-  ctx.fillStyle = createLinearGradient(ctx, ['rgba(255,255,255,0)', '#FFFFFF', 'rgba(255,255,255,0)'], x - band, 0, x + band, 0, '#FFFFFF');
-  ctx.fillRect?.(x - band, 0, band * 2, model.height);
-  ctx.restore?.();
-}
-
 export function drawAuthoredNameMotion(ctx, model, drawBase) {
   switch (model.motion.key) {
     case 'star-companions': drawStarCompanions(ctx, model, drawBase); return true;
     case 'heart-pop': drawHeartPop(ctx, model, drawBase); return true;
-    case 'ion-sweep': drawIonSweep(ctx, model, drawBase); return true;
-    case 'phase-fracture': drawPhaseFracture(ctx, model, drawBase); return true;
-    case 'letterpress': drawLetterpress(ctx, model, drawBase); return true;
     default: return false;
   }
 }

@@ -208,32 +208,15 @@ test('all four approved name motions draw bounded deterministic frames, includin
   assert.equal(attractedFallbacks, 1);
 });
 
-test('the three approved reference effects keep their authored visual primitives', async () => {
+test('the retained approved reference effects keep their authored visual primitives', async () => {
   const [motions, cursorTrail] = await Promise.all([
     read('src/lib/name/render/composableMotions.js'),
     read('src/lib/cursor-trail/CursorTrailLayer.svelte')
   ]);
 
-  const neonStart = motions.indexOf('function drawNeonParticleName');
   const rasterStart = motions.indexOf('function drawRasterSignal');
   const rasterEnd = motions.indexOf('export function drawComposableMotion');
-  const neon = motions.slice(neonStart, rasterStart);
   const raster = motions.slice(rasterStart, rasterEnd);
-
-  assert.match(neon, /getReferenceTextMask\(ctx, model\)/);
-  assert.match(neon, /if \(model\.material\.key === 'plain'\) ctx\.drawImage\?\.\(mask\.canvas/);
-  assert.match(neon, /else drawBase\(ctx, model\)/);
-  assert.match(neon, /const perimeter = createLinearGradient/);
-  assert.match(neon, /const compactParticles = model\.compact \|\| metrics\.fontSize < 36/);
-  assert.match(neon, /compactParticles \? 42 : 320/);
-  assert.match(neon, /const edgeBiased = index % 3 === 0/);
-  assert.match(neon, /const hot = seededNoise\(model\.seed, index \* 89 \+ 371\) > 0\.91/);
-  assert.match(neon, /compactParticles \? 34 : 160/);
-  assert.match(neon, /edge\.nx \* distance/);
-  assert.match(neon, /strokeText\(ctx, model, outline/);
-  assert.match(motions, /const sampleStep = 2/);
-  assert.doesNotMatch(neon, /const bandWidth|index < 13/);
-  assert.doesNotMatch(neon, /drawBase\(ctx, model\);\s*\n\s*\n\s*const field/);
 
   assert.match(raster, /getRasterSignalBuffers\(ctx, model\)/);
   assert.match(motions, /sourceContext\.shadowColor = 'rgba\(255,255,255,\.42\)'/);

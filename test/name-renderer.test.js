@@ -43,21 +43,21 @@ test('the curated renderer registries contain the approved active layers and fre
 
   assert.deepEqual(Object.keys(NAME_FONTS), seedKeys('name_font'));
   assert.deepEqual(NAME_PAID_MATERIAL_KEYS, seedKeys('name_material'));
-  assert.deepEqual(NAME_PAID_MOTION_KEYS, seedKeys('name_motion'));
+  assert.deepEqual([...NAME_PAID_MOTION_KEYS].sort(), seedKeys('name_motion').sort());
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 18,
     materials: 9,
-    motions: 21,
+    motions: 36,
     paidFonts: 17,
     paidMaterials: 8,
-    paidMotions: 20,
-    paidTotal: 45
+    paidMotions: 35,
+    paidTotal: 60
   });
   assert.equal(NAME_MATERIALS.plain.composable, true);
   assert.equal(NAME_MOTIONS.none.composable, true);
   assert.equal(new Set(Object.keys(NAME_FONTS)).size, 17);
   assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 9);
-  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 21);
+  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 36);
 });
 
 test('new expression labels are original Chromadie names, not competitor names', () => {

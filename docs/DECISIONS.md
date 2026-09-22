@@ -7724,3 +7724,17 @@ Roll color, profile accent, rank, and cosmetic palette do not recolor or add a
 glow to that fallback. Uploaded media and explicitly equipped avatar effects
 retain their existing rendering contracts; only the underlying missing-media
 state is standardized.
+
+
+## 2026-09-22 — Distinct gestures with stable motion identities
+
+Keep the five requested favorite motions intact. Replace the five weaker shelf
+gestures behind their existing IDs; add fifteen free, finite renderer keys.
+Use illustrated natural, playful and ceremonial motifs rather than another
+set of electronic sweeps. Tide Pool and Confetti Parade also animate the
+material-painted letters. Every effect uses the existing animation clock and
+reduced-motion baseline. The migration extends the live finite constraint
+without rebuilding unrelated slot vocabularies; it changes no inventory,
+RLS, equip RPC, scoring or reward rules.
+
+See [the motion collection milestone](milestones/NAME_MOTION_COLLECTION.md).

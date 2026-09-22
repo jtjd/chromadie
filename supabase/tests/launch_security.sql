@@ -405,17 +405,17 @@ SELECT pg_temp.audit_assert(
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.shop_items'::regclass AND conname = 'shop_items_catalog_status_check'
   )
-  AND (SELECT count(*) = 45 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
+  AND (SELECT count(*) = 60 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
   AND (SELECT count(*) = 17 FROM public.shop_items WHERE slot = 'name_font' AND catalog_status = 'active')
   AND (SELECT count(*) = 8 FROM public.shop_items WHERE slot = 'name_material' AND catalog_status = 'active')
-  AND (SELECT count(*) = 20 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
+  AND (SELECT count(*) = 35 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
   AND (SELECT count(*) = 12 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
   AND (SELECT count(*) = 23 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
   AND (SELECT count(*) = 15 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
   AND (SELECT count(*) = 5 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
   AND (SELECT count(*) = 14 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
   AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 119 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 134 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -434,11 +434,18 @@ SELECT pg_temp.audit_assert(
   'authored name motions must remain five free code-owned catalog entries'
 );
 SELECT pg_temp.audit_assert(
+  (SELECT count(*) = 15 FROM public.get_shop_catalog()
+   WHERE css_value IN ('cherry-blossom', 'butterfly-kiss', 'bubble-bath', 'kitten-paws', 'dandelion-wish', 'rose-romance', 'raven-feather', 'falling-ace', 'crown-glint', 'meteor-skip', 'laurel-grow', 'paper-plane', 'tide-pool', 'firefly-dance', 'confetti-parade')
+   AND slot = 'name_motion' AND css_type = 'renderer' AND catalog_status = 'active'
+   AND access_tier = 'free' AND cost = 0 AND entitlement_key IS NULL),
+  'all fifteen new authored motions must be available as free expression'
+);
+SELECT pg_temp.audit_assert(
   has_function_privilege('anon', 'public.get_shop_catalog()', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 117
+    AND (SELECT count(*) = 132
          FROM public.get_shop_catalog()
          WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),

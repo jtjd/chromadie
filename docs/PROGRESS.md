@@ -6436,3 +6436,15 @@ previews. The fallback now stays independent of roll/profile accent colors and
 uses the same lowercase single-initial treatment at every size. Focused source
 tests and the homepage browser suite pass, including desktop and mobile visual
 captures. No data, RPC, auth, media, or cosmetic entitlement contract changed.
+
+
+## 2026-09-22 — Authored name motion collection
+
+Preserved Fuzzy, Heart Pop, Raster Signal, Scramble and Star Companions. Replaced
+five weaker motions behind stable IDs with Ribbon Waltz, Firebrand, Sword
+Flourish, Ink Impact and Wax Seal. Added fifteen original cute, bold and neutral
+gestures, bringing the Studio shelf to 25. Removed superseded drawing code.
+All gestures share the bounded Canvas renderer, material composition, shared
+clock and static reduced-motion fallback. No authority or ownership changes.
+
+Validation and release evidence: [motion collection milestone](milestones/NAME_MOTION_COLLECTION.md).

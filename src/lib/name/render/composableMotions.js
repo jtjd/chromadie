@@ -1,3 +1,4 @@
+import { drawCollectionMotion } from './collectionMotions.js';
 import {
   createLinearGradient,
   createRadialGradient,
@@ -10,7 +11,6 @@ import {
   rgba,
   seededNoise,
   setTextContext,
-  strokeText,
   withTextMask
 } from './primitives.js';
 import { getPaintedTextSurface, getNameGlyphLayout, drawSurfaceGlyph } from './textSurface.js';
@@ -19,7 +19,7 @@ import {
   getGunsFuzzyRowOffset
 } from '../../competitor-effects/gunsEffectAlgorithms.js';
 
-import { getScrambleCharacter, getParticleEnvelope } from './motionTiming.js';
+import { getScrambleCharacter } from './motionTiming.js';
 import { drawAuthoredNameMotion } from './authoredMotions.js';
 import { getNameFontRevision } from '../nameFonts.js';
 
@@ -213,7 +213,6 @@ function drawParticleTrail(ctx, model, count = 32) {
   }
 }
 
-const REFERENCE_TEXT_MASKS = new WeakMap();
 const RASTER_SIGNAL_BUFFERS = new WeakMap();
 
 function createReferenceCanvas(ctx, width, height) {
@@ -305,86 +304,6 @@ function drawScrambleMotion(ctx, model, drawBase) {
   });
 }
 
-function getReferenceTextMask(ctx, model) {
-  if (!ctx || (typeof ctx !== 'object' && typeof ctx !== 'function')) return null;
-  const key = [
-    model.displayText,
-    model.width,
-    model.height,
-    model.font.key,
-    model.font.family,
-    model.font.weight,
-    getNameFontRevision(model.font.key),
-    model.metrics.fontSize,
-    model.metrics.width,
-    model.metrics.x,
-    model.metrics.y
-  ].join('|');
-  const cached = REFERENCE_TEXT_MASKS.get(ctx);
-  if (cached?.key === key) return cached;
-
-  const width = Math.max(1, Math.round(model.width));
-  const height = Math.max(1, Math.round(model.height));
-  const maskCanvas = createReferenceCanvas(ctx, width, height);
-  const maskContext = maskCanvas?.getContext?.('2d');
-  if (!maskCanvas || !maskContext?.getImageData || !maskContext.fillText) return null;
-
-  maskContext.clearRect(0, 0, width, height);
-  setTextContext(maskContext, model);
-  maskContext.fillStyle = '#FFFFFF';
-  maskContext.fillText(model.displayText, model.metrics.x, model.metrics.y);
-  maskContext.lineWidth = Math.max(2, model.metrics.fontSize * 0.018);
-  maskContext.strokeStyle = '#FFFFFF';
-  maskContext.strokeText?.(model.displayText, model.metrics.x, model.metrics.y);
-
-  let pixels;
-  try {
-    pixels = maskContext.getImageData(0, 0, width, height).data;
-  } catch {
-    return null;
-  }
-
-  const left = Math.max(0, Math.floor(model.metrics.x - model.metrics.width / 2 - model.metrics.fontSize * 0.12));
-  const right = Math.min(width, Math.ceil(model.metrics.x + model.metrics.width / 2 + model.metrics.fontSize * 0.12));
-  const top = Math.max(0, Math.floor(model.metrics.y - model.metrics.fontSize * 0.54));
-  const bottom = Math.min(height, Math.ceil(model.metrics.y + model.metrics.fontSize * 0.54));
-  const alphaAt = (x, y) => {
-    if (x < 0 || y < 0 || x >= width || y >= height) return 0;
-    return pixels[(y * width + x) * 4 + 3] || 0;
-  };
-  const solidPoints = [];
-  const edgePoints = [];
-  // The reference samples the glyph on a bounded two-pixel grid. Keep that
-  // density across profile and compact surfaces so a small name stays
-  // granular without turning into a noisy block after downsampling.
-  const sampleStep = 2;
-  for (let y = top; y < bottom; y += sampleStep) {
-    for (let x = left; x < right; x += sampleStep) {
-      if (alphaAt(x, y) <= 20) continue;
-      const leftAlpha = alphaAt(x - sampleStep, y);
-      const rightAlpha = alphaAt(x + sampleStep, y);
-      const topAlpha = alphaAt(x, y - sampleStep);
-      const bottomAlpha = alphaAt(x, y + sampleStep);
-      const edge = leftAlpha <= 20 || rightAlpha <= 20 || topAlpha <= 20 || bottomAlpha <= 20;
-      const normalLength = Math.hypot(leftAlpha - rightAlpha, topAlpha - bottomAlpha) || 1;
-      const point = {
-        x,
-        y,
-        nx: (leftAlpha - rightAlpha) / normalLength,
-        ny: (topAlpha - bottomAlpha) / normalLength
-      };
-      solidPoints.push(point);
-      if (edge) edgePoints.push(point);
-    }
-  }
-  if (!solidPoints.length) return null;
-
-  const fieldCanvas = createReferenceCanvas(ctx, width, height);
-  const fieldContext = fieldCanvas?.getContext?.('2d') || null;
-  const state = { key, canvas: maskCanvas, solidPoints, edgePoints, fieldCanvas, fieldContext };
-  REFERENCE_TEXT_MASKS.set(ctx, state);
-  return state;
-}
 
 function getRasterSignalBuffers(ctx, model) {
   if (!ctx || (typeof ctx !== 'object' && typeof ctx !== 'function')) return null;
@@ -438,72 +357,8 @@ function getRasterSignalBuffers(ctx, model) {
   return state;
 }
 
-function drawReferenceCircle(ctx, x, y, radius, color, alpha) {
-  if (ctx?.beginPath && ctx.arc && ctx.fill) {
-    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x, y, Math.max(0.1, radius), 0, Math.PI * 2);
-    ctx.fill();
-  } else if (ctx?.fillRect) {
-    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-    ctx.fillStyle = color;
-    ctx.fillRect(x - radius / 2, y - radius / 2, Math.max(0.5, radius), Math.max(0.5, radius));
-  }
-}
 
-function drawNeonParticleFallback(ctx, model, drawBase) {
-  const { metrics } = model;
-  const left = metrics.x - metrics.width / 2;
-  const top = metrics.y - metrics.fontSize * 0.52;
-  const field = createLinearGradient(ctx,
-    ['rgba(0,220,255,.26)', 'rgba(55,110,255,.12)', 'rgba(255,45,215,.26)'],
-    left,
-    0,
-    left + metrics.width,
-    0,
-    '#B6F7FF');
-  drawBaseVariant(ctx, model, drawBase, { alpha: 0.16, blur: 3, shadowColor: '#5F82FF' });
-  drawBase(ctx, model);
-  withTextMask(ctx, model, target => {
-    target.fillStyle = field;
-    target.globalAlpha = 0.86;
-    target.fillRect?.(0, 0, model.width, model.height);
-  });
-  strokeText(ctx, model, field, Math.max(1.2, metrics.fontSize * 0.01), 0.75);
-  const particleCount = Math.min(680, Math.max(110, Math.round(metrics.width * metrics.fontSize * 0.045)));
-  withTextMask(ctx, model, target => {
-    for (let index = 0; index < particleCount; index += 1) {
-      const seed = seededNoise(model.seed, index + 281);
-      const x = left + seededNoise(model.seed, index + 321) * metrics.width;
-      const y = top + seededNoise(model.seed, index + 341) * metrics.fontSize;
-      drawReferenceCircle(target, x, y, 0.45 + seed * 1.25, index % 9 === 0 ? '#FFFFFF' : '#00EFFF', 0.35 + seed * 0.45);
-    }
-  });
-}
 
-function drawKineticEcho(ctx, model, drawBase) {
-  const time = Number.isFinite(model.time) ? model.time : 0;
-  const angle = time * 0.0014;
-  // The rear echo is deliberately slower and wider than the nearer echo. The
-  // two controlled afterimages stay attached to the name instead of becoming
-  // a generic blur field.
-  drawBaseVariant(ctx, model, drawBase, {
-    alpha: 0.34,
-    offsetX: Math.cos(angle * 0.82) * 15,
-    offsetY: Math.sin(angle * 1.3) * 2.4,
-    blur: 1.2,
-    shadowColor: '#B78BFF'
-  });
-  drawBaseVariant(ctx, model, drawBase, {
-    alpha: 0.48,
-    offsetX: Math.sin(angle) * 9,
-    offsetY: Math.cos(angle * 1.15) * 1.5,
-    blur: 0.8,
-    shadowColor: model.todayColor
-  });
-  drawBase(ctx, model);
-}
 
 function drawMagneticType(ctx, model, drawBase) {
   if (model.staticFrame || model.reducedMotion || !model.pointer) {
@@ -528,198 +383,6 @@ function drawMagneticType(ctx, model, drawBase) {
   });
 }
 
-function drawNeonParticleName(ctx, model, drawBase) {
-  const { metrics } = model;
-  const time = Number.isFinite(model.time) ? model.time : 0;
-  const left = metrics.x - metrics.width / 2;
-  const colors = ['#31E6FF', '#8176FF', '#FF6ED8'];
-
-  const mask = getReferenceTextMask(ctx, model);
-  if (!mask?.fieldCanvas || !mask.fieldContext || !mask.canvas) {
-    drawNeonParticleFallback(ctx, model, drawBase);
-    return;
-  }
-
-  // The reference is white type first. Color appears as a restrained edge
-  // atmosphere and isolated particles, never as broad bands across the name.
-  const fieldContext = mask.fieldContext;
-  const fieldCanvas = mask.fieldCanvas;
-  fieldContext.clearRect(0, 0, model.width, model.height);
-  fieldContext.fillStyle = createLinearGradient(
-    fieldContext,
-    ['rgba(28,226,255,.72)', 'rgba(255,255,255,.08)', 'rgba(126,108,255,.26)', 'rgba(255,91,214,.68)'],
-    left,
-    0,
-    left + metrics.width,
-    0,
-    '#FFFFFF'
-  );
-  fieldContext.fillRect(0, 0, model.width, model.height);
-  fieldContext.globalCompositeOperation = 'destination-in';
-  fieldContext.drawImage(mask.canvas, 0, 0);
-  fieldContext.globalCompositeOperation = 'source-over';
-
-  // Two close, low-energy color shadows provide the cyan-left/pink-right
-  // perimeter in the source without sacrificing the letter silhouette.
-  ctx.save?.();
-  ctx.globalAlpha = 0.44;
-  ctx.shadowColor = 'rgba(38,218,255,.7)';
-  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.16);
-  ctx.translate?.(-Math.max(0.35, metrics.fontSize * 0.009), 0);
-  ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
-  ctx.restore?.();
-
-  ctx.save?.();
-  ctx.globalAlpha = 0.34;
-  ctx.shadowColor = 'rgba(255,76,210,.62)';
-  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.14);
-  ctx.translate?.(Math.max(0.35, metrics.fontSize * 0.009), metrics.fontSize * 0.003);
-  ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
-  ctx.restore?.();
-
-  ctx.save?.();
-  ctx.filter = `blur(${Math.max(3, metrics.fontSize * 0.09)}px)`;
-  ctx.globalAlpha = 0.16;
-  ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
-  ctx.restore?.();
-
-  ctx.save?.();
-  ctx.globalAlpha = 0.18;
-  ctx.shadowColor = 'rgba(116,132,255,.82)';
-  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.18);
-  ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
-  ctx.restore?.();
-
-  ctx.save?.();
-  ctx.filter = `blur(${Math.max(2, metrics.fontSize * 0.055)}px)`;
-  ctx.globalAlpha = 0.44;
-  ctx.shadowColor = 'rgba(80,108,255,.68)';
-  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.12);
-  ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
-  ctx.restore?.();
-
-  const perimeter = createLinearGradient(
-    ctx,
-    ['#43ECFF', '#F8FDFF', '#8E84FF', '#FF73D9'],
-    left,
-    0,
-    left + metrics.width,
-    0,
-    '#F8FDFF'
-  );
-  ctx.save?.();
-  setTextContext(ctx, model);
-  ctx.globalAlpha = 0.52;
-  ctx.strokeStyle = perimeter;
-  ctx.lineWidth = Math.max(1.05, metrics.fontSize * 0.018);
-  ctx.shadowColor = 'rgba(105,126,255,.86)';
-  ctx.shadowBlur = Math.max(6, metrics.fontSize * 0.11);
-  ctx.strokeText?.(model.displayText, metrics.x, metrics.y);
-  ctx.restore?.();
-
-  // The clean white face is the dominant layer in the supplied reference.
-  ctx.save?.();
-  ctx.globalAlpha = 0.94;
-  if (model.material.key === 'plain') ctx.drawImage?.(mask.canvas, 0, 0, model.width, model.height);
-  else drawBase(ctx, model);
-  ctx.globalAlpha = 0.17;
-  ctx.drawImage?.(fieldCanvas, 0, 0, model.width, model.height);
-  ctx.restore?.();
-
-  const solidPoints = mask.solidPoints;
-  const compactParticles = model.compact || metrics.fontSize < 36;
-  const particleCount = Math.min(
-    solidPoints.length,
-    compactParticles ? 42 : 320,
-    Math.max(compactParticles ? 14 : 96, Math.round(metrics.width * metrics.fontSize * 0.0115))
-  );
-  const particleScale = Math.min(1.35, Math.max(0.42, metrics.fontSize / 74));
-  ctx.save?.();
-  for (let index = 0; index < particleCount; index += 1) {
-    const edgeBiased = index % 3 === 0 && mask.edgePoints.length;
-    const points = edgeBiased ? mask.edgePoints : solidPoints;
-    const sample = points[Math.floor(seededNoise(model.seed, index * 73 + 281) * points.length) % points.length];
-    const tw = time * 0.0015 + seededNoise(model.seed, index * 79 + 301) * Math.PI * 2;
-    const sizeNoise = seededNoise(model.seed, index * 83 + 361);
-    const size = (0.5 + sizeNoise * sizeNoise * 1.55) * particleScale;
-    const hot = seededNoise(model.seed, index * 89 + 371) > 0.91;
-    let x = sample.x + Math.sin(tw + index) * 0.32 * particleScale;
-    let y = sample.y + Math.cos(tw * 1.2 + index) * 0.32 * particleScale;
-    if (model.pointer && Number.isFinite(model.pointer.x) && Number.isFinite(model.pointer.y)) {
-      const dx = model.pointer.x - x;
-      const dy = model.pointer.y - y;
-      const distance = Math.hypot(dx, dy) || 1;
-      if (distance < 90) {
-        const force = (1 - distance / 90) * 0.12;
-        x += dx * force;
-        y += dy * force;
-      }
-    }
-    const pulse = (Math.sin(tw * 1.4 + index) + 1) / 2;
-    const colorIndex = Math.floor(seededNoise(model.seed, index * 97 + 391) * colors.length) % colors.length;
-    const color = hot ? '#FFFFFF' : colors[colorIndex];
-    drawReferenceCircle(ctx, x, y, size * 2.25, color, 0.085 * (0.65 + pulse * 0.35));
-    drawReferenceCircle(ctx, x, y, size, color, (hot ? 0.72 : 0.54) * (0.76 + pulse * 0.24));
-    if (hot) drawReferenceCircle(ctx, x, y, size * 0.34, '#FFFFFF', 0.92);
-  }
-
-  const edgeCount = Math.min(
-    mask.edgePoints.length,
-    compactParticles ? 34 : 160,
-    Math.max(compactParticles ? 16 : 72, Math.round(metrics.width * 0.5))
-  );
-  for (let index = 0; index < edgeCount; index += 1) {
-    const seed = seededNoise(model.seed, index * 131 + 401);
-    const edge = mask.edgePoints[
-      Math.floor(seededNoise(model.seed, index * 137 + 411) * mask.edgePoints.length) % mask.edgePoints.length
-    ];
-    const life = fract(seed + time * 0.00045);
-    const tangent = (seededNoise(model.seed, index * 149 + 421) - 0.5) * 1.8;
-    const distance = life * (3.5 + 8.5 * particleScale);
-    const x = edge.x + edge.nx * distance - edge.ny * tangent;
-    const y = edge.y + edge.ny * distance + edge.nx * tangent;
-    const size = (0.55 + seededNoise(model.seed, index * 157 + 441) * 1.25) * particleScale;
-    const alpha = getParticleEnvelope(life) * 0.78;
-    const color = colors[Math.floor(seededNoise(model.seed, index * 163 + 446) * colors.length) % colors.length];
-    drawReferenceCircle(ctx, x, y, size * 2.5, color, alpha * 0.11);
-    drawReferenceCircle(ctx, x, y, size, color, alpha * 0.64);
-    if (seededNoise(model.seed, index * 167 + 447) > 0.66) {
-      drawReferenceCircle(ctx, x, y, size * 0.42, '#FFFFFF', alpha * 0.82);
-    }
-  }
-
-  // Tiny edge glints punctuate the particles without producing the long
-  // horizontal streak that obscured compact names.
-  const glintCount = compactParticles ? 3 : 8;
-  for (let index = 0; index < glintCount; index += 1) {
-    const phase = fract(time * 0.00025 + seededNoise(model.seed, index + 451));
-    if (phase > 0.16 || !mask.edgePoints.length) continue;
-    const edge = mask.edgePoints[Math.floor(seededNoise(model.seed, index + 461) * mask.edgePoints.length) % mask.edgePoints.length];
-    const size = (1.8 + seededNoise(model.seed, index + 471) * 2.8) * particleScale;
-    const alpha = getParticleEnvelope(phase / 0.16);
-    ctx.globalAlpha = alpha * 0.82;
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = Math.max(0.55, particleScale * 0.65);
-    ctx.beginPath?.();
-    ctx.moveTo?.(edge.x - size, edge.y);
-    ctx.lineTo?.(edge.x + size, edge.y);
-    ctx.moveTo?.(edge.x, edge.y - size);
-    ctx.lineTo?.(edge.x, edge.y + size);
-    ctx.stroke?.();
-  }
-  ctx.restore?.();
-
-  const outline = createLinearGradient(
-    ctx,
-    ['rgba(0,236,255,.62)', 'rgba(255,255,255,.4)', 'rgba(255,80,214,.62)'],
-    left,
-    0,
-    left + metrics.width,
-    0,
-    '#F7FBFF'
-  );
-  strokeText(ctx, model, outline, Math.max(0.6, metrics.fontSize * 0.009), 0.56);
-}
 
 function drawRasterSignal(ctx, model, drawBase) {
   if (!ctx?.fillText) {
@@ -835,6 +498,8 @@ export function drawComposableMotion(ctx, model, drawBase) {
     drawBase(ctx, model);
     return true;
   }
+
+  if (drawCollectionMotion(ctx, model, drawBase)) return true;
 
   if (drawAuthoredNameMotion(ctx, model, drawBase)) return true;
 
@@ -1005,14 +670,8 @@ export function drawComposableMotion(ctx, model, drawBase) {
       }
       return true;
     }
-    case 'kinetic-echo':
-      drawKineticEcho(ctx, model, drawBase);
-      return true;
     case 'magnetic-type':
       drawMagneticType(ctx, model, drawBase);
-      return true;
-    case 'neon-particle':
-      drawNeonParticleName(ctx, model, drawBase);
       return true;
     case 'raster-signal':
       drawRasterSignal(ctx, model, drawBase);
