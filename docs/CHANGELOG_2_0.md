@@ -5567,3 +5567,10 @@ until remote images load, and made the multi-layout browser evidence use the
 supported reduced-motion path. Production Profile Studio smoke now completes
 across desktop and mobile layouts without empty avatar frames or Chromium CDP
 stalls.
+
+Applied the six reviewed production migrations through
+`20260924150000_profile_media_content_validation_version.sql`. This publishes
+the authored Name Material collection, grants active non-consumable cosmetics
+to the confirmed staff-only `tjz` QA account, and activates the audited roll,
+insight quota, progression quota, and media-validation changes. Remote catalog
+drift and the full database/browser workflow pass.

@@ -8369,3 +8369,11 @@ successful load. Run the repeated public-layout viewport evidence under the
 product's reduced-motion contract so accumulated canvas work cannot starve the
 Chromium control channel; the earlier public-profile checks continue to cover
 normal-motion mounting.
+
+## 2026-09-25 — Apply the audited production migration set
+
+Apply the six pending migrations together after a dry run and a private
+public-data backup. Include the historical `tjz` inventory grant only after the
+account owner confirms that the current staff profile is the intended QA
+target. Verify exact local/remote migration parity, production catalog drift,
+database security and behavior checks, and browser smoke after application.

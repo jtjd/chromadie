@@ -17,8 +17,8 @@ schema lint, progression behavior, database security, and profile-insight
 integrity checks pass. Catalog drift used local seed data; enforced performance
 budgets pass while advisory aggregate JS/CSS catalog targets remain over budget.
 Production email-confirmation settings and already-ready R2 videos were not
-available for retroactive verification. The historical `tjz` QA migration's
-target identity also needs production review before use. See
+available for retroactive verification. The `tjz` account owner subsequently
+confirmed the staff profile as the intended QA grant target. See
 [`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
 
 ## 2026-09-25 — Main release CI follow-up
@@ -30,6 +30,12 @@ fallback throughout image loading, and the repeated layout matrix exercises
 the reduced-motion presentation to avoid canvas-driven CDP stalls. The full
 production Profile Studio smoke now passes through desktop/mobile layouts,
 Progression, Leaderboard, direct refresh, and signed-out navigation.
+
+Applied all six pending migrations to the linked production project after a
+private public-data backup and dry run. Local and remote migration histories
+match through `20260924150000`; the authored Name Material catalog and the
+staff-only `tjz` QA inventory grant are live. Main CI catalog drift and the
+complete database/browser workflow pass against the released state.
 
 ## 2026-09-24 — Material collection rebuilt and validated
 
