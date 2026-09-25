@@ -684,6 +684,10 @@ async function capturePublishedLayouts() {
   // the browser smoke path because a selector-level unit test cannot prove
   // that a saved layout, its six links, and its roll widget survive a public
   // navigation at both desktop and mobile widths.
+  // Use the required reduced-motion presentation for the repeated viewport
+  // matrix so several canvas-heavy public layouts cannot starve Chromium's
+  // control channel during direct-refresh evidence capture.
+  await page.setReducedMotion(true);
   const layoutEvidence = { compact: { desktop: publicState } };
   const layoutKeys = ['full-bleed', 'sleek', 'framed', 'portfolio'];
   let persistedLayout = 'compact';
@@ -848,6 +852,7 @@ async function capturePublishedLayouts() {
   }
   await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore reference-card Studio');
   await waitForStudioReferenceCard('restore reference-card Studio');
+  await page.setReducedMotion(false);
   return { studio: studioState, mobile: mobileState, public: publicState, layouts: layoutEvidence, hiddenRoll };
 }
 

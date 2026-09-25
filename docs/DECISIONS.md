@@ -8359,3 +8359,13 @@ them for recovery. ANI cursor validation checks complete DIB XOR/AND planes and
 PNG chunk integrity, and rejects nested APNG animation. MP4 validation checks
 absolute sample presentation times and supports only a validated 1× edit list;
 unsupported edit rates fail closed.
+
+## 2026-09-25 — Keep release browser evidence stable and visibly complete
+
+Assign the four compact Profile Studio media cards to explicit grid cells and
+reset those coordinates in the one-column responsive layout. Keep a shared
+avatar fallback mounted beneath leaderboard media until the image reports a
+successful load. Run the repeated public-layout viewport evidence under the
+product's reduced-motion contract so accumulated canvas work cannot starve the
+Chromium control channel; the earlier public-profile checks continue to cover
+normal-motion mounting.

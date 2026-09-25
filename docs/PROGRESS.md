@@ -21,6 +21,16 @@ available for retroactive verification. The historical `tjz` QA migration's
 target identity also needs production review before use. See
 [`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
 
+## 2026-09-25 — Main release CI follow-up
+
+Repaired the production-browser failures exposed by the main-branch release:
+the Media workspace now holds its intended two-by-two desktop geometry and
+collapses cleanly to one column, leaderboard entries retain a visible avatar
+fallback throughout image loading, and the repeated layout matrix exercises
+the reduced-motion presentation to avoid canvas-driven CDP stalls. The full
+production Profile Studio smoke now passes through desktop/mobile layouts,
+Progression, Leaderboard, direct refresh, and signed-out navigation.
+
 ## 2026-09-24 — Material collection rebuilt and validated
 
 The primary agent replaced the eighteen rejected material drafts with the user's

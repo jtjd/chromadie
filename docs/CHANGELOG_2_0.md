@@ -5559,3 +5559,11 @@ effects, and the QA inventory grant now requires staff status. The full
 required validation suite passes with 885 tests. Production media state was
 not accessible for impact measurement. See
 [`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
+
+## 2026-09-25 — Main release browser stability
+
+Fixed compact Media card placement, kept leaderboard avatar fallbacks visible
+until remote images load, and made the multi-layout browser evidence use the
+supported reduced-motion path. Production Profile Studio smoke now completes
+across desktop and mobile layouts without empty avatar frames or Chromium CDP
+stalls.

@@ -97,7 +97,10 @@ test('media sections follow the approved reference hierarchy', async () => {
     read('src/lib/ProfileExpressionEditor.svelte')
   ]);
 
-  assert.match(workspace, /rich-media-editor__compact-card--cursor\) \{ order: 4; \}/);
+  assert.match(workspace, /compact-card--background\) \{ grid-column: 1; grid-row: 1; order: 1; \}/);
+  assert.match(workspace, /compact-card--avatar\) \{ grid-column: 2; grid-row: 1; order: 2; \}/);
+  assert.match(workspace, /rich-media-editor__compact-card--audio\) \{ grid-column: 1; grid-row: 2; order: 3; \}/);
+  assert.match(workspace, /rich-media-editor__compact-card--cursor\) \{ grid-column: 2; grid-row: 2; order: 4; \}/);
   assert.match(workspace, /rich-media-editor__compact-preview[\s\S]*height: 115px;[\s\S]*min-height: 115px/);
   assert.match(workspace, /profile-background-treatment\)[\s\S]*grid-column: 1 \/ -1/);
   assert.match(workspace, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);

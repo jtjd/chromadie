@@ -69,6 +69,16 @@ test('top roll fallback no longer derives its presentation from the roll or prof
   assert.doesNotMatch(avatarRule, /color-mix|box-shadow|background/);
 });
 
+test('leaderboard avatars keep the fallback visible until media has loaded', async () => {
+  const entry = await read('src/lib/LeaderboardEntry.svelte');
+
+  assert.match(entry, /<UserAvatarFallback initial=\{displayName\} className="leaderboard-row__avatar-initial" \/>/);
+  assert.match(entry, /class:leaderboard-row__avatar-image--loaded=\{loadedAvatarSource === avatarSrc\}/);
+  assert.match(entry, /on:load=\{\(\) => loadedAvatarSource = avatarSrc\}/);
+  assert.match(entry, /\.leaderboard-row__avatar img \{[^}]*opacity: 0/);
+  assert.match(entry, /img\.leaderboard-row__avatar-image--loaded \{ opacity: 1; \}/);
+});
+
 test('avatar initials stay bounded without a container-query context', async () => {
   const source = await read('src/lib/UserAvatarFallback.svelte');
   assert.match(source, /font:\s*600 clamp\(1\.5rem, 34px, 3rem\)/);

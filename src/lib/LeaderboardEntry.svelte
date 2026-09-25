@@ -13,6 +13,7 @@
 
   const dispatch = createEventDispatcher();
   let failedAvatarSource = '';
+  let loadedAvatarSource = '';
 
   $: profilePath = getPublicProfilePath(item?.username);
   $: displayName = item?.displayName || item?.username || 'Unknown player';
@@ -68,10 +69,17 @@
 
   <span class="leaderboard-row__profile">
     <span class="leaderboard-row__avatar">
+      <UserAvatarFallback initial={displayName} className="leaderboard-row__avatar-initial" />
       {#if avatarSrc && avatarSrc !== failedAvatarSource}
-        <img src={avatarSrc} alt="" loading="lazy" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
-      {:else}
-        <UserAvatarFallback initial={displayName} />
+        <img
+          class:leaderboard-row__avatar-image--loaded={loadedAvatarSource === avatarSrc}
+          src={avatarSrc}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          on:load={() => loadedAvatarSource = avatarSrc}
+          on:error={() => failedAvatarSource = avatarSrc}
+        />
       {/if}
     </span>
     <span class="leaderboard-row__identity">
@@ -134,8 +142,9 @@
   .leaderboard-row--first .leaderboard-row__rank-mark { width: 1.55rem; height: 1.55rem; }
   .leaderboard-row__rank-number { color: var(--row-accent); font-weight: 800; }
   .leaderboard-row__profile { display: flex; align-items: center; gap: .85rem; min-width: 0; }
-  .leaderboard-row__avatar { display: grid; flex: 0 0 auto; place-items: center; width: 3rem; height: 3rem; overflow: hidden; border-radius: 50%; }
-  .leaderboard-row__avatar img { box-sizing: border-box; width: 100%; height: 100%; border: 1px solid color-mix(in srgb, var(--row-accent) 28%, var(--row-line)); border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 .16rem color-mix(in srgb, var(--row-accent) 8%, transparent); }
+  .leaderboard-row__avatar { position: relative; display: grid; flex: 0 0 auto; place-items: center; width: 3rem; height: 3rem; overflow: hidden; border-radius: 50%; }
+  .leaderboard-row__avatar img { position: absolute; inset: 0; box-sizing: border-box; width: 100%; height: 100%; border: 1px solid color-mix(in srgb, var(--row-accent) 28%, var(--row-line)); border-radius: 50%; object-fit: cover; opacity: 0; box-shadow: 0 0 0 .16rem color-mix(in srgb, var(--row-accent) 8%, transparent); }
+  .leaderboard-row__avatar img.leaderboard-row__avatar-image--loaded { opacity: 1; }
   .leaderboard-row__identity { display: grid; min-width: 0; max-width: 100%; gap: .35rem; }
   .leaderboard-row__identity strong { display: block; max-width: 100%; min-width: 0; overflow: hidden; color: var(--leaderboard-text, #f5f5f7); font: 750 1rem/1.1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
   .leaderboard-row__identity small { display: block; max-width: 100%; min-width: 0; overflow: hidden; color: var(--leaderboard-muted, #b7b8c2); font: 600 .72rem/1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }

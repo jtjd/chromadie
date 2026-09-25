@@ -81,12 +81,12 @@
     display: none;
   }
 
-  .profile-media-workspace :global(.profile-expression-editor__compact-card--background) { order: 1; }
-  .profile-media-workspace :global(.profile-expression-editor__compact-card--avatar) { order: 2; }
+  .profile-media-workspace :global(.profile-expression-editor__compact-card--background) { grid-column: 1; grid-row: 1; order: 1; }
+  .profile-media-workspace :global(.profile-expression-editor__compact-card--avatar) { grid-column: 2; grid-row: 1; order: 2; }
   .profile-media-workspace :global(.profile-expression-editor__compact-card--audio),
-  .profile-media-workspace :global(.rich-media-editor__compact-card--audio) { order: 3; }
+  .profile-media-workspace :global(.rich-media-editor__compact-card--audio) { grid-column: 1; grid-row: 2; order: 3; }
   .profile-media-workspace :global(.profile-expression-editor__compact-card--cursor),
-  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor) { order: 4; }
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor) { grid-column: 2; grid-row: 2; order: 4; }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-library),
   .profile-media-workspace :global(.profile-expression-editor__compact-spotify),
@@ -423,6 +423,8 @@
 
   @media (max-width: 34rem) {
     .profile-media-workspace { grid-template-columns: minmax(0, 1fr); }
+    .profile-media-workspace :global(.profile-expression-editor__compact-card),
+    .profile-media-workspace :global(.rich-media-editor__compact-card) { grid-column: 1; grid-row: auto; }
     .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row) { grid-template-columns: minmax(0, 1fr); }
     .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row button) { justify-self: start; }
     .profile-media-workspace :global(.profile-background-treatment__controls) { grid-template-columns: minmax(0, 1fr); }
@@ -430,6 +432,8 @@
 
   @container profile-media (max-width: 34rem) {
     .profile-media-workspace { grid-template-columns: minmax(0, 1fr); }
+    .profile-media-workspace :global(.profile-expression-editor__compact-card),
+    .profile-media-workspace :global(.rich-media-editor__compact-card) { grid-column: 1; grid-row: auto; }
     .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row) { grid-template-columns: minmax(0, 1fr); }
     .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row button) { justify-self: start; }
     .profile-media-workspace :global(.profile-background-treatment__controls) { grid-template-columns: minmax(0, 1fr); }
