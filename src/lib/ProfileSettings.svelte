@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, onMount, tick } from 'svelte';
-  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+  import { SvelteSet } from 'svelte/reactivity';
   import { restoreFocus, trapFocus } from './a11y.js';
   import { authUser, equippedItems, isAuthenticated, profile, profileEntitlements, session } from './stores';
   import { supabase } from './supabase';
@@ -17,14 +17,14 @@
     PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES,
     PROFILE_STUDIO_CUSTOMIZE_TAB_IDS,
     PROFILE_STUDIO_FALLBACK_COLOR,
-    PROFILE_STUDIO_HASH_ALIASES,
     PROFILE_STUDIO_SECTIONS,
     getProfileStudioHash,
     getVisibleProfileStudioSections,
-    normalizeDashboardHash,
-    resolveProfileStudioLocation
+    normalizeDashboardHash
   } from './profile-studio/dashboardContract.js';
+  import { createProfileStudioNavigationController } from './profile-studio/profileStudioNavigation.js';
   import { PROFILE_STUDIO_SECTION_LOADERS } from './profile-studio/sectionRegistry.js';
+  import { createProfileStudioLazyComponents } from './profile-studio/lazyComponents.js';
   import {
     asConfigurationV2 as asConfigurationV2Model,
     applyProfileStudioDraftPatch,
@@ -56,7 +56,6 @@
   const CUSTOMIZE_TAB_IDS = PROFILE_STUDIO_CUSTOMIZE_TAB_IDS;
   const CUSTOMIZE_TAB_HASHES = PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES;
   const SETTINGS_SECTIONS = PROFILE_STUDIO_SECTIONS;
-  const HASH_ALIASES = PROFILE_STUDIO_HASH_ALIASES;
   const CUSTOMIZE_TAB_LABELS = Object.freeze({ appearance: 'Appearance', media: 'Media', content: 'Content', links: 'Links', layout: 'Layout' });
 
   const dispatch = createEventDispatcher();
@@ -103,7 +102,6 @@
   let sectionComponents = {};
   let sectionErrors = {};
   let sectionLoading = false;
-  const sectionLoadPromises = new SvelteMap();
   let dirtySources = {};
   let pendingNavigation = null;
   let showDirtyPrompt = false;
@@ -115,11 +113,21 @@
   let dashboardStatus = '';
   let dashboardError = '';
   let ProfilePreviewComponent = null;
-  let previewLoadPromise = null;
   let previewError = '';
   let fullContextLoaded = false;
   let fullContextPromise = null;
   const settingsLoadAccounts = new SvelteSet();
+  const lazyComponents = createProfileStudioLazyComponents({
+    sectionLoaders: SECTION_LOADERS,
+    previewLoader: () => import('./ProfileStudioPreview.svelte'),
+    onChange(state) {
+      sectionComponents = state.sectionComponents;
+      sectionErrors = state.sectionErrors;
+      sectionLoading = state.sectionLoading;
+      ProfilePreviewComponent = state.preview;
+      previewError = state.previewError;
+    }
+  });
 
   $: accountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
@@ -172,16 +180,19 @@
   });
   $: previewRenderSnapshot = previewModel.snapshot;
 
+  function resetAccountScopedState() {
+    context = studioDraft = studioIdentityDraft = cosmeticPreviewLoadout = pendingNavigation = dirtyPromptReturnFocus = null;
+    dirtySources = {};
+    preferenceDirty = showDirtyPrompt = false;
+    dashboardSaving = false;
+  }
+
   function resetSettingsLoadState() {
     if (!settingsLoadAccounts.size) return;
     settingsLoadAccounts.clear();
     requestId += 1;
     dashboardMutationToken += 1;
-    context = null;
-    studioDraft = null;
-    studioIdentityDraft = null;
-    dashboardSaving = false;
-    sectionErrors = {};
+    resetAccountScopedState();
   }
 
   function ensureSettingsLoaded(nextAccountKey) {
@@ -190,11 +201,8 @@
     settingsLoadAccounts.clear();
     settingsLoadAccounts.add(nextAccountKey);
     if (context?.profileId !== nextAccountKey) {
-      context = null;
-      studioDraft = null;
-      studioIdentityDraft = null;
+      resetAccountScopedState();
       dashboardMutationToken += 1;
-      dashboardSaving = false;
     }
     void loadSettings(nextAccountKey);
   }
@@ -215,64 +223,30 @@
     // useful while making the dedicated route the only full renderer.
     if (normalizeDashboardHash(window.location.hash) === 'progression') {
       window.location.replace('/progression');
-      return () => previewMediaQuery?.removeEventListener?.('change', updatePreviewViewport);
+      return () => {
+        lazyComponents.dispose();
+        previewMediaQuery?.removeEventListener?.('change', updatePreviewViewport);
+      };
     }
 
-    const getLocationState = () => resolveProfileStudioLocation(window.location.hash, visibleSettingsSections);
-    const restoreLocation = () => {
-      const nextLocation = getLocationState();
-      const nextSection = nextLocation.sectionId;
-      if (nextSection === activeSection) {
-        if (nextSection === 'customize' && nextLocation.customizeTab && nextLocation.customizeTab !== activeCustomizeTab) {
-          activeCustomizeTab = nextLocation.customizeTab;
-          void loadCustomizeComponents();
-        }
-        return;
-      }
-      if (navigationDirty) {
-        const currentHash = getProfileStudioHash(activeSection, activeCustomizeTab);
-        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}#${currentHash}`);
-        openDirtyPrompt({ type: 'section', value: nextSection, customizeTab: nextLocation.customizeTab });
-        return;
-      }
-      setActiveSection(nextSection, {
-        push: false,
-        customizeTab: nextLocation.customizeTab,
-        hash: nextLocation.rawHash && (HASH_ALIASES[nextLocation.rawHash] || visibleSettingsSections.some(section => section.id === nextLocation.rawHash))
-          ? nextLocation.rawHash
-          : null
-      });
-    };
-    const initialLocation = getLocationState();
-    setActiveSection(initialLocation.sectionId, {
-      push: false,
-      customizeTab: initialLocation.customizeTab,
-      hash: initialLocation.rawHash && (HASH_ALIASES[initialLocation.rawHash] || visibleSettingsSections.some(section => section.id === initialLocation.rawHash))
-        ? initialLocation.rawHash
-        : null
+    const navigationController = createProfileStudioNavigationController({
+      windowRef: window,
+      getVisibleSections: () => visibleSettingsSections,
+      getActiveSection: () => activeSection,
+      getActiveCustomizeTab: () => activeCustomizeTab,
+      isNavigationDirty: () => navigationDirty,
+      setActiveSection,
+      onCustomizeTabChange(tabId) {
+        activeCustomizeTab = tabId;
+      },
+      loadCustomizeComponents: () => loadCustomizeComponents(),
+      openDirtyPrompt
     });
-    window.addEventListener('hashchange', restoreLocation);
-    window.addEventListener('popstate', restoreLocation);
-    const beforeUnload = event => {
-      if (!navigationDirty) return;
-      event.preventDefault();
-      event.returnValue = '';
-    };
-    const navigationGuard = event => {
-      if (!navigationDirty) return;
-      event.preventDefault();
-      openDirtyPrompt(event.detail?.navigation
-        ? { type: 'navigate', value: event.detail.navigation }
-        : { type: 'path', value: event.detail?.nextPath || window.location.pathname });
-    };
-    window.addEventListener('beforeunload', beforeUnload);
-    window.addEventListener('chromadie:navigation-request', navigationGuard);
+    navigationController.start();
     return () => {
       requestId += 1;
-      window.removeEventListener('hashchange', restoreLocation);
-      window.removeEventListener('popstate', restoreLocation);
-      window.removeEventListener('beforeunload', beforeUnload);
-      window.removeEventListener('chromadie:navigation-request', navigationGuard);
+      lazyComponents.dispose();
+      navigationController.stop();
       previewMediaQuery?.removeEventListener?.('change', updatePreviewViewport);
     };
   });
@@ -397,55 +371,15 @@
   }
 
   function loadSectionComponent(sectionId, { force = false } = {}) {
-    const loader = SECTION_LOADERS[sectionId];
-    if (!loader || (!force && sectionComponents[sectionId])) return Promise.resolve();
-    if (sectionLoadPromises.has(sectionId)) return sectionLoadPromises.get(sectionId);
-    sectionErrors = { ...sectionErrors, [sectionId]: '' };
-    sectionLoading = true;
-    const promise = loader()
-      .then(module => {
-        sectionComponents = { ...sectionComponents, [sectionId]: module.default };
-        sectionErrors = { ...sectionErrors, [sectionId]: '' };
-      })
-      .catch(loadError => {
-        sectionErrors = {
-          ...sectionErrors,
-          [sectionId]: loadError?.message || 'The dashboard section could not be loaded.'
-        };
-      })
-      .finally(() => { sectionLoadPromises.delete(sectionId); sectionLoading = sectionLoadPromises.size > 0; });
-    sectionLoadPromises.set(sectionId, promise);
-    return promise;
+    return lazyComponents.loadSection(sectionId, { force });
   }
 
-  async function loadPreviewComponent() {
-    if (ProfilePreviewComponent) return ProfilePreviewComponent;
-    if (previewLoadPromise) return previewLoadPromise;
-    previewError = '';
-    previewLoadPromise = import('./ProfileStudioPreview.svelte')
-      .then(module => {
-        ProfilePreviewComponent = module.default;
-        return ProfilePreviewComponent;
-      })
-      .catch(loadError => {
-        previewError = loadError instanceof Error ? loadError.message : 'The live preview could not be loaded.';
-        return null;
-      })
-      .finally(() => { previewLoadPromise = null; });
-    return previewLoadPromise;
+  function loadPreviewComponent() {
+    return lazyComponents.loadPreview();
   }
 
-  async function loadCustomizeComponents() {
-    const sectionIds = activeCustomizeTab === 'appearance'
-      ? ['customize', 'profile-identity', 'profile-collection']
-      : activeCustomizeTab === 'media'
-        ? ['customize', 'profile-media']
-        : activeCustomizeTab === 'content'
-          ? ['customize', 'profile-content', 'profile-widgets']
-        : activeCustomizeTab === 'links'
-          ? ['customize', 'profile-layout', 'profile-aliases']
-          : ['customize'];
-    await Promise.all(sectionIds.map(sectionId => loadSectionComponent(sectionId)));
+  function loadCustomizeComponents() {
+    return lazyComponents.loadCustomize(activeCustomizeTab);
   }
 
   function retrySectionComponent(sectionId) {
@@ -511,125 +445,116 @@
     dirtySources = {};
   }
 
-  function responseError(response, fallback) {
-    return response?.error?.message || response?.data?.error || fallback;
+  function loadConfigurationWriteService() {
+    return import('./profile-studio/configurationWrites.js');
   }
 
-  function isFailedResponse(response) {
-    return Boolean(response?.error || response?.data?.success === false || response?.data?.code === 'conflict');
+  /** @param {'publish' | 'reset'} action */
+  async function writeDashboardConfiguration(action) {
+    if (dashboardSaving || !profileDraftDirty) return;
+    if (!configurationWriteAvailable) {
+      dashboardError = PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
+      dashboardStatus = '';
+      return;
+    }
+    const publishing = action === 'publish';
+    const fallbackError = publishing
+      ? 'The profile could not be published.'
+      : 'The profile changes could not be reset.';
+    if (publishing) {
+      const editor = getDashboardEditor();
+      if (editor?.validateDraft && !editor.validateDraft()) {
+        dashboardError = 'Finish the highlighted fields before publishing.';
+        dashboardStatus = '';
+        return;
+      }
+    }
+
+    const mutationToken = ++dashboardMutationToken;
+    dashboardSaving = true;
+    dashboardError = '';
+    dashboardStatus = publishing ? 'Publishing profile…' : 'Resetting profile changes…';
+    const identityDraft = publishing ? getDashboardIdentity() : null;
+    const v2Draft = publishing
+      ? buildConfigurationV2(getDashboardDraft())
+      : buildConfigurationV2(
+          toEditorProfileConfig(context?.profileConfig?.published),
+          context?.profileConfig?.v2Published
+        );
+    const mutationRequestId = requestId;
+    const mutationAccountId = $session?.user?.id;
+    const isCurrent = () => mutationToken === dashboardMutationToken
+      && mutationRequestId === requestId
+      && mutationAccountId === $session?.user?.id;
+    try {
+      const { writeProfileStudioConfiguration } = await loadConfigurationWriteService();
+      if (!isCurrent()) return;
+      const write = await writeProfileStudioConfiguration(
+        supabase,
+        action,
+        v2Draft,
+        publishing ? accountUsername || null : null,
+        publishing ? identityDraft?.bio ?? context?.targetProfile?.bio ?? null : null,
+        context.profileConfig?.updatedAt || null,
+        fallbackError
+      );
+      if (!isCurrent()) return;
+      if (write.error) {
+        dashboardStatus = '';
+        dashboardError = write.error;
+        return;
+      }
+      const responseData = write.response.data || {};
+      if (publishing) {
+        const nextBio = responseData.identity?.bio ?? identityDraft?.bio ?? context?.targetProfile?.bio ?? null;
+        // Settings remounts hydrate from the authenticated account store. Keep
+        // it aligned with the successful publish so returning cannot restore
+        // the pre-publish bio.
+        profile.update(currentProfile => currentProfile && currentProfile.id === context.profileId
+          ? { ...currentProfile, bio: nextBio }
+          : currentProfile);
+        context = { ...context, targetProfile: { ...context.targetProfile, bio: nextBio } };
+        applyDashboardConfiguration({
+          draft: responseData.draft || v2Draft,
+          published: responseData.published || v2Draft,
+          updatedAt: responseData.updated_at || context.profileConfig?.updatedAt,
+          publishedAt: responseData.published_at || context.profileConfig?.publishedAt
+        });
+        dashboardStatus = 'Profile published.';
+      } else {
+        applyDashboardConfiguration({
+          draft: responseData.draft || v2Draft,
+          published: responseData.published || context.profileConfig?.v2Published || v2Draft,
+          updatedAt: responseData.updated_at || context.profileConfig?.updatedAt,
+          publishedAt: context.profileConfig?.publishedAt
+        });
+        dashboardStatus = 'Profile changes reset.';
+      }
+      dashboardError = '';
+    } catch (mutationError) {
+      if (isCurrent()) {
+        dashboardStatus = '';
+        dashboardError = mutationError?.message || fallbackError;
+      }
+    } finally {
+      // A stale response must not strand its own lock or release a newer one.
+      if (mutationToken === dashboardMutationToken) {
+        dashboardSaving = false;
+        if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
+      }
+    }
   }
 
   async function publishDashboard() {
-    if (dashboardSaving || !profileDraftDirty) return;
-    if (!configurationWriteAvailable) {
-      dashboardError = PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
-      dashboardStatus = '';
-      return;
-    }
-    const editor = getDashboardEditor();
-    if (editor?.validateDraft && !editor.validateDraft()) {
-      dashboardError = 'Finish the highlighted fields before publishing.';
-      dashboardStatus = '';
-      return;
-    }
-    const mutationToken = ++dashboardMutationToken;
-    dashboardSaving = true;
-    dashboardError = '';
-    dashboardStatus = 'Publishing profile…';
-    const editorDraft = getDashboardDraft();
-    const identityDraft = getDashboardIdentity();
-    const v2Draft = buildConfigurationV2(editorDraft);
-    const mutationRequestId = requestId;
-    const mutationAccountId = $session?.user?.id;
-    try {
-      const publishResponse = await supabase.rpc('publish_profile_studio_v2', {
-        p_draft: v2Draft,
-        p_display_name: accountUsername || null,
-        p_bio: identityDraft?.bio ?? context?.targetProfile?.bio ?? null,
-        p_expected_updated_at: context.profileConfig?.updatedAt || null
-      });
-      if (mutationToken !== dashboardMutationToken || mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
-      if (isFailedResponse(publishResponse)) {
-        dashboardStatus = '';
-        dashboardError = responseError(publishResponse, 'The profile could not be published.');
-        return;
-      }
-      const nextBio = publishResponse.data?.identity?.bio ?? identityDraft?.bio ?? context?.targetProfile?.bio ?? null;
-      // Settings remounts hydrate from the authenticated account store. Keep it
-      // aligned with the successful publish so leaving for the public profile
-      // and returning cannot restore the pre-publish bio.
-      profile.update(currentProfile => currentProfile && currentProfile.id === context.profileId
-        ? { ...currentProfile, bio: nextBio }
-        : currentProfile);
-      context = { ...context, targetProfile: { ...context.targetProfile, bio: nextBio } };
-      applyDashboardConfiguration({
-        draft: publishResponse.data?.draft || v2Draft,
-        published: publishResponse.data?.published || v2Draft,
-        updatedAt: publishResponse.data?.updated_at || context.profileConfig?.updatedAt,
-        publishedAt: publishResponse.data?.published_at || context.profileConfig?.publishedAt
-      });
-      dashboardStatus = 'Profile published.';
-      dashboardError = '';
-    } catch (mutationError) {
-      if (mutationToken === dashboardMutationToken && mutationRequestId === requestId && mutationAccountId === $session?.user?.id) {
-        dashboardStatus = '';
-        dashboardError = mutationError?.message || 'The profile could not be published.';
-      }
-    } finally {
-      // Always release the local mutation lock. A stale response may no
-      // longer be allowed to update the model, but it must not strand the UI
-      // in Publishing… after an unrelated load or account transition.
-      if (mutationToken === dashboardMutationToken) {
-        dashboardSaving = false;
-        if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
-      }
-    }
+    await writeDashboardConfiguration('publish');
   }
 
   async function resetDashboard() {
-    if (dashboardSaving || !profileDraftDirty) return;
-    if (!configurationWriteAvailable) {
-      dashboardError = PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE;
-      dashboardStatus = '';
-      return;
-    }
-    const mutationToken = ++dashboardMutationToken;
-    dashboardSaving = true;
-    dashboardError = '';
-    dashboardStatus = 'Resetting profile changes…';
-    const publishedConfig = toEditorProfileConfig(context?.profileConfig?.published);
-    const v2Draft = buildConfigurationV2(publishedConfig, context?.profileConfig?.v2Published);
-    const mutationRequestId = requestId;
-    const mutationAccountId = $session?.user?.id;
-    try {
-      const response = await supabase.rpc('save_profile_configuration_v2', {
-        p_draft: v2Draft,
-        p_expected_updated_at: context.profileConfig?.updatedAt || null
-      });
-      if (mutationToken !== dashboardMutationToken || mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) return;
-      if (isFailedResponse(response)) {
-        dashboardStatus = '';
-        dashboardError = responseError(response, 'The profile changes could not be reset.');
-        return;
-      }
-      applyDashboardConfiguration({
-        draft: response.data?.draft || v2Draft,
-        published: response.data?.published || context.profileConfig?.v2Published || v2Draft,
-        updatedAt: response.data?.updated_at || context.profileConfig?.updatedAt,
-        publishedAt: context.profileConfig?.publishedAt
-      });
-      dashboardStatus = 'Profile changes reset.';
-    } catch (mutationError) {
-      if (mutationToken === dashboardMutationToken && mutationRequestId === requestId && mutationAccountId === $session?.user?.id) {
-        dashboardStatus = '';
-        dashboardError = mutationError?.message || 'The profile changes could not be reset.';
-      }
-    } finally {
-      if (mutationToken === dashboardMutationToken) {
-        dashboardSaving = false;
-        if (mutationRequestId !== requestId || mutationAccountId !== $session?.user?.id) dashboardStatus = '';
-      }
-    }
+    await writeDashboardConfiguration('reset');
+  }
+
+  function loadSettingsStateModule() {
+    return import('./profile-studio/settingsLoadState.js').catch(() => null);
   }
 
   async function loadSettings(expectedAccountKey = '') {
@@ -642,73 +567,89 @@
     sectionErrors = {};
     fullContextLoaded = false;
     fullContextPromise = null;
-    const nextContext = await loadProfileStudioContext({
-      supabaseClient: supabase,
-      profileRecord: $profile,
-      sessionUserId: $session?.user?.id
+    const [nextContext, loadStateModule] = await Promise.all([
+      loadProfileStudioContext({
+        supabaseClient: supabase,
+        profileRecord: $profile,
+        sessionUserId: $session?.user?.id
+      }).catch(() => /** @type {{ configurationUnavailable: true, profileId: null }} */ ({ configurationUnavailable: true })),
+      loadSettingsStateModule()
+    ]);
+    if (nextRequestId !== requestId || (expectedAccountKey && expectedAccountKey !== $session?.user?.id)) return;
+    if (!loadStateModule) {
+      context = {
+        ...nextContext,
+        configurationUnavailable: true,
+        dataWarning: PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE
+      };
+      if (!nextContext.profileId || nextContext.profileId !== previousContext?.profileId) {
+        studioDraft = studioIdentityDraft = cosmeticPreviewLoadout = null;
+      }
+      loading = false;
+      return;
+    }
+    const loadedState = loadStateModule.resolveProfileStudioSettingsLoadState({
+      previousContext,
+      nextContext,
+      studioDraft,
+      fallbackColor: FALLBACK_PROFILE_COLOR,
+      mergeProfileStudioContext,
+      toEditorProfileConfig
     });
-    if (nextRequestId !== requestId) return;
-    if (expectedAccountKey && expectedAccountKey !== $session?.user?.id) return;
-    if (nextContext.loadError && previousContext) {
-      context = { ...previousContext, dataWarning: nextContext.loadError };
-      loading = false;
-      return;
+    context = loadedState.context;
+    if (!loadedState.preserveDrafts) {
+      studioDraft = loadedState.studioDraft;
+      studioIdentityDraft = loadedState.studioIdentityDraft;
+      cosmeticPreviewLoadout = loadedState.cosmeticPreviewLoadout;
     }
-    if (nextContext.configurationUnavailable) {
-      context = mergeProfileStudioContext(previousContext, nextContext);
-      studioDraft = context.profileConfig
-        ? (studioDraft || toEditorProfileConfig(context.profileConfig.draft, FALLBACK_PROFILE_COLOR))
-        : null;
-      studioIdentityDraft = studioDraft
-        ? { bio: context.targetProfile?.bio || '', identityPresentation: studioDraft.identityPresentation }
-        : null;
-      cosmeticPreviewLoadout = null;
-      loading = false;
-      return;
-    }
-    context = nextContext;
-    studioDraft = nextContext.profileConfig
-      ? toEditorProfileConfig(nextContext.profileConfig.draft, FALLBACK_PROFILE_COLOR)
-      : null;
-    studioIdentityDraft = studioDraft
-      ? { bio: nextContext.targetProfile?.bio || '', identityPresentation: studioDraft.identityPresentation }
-      : null;
-    cosmeticPreviewLoadout = null;
     loading = false;
-    if (nextContext.loadError) error = nextContext.loadError;
-    else if (!nextContext.viewingOwnProfile) error = 'Profile settings are available only for your own profile.';
+    if (loadedState.error) error = loadedState.error;
   }
 
-  async function ensureFullContext({ force = false } = {}) {
+  function ensureFullContext({ force = false } = {}) {
     if (fullContextLoaded && !force) return context;
     if (fullContextPromise && !force) return fullContextPromise;
     const nextRequestId = ++requestId;
-    fullContextPromise = loadProfileContext({
-      supabaseClient: supabase,
-      profileRecord: force ? null : $profile,
-      isAuthenticated: $isAuthenticated,
-      sessionUserId: $session?.user?.id,
-      currentUsername: accountUsername
-    }).then(nextContext => {
+    fullContextPromise = Promise.all([
+      loadProfileContext({
+        supabaseClient: supabase,
+        profileRecord: force ? null : $profile,
+        isAuthenticated: $isAuthenticated,
+        sessionUserId: $session?.user?.id,
+        currentUsername: accountUsername
+      }),
+      loadSettingsStateModule()
+    ]).then(([nextContext, loadStateModule]) => {
       if (nextRequestId !== requestId) return context;
-      if (nextContext.targetProfile || nextContext.profileConfig || nextContext.configurationUnavailable) {
-        context = mergeProfileStudioContext(context, nextContext);
-        const refreshedProfileConfig = context.profileConfig;
-        studioDraft = refreshedProfileConfig
-          ? (studioDraft || toEditorProfileConfig(refreshedProfileConfig.draft, FALLBACK_PROFILE_COLOR))
-          : null;
-        studioIdentityDraft = studioDraft
-          ? { bio: context.targetProfile?.bio || '', identityPresentation: studioDraft.identityPresentation }
-          : null;
+
+      if (!loadStateModule) {
+        context = { ...context, configurationUnavailable: true, dataWarning: PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE };
+        fullContextLoaded = false;
+        return context;
       }
-      fullContextLoaded = nextContext.configurationUnavailable !== true;
+
+      const refreshedState = loadStateModule.resolveProfileStudioFullContextRefreshState(
+        nextContext,
+        context,
+        studioDraft,
+        studioIdentityDraft,
+        dirtySources['customize:identity'],
+        FALLBACK_PROFILE_COLOR,
+        mergeProfileStudioContext,
+        toEditorProfileConfig
+      );
+      ({ context, studioDraft, studioIdentityDraft, fullContextLoaded } = refreshedState);
       return context;
     }).catch(loadError => {
       if (nextRequestId !== requestId) return context;
-      context = { ...context, dataWarning: loadError instanceof Error ? loadError.message : 'Additional profile details are temporarily unavailable.' };
+      fullContextLoaded = false;
+      context = { ...context, dataWarning: loadError?.message || PROFILE_CONFIGURATION_UNAVAILABLE_MESSAGE };
       return context;
     }).finally(() => {
-      if (nextRequestId === requestId) fullContextPromise = null;
+      if (nextRequestId === requestId) {
+        fullContextPromise = null;
+        loading = false;
+      }
     });
     return fullContextPromise;
   }
@@ -921,7 +862,7 @@
     {#if context?.dataWarning}
       <div class="profile-settings-page__warning" role="status">
         <span>{context.dataWarning}</span>
-        {#if context.configurationUnavailable}<button type="button" on:click={() => loadSettings(accountKey)} disabled={loading}>Retry</button>{/if}
+        <button type="button" on:click={() => ensureFullContext()} disabled={loading || fullContextPromise}>Retry</button>
       </div>
     {/if}
     {#if context && !loading && !error}

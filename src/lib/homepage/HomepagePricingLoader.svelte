@@ -39,16 +39,17 @@
   });
 </script>
 
-<div id="pricing" bind:this={host} class="homepage-pricing-loader" aria-busy={!pricingComponent}>
+<div id="pricing" bind:this={host} class="homepage-pricing-loader" class:homepage-pricing-loader--pending={!pricingComponent} aria-busy={!pricingComponent && !failed}>
   {#if pricingComponent}
     <svelte:component this={pricingComponent} {isAuthenticated} sectionId="" />
   {:else if failed}
-    <p class="homepage-pricing-loader__state" role="status">Pricing preview couldn’t load. <button type="button" on:click={load}>Retry</button></p>
+    <p class="homepage-pricing-loader__state" role="status">Pricing preview couldn’t load. <button type="button" on:click={() => window.location.reload()}>Reload pricing</button></p>
   {/if}
 </div>
 
 <style>
-  .homepage-pricing-loader { min-height: 1px; }
+  .homepage-pricing-loader { scroll-margin-top: 96px; }
+  .homepage-pricing-loader--pending { min-height: 820px; }
 
   .homepage-pricing-loader__state {
     width: min(1380px, calc(100% - 64px));
@@ -58,6 +59,7 @@
   }
 
   .homepage-pricing-loader__state button {
+    min-height: 44px;
     border: 0;
     background: none;
     color: var(--homepage-text);
@@ -67,5 +69,9 @@
 
   @media (max-width: 780px) {
     .homepage-pricing-loader__state { width: calc(100% - 30px); }
+  }
+
+  @media (max-width: 600px) {
+    .homepage-pricing-loader--pending { min-height: 1400px; }
   }
 </style>

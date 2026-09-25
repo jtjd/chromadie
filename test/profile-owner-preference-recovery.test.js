@@ -6,18 +6,31 @@ import { normalizeProfileInsights } from '../src/lib/profileInsights.js';
 
 const insightsSource = await readFile(new URL('../src/lib/ProfileInsights.svelte', import.meta.url), 'utf8');
 function insightHarness(rpc) {
-  const context = vm.createContext({
-    supabase: { rpc },
+  const state = {
+    supabase: {
+      auth: { getSession: async () => ({ data: { session: { user: { id: 'owner-a' }, access_token: 'owner-a-token' } } }) },
+      rpcWithAccessToken: rpc,
+      rpc
+    },
+    rpcWithAccessToken: (client, name, args, token) => client.rpcWithAccessToken(name, args, token),
     insights: { enabled: false, windowDays: 90, daily: [{ views: 12 }] },
     enabledDraft: true, publicViewsVisibleDraft: false,
     socialSettings: { profileViewsVisible: true },
     loading: false, saving: false, hasUnsavedPreference: true,
     windowDays: 90, preferencesLoaded: true,
+    activeOwnerId: 'owner-a', ownerGeneration: 1, requestId: 0, componentActive: true,
+    $session: { user: { id: 'owner-a' } },
     normalizeProfileInsights,
     getProfileInsightsError: result => result.error?.message || 'Failed',
     dispatch: () => {},
     Error
-  });
+  };
+  const context = vm.createContext(state);
+  state.isCurrentOwner = (ownerId, generation, request = state.requestId) => state.componentActive
+    && ownerId === state.activeOwnerId
+    && generation === state.ownerGeneration
+    && request === state.requestId
+    && ownerId === state.$session?.user?.id;
   vm.runInContext(insightsSource.slice(insightsSource.indexOf('  async function loadInsights'), insightsSource.indexOf('  function formatNumber')), context);
   return context;
 }
@@ -56,6 +69,38 @@ test('Thrown preference requests recover without leaving the form busy', async (
   assert.equal(context.enabledDraft, true);
 });
 
+test('Insight saves stop before the second account-scoped write after an account switch', async () => {
+  let resolveSettings;
+  const calls = [];
+  const context = insightHarness((name, args, token) => {
+    calls.push({ name, args, token });
+    if (name === 'update_my_profile_insights_settings') {
+      return new Promise(resolve => { resolveSettings = resolve; });
+    }
+    return Promise.resolve({ data: { success: true, settings: { profileViewsVisible: false } } });
+  });
+  assert.equal(context.isCurrentOwner('owner-a', 1, 0), true);
+  const saving = context.savePreference();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].name, 'update_my_profile_insights_settings');
+  assert.equal(calls[0].token, 'owner-a-token');
+
+  context.$session = { user: { id: 'owner-b' } };
+  context.activeOwnerId = 'owner-b';
+  context.ownerGeneration += 1;
+  context.requestId += 1;
+  context.insights = { enabled: false, windowDays: 30, daily: [{ views: 0 }] };
+  context.socialSettings = { profileViewsVisible: true };
+  context.publicViewsVisibleDraft = true;
+  resolveSettings({ data: { success: true, enabled: true, windowDays: 30 } });
+  await saving;
+
+  assert.equal(calls.length, 1);
+  assert.equal(context.insights.enabled, false);
+  assert.equal(context.socialSettings.profileViewsVisible, true);
+});
+
 test('Mark all read includes unread notifications outside the displayed page', async () => {
   const source = await readFile(new URL('../src/lib/ProfileNotifications.svelte', import.meta.url), 'utf8');
   let args;
@@ -86,6 +131,7 @@ test('Failed mark-all preserves unread state and allows retry', async () => {
 
 test('Preference-only changes invoke the Studio navigation warning', async () => {
   const source = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+  const navigation = await readFile(new URL('../src/lib/profile-studio/profileStudioNavigation.js', import.meta.url), 'utf8');
   const pending = [];
   const navigated = [];
   const context = vm.createContext({
@@ -98,7 +144,8 @@ test('Preference-only changes invoke the Studio navigation warning', async () =>
   assert.equal(pending[0].value, 'customize');
   assert.equal(navigated.length, 0);
   assert.match(source, /navigationDirty = dashboardDirty \|\| preferenceDirty/);
-  assert.match(source, /if \(!navigationDirty\) return;/);
+  assert.match(source, /isNavigationDirty: \(\) => navigationDirty/);
+  assert.match(navigation, /if \(!isNavigationDirty\(\)\) return;/);
 });
 
 test('Privacy failure retains the editable draft and success accepts canonical settings', async () => {

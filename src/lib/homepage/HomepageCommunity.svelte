@@ -160,7 +160,6 @@
   <section class="homepage-section homepage-community" id="community" data-homepage-reveal aria-labelledby="homepage-community-title" aria-busy={loading}>
     <div class="homepage-community__copy">
       <div>
-        <p class="homepage-community__eyebrow">COMMUNITY</p>
         <h2 id="homepage-community-title" class="homepage-section-heading">See who’s rolling.</h2>
         <p class="homepage-section-sub">
           {communityMode === 'today'
@@ -175,8 +174,8 @@
       <p class="homepage-community__loading" role="status">Loading public profiles…</p>
     {:else if visibleRows.length}
       <div class="homepage-community__players">
-        {#each visibleRows as player, index (player.username)}
-          <HomepagePlayerCard {player} position={index} />
+        {#each visibleRows as player (player.username)}
+          <HomepagePlayerCard {player} />
         {/each}
       </div>
       {#if communityMode === 'recent'}
@@ -192,91 +191,16 @@
 {/if}
 
 <style>
-  .homepage-community {
-    position: relative;
-    padding-block: 104px 112px;
-  }
-
-
-  .homepage-community__copy {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    gap: 40px;
-  }
-
-  .homepage-community__eyebrow {
-    margin: 0 0 16px;
-    color: var(--homepage-muted);
-    font: 600 .68rem / 1.2 'Inter', sans-serif;
-    letter-spacing: .13em;
-  }
-
+  .homepage-community__copy { display: flex; justify-content: space-between; align-items: end; gap: 40px; }
   .homepage-community__copy > div { max-width: 720px; }
-  .homepage-community__copy > a {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    flex-shrink: 0;
-    font-size: 1rem;
-    text-underline-offset: 5px;
-  }
-
-  .homepage-community__players {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-    margin-top: 44px;
-    align-items: stretch;
-  }
-
-  .homepage-community__loading,
-  .homepage-community__error {
-    margin: 32px 0 0;
-    color: var(--homepage-secondary-muted);
-    font-size: .95rem;
-    line-height: 1.6;
-  }
-
-  .homepage-community__error {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-  }
-
-  .homepage-community__error button {
-    min-height: 42px;
-    border: 0;
-    background: transparent;
-    color: var(--homepage-text);
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    cursor: pointer;
-  }
-
-  .homepage-community__note {
-    margin: 18px 0 0;
-    color: var(--homepage-muted);
-    font-size: .8rem;
-    line-height: 1.5;
-  }
-
-  a:focus-visible,
-  button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
-
-  @media (max-width: 980px) {
-    .homepage-community__players { grid-template-columns: 1fr 1fr; }
-    .homepage-community__players :global(.homepage-player:nth-child(3)) { grid-column: 1 / -1; }
-  }
-
-  @media (max-width: 780px) {
-    .homepage-community { padding-block: 64px 72px; }
-    .homepage-community__copy { align-items: start; flex-direction: column; gap: 18px; }
-    .homepage-community__players { grid-template-columns: 1fr; gap: 14px; margin-top: 30px; }
-    .homepage-community__players :global(.homepage-player:nth-child(3)) { grid-column: auto; }
-  }
+  .homepage-community__copy > a { display: inline-flex; min-height: 44px; align-items: center; flex-shrink: 0; font-size: .875rem; text-underline-offset: 5px; text-decoration-color: var(--homepage-muted); }
+  .homepage-community__players { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 36px; border-top: 1px solid var(--homepage-border); border-bottom: 1px solid var(--homepage-border); }
+  .homepage-community__players :global(.homepage-player + .homepage-player) { border-left: 1px solid var(--homepage-border); }
+  .homepage-community__loading, .homepage-community__error { margin: 32px 0 0; padding-block: 24px; border-block: 1px solid var(--homepage-border); color: var(--homepage-secondary-muted); font-size: .9375rem; line-height: 1.6; }
+  .homepage-community__error { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+  .homepage-community__error button { min-height: 44px; border: 0; background: transparent; color: var(--homepage-text); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+  .homepage-community__note { margin: 18px 0 0; color: var(--homepage-muted); font-size: .8125rem; line-height: 1.6; }
+  a:focus-visible, button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+  @media (max-width: 980px) { .homepage-community__players { grid-template-columns: 1fr; } .homepage-community__players :global(.homepage-player + .homepage-player) { border-left: 0; border-top: 1px solid var(--homepage-border); } }
+  @media (max-width: 700px) { .homepage-community__copy { align-items: start; flex-direction: column; gap: 16px; } .homepage-community__players { margin-top: 24px; } }
 </style>

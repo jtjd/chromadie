@@ -63,7 +63,10 @@ test('progression normalization preserves server-published journey lanes and wee
 });
 
 test('progression keeps approaching deterministic goals and parallel discoveries visible', async () => {
-  const component = await read('src/lib/ProfileProgression.svelte');
+  const [component, journeyModel] = await Promise.all([
+    read('src/lib/ProfileProgression.svelte'),
+    read('src/lib/progressionJourneyModel.js')
+  ]);
   const reward = itemKey => ({ item_key: itemKey, name: itemKey, slot: 'expression' });
   const progression = normalizeProgressionData({
     total_rolls: 42,
@@ -139,6 +142,10 @@ test('progression keeps approaching deterministic goals and parallel discoveries
   const discovery = progression.journeyByTrack.discovery;
   assert.equal(discovery.length, 3);
   assert.ok(discovery.every(node => node.presentationState === 'active'));
+  assert.match(component, /buildProgressionJourneyModel/);
+  assert.match(component, /from '\.\/progressionJourneyModel\.js'/);
+  assert.match(journeyModel, /openDiscoveries/);
+  assert.match(journeyModel, /lifetimeDiscoveries/);
   assert.match(component, /openDiscoveries/);
   assert.match(component, /lifetimeDiscoveries/);
   assert.match(component, /They never block your next Rank or Ritual milestone/);
@@ -197,11 +204,13 @@ test('the journey schema is additive, catalog-backed, and returned by the author
 });
 
 test('progression presentation and guest claim copy keep authority and privacy boundaries visible', async () => {
-  const [progression, state, overview, page, game, preRoll, shell, preferences] = await Promise.all([
+  const [progression, state, overview, page, board, presentation, game, preRoll, shell, preferences] = await Promise.all([
     read('src/lib/ProfileProgression.svelte'),
     read('src/lib/progressionState.js'),
     read('src/lib/ProfileStudioOverview.svelte'),
     read('src/lib/ProgressionPage.svelte'),
+    read('src/lib/ProgressionPageBoard.svelte'),
+    read('src/lib/progressionPresentation.js'),
     read('src/lib/Game.svelte'),
     read('src/lib/RollPreRoll.svelte'),
     read('src/lib/ProfileShell.svelte'),
@@ -210,7 +219,7 @@ test('progression presentation and guest claim copy keep authority and privacy b
 
   assert.match(state, /Ritual/);
   assert.match(state, /Discovery/);
-  assert.match(progression, /Find it whenever it appears/);
+  assert.match(presentation, /Find it whenever it appears/);
   assert.match(progression, /journeyState/);
   assert.doesNotMatch(progression, /0\/0/);
   assert.match(progression, /Your profile story/);
@@ -219,7 +228,17 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(progression, /Find rare colors/);
   assert.match(progression, /They never block your next Rank or Ritual milestone/);
   assert.doesNotMatch(page, /nextJourney\?\.discovery/);
-  assert.match(page, /isIntentionalObjective/);
+  assert.match(page, /resolveFocusGoal/);
+  assert.match(presentation, /isIntentionalObjective/);
+  assert.match(page, /from '\.\/progressionPresentation\.js'/);
+  assert.match(progression, /from '\.\/progressionPresentation\.js'/);
+  assert.doesNotMatch(page, /function isIntentionalObjective/);
+  assert.doesNotMatch(progression, /function isIntentionalObjective/);
+  assert.match(presentation, /export function getNodeProgressLabel/);
+  assert.match(board, /from '\.\/progressionPresentation\.js'/);
+  assert.match(progression, /from '\.\/progressionPresentation\.js'/);
+  assert.doesNotMatch(board, /function goalPaceLabel/);
+  assert.doesNotMatch(progression, /function goalPaceLabel/);
   assert.match(progression, /Cosmetics earned/);
   assert.doesNotMatch(progression, /No history yet/);
   assert.match(overview, /Some discoveries unavailable/);
@@ -299,7 +318,7 @@ test('progression visual treatment keeps state neutral and previews canonical co
   assert.match(page, /hasRolledToday/);
   assert.match(page, /progression-page__roll-status/);
   assert.match(board, /progression-page__rail-details/);
-  assert.match(board, /View full roll/);
+  assert.match(board, /View today’s roll/);
   assert.match(board, /Scoring signals/);
   assert.doesNotMatch(board, /Next milestone/);
   assert.match(board, /this week’s color/);

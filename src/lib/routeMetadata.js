@@ -1,4 +1,5 @@
 import { getCanonicalProfilePath } from './routeContract.js';
+import { HOW_TO_PLAY_CANONICAL_PATH, HOW_TO_PLAY_META_DESCRIPTION } from './howToPlayContent.js';
 
 export function resolveRouteMetadata({
   routeMode = 'app',
@@ -37,7 +38,7 @@ export function resolveRouteMetadata({
                         : routeMode === 'app' && view === 'game' && challengeData
                           ? challengeData.error ? 'Challenge Unavailable | ChromaDie' : 'Challenge | ChromaDie'
                           : routeMode === 'app' && view === 'game'
-                            ? 'Roll | ChromaDie'
+                            ? 'Page Not Found | ChromaDie'
                             : routeMode === 'not-found'
                               ? 'Page Not Found | ChromaDie'
                               : 'ChromaDie';
@@ -49,7 +50,7 @@ export function resolveRouteMetadata({
       : routeMode === 'terms'
         ? 'Read the ChromaDie Terms of Service for profiles, uploads, customization, and community safety.'
         : routeMode === 'how-to-play'
-          ? 'Learn how ChromaDie works: roll a color every day, discover rarity and traits, earn EP, and compete on the leaderboard.'
+          ? HOW_TO_PLAY_META_DESCRIPTION
           : routeMode === 'auth'
             ? authRouteTab === 'signup'
               ? 'Create a ChromaDie account and keep building your public color identity.'
@@ -77,7 +78,7 @@ export function resolveRouteMetadata({
       : routeMode === 'terms'
         ? '/terms'
         : routeMode === 'how-to-play'
-          ? '/how-to-play'
+          ? HOW_TO_PLAY_CANONICAL_PATH
           : routeMode === 'auth'
             ? `/${authRouteTab}`
             : routeMode === 'app' && view === 'leaderboard'
@@ -92,9 +93,7 @@ export function resolveRouteMetadata({
                       ? (getCanonicalProfilePath(selectedProfileUsername) || '/')
                       : routeMode === 'app' && view === 'prototype'
                         ? '/prototype/profile'
-                        : routeMode === 'app' && view === 'game' && !challengeData
-                          ? '/'
-                          : '/';
+                        : '/';
 
   const noindexAppRoute = legacyProfile
     || profileRouteKind === 'compatibility'

@@ -25,10 +25,8 @@ dist-ssr
 *.sw?
 
 .env
-.env.local
-.env.development
-.env.production
-.env.*.local
+.env.*
+!.env.example
 .dev.vars
 .wrangler/
 supabase/.temp/

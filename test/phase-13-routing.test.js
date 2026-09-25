@@ -18,8 +18,9 @@ import { onRequestGet as compatibilityRoute } from '../functions/u/[[username]].
 import { onRequestGet as aliasRoute } from '../functions/a/[[alias]].js';
 import { onRequestGet as rootProfileRoute } from '../functions/[[username]].js';
 
-const [appSource, authPageSource, authSource] = await Promise.all([
+const [appSource, routeTargetSource, authPageSource, authSource] = await Promise.all([
   readFile(new URL('../src/App.svelte', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/routeTarget.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/AuthPage.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/Auth.svelte', import.meta.url), 'utf8')
 ]);
@@ -124,7 +125,7 @@ test('standalone auth routes carry only bounded, safe presentation state', () =>
   assert.equal(signup.authNext, '/profile/settings');
   assert.equal(signup.authUsername, 'ab');
   assert.equal(parseRouteLocation('/signup', '?username=bad%2Fname').authUsername, '');
-  assert.match(appSource, /loaderKey: 'authPage'/);
+  assert.match(routeTargetSource, /loaderKey: 'authPage'/);
   assert.match(appSource, /navigateToAuth/);
   assert.doesNotMatch(appSource, /auth-modal-overlay|openAuthModal/);
   assert.match(authPageSource, /getSafeNextUrl/);

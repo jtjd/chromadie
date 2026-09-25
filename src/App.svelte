@@ -3,56 +3,54 @@
   import { signOutCurrentBrowser } from './lib/authSession';
   import { supabase, supabaseError } from './lib/supabase';
   import SiteModeHeader from './lib/SiteModeHeader.svelte';
+  import ChallengeBanner from './lib/ChallengeBanner.svelte';
   import SiteFooter from './lib/SiteFooter.svelte';
   import Toast from './lib/Toast.svelte';
   import AccountUnavailable from './lib/AccountUnavailable.svelte';
   import NotFound from './lib/NotFound.svelte';
   import RouteLoading from './lib/RouteLoading.svelte';
   import RouteOutlet from './lib/RouteOutlet.svelte';
-  import { loadChallengeLink } from './lib/challenges';
   import { getAppOrigin } from './lib/authUrls';
-  import { VALID_VIEWS, parseRouteLocation, viewToCanonicalPath } from './lib/routes';
-  import { getCanonicalProfilePath } from './lib/routeContract.js';
+  import { VALID_VIEWS, getChallengeClearPath, parseRouteLocation, resolveRouteSyncPath, viewToCanonicalPath } from './lib/routes';
+  import { resolveRouteTarget } from './lib/routeTarget.js';
+  import { resolveRouteState } from './lib/routeState.js';
+  import { createRouteNavigationController } from './lib/routeNavigation.js';
   import { resolveRouteMetadata } from './lib/routeMetadata.js';
-  import { resolveProfileAlias } from './lib/profileAliases.js';
   import { trackProductEvent } from './lib/productAnalytics.js';
   import { ACCOUNT_STATES } from './lib/authState';
   import { onMount, onDestroy, tick } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
-  const VALID_APP_ROUTES = new Set(['app', 'privacy', 'terms', 'how-to-play', 'auth', 'auth-callback', 'reset-password']);
   // Resolve the browser location before the first RouteOutlet pass. Starting
   // every document as Home briefly imports the homepage tree even when a
-  // visitor directly opens /pricing, /roll, or an information route. The
+  // visitor directly opens /pricing or an information route. The
   // mount-time parse below still owns side effects such as challenge and
   // alias resolution; this first pass only prevents the wrong lazy split
   // point from entering the network graph.
   const initialRoute = typeof window !== 'undefined'
     ? parseRouteLocation(window.location.pathname, window.location.search)
     : null;
+  const initialRouteState = initialRoute ? resolveRouteState(initialRoute) : null;
 
-  let view = initialRoute?.view || 'home';
-  let leaderboardTab = initialRoute?.leaderboardTab || 'today';
-  let progressionTab = initialRoute?.progressionTab || 'journey';
-  let routeMode = initialRoute?.routeMode || 'app';
-  let authRouteTab = initialRoute?.authTab || 'login';
-  let authRouteNext = initialRoute?.authNext || '';
-  let authRouteUsername = initialRoute?.authUsername || '';
+  let view = initialRouteState?.view || 'home';
+  let leaderboardTab = initialRouteState?.leaderboardTab || 'today';
+  let progressionTab = initialRouteState?.progressionTab || 'journey';
+  let routeMode = initialRouteState?.routeMode || 'app';
+  let authRouteTab = initialRouteState?.authRouteTab || 'login';
+  let authRouteNext = initialRouteState?.authRouteNext || '';
+  let authRouteUsername = initialRouteState?.authRouteUsername || '';
   let logoutInProgress = false;
-  let challengeData = initialRoute?.challengeId !== null && initialRoute?.challengeId !== undefined
-    ? {
-      id: initialRoute.challengeId,
-      fromUsername: initialRoute.challengeFrom,
-      loading: true,
-      error: null
-    }
-    : null;
-  let challengeLoadRequestId = 0;
-  let selectedProfileUsername = initialRoute?.profileUsername || null;
-  let profileRouteKind = initialRoute?.profileRouteKind || null;
-  let aliasResolving = Boolean(initialRoute?.profileAlias);
-  let aliasResolutionRequestId = 0;
-  let legacyProfile = Boolean(initialRoute?.legacyProfile);
+  let challengeData = initialRouteState?.challengeData || null;
+  let challengeLifecycle = null;
+  let challengeLifecyclePromise = null;
+  let challengeLifecycleGeneration = 0;
+  let profileAliasLifecycle = null;
+  let profileAliasLifecyclePromise = null;
+  let aliasResolutionGeneration = 0;
+  let selectedProfileUsername = initialRouteState?.selectedProfileUsername || null;
+  let profileRouteKind = initialRouteState?.profileRouteKind || null;
+  let aliasResolving = initialRouteState?.aliasResolving || false;
+  let legacyProfile = initialRouteState?.legacyProfile || false;
   let founderLaunchWindowActive = false;
   let routeInitialized = false;
   let mainContent = null;
@@ -157,81 +155,77 @@
   }
 
   function parseRoute() {
-    challengeLoadRequestId += 1;
-    aliasResolutionRequestId += 1;
-    aliasResolving = false;
+    invalidateChallengeLoad();
+    invalidateProfileAliasLoad();
     profileVisualFixture = getProfileVisualFixture();
     const parsed = parseRouteLocation(window.location.pathname, window.location.search);
     updateHomepageHeaderTransition(parsed);
-    routeMode = parsed.routeMode;
+    const nextRouteState = resolveRouteState(parsed);
+    routeMode = nextRouteState.routeMode;
+    view = nextRouteState.view;
+    leaderboardTab = nextRouteState.leaderboardTab;
+    progressionTab = nextRouteState.progressionTab;
+    authRouteTab = nextRouteState.authRouteTab;
+    authRouteNext = nextRouteState.authRouteNext;
+    authRouteUsername = nextRouteState.authRouteUsername;
+    selectedProfileUsername = nextRouteState.selectedProfileUsername;
+    profileRouteKind = nextRouteState.profileRouteKind;
+    aliasResolving = nextRouteState.aliasResolving;
+    legacyProfile = nextRouteState.legacyProfile;
+    challengeData = nextRouteState.challengeData;
+    selectedUserId.set(nextRouteState.selectedUserId);
     profileIndexingAllowed = false;
 
     if (typeof window !== 'undefined' && window.location.pathname === '/shop') {
       window.history.replaceState({}, '', '/profile/settings#customize-appearance');
     }
 
-    if (parsed.routeMode === 'auth') {
-      view = 'auth';
-      authRouteTab = parsed.authTab || 'login';
-      authRouteNext = parsed.authNext || '';
-      authRouteUsername = parsed.authUsername || '';
-      selectedProfileUsername = null;
-      profileRouteKind = null;
-      selectedUserId.set(null);
-      legacyProfile = false;
-      challengeData = null;
-    } else if (parsed.profileAlias) {
-      challengeData = null;
-      view = 'profile';
-      selectedProfileUsername = null;
-      profileRouteKind = 'alias';
-      aliasResolving = true;
-      selectedUserId.set(null);
-      legacyProfile = false;
-      void loadProfileAlias(parsed.profileAlias);
-    } else if (parsed.profileUsername !== null) {
-      challengeData = null;
-      view = 'profile';
-      selectedProfileUsername = parsed.profileUsername;
-      profileRouteKind = parsed.profileRouteKind;
-      selectedUserId.set(null);
-      legacyProfile = parsed.legacyProfile;
-    } else if (parsed.challengeId !== null) {
-      view = 'game';
-      selectedProfileUsername = null;
-      profileRouteKind = null;
-      selectedUserId.set(null);
-      legacyProfile = false;
-      challengeData = {
-        id: parsed.challengeId,
-        fromUsername: parsed.challengeFrom,
-        loading: true,
-        error: null
-      };
-      void loadChallengeById(challengeData.id, parsed.challengeFrom);
-    } else {
-      view = parsed.view;
-      selectedProfileUsername = null;
-      selectedUserId.set(parsed.routeMode === 'app' ? parsed.profileId : null);
-      legacyProfile = parsed.view === 'profile' && parsed.legacyProfile;
-      // Challenge values are accepted only from an authoritative /c/<id>
-      // lookup. Legacy query-string score/hex inputs are intentionally ignored.
-      challengeData = null;
+    if (nextRouteState.aliasToResolve) void loadProfileAlias(nextRouteState.aliasToResolve);
+    if (nextRouteState.challengeToLoad) {
+      void loadChallengeById(
+        nextRouteState.challengeToLoad.challengeId,
+        nextRouteState.challengeToLoad.fallbackFrom
+      );
     }
-    leaderboardTab = parsed.leaderboardTab;
-    progressionTab = parsed.progressionTab;
     routeInitialized = true;
     trackCurrentRoute();
   }
 
+  function invalidateProfileAliasLoad() {
+    aliasResolutionGeneration += 1;
+    profileAliasLifecycle?.invalidate();
+  }
+
+  function getProfileAliasLifecycle() {
+    if (!profileAliasLifecyclePromise) {
+      profileAliasLifecyclePromise = import('./lib/profileAliasLifecycle.js')
+        .then(({ createProfileAliasLifecycle }) => {
+          profileAliasLifecycle = createProfileAliasLifecycle({ supabaseClient: supabase });
+          return profileAliasLifecycle;
+        })
+        .catch(error => {
+          profileAliasLifecyclePromise = null;
+          throw error;
+        });
+    }
+    return profileAliasLifecyclePromise;
+  }
+
   async function loadProfileAlias(alias) {
-    const requestId = aliasResolutionRequestId;
-    const { profile, error } = await resolveProfileAlias(supabase, alias);
-    if (requestId !== aliasResolutionRequestId) return;
+    const generation = aliasResolutionGeneration;
+    let result = { status: 'not-found' };
+    try {
+      const lifecycle = await getProfileAliasLifecycle();
+      if (generation !== aliasResolutionGeneration) return;
+      result = await lifecycle.load(alias);
+    } catch {
+      // The existing alias route has no separate transport-error surface.
+      // Failed module or lookup loading resolves to its normal not-found state.
+    }
+    if (generation !== aliasResolutionGeneration || result.status === 'stale') return;
 
     aliasResolving = false;
-    const canonicalPath = getCanonicalProfilePath(profile?.username);
-    if (error || !canonicalPath) {
+    if (result.status !== 'resolved') {
       routeMode = 'not-found';
       view = 'home';
       selectedProfileUsername = null;
@@ -243,74 +237,73 @@
       return;
     }
 
-    window.history.replaceState({}, '', `${canonicalPath}${window.location.search}${window.location.hash}`);
+    window.history.replaceState({}, '', `${result.canonicalPath}${window.location.search}${window.location.hash}`);
     parseRoute();
   }
 
-  function syncRoute() {
-    if (typeof window === 'undefined') return;
-    if (aliasResolving) return;
-    if (!VALID_APP_ROUTES.has(routeMode) || routeMode !== 'app') return;
-    if (view === 'prototype' && window.location.pathname === '/prototype/profile') return;
+  function invalidateChallengeLoad() {
+    challengeLifecycleGeneration += 1;
+    challengeLifecycle?.invalidate();
+  }
 
-    const currentProfileUsername = $profile?.username || $authUser?.user_metadata?.username || null;
-    if (view === 'game' && challengeData) {
-      return;
+  function getChallengeLifecycle() {
+    if (!challengeLifecyclePromise) {
+      challengeLifecyclePromise = import('./lib/challengeLifecycle.js')
+        .then(({ createChallengeLifecycle }) => {
+          challengeLifecycle = createChallengeLifecycle({
+            supabaseClient: supabase,
+            setChallengeData: value => { challengeData = value; }
+          });
+          return challengeLifecycle;
+        })
+        .catch(error => {
+          challengeLifecyclePromise = null;
+          throw error;
+        });
     }
-    const routeUsername = view === 'profile'
-      ? (
-        selectedProfileUsername
-        || ($selectedUserId && $session?.user?.id && $selectedUserId === $session.user.id ? currentProfileUsername : null)
-        || (!$selectedUserId ? currentProfileUsername : null)
-      )
-      : null;
-    if (view === 'profile' && !routeUsername && !$selectedUserId) return;
-
-    // Pricing success is a valid sub-route. Preserve it during reactive
-    // synchronization, while explicit Pricing navigation still resolves to
-    // the canonical /pricing destination through setRoute().
-    const nextUrl = view === 'pricing' && window.location.pathname === '/pricing/success'
-      ? '/pricing/success'
-      : viewToCanonicalPath(view, {
-        tab: leaderboardTab,
-        progressionTab,
-        username: routeUsername,
-        userId: $selectedUserId,
-        legacyProfile
-      });
-    if (!nextUrl) return;
-    const currentUrl = `${window.location.pathname}${window.location.search}`;
-    if (nextUrl !== currentUrl) {
-      // Reactive synchronization normalizes the address after state/data
-      // changes; it must not create another Back-stack entry.
-      window.history.replaceState({}, '', nextUrl);
-    }
+    return challengeLifecyclePromise;
   }
 
   async function loadChallengeById(challengeId, fallbackFrom = null) {
-    const requestId = ++challengeLoadRequestId;
-    const result = await loadChallengeLink(supabase, challengeId);
-
-    if (requestId !== challengeLoadRequestId) return;
-
-    if (!result.success || !result.challenge) {
+    const generation = challengeLifecycleGeneration;
+    let lifecycle;
+    try {
+      lifecycle = await getChallengeLifecycle();
+    } catch {
+      if (generation !== challengeLifecycleGeneration) return;
       challengeData = {
         id: challengeId,
         fromUsername: fallbackFrom || null,
         loading: false,
-        error: result.error?.message || 'Challenge not found.'
+        error: 'Challenge could not be loaded. Refresh and try again.'
       };
       return;
     }
+    if (generation !== challengeLifecycleGeneration) return;
+    await lifecycle.load(challengeId, fallbackFrom);
+  }
 
-    challengeData = {
-      id: result.challenge.id,
-      score: result.challenge.target_score,
-      hex: result.challenge.target_hex,
-      fromUsername: result.challenge.sender_username || fallbackFrom || null,
-      loading: false,
-      error: null
-    };
+  function syncRoute() {
+    if (typeof window === 'undefined') return;
+    const nextUrl = resolveRouteSyncPath(
+      routeMode,
+      view,
+      aliasResolving,
+      window.location.pathname,
+      window.location.search,
+      selectedProfileUsername,
+      $selectedUserId,
+      $session?.user?.id,
+      $profile?.username || $authUser?.user_metadata?.username || null,
+      challengeData,
+      leaderboardTab,
+      progressionTab,
+      legacyProfile
+    );
+    if (!nextUrl) return;
+    // Reactive synchronization normalizes the address after state/data
+    // changes; it must not create another Back-stack entry.
+    window.history.replaceState({}, '', nextUrl);
   }
 
   async function loadFounderAnnouncementState() {
@@ -352,7 +345,7 @@
       legacyProfile: Boolean(options.legacyProfile)
     });
     if (nextPath) {
-      navigateToPath(nextPath, { navigation: { view: nextView, ...options } });
+      routeNavigation.navigateToPath(nextPath, { view: nextView, ...options });
     }
   }
 
@@ -363,84 +356,35 @@
     mainContent.focus({ preventScroll: true });
   }
 
-  function navigateToPath(pathname, { navigation = null } = {}) {
-    if (typeof window === 'undefined') return;
-    const normalized = pathname || '/';
-    const nextUrl = new URL(normalized, window.location.origin);
-    const navigationGuard = new CustomEvent('chromadie:navigation-request', {
-      detail: {
-        nextPath: `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
-        ...(navigation ? { navigation } : {})
-      },
-      cancelable: true
-    });
-    if (!window.dispatchEvent(navigationGuard)) return;
-    if (routeMode === 'app' && view === 'game' && challengeData && !nextUrl.pathname.startsWith('/c/')) {
-      clearChallengeState();
-    }
-    window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
-    parseRoute();
-    void focusRouteContent();
-  }
-
-  function handleInternalLinkClick(event) {
-    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-    const target = event.target;
-    const link = target instanceof Element ? target.closest('a[href]') : null;
-    if (!(link instanceof HTMLAnchorElement) || link.target && link.target !== '_self' || link.hasAttribute('download')) return;
-
-    const nextUrl = new URL(link.href, window.location.href);
-    if (nextUrl.origin !== window.location.origin || !['http:', 'https:'].includes(nextUrl.protocol)) return;
-
-    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-    if (currentUrl === nextPath) return;
-
-    const nextRoute = parseRouteLocation(nextUrl.pathname, nextUrl.search);
-    const isSpaRoute = nextRoute.routeMode === 'app'
-      || nextRoute.routeMode === 'auth'
-      || ['privacy', 'terms', 'how-to-play'].includes(nextRoute.routeMode);
-    if (!isSpaRoute) return;
-
-    event.preventDefault();
-    navigateToPath(nextPath);
-  }
-
   function clearChallengeState() {
     if (typeof window === 'undefined') return;
 
-    challengeLoadRequestId += 1;
+    invalidateChallengeLoad();
     challengeData = null;
-    const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.delete('challenge');
-    nextUrl.searchParams.delete('hex');
-    nextUrl.searchParams.delete('from');
-
-    if (nextUrl.pathname.startsWith('/c/')) {
-      window.history.replaceState({}, '', '/');
-      return;
-    }
-
-    window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+    window.history.replaceState({}, '', getChallengeClearPath(window.location.href));
   }
 
-  function handlePopState() {
-    parseRoute();
-    void focusRouteContent();
+  function shouldClearChallengeBeforeNavigation(pathname) {
+    return routeMode === 'app' && view === 'game' && Boolean(challengeData) && !pathname.startsWith('/c/');
   }
+
+  const routeNavigation = createRouteNavigationController(
+    typeof window !== 'undefined' ? window : null,
+    shouldClearChallengeBeforeNavigation,
+    parseRoute,
+    focusRouteContent,
+    clearChallengeState
+  );
 
   onMount(() => {
     import('./styles/site-atmosphere.css');
     void loadFounderAnnouncementState();
     parseRoute();
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('click', handleInternalLinkClick);
+    routeNavigation.start();
   });
 
   onDestroy(() => {
-    window.removeEventListener('popstate', handlePopState);
-    window.removeEventListener('click', handleInternalLinkClick);
+    routeNavigation.stop();
   });
 
   async function handleLogout() {
@@ -531,193 +475,14 @@
     if (requestedMode === 'signup' && username) params.set('username', username);
     if (next) params.set('next', next);
     const query = params.toString();
-    navigateToPath(`/${requestedMode === 'signup' ? 'signup' : 'login'}${query ? `?${query}` : ''}`);
-  }
-
-  function getRouteTarget({
-    routeMode: currentRouteMode,
-    view: currentView,
-    tab,
-    progressionTab: currentProgressionTab,
-    isAuthenticated: authenticated,
-    sessionState,
-    authInitialized: initialized,
-    accountState: currentAccountState,
-    profileError: accountError,
-    selectedUsername,
-    selectedId,
-    currentLegacyProfile,
-    visualFixture,
-    guestActive,
-    challenge,
-    authTab,
-    authNext,
-    authUsername,
-    aliasResolving: resolvingAlias,
-    username: currentUsername,
-    logoutInProgress: currentLogoutInProgress
-  }) {
-    if (currentRouteMode === 'not-found') {
-      return { componentKey: 'not-found', staticComponent: NotFound, componentProps: {}, loadingLabel: 'Opening page' };
-    }
-
-    if (currentRouteMode === 'auth') {
-      return {
-        loaderKey: 'authPage',
-        componentKey: `auth-page:${authTab}:${authNext}:${authUsername}`,
-        componentProps: { initialTab: authTab, next: authNext, initialUsername: authUsername },
-        loadingLabel: authTab === 'signup' ? 'Opening sign up' : 'Opening sign in'
-      };
-    }
-
-    if (currentRouteMode === 'privacy' || currentRouteMode === 'terms' || currentRouteMode === 'how-to-play') {
-      return {
-        loaderKey: currentRouteMode === 'how-to-play' ? 'howToPlay' : currentRouteMode,
-        componentKey: currentRouteMode,
-        componentProps: {},
-        loadingLabel: 'Opening information'
-      };
-    }
-
-    if (resolvingAlias) {
-      return {
-        componentKey: 'profile-alias-loading',
-        staticComponent: RouteLoading,
-        componentProps: { label: 'Opening profile alias' },
-        loadingLabel: 'Opening profile alias'
-      };
-    }
-
-    if (currentView === 'home') {
-      return {
-        loaderKey: 'home',
-        componentKey: 'home',
-        componentProps: {
-          isAuthenticated: authenticated,
-          accountState: currentAccountState,
-          username: currentUsername,
-          logoutInProgress: currentLogoutInProgress
-        },
-        loadingLabel: 'Opening ChromaDie'
-      };
-    }
-
-    if (currentView === 'pricing') {
-      return {
-        loaderKey: 'pricing',
-        componentKey: 'pricing',
-        componentProps: {},
-        loadingLabel: 'Opening pricing'
-      };
-    }
-
-    if (currentView === 'game') {
-      return {
-        loaderKey: 'game',
-        componentKey: `game:${challenge?.id || 'daily'}`,
-        componentProps: {},
-        loadingLabel: 'Opening today’s roll'
-      };
-    }
-
-    if (currentView === 'prototype') {
-      return {
-        loaderKey: 'prototype',
-        componentKey: 'prototype',
-        componentProps: {},
-        loadingLabel: 'Opening prototype'
-      };
-    }
-
-    if (currentView === 'leaderboard') {
-      return {
-        loaderKey: 'leaderboard',
-        componentKey: `leaderboard:${tab}`,
-        componentProps: { initialTab: tab },
-        loadingLabel: 'Opening discovery'
-      };
-    }
-
-    if (currentView === 'progression') {
-      return {
-        loaderKey: 'progression',
-        componentKey: `progression:${currentProgressionTab}`,
-        componentProps: { initialTab: currentProgressionTab },
-        loadingLabel: 'Opening progress'
-      };
-    }
-
-    if (currentView === 'profile-settings') {
-      if (authenticated) {
-        return {
-          loaderKey: 'profileSettings',
-          componentKey: 'profile-settings',
-          componentProps: { logoutInProgress },
-          loadingLabel: 'Opening profile settings'
-        };
-      }
-
-      if (currentAccountState === ACCOUNT_STATES.PROFILE_ERROR) {
-        return {
-          componentKey: 'profile-settings-error',
-          staticComponent: AccountUnavailable,
-          componentProps: {},
-          loadingLabel: 'Loading account'
-        };
-      }
-
-      return {
-        componentKey: 'profile-settings-loading',
-        staticComponent: RouteLoading,
-        componentProps: { label: 'Loading your account' },
-        loadingLabel: 'Loading your account'
-      };
-    }
-
-    if (initialized && sessionState && accountError && currentView === 'profile') {
-      return {
-        componentKey: `account-error:${currentView}`,
-        staticComponent: AccountUnavailable,
-        componentProps: {},
-        loadingLabel: 'Loading account'
-      };
-    }
-
-    if (currentView === 'profile' && (authenticated || sessionState || selectedUsername || selectedId)) {
-      const loaderKey = currentLegacyProfile ? 'profileLegacy' : 'profileShell';
-      const profileKey = selectedUsername || selectedId || 'self';
-      return {
-        loaderKey,
-        componentKey: `profile:${currentLegacyProfile ? 'legacy' : 'shell'}:${profileKey}:${visualFixture}`,
-        componentProps: currentLegacyProfile
-          ? { profileUsername: selectedUsername, userId: selectedId }
-          : { profileUsername: selectedUsername, userId: selectedId, visualFixture },
-        loadingLabel: 'Opening profile'
-      };
-    }
-
-    if (currentView === 'profile' && currentAccountState === ACCOUNT_STATES.SIGNED_OUT) {
-      return {
-        loaderKey: 'guestProfile',
-        componentKey: `guest-profile:${guestActive}`,
-        componentProps: { guestActive },
-        loadingLabel: 'Opening a profile preview'
-      };
-    }
-
-    return {
-      componentKey: `route-loading:${currentView}`,
-      staticComponent: RouteLoading,
-      componentProps: { label: initialized ? 'Loading page' : 'Loading your account' },
-      loadingLabel: 'Loading page'
-    };
+    routeNavigation.navigateToPath(`/${requestedMode === 'signup' ? 'signup' : 'login'}${query ? `?${query}` : ''}`);
   }
 
   $: if (challengeData && routeMode === 'app' && view !== 'game') {
     clearChallengeState();
   }
 
-  $: routeTarget = getRouteTarget({
+  $: routeTarget = resolveRouteTarget({
     routeMode,
     view,
     tab: leaderboardTab,
@@ -729,7 +494,7 @@
     profileError: $profileError,
     selectedUsername: selectedProfileUsername,
     selectedId: $selectedUserId,
-    currentLegacyProfile: legacyProfile,
+    legacyProfile,
     visualFixture: profileVisualFixture,
     guestActive: $guestProgressActive,
     challenge: challengeData,
@@ -739,7 +504,7 @@
     aliasResolving,
     username: headerUsername,
     logoutInProgress
-  });
+  }, NotFound, AccountUnavailable, RouteLoading);
 
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
@@ -774,7 +539,7 @@
     legacyProfile,
     profileRouteKind,
     profileIndexingAllowed,
-    pricingSuccess: typeof window !== 'undefined' && window.location.pathname === '/pricing/success'
+    pricingSuccess: typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '') === '/pricing/success'
   });
   $: pageTitle = routeMetadata.title;
   $: pageDescription = routeMetadata.description;
@@ -894,67 +659,7 @@
   </div>
 
   {#if challengeData && view === 'game'}
-    <section class="challenge-banner" aria-label="Challenge prompt">
-      <div class="challenge-copy">
-        <p class="challenge-kicker">Challenge</p>
-        <h2>
-          {#if challengeData.loading}
-            Opening challenge
-          {:else if challengeData.error}
-            Challenge unavailable
-          {:else}
-            Beat this roll
-          {/if}
-        </h2>
-        {#if challengeData.fromUsername && !challengeData.loading}
-          <p class="challenge-source">From {challengeData.fromUsername}</p>
-        {/if}
-        <p class="challenge-text">
-          {#if challengeData.loading}
-            Checking the shared link.
-          {:else if challengeData.error}
-            This link may have expired or been removed.
-          {:else if challengeData.fromUsername}
-            Beat the target score with your next daily roll.
-          {:else}
-            Beat the target score with your next daily roll.
-          {/if}
-        </p>
-      </div>
-      <div class="challenge-meta">
-        {#if challengeData.loading}
-          <div class="challenge-stat challenge-stat-loading">
-            <div>
-              <p class="challenge-score">Loading</p>
-              <p class="challenge-subtext">Challenge link</p>
-            </div>
-          </div>
-        {:else if challengeData.error}
-          <div class="challenge-stat challenge-stat-error">
-            <div>
-              <p class="challenge-score">Unavailable</p>
-              <p class="challenge-subtext">Try a newer link</p>
-            </div>
-          </div>
-        {:else}
-          <div class="challenge-stat" aria-label={`Target score ${challengeData.score.toLocaleString()} points`}>
-            <span class="challenge-color" style="background-color: {challengeData.hex};"></span>
-            <div>
-              <p class="challenge-score">{challengeData.score.toLocaleString()} pts</p>
-              <p class="challenge-subtext">Target score</p>
-            </div>
-          </div>
-        {/if}
-        <button
-          type="button"
-          class="challenge-close"
-          aria-label="Dismiss challenge"
-          on:click={clearChallengeState}
-        >
-          Close
-        </button>
-      </div>
-    </section>
+    <ChallengeBanner challengeData={challengeData} on:dismiss={clearChallengeState} />
   {/if}
 
   {#if $authInitialized && $session && $profileError && !profileModeVisible && !profileSettingsModeVisible}
@@ -1139,20 +844,6 @@
     color: var(--text-muted);
   }
 
-  .challenge-banner {
-    width: min(1160px, calc(100% - 48px));
-    margin: 0 auto 12px;
-    padding: 1rem 1.1rem;
-    background: rgba(10, 10, 12, .58);
-    border: 1px solid rgba(255, 255, 255, .1);
-    border-radius: 18px;
-    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-
   .founder-banner {
     width: min(1160px, calc(100% - 48px));
     margin: 0 auto 12px;
@@ -1226,113 +917,12 @@
     color: #fff;
   }
 
-  .challenge-copy {
-    display: grid;
-    gap: 0.35rem;
-    min-width: 0;
-  }
-  .challenge-kicker {
-    margin: 0;
-    color: var(--white, #ffffff);
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    font-size: 0.68rem;
-    font-weight: 700;
-  }
-  .challenge-banner h2 {
-    margin: 0;
-    font-family: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
-    font-size: 1.05rem;
-    color: #fff;
-  }
-  .challenge-source {
-    margin: 0;
-    color: #fff;
-    font-size: 0.84rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    opacity: 0.95;
-  }
-  .challenge-text {
-    margin: 0;
-    color: var(--text-muted);
-    line-height: 1.5;
-    font-size: 0.92rem;
-  }
-  .challenge-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-  .challenge-stat {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.7rem 0.85rem;
-    border-radius: 9px;
-    background: rgba(0,0,0,0.18);
-    border: 1px solid rgba(255,255,255,0.07);
-  }
-  .challenge-stat-loading,
-  .challenge-stat-error {
-    min-width: 220px;
-    justify-content: flex-start;
-  }
-  .challenge-color {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.22);
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.12) inset;
-    flex-shrink: 0;
-  }
-  .challenge-score {
-    margin: 0;
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    font-weight: 700;
-    color: #fff;
-    font-size: 1rem;
-    line-height: 1.1;
-  }
-  .challenge-subtext {
-    margin: 0.15rem 0 0;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-  }
-  .challenge-close {
-    min-height: 42px;
-    border: 1px solid rgba(255,255,255,.2);
-    border-radius: 9px;
-    background: transparent;
-    color: #f8f8f8;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 0 18px;
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
-  }
-  .challenge-close:hover {
-    background: color-mix(in srgb, var(--white, #ffffff) 9%, transparent);
-    border-color: var(--border, rgba(255, 255, 255, .09));
-    transform: translateY(-1px);
-  }
-
   @media (max-width: 600px) {
     .account-error-banner {
       width: calc(100% - 2rem);
       margin-inline: auto;
       justify-content: flex-start;
       text-align: left;
-    }
-    .challenge-banner {
-      flex-direction: column;
-      align-items: stretch;
-      width: calc(100% - 1rem);
-      padding: 0.9rem;
-      margin: 0 auto 12px;
-      gap: 0.85rem;
     }
     .founder-banner {
       flex-direction: column;
@@ -1341,18 +931,6 @@
       padding: 0.9rem;
       margin: 0 auto 12px;
       gap: 0.55rem;
-    }
-    .challenge-meta {
-      justify-content: stretch;
-    }
-    .challenge-stat,
-    .challenge-stat-loading,
-    .challenge-stat-error {
-      width: 100%;
-      justify-content: flex-start;
-    }
-    .challenge-close {
-      width: 100%;
     }
   }
 

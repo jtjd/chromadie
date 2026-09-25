@@ -122,7 +122,8 @@ Do not allow profile editing state to mutate canonical data until an explicit sa
 
 Keep roll execution server-authoritative.
 
-`Game.svelte` on `/roll` controls the interactive presentation only:
+`Game.svelte`, mounted inside the homepage Roll composition, controls the
+interactive presentation only:
 
 1. Request eligibility/status.
 2. Begin visual sequence.
@@ -138,16 +139,16 @@ controls.
 
 Never determine a winning result, score, reward, rarity, or eligibility in animation code.
 
-## Compatibility
+## Routes
 
 Maintain current public routes during migration.
 
 Possible route map:
 
-- `/` → public landing/onboarding; signed-in visitors receive an owner-profile
-  CTA without changing the root route.
-- `/roll` → canonical interactive Roll route.
-- `/?view=game` → compatibility alias for old links.
+- `/` → canonical daily-roll homepage, including Today’s Top Roller and
+  contextual post-roll actions.
+- `/roll` → not an application route; prelaunch no compatibility alias is kept.
+- `/?view=game` → resolves to the homepage, not a second Roll route.
 - `/u/:username` → public profile.
 - `/leaderboard` → public roll leaderboard with Today and This month views,
   a featured top-three podium, and framed lower-ranked rows.

@@ -1,4 +1,5 @@
 export const PRODUCT_ANALYTICS_CONSENT_KEY = 'chromadie-product-analytics-consent';
+export const PROFILE_INSIGHT_RECENCY_KEY = 'chromadie-profile-insight-recency-v1';
 
 export const PRODUCT_ANALYTICS_EVENTS = Object.freeze([
   'route_view',
@@ -165,6 +166,13 @@ export function setProductAnalyticsConsent(value) {
     storage?.setItem(PRODUCT_ANALYTICS_CONSENT_KEY, value);
   } catch {
     // Ignore storage failures; the current preference remains unknown.
+  }
+  if (value === 'denied') {
+    try {
+      storage?.removeItem(PROFILE_INSIGHT_RECENCY_KEY);
+    } catch {
+      // Analytics preference changes must not interrupt the UI.
+    }
   }
   resetProgressionAnalyticsDedupe();
   return getProductAnalyticsConsent();

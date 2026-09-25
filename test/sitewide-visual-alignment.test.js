@@ -29,7 +29,7 @@ test('signed-out chrome keeps the reference destinations and gates protected rou
   assert.ok(header.includes('class="site-mode-header__create-profile"'));
   assert.ok(header.includes('>Create profile</button>'));
   assert.ok(footer.includes('{#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}'));
-  assert.match(homepage, /<SiteFooter \{isAuthenticated\} variant="home" \/>/);
+  assert.match(homepage, /<SiteFooter \{isAuthenticated\} variant="home-compact" \/>/);
 });
 
 test('signed-out Profile Studio entry resolves through the current auth route', () => {

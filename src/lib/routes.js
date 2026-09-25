@@ -7,14 +7,14 @@ import {
   normalizeUsernameSegment
 } from './routeContract.js';
 
-export const VALID_VIEWS = Object.freeze(['home', 'game', 'leaderboard', 'profile', 'profile-settings', 'progression', 'prototype', 'pricing'])
+export const VALID_VIEWS = Object.freeze(['home', 'leaderboard', 'profile', 'profile-settings', 'progression', 'prototype', 'pricing'])
 export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'monthly', 'rivals'])
 export const VALID_PROGRESSION_TABS = Object.freeze(['journey', 'achievements', 'collection', 'history'])
 
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
 const VALID_LEADERBOARD_TAB_SET = new Set(VALID_LEADERBOARD_TABS)
 const VALID_PROGRESSION_TAB_SET = new Set(VALID_PROGRESSION_TABS)
-const CLEAN_APP_PATHS = new Set(['/', '/roll', '/shop', '/leaderboard', '/profile', '/profile/settings', '/progression', '/pricing', '/pricing/success'])
+const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile', '/profile/settings', '/progression', '/pricing', '/pricing/success'])
 
 export function isPrototypeRouteEnabled() {
   return import.meta.env?.DEV === true;
@@ -31,8 +31,6 @@ export function viewToCanonicalPath(view, {
   switch (view) {
     case 'home':
       return '/';
-    case 'game':
-      return '/roll';
     case 'leaderboard': {
       const params = new URLSearchParams();
       if (VALID_LEADERBOARD_TAB_SET.has(tab) && tab !== 'today') params.set('tab', tab);
@@ -70,9 +68,92 @@ export function viewToCanonicalPath(view, {
   }
 }
 
+/**
+ * @param {string} href
+ * @returns {string}
+ */
+export function getChallengeClearPath(href) {
+  const nextUrl = new URL(href);
+  nextUrl.searchParams.delete('challenge');
+  nextUrl.searchParams.delete('hex');
+  nextUrl.searchParams.delete('from');
+  if (nextUrl.searchParams.get('view') === 'game') nextUrl.searchParams.delete('view');
+
+  if (nextUrl.pathname.startsWith('/c/')) return '/';
+  return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+}
+
+/**
+ * Resolve the URL used by App's reactive route synchronization.
+ *
+ * Browser access and history writes stay in App.svelte so this decision can
+ * be tested without a window. A null result means synchronization should not
+ * write a URL for the current state.
+ * @param {string} routeMode
+ * @param {string} view
+ * @param {boolean} aliasResolving
+ * @param {string} pathname
+ * @param {string} search
+ * @param {string | null | undefined} selectedProfileUsername
+ * @param {string | null | undefined} selectedUserId
+ * @param {string | null | undefined} sessionUserId
+ * @param {string | null | undefined} accountUsername
+ * @param {object | null | undefined} challengeData
+ * @param {string | undefined} tab
+ * @param {string | undefined} progressionTab
+ * @param {boolean | undefined} legacyProfile
+ * @returns {string | null}
+ */
+export function resolveRouteSyncPath(
+  routeMode,
+  view,
+  aliasResolving,
+  pathname,
+  search,
+  selectedProfileUsername,
+  selectedUserId,
+  sessionUserId,
+  accountUsername,
+  challengeData,
+  tab,
+  progressionTab,
+  legacyProfile
+) {
+  const normalizedPathname = pathname.replace(/\/+$/, '');
+  if (
+    aliasResolving
+    || routeMode !== 'app'
+    || view === 'prototype' && pathname === '/prototype/profile'
+    || view === 'game' && challengeData
+  ) return null;
+
+  const routeUsername = selectedProfileUsername || (selectedUserId === sessionUserId || !selectedUserId ? accountUsername : null);
+  if (view === 'profile' && !routeUsername && !selectedUserId) return null;
+
+  // Pricing owns these return URLs and their search params. Leave them intact
+  // so checkout restoration and cancellation feedback see their input.
+  if (
+    view === 'pricing'
+    && (
+      normalizedPathname === '/pricing/success'
+      || normalizedPathname === '/pricing' && new URLSearchParams(search).get('checkout') === 'cancelled'
+    )
+  ) return null;
+
+  const nextUrl = viewToCanonicalPath(view, {
+    tab,
+    progressionTab,
+    username: routeUsername,
+    userId: selectedUserId,
+    legacyProfile
+  });
+
+  if (!nextUrl || nextUrl === `${pathname}${search}`) return null;
+  return nextUrl;
+}
+
 function getCleanPathView(pathname, prototypeEnabled) {
   if (pathname === '/') return 'home'
-  if (pathname === '/roll') return 'game'
   // The former Shop URL is a one-way route alias into the profile studio.
   // There is no Shop view or presentation behind it anymore.
   if (pathname === '/shop') return 'profile-settings'

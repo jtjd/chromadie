@@ -31,94 +31,12 @@
 .homepage-reference a { color: inherit; }
 .homepage-reference button,
 .homepage-reference input { font: inherit; }
-.app-main--site .homepage-reference :is(.homepage-section-heading, .homepage-step h3) {
-  /* The site shell has a higher-specificity !important heading rule. Keep the
-     homepage display face authoritative without changing other
-     application surfaces. */
-  font-family: var(--homepage-display) !important;
-}
-
-.homepage-shell { width: min(1480px, calc(100% - 64px)); margin-inline: auto; }
-.homepage-section__inner,
-.homepage-section { width: min(1380px, calc(100% - 64px)); margin-inline: auto; }
 .homepage-content {
   position: relative;
   z-index: 3;
   background: var(--homepage-bg);
 }
 
-.homepage-button {
-  display: inline-flex;
-  min-height: 42px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 9px;
-  background: var(--homepage-text);
-  color: #08080a;
-  font: 600 0.88rem / 1 var(--homepage-display);
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 0.18s ease, background 0.18s ease;
-}
-
-.homepage-button:hover { transform: translateY(-1px); background: var(--homepage-accent); }
-.homepage-button:focus-visible { outline: 2px solid var(--homepage-accent); outline-offset: 4px; }
-
-.homepage-section-kicker {
-  margin-bottom: 14px;
-  color: var(--homepage-secondary);
-  font: 500 0.78rem / 1.45 'Inter', sans-serif;
-  letter-spacing: 0.01em;
-  text-shadow: var(--homepage-secondary-shadow);
-}
-
-.homepage-section-heading {
-  max-width: 780px;
-  margin: 0;
-  color: var(--homepage-text);
-  font: 600 clamp(2.25rem, 3.5vw, 3.25rem) / 1.08 var(--homepage-display);
-  letter-spacing: -0.04em;
-}
-
-.homepage-section-heading span { color: var(--homepage-accent); }
-
-.homepage-section-sub {
-  max-width: 590px;
-  margin: 20px 0 0;
-  color: var(--homepage-secondary-muted);
-  font: 500 1.05rem / 1.65 'Inter', sans-serif;
-  letter-spacing: 0.01em;
-}
-
-.homepage-final {
-  padding-top: 118px;
-  padding-bottom: 52px;
-  border-top: 1px solid var(--homepage-border);
-  text-align: center;
-}
-
-.homepage-final h2 { margin: 0; color: var(--homepage-text); font: 600 clamp(3.6rem, 6vw, 6rem) / 0.9 var(--homepage-display); letter-spacing: -0.05em; }
-.homepage-final p { max-width: 500px; margin: 18px auto 34px; color: var(--homepage-secondary-muted); font: 500 1rem / 1.6 'Inter', sans-serif; letter-spacing: 0.01em; }
-.homepage-final .homepage-claim-slot { margin-inline: auto; }
-.homepage-final .homepage-button { min-height: 58px; padding-inline: 30px; font-size: 1rem; }
-
-@media (max-width: 1100px) {
-  .homepage-shell { width: min(calc(100% - 40px), 980px); }
-  .homepage-section__inner,
-  .homepage-section { width: min(calc(100% - 40px), 1080px); }
-}
-
-@media (max-width: 780px) {
-  .homepage-shell { width: calc(100% - 30px); }
-  .homepage-section,
-  .homepage-section__inner { width: calc(100% - 30px); }
-  .homepage-section-heading { font-size: clamp(1.9rem, 7vw, 2.5rem); }
-  .homepage-final { padding-top: 88px; padding-bottom: 48px; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .homepage-reference { scroll-behavior: auto; }
-  .homepage-button { transition: none; }
 }

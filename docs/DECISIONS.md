@@ -1,5 +1,236 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-24 — Bind asynchronous profile mutations to their starting account
+
+Capture the authenticated access token and account generation when a profile
+mutation begins. Abort later steps and ignore results when the session changes,
+so an action started by one account cannot update another account's interface
+or continue a multi-step write under a new session. Clear account-owned editor
+state on logout and account changes. Keep server authorization and existing RPC
+boundaries authoritative.
+
+## 2026-09-24 — Bound uploaded media by decoded work and container metadata
+
+Inspect GIF/WebP frame structure before decode and before promotion, and derive
+video duration and dimensions from uploaded MP4/WebM bytes on the server. Cap
+animated images at 1024×1024, 60 frames, and 12 million decoded pixels total;
+cap background video at 1280×720 and 30 seconds. Client checks provide early
+feedback, while server-side validation decides promotion. Existing ready
+objects are not retroactively validated by this upload path.
+
+## 2026-09-24 — Limit progression analytics per account and UTC day
+
+Keep shared progression analytics aggregates, but accept no more than 500
+events per account per UTC day. Update the private counter atomically before
+the shared aggregate so rejected events cannot change it. Keep the counter
+inaccessible to client roles and clean up rows older than 90 days. See
+[`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
+
+## 2026-09-24 — Require consent before loading public profile providers
+
+Defer third-party embeds on public profiles until the visitor activates them.
+This prevents a profile view from automatically contacting Spotify or other
+external providers while preserving the existing profile widgets.
+
+## 2026-09-24 — Serialize the profile-insight daily dimension cap
+
+Distinct visitor digests can race while recording a new profile-insight
+dimension, so retain the existing visitor/day dedupe lock and add a shared
+profile/day transaction lock around dimension-cap counting and insertion. Keep
+the 500-dimension daily cap, service-role-only RPC execution, existing
+arguments, and additive migration behavior. Browser analytics consent denial
+also clears its profile-insight recency key. See
+[`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
+
+## 2026-09-24 — Keep account-state auth responses indistinguishable
+
+Use account-neutral client messages for signup and password reset, and the
+same sign-in error for missing, invalid, or unconfirmed account states. Keep
+other validation and CAPTCHA feedback actionable. Production email-confirmation
+configuration remains a deployment check; client wording alone cannot change
+provider behavior. See
+[`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
+
+## 2026-09-23 — Author distinct scenes for the collection name motions
+
+Rebuild the twenty collection motion drawings as separate nature, object, and
+energy scene modules. Each scene owns its thematic palette, recognizable shape,
+and anticipation/action/settle timing. The shared renderer fits the scene to the
+name canvas and supplies a quiet interval at the loop boundary. Paint helpers
+multiply lifecycle opacity so individual details cannot bypass the fade.
+
+Keep the selected name material on a stable text surface. Broad washes and
+framing ornaments sit behind it; small passing subjects may cross in front to
+preserve recognizable silhouettes.
+Remove the repeated generic highlight passes that obscured the material and
+made different effects look alike. Preserve saved keys, ownership, durations,
+shared scheduling, and static/reduced-motion handling. This is a renderer-only
+change; it needs no data migration.
+
+## 2026-09-23 — Make How to Play follow the roll-first journey
+
+Rebuild `/how-to-play` around the daily roll, its evolving profile, and public
+profile discovery. Use the shared result and score-breakdown components for a
+static example checked against the current scorer, rather than a screenshot that
+could drift from the interface. Explain guest limits, score versus EP, shard
+rerolls, and the homepage’s empty top-roll state using live product rules. Keep
+the visible pre-roll Leaderboard link and conditional Today’s top roll route to
+a real profile. Share metadata and the no-JavaScript fallback. No backend,
+schema, auth, or gameplay changes.
+
+## 2026-09-23 — Make the homepage the only daily-roll route
+
+The homepage now owns the complete unchallenged daily Roll, including the
+existing Today’s Top Roller. Remove the standalone `/roll` page and its metadata
+function rather than retaining a redirect or compatibility alias; prelaunch
+there is no requirement to support old links. Point application navigation,
+progression CTAs, and signup returns at `/`. Ignore `/?view=game` as an obsolete
+view and resolve it to the homepage. Preserve `/c/:id` challenge links and their
+shared game presentation. The roll transaction remains server-authoritative.
+This supersedes earlier decisions that described `/roll` as the canonical
+interactive Roll surface.
+
+## 2026-09-23 — Keep the homepage focused on Roll and the existing top roller
+
+Make the homepage a focused entry to the daily game. Keep the playable Roll
+hero and Today’s Top Roller, which already provides an authentic public-profile
+preview and discovery path before a visitor rolls. Remove the extra profile,
+collection, community, pricing, FAQ, and signup sections from the homepage.
+After a result, offer contextual routes to the player's profile, customization,
+or Leaderboard; guests can browse the Leaderboard without creating an account.
+Keep standalone routes and the shared header/footer navigation. No schema,
+RPC, scoring, rewards, profile-data, or auth behavior changes are needed.
+See [`HOMEPAGE_ROLL_AND_DISCOVERY.md`](milestones/HOMEPAGE_ROLL_AND_DISCOVERY.md).
+
+## 2026-09-23 — Preserve all authoritative roll rarities in best-roll candidates
+
+The v6 SQL scorer can return `Legendary`, so `user_roll_best_candidates` must
+accept that canonical value. Widen the existing check constraint through a new
+migration and lock the contract with a deterministic database-security test.
+Do not alter scoring thresholds, roll RPC behavior, rewards, or RLS.
+
+## 2026-09-23 — Ignore stale Roll reveal sequences before touching display state
+
+Check the current-request predicate before clearing or updating any reveal
+presentation fields. An invalidated sequence must not affect a newer result's
+state, even when it is stale before the first scheduled reveal step.
+
+## 2026-09-22 — Keep Profile Studio chunk loading in its own controller
+
+Move lazy section and preview requests, in-flight deduplication, component
+caches, recoverable errors, and aggregate section loading state into
+`profile-studio/lazyComponents.js`. Keep navigation and Svelte rendering in
+`ProfileSettings.svelte`, supplied from controller snapshots. Preserve each
+Customize tab's section group and lazy import boundary. Dispose pending state
+callbacks when the Studio unmounts; no data or route changes.
+
+## 2026-09-22 — Keep Turnstile widget lifecycle outside Auth.svelte
+
+Move polling, widget creation, token callbacks, reset/remove, retry, and
+teardown into the injected `auth/turnstileLifecycle.js` controller. Keep local
+development detection, account flow state, remote CAPTCHA enforcement, and
+Supabase auth submissions in `Auth.svelte`. Preserve the existing 200 ms
+polling cadence, 50-attempt timeout, retry reload fallback, and CAPTCHA script.
+No schema or auth-provider behavior changes.
+
+## 2026-09-22 — Keep reveal sequencing outside Game.svelte
+
+Move the staged color/condition/score reveal into `rollRevealSequence.js`,
+where it can be tested without mounting Svelte. Pass explicit callbacks for
+presentation state, list scrolling, event dispatch, score animation, reduced
+motion, skip, and request validity. Keep `Game.svelte` as the owner of those UI
+and browser effects; the sequence only presents the canonical server result.
+
+## 2026-09-22 — Keep initial Roll hydration outside the presentation component
+
+Let `Game.svelte` own loading states, request identity checks, reveal timing,
+and result presentation. Move browser persistence and authenticated/guest
+snapshot acquisition into `rollStorage.js` and `rollHydration.js`, returning
+data for the component to apply. Keep authenticated results server-owned, and
+retain guest-day, score, color, and rarity validation before rendering.
+
+Account cleanup keeps its matching persisted-key filters in the already loaded
+store module; importing Roll storage there would add bytes to every account
+route. Tests assert those cleanup keys remain compatible with the Roll storage
+definitions. No schema or backend change is needed.
+
+## 2026-09-22 — Keep route target selection outside the app shell
+
+Keep browser navigation, route side effects, and app-level state integration in
+`App.svelte`, but resolve the current state into a `RouteOutlet` target in
+`src/lib/routeTarget.js`. Inject the three static Svelte components as function
+arguments so the selector remains testable without loading Svelte files in
+Node. Preserve URL parsing, canonical path generation, account boundaries,
+lazy loader keys, component keys, and route behavior.
+
+## 2026-09-22 — Name motion collection follow-up
+
+After visual review found the new gestures too faint and the letter movement
+unmotivated, keep name geometry still across this collection. Motion comes from
+larger, effect-specific forms and a matching light or material pass. Do not
+apply shared per-glyph waves, bounces, rotations, or scale changes. Keep the
+saved motion IDs, durations, material rendering, Hero Roll, shared clock, and
+reduced-motion compositor unchanged. Fuzzy, Raster Signal, Star Companions,
+Heart Pop, and Scramble remain on their existing renderers.
+
+Do not add a new animation clock, external artwork, catalog rows, migrations,
+or profile data. The browser collection smoke compares each effect with its
+still frame and checks that the name silhouette stays in place.
+
+## 2026-09-22 — Homepage composition and restraint
+
+The user authorized a substantial homepage redesign around the existing Hero
+Roll. Use a neutral supporting canvas, larger introductory typography, a shared
+1160px alignment, natural section heights, and thin rules to establish hierarchy.
+Remove lower-page artwork, colored lighting, decorative orbits, floating plan
+badges, and repeated card chrome. Keep color in the actual profile, discovery,
+name-material, and public-roll examples.
+
+The reading order is Hero Roll, profile showcase, collection and name styles,
+public community, Free/Plus comparison, FAQ, guest signup, and footer. Give the
+profile showcase a separate introduction and layout selector; keep automatic
+preview playback opt-in. On small screens, scale the contained profile specimen
+to show its composition while leaving the shared profile renderer intact.
+
+Supporting entrances run once for 420ms with 8px movement. Keyboard focus reveals
+content, and reduced motion removes transitions. Hero Roll components, props,
+events, scoring, account authority, game styles, and hero animation remain intact.
+No migrations, dependencies, profile data, routes, or entitlement changes.
+
+## 2026-09-20 — Homepage vertical pacing
+
+Give every supporting homepage section a viewport-aware minimum height of
+90svh, capped at 960px, with 96–160px vertical padding and centered content.
+Preserve the profile and FAQ grids. Content can grow beyond the minimum; no
+fixed heights or scroll snapping. On mobile, use natural content heights with
+72–96px padding to retain breathing room without excessive blank screens.
+The playable hero and footer keep their existing compositions. No data,
+migration, or gameplay compatibility changes.
+
+The user's follow-up expands this beyond spacing: rebalance the profile stage,
+give Free and Plus a complete side-by-side comparison using every canonical
+feature, frame community identities with their actual accent colors, make signup
+a larger closing composition, and give the FAQ a full heading and larger native
+disclosure controls. Keep existing profile renderers, pricing/entitlements,
+public feed, and signup/account-state behavior intact.
+
+## 2026-09-20 — Homepage collection and cosmetic composition
+
+Following user review, replace the static gallery with an interactive discovery
+showcase and an open name-material playground. Lead with the reason to collect:
+rare finds give visitors something to explore on a profile. Keep earned
+discoveries distinct from appearance choices in the copy. Show one canonical
+condition at a time, with selectable examples, rarity-colored lighting, and a
+brief entrance animation. Offer Raised Glass, Afterglow, and Draftline through
+the existing material catalog and actual NameEffectCanvas renderer.
+
+Motion follows explicit selection, ends within 650ms, and is removed under
+reduced motion. There is no automatic cycling or perpetual animation. Defer the
+name renderer until its preview approaches the viewport, preserving the homepage
+JavaScript budget and a text fallback. Keep example labeling explicit; the
+showcase neither grants unlocks nor represents a real account. No migrations,
+gameplay, entitlement, authentication, or public-profile route changes.
+
 ## 2026-09-20 — Surface uploaded avatars in account chrome
 
 The authenticated shared header consumes the selected avatar through the
@@ -7738,3 +7969,393 @@ without rebuilding unrelated slot vocabularies; it changes no inventory,
 RLS, equip RPC, scoring or reward rules.
 
 See [the motion collection milestone](milestones/NAME_MOTION_COLLECTION.md).
+
+## 2026-09-22 — Profile Studio configuration write service
+
+The Profile Studio adapter delegates its versioned publish and reset RPC
+contracts and response-envelope parsing to one service. The adapter keeps
+draft formation, validation, account/request race checks, and local state
+application. The service loads only when a write starts, and the adapter checks
+its request tokens again before dispatch. Existing RPCs remain server-owned;
+no migration, authority, RLS, or profile data contract changes.
+
+## 2026-09-22 — Keep Roll result projections in rollPresentation.js
+
+Keep display-only score decomposition and badge ordering in the existing Roll
+presentation module. Use contributor values and point metadata already
+provided by the canonical response/catalog, and return sorted badge copies.
+`Game.svelte` remains responsible for lifecycle, state application, and UI.
+These helpers do not calculate or mutate server scores, eligibility, rarity,
+rewards, or progression.
+
+## 2026-09-22 — Share dynamic-color text contrast
+
+Use one `colorContrast.js` luminance calculation for system text placed over
+dynamic Roll and Progression colors. Keep the current sRGB conversion,
+white fallback, and `0.179` threshold so both surfaces choose the same readable
+dark or white ink. Profile appearance values and server-owned color/game data
+remain outside this helper.
+
+## 2026-09-22 — Isolate and lazy-load Roll image sharing
+
+Keep the Roll image preview, clipboard handling, dialog focus, and scroll lock
+inside `RollShareImageDialog.svelte`. Load it only after the player asks to
+share an image. `Game.svelte` supplies the confirmed result fields and current
+request predicate, and closes the dialog when account hydration or a new roll
+invalidates that result. Continue using the existing share-card renderer and
+keep identity and private account fields out of the export.
+
+## 2026-09-22 — Isolate Profile Studio settings load reconciliation
+
+Keep context acquisition, request/account race checks, and Svelte state
+application in `ProfileSettings.svelte`; move accepted context projection into
+a directly tested state resolver. Load the resolver alongside the existing
+context read and pass its draft/context collaborators from the Studio adapter,
+so it stays out of the dashboard entry and public-profile route. If its lazy
+chunk fails, apply the fresh account-scoped context read as read-only, retain
+drafts only for the same profile, and expose the existing retry action. No
+schema, RPC, route, or authority changes.
+
+## 2026-09-22 — Share progression focus selection
+
+Keep the intentional-objective and unlocked checks in one pure
+`progressionPresentation.js` module. Both the profile progression story and
+the dedicated Progress page select focus in Ritual, Rank, then explicit
+objective order, while authored objective-role records may override the
+stochastic Discovery exclusion. Continue accepting the existing unlock
+timestamp aliases. This is presentation only; progression eligibility and
+reward authority remain server-owned.
+
+## 2026-09-22 — Isolate Profile Portfolio scrolling
+
+Keep portfolio page tracking, profile-more threshold updates, wheel filtering,
+overflow scrolling, and listener cleanup in
+`profile-layout/portfolioScrollController.js`. Load it only when the selected
+layout is Portfolio; other public profiles retain native browser scrolling and
+do not download the controller. `ProfileShell.svelte` retains Svelte state,
+reduced-motion state, and click-to-page navigation. Preserve native CSS scroll
+snap and keep Ctrl-wheel and horizontal gestures unhandled.
+
+## 2026-09-22 — Keep expression media transport in Profile Studio actions
+
+Keep the Profile Expression Editor focused on local preview and Svelte state.
+Route its owner-scoped media-library query, media selection RPCs, and expression
+update RPC through `profile-studio/expressionMediaActions.js`, beside the
+existing upload actions. Keep the editor's request-race guards and state
+projection local, and preserve the existing RLS/RPC authority and arguments.
+No schema or data contract changes.
+
+## 2026-09-22 — Coordinate Roll attempt stages outside the Svelte handler
+
+Keep request-to-completion ordering in `rollAttempt.js`: stop stale attempts,
+save guest results before reveal, then apply the confirmed result and refresh
+authenticated stores. `Game.svelte` owns eligibility, reroll locks, state
+projection, and UI effects. Continue to source outcomes only from
+`requestRoll` and the secure server RPC; the coordinator performs no scoring,
+eligibility, reward, or rarity calculation.
+
+## 2026-09-22 — Consolidate Profile Expression image lifecycle
+
+Keep avatar/background upload and removal mechanics shared by media kind in
+`ProfileExpressionEditor.svelte`; keep staged upload, promotion, and cleanup in
+the Profile Studio media action module. Delete a promoted asset if its
+owner-scoped selection RPC fails. Preserve the existing RPC authority,
+kind-specific user feedback, local previews, and legacy path compatibility.
+No schema, route, or visual changes.
+
+## 2026-09-22 — Share Profile Studio write lifecycle
+
+Use one `ProfileSettings.svelte` mutation lifecycle for publish and reset so
+their stale account/request checks, write lock, error handling, and finalization
+cannot diverge. Keep publish validation and current-draft/identity projection
+distinct from reset-to-published behavior. Continue using the lazy existing
+RPC transport and its optimistic update token. No schema or authority changes.
+
+## 2026-09-22 — Project parsed routes before applying App state
+
+Keep URL parsing in `routes.js`, pure parsed-route state projection in
+`routeState.js`, and browser history plus alias/challenge reads in `App.svelte`.
+The app adapter still owns request invalidation and stale-result checks. Only an
+explicit `/c/<id>` path creates a challenge lookup intent. Preserve existing
+profile, auth, tab, and lazy target contracts; no route or data changes.
+
+## 2026-09-22 — Share progression node presentation rules
+
+Keep unlock checks, node target/current math, completion percentage, pace copy,
+progress labels, and number formatting in `progressionPresentation.js`. Both
+the profile progression story and dedicated Progression page consume these
+rules, with each component supplying its lifetime EP value. Keep weekly focus,
+lane state, and reward authority in their existing boundaries.
+
+## 2026-09-22 — Project Profile Shell preview state as one boundary
+
+Keep the Studio preview key, source/configuration precedence, normalized
+identity, and empty progression/social data in `profileShellPreview.js`. Keep
+preview invalidation, shell reset, and Svelte assignment in `ProfileShell`.
+Exclude staged configuration from the key so authoring changes update the
+mounted preview without resetting its effects.
+
+## 2026-09-22 — Reuse route projection for first render
+
+Pass the synchronous initial URL parse through `resolveRouteState()` before
+selecting the first `RouteOutlet` target. Mounted `parseRoute()` remains the
+owner of URL repair, store updates, and alias/challenge reads. This keeps lazy
+route selection early while using one route-to-state mapping.
+
+## 2026-09-22 — Isolate the Roll reveal stage view
+
+Keep the rolling-stage markup, accessibility presentation, and stage-specific
+responsive/reduced-motion rules in `RollRevealStage.svelte`. Keep request
+identity, eligibility, reveal timing, result state, and scroll orchestration in
+`Game.svelte` and the existing Roll controllers. Bind the condition-list DOM
+element back to the parent and route skip input through the existing handler.
+No data, RPC, or authority changes.
+
+## 2026-09-22 — Isolate Roll result reward rows
+
+Keep bonus and achievement row rendering in `RollResultRewards.svelte`, using
+the canonical badge metadata module and the existing parent-owned arrays. Keep
+the dedicated-mode guard, badge and reward classification, wallet/score
+authority, and result state in `Game.svelte`. Preserve the empty grid wrapper,
+row selectors, headings, IDs, and mobile layout. No data or schema changes.
+
+## 2026-09-22 — Project Profile Studio content draft projection
+
+Keep structured content normalization and bounded in-progress text retention
+in `profile-studio/contentDraft.js`. Preserve the value/draft/published
+fallback order, normalize the public projection before restoring current text,
+and keep publish validation in the existing editor/server boundary. Keep
+editor state, baseline, focus, dirty/error behavior, and dispatch in
+`ProfileContentEditor.svelte`. No schema or authority changes.
+
+## 2026-09-22 — Compose Profile Expression audio upload and selection
+
+Use one media action for audio validation, preparation, upload, promotion, and
+owner-scoped selection. If selection fails, perform the existing best-effort
+staged-asset cleanup and preserve the selection error. Keep preview, media
+reference, busy state, and feedback in `ProfileExpressionEditor.svelte`. No
+storage or RPC contract changes.
+
+## 2026-09-22 — Isolate browser navigation from the App shell
+
+Keep route parsing, canonical URL repair, account state, and lazy route
+selection in `App.svelte`. Move browser click filtering, guarded history
+changes, `popstate`, and listener ownership into an injected adapter that calls
+back into App for challenge cleanup, route parsing, and focus. Preserve the
+guard → cleanup → history → parse → focus sequence. No route, data, or schema
+changes.
+
+## 2026-09-22 — Project progression lanes in a pure model
+
+Keep track source selection, node presentation-state fallback, discovery
+grouping, and journey counters together in `progressionJourneyModel.js`. Feed
+its result to both the embedded Profile progression story and lazy Progress
+page. Keep focus selection, display formatting, interaction state, analytics,
+and reward rendering in their current adapters. Consume the normalized,
+server-authoritative progression data without changing its contract.
+
+## 2026-09-22 — Isolate Roll result action presentation
+
+Render the dedicated result controls, optional acquisition actions, and
+embedded post-score toolbar through `RollResultActions.svelte`. Keep account
+and reroll state, eligibility, sharing, navigation, and reroll handlers in
+`Game.svelte`. Preserve the DOM hooks used by RollPage and browser smokes, and
+keep shared button rules scoped to the Game surface so Studio onboarding stays
+styled. No route, schema, RPC, or authority changes.
+
+## 2026-09-22 — Extract App route URL synchronization
+
+Keep route-to-URL selection pure beside the route parser and canonical path
+helpers; keep the SSR guard and browser history replacement in `App.svelte`.
+Preserve pricing success and cancellation query state, profile identity
+precedence, legacy paths, tabs, and the existing pathname-plus-search
+comparison. Continue using `replaceState` for reactive normalization. No data,
+RPC, or schema changes.
+## 2026-09-22 — Project Profile Studio full-context refresh state
+
+Keep full-context fetches, request freshness, loading, and promise cleanup in
+`ProfileSettings.svelte`. Project accepted responses in the lazy settings
+load-state module. Preserve same-profile staged configuration and dirty bio
+edits; keep failed reads retryable and read-only when configuration is
+unavailable. Only a current request may update the page. No route, schema, RPC,
+or authority changes.
+## 2026-09-22 — Coordinate initial daily-roll hydration
+
+Keep snapshot acquisition in `rollHydration.js` and the authenticated daily-roll
+RPC as the source of truth. Use `rollInitialState.js` for guest/account loader
+selection, current-snapshot application, error reporting, and current-request
+completion. Keep account/day deduplication, Svelte state projection, stores,
+readiness, and event dispatch in `Game.svelte`. No schema, route, storage, or
+authority changes.
+
+## 2026-09-23 — Lazy-load the App challenge lifecycle
+
+Keep challenge route projection and synchronous dismissal/history cleanup in
+the App route boundary. Split challenge create and lookup transport, then
+dynamically import lookup and its result controller only for explicit `/c/<id>`
+lookups. Use an App generation guard while that import is pending, then
+controller freshness for in-flight reads. Project current import failures into
+the challenge unavailable state and ignore stale failures. Keep the challenge
+URL result pure in `routes.js` for direct tests. Preserve the loading
+placeholder, server-sender precedence, error shape, challenge query cleanup,
+and navigation order. No schema, route, RPC, or authority changes.
+
+## 2026-09-23 — Lazy-load the App profile alias lifecycle
+
+Keep route projection and the alias loading placeholder in the App route
+boundary. Dynamically load alias lookup/result projection only for explicit
+`/a/<alias>` routes, with an App generation guard for pending imports and a
+controller freshness guard for lookup responses. Keep not-found state,
+`replaceState`, search/hash preservation, and canonical reparsing in App. Use
+the existing resolver and username path contract; no schema, RPC, or
+authority changes.
+
+## 2026-09-23 — Extract Profile Studio browser navigation
+
+Keep hash/popstate interpretation, dirty-history restoration, browser guards,
+and listener cleanup in `profileStudioNavigation.js`, injected with live
+Profile Studio state and Svelte callbacks. Keep section side effects, lazy
+loading, draft semantics, prompt presentation/focus, discard, and the legacy
+progression redirect in `ProfileSettings.svelte`. Preserve recognized legacy
+hashes and current dirty-navigation target types. No route, data, schema, RPC,
+or authority changes.
+
+## 2026-09-23 — Extract Roll text sharing
+
+Keep text formatting, challenge/fallback selection, analytics, clipboard
+outcomes, and stale async-result checks in `rollTextShare.js`, supplied with
+an immutable click-time snapshot of the confirmed result. Keep request/account
+identity checks, server challenge adapter, browser clipboard, toasts, and
+copied UI state in `Game.svelte`. Keep challenge creation on the existing
+authenticated Edge Function/RPC path. Advance a copied-feedback token so an
+older timer cannot clear newer feedback. No route, data, schema, RPC, score, or
+authority changes.
+
+## 2026-09-23 — Scope legacy Profile Rivals reads
+
+Keep the owner-only leaderboard query and request freshness in
+`profileRivalLifecycle.js`, with Svelte state and rendering in `Profile.svelte`.
+Invalidate reads when the profile scope or followed-user list changes, when the
+list becomes empty, and when the component is destroyed. Preserve the current
+today filter, bounded public fields, deterministic ordering, and error log.
+No route, schema, RPC, or authority changes.
+
+## 2026-09-23 — Scope Roll image clipboard effects
+
+Keep image rendering and browser clipboard adapters in the lazy share dialog,
+and move asynchronous sequencing and stale-result suppression into
+`rollImageCopy.js`. Only the current confirmed result and latest copy attempt
+may apply copied or failure feedback. Invalidate pending attempts when the
+dialog reopens, closes, or is destroyed; version the copied timer so earlier
+operations cannot clear newer feedback. Preserve the existing export fields,
+renderer, clipboard support check, messages, and two-second status. No route,
+schema, RPC, or gameplay authority changes.
+
+## 2026-09-23 — Isolate App challenge banner presentation
+
+Keep challenge visibility, data, and URL cleanup in `App.svelte`; give the
+loading/error/success prompt and its responsive styling to `ChallengeBanner`.
+Preserve the immediate render gate, event-driven dismissal, content, color and
+score display, and accessible labels. Accept the small initial-shell cost
+within existing route budgets. No route, data, schema, RPC, or authority
+changes.
+
+## 2026-09-23 — Track current Roll text-share attempt
+
+Keep text-share attempt identity in `Game.svelte`, where it can be combined
+with the current roll request and account identity. Pass that composite
+freshness check to `rollTextShare.js` so only the newest same-roll attempt can
+apply challenge or clipboard feedback. Preserve click-time result values and
+the existing server challenge flow. No route, schema, RPC, or authority
+changes.
+
+## 2026-09-23 — Invalidate legacy Profile context reads
+
+Reuse the existing `loadRequestId` freshness guard and invalidate it when
+`resetProfileState()` clears the legacy Profile and when the component is
+destroyed. Preserve current context projection, query inputs, and Rival
+lifecycle disposal. No route, schema, RPC, or authority changes.
+
+## 2026-09-23 — Guard prepared media previews after teardown
+
+Check editor liveness before asynchronous image/audio preparation allocates a
+Blob preview URL. Keep current preview replacement and teardown revocation in
+`ProfileExpressionEditor.svelte`, with the check covered by a small injectable
+callback used by both media paths. Preserve upload, selection, and staged-asset
+cleanup. No route, storage, schema, RPC, or authority changes.
+
+## 2026-09-23 — Scope follow effects to social-state generation
+
+Capture the social-state generation for each `toggle_follow` request and
+discard store and toast effects after `clearSocialState()` invalidates that
+generation. Convert rejected transport into the established error feedback;
+always release Profile and Leaderboard loading flags. Preserve the existing
+server RPC, return contract, and five-follow authority. No schema or RLS
+changes.
+
+## 2026-09-23 — Recover rejected challenge lookups
+
+Catch rejected challenge lookup promises inside the dynamically loaded
+challenge lifecycle and project an unavailable state only for the current
+request. Preserve the normalized error path, sender fallback, route freshness,
+and challenge-only loading boundary. No route, schema, RPC, or authority
+changes.
+
+## 2026-09-23 — Recover rejected Profile Social RPCs
+
+Normalize thrown or rejected `client.rpc()` calls in `invokeProfileSocialRpc()`
+to `{ data: null, error }`, allowing existing Profile Social handlers to show
+their established error state and finish loading. Preserve resolved response
+objects, arguments, and the unavailable-service result. No endpoint, schema,
+RPC definition, or authority changes.
+
+## 2026-09-23 — Recover rejected roll reveals
+
+When staged reveal rejects after `roll_die` succeeds, normalize the same
+server-confirmed payload and continue the ordinary result and account-refresh
+path. The UI applies the confirmed color and score, reports the skipped reveal,
+and releases the attempt's locks. Stale failures remain ignored. No scoring,
+eligibility, reward, storage, schema, or RPC changes.
+
+
+## 2026-09-24 — Simple luminous materials and independent material animation
+
+Replace all eighteen rejected drafts instead of tuning their muted physical-material
+concepts. Favor crisp faces, restrained sparkle, soft glow, and deliberate texture;
+exclude mirror bands, scanning lines, and busy geometric patterns. The primary
+agent owns the new designs; Luna design delegation is discontinued for this work.
+Soft Halo and Cathode Bloom keep their approved appearance.
+
+Keep existing material IDs while replacing names, descriptions, and artwork. Add
+only the twelve missing entries. Material timing is independent from motion timing
+and uses the existing shared clock, quantized to 30 repaint opportunities/second.
+Static/reduced-motion frames use phase 0.32. Material seeds depend on text/font/
+material, never motion, preventing particle reshuffles at motion boundaries.
+No new scheduler, client entitlement logic, scoring change, or remote deployment.
+
+## 2026-09-24 — Gate public R2 media on current byte validation
+
+Public profile media references and promotion require a durable content-policy
+version plus a valid stored SHA-256. Ready R2 rows from an older policy are
+re-read from the private or public bucket and checked against their stored hash,
+MIME, byte size, format signature, and encoded bounds before the control plane
+marks them current. Profile Studio exposes this recheck for active legacy rows;
+rows without a trustworthy saved hash require re-upload. Keep historical rows
+and storage keys intact while the public projection fails closed. New uploads
+receive the marker only after server byte verification. Keep media deletion and
+legacy-audio completion effects scoped to the account that initiated them.
+
+The parser accepts only media forms whose resource bounds can be checked from
+their encoded bytes: image headers and animation frames, ANI cursor resources,
+H.264 SPS dimensions, and every supported VP8/VP9 video frame. Unsupported or
+inconsistent container forms fail closed. Preserve the existing storage
+provider and selection RPC boundaries; no client-side authority is added.
+Keep the public projection R2-only so a retired Supabase storage path is never
+restored as an anonymous reference. When legacy public bytes fail but a verified
+private copy remains, restore from that private copy and purge the exact CDN URL
+before exposing the R2 reference again. Public V1/V2 profile projections also
+omit legacy storage paths and playlist track paths; owner projections retain
+them for recovery. ANI cursor validation checks complete DIB XOR/AND planes and
+PNG chunk integrity, and rejects nested APNG animation. MP4 validation checks
+absolute sample presentation times and supports only a validated 1× edit list;
+unsupported edit rates fail closed.

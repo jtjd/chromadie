@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import vm from 'node:vm';
+import { attachProfilePortfolioScrollController } from '../src/lib/profile-layout/portfolioScrollController.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -21,6 +21,7 @@ const preview = await read('src/lib/ProfileStudioPreview.svelte');
 const identity = await read('src/lib/ProfileReferenceCard.svelte');
 const identityEditor = await read('src/lib/IdentityEditor.svelte');
 const settings = await read('src/lib/ProfileSettings.svelte');
+const configurationWrites = await read('src/lib/profile-studio/configurationWrites.js');
 const customize = await read('src/lib/ProfileCustomizePage.svelte');
 const cosmetics = await read('src/lib/ProfileCosmeticsEditor.svelte');
 const mediaWorkspace = await read('src/lib/ProfileMediaWorkspace.svelte');
@@ -33,7 +34,7 @@ const foundations = await read('src/styles/foundations.css');
 
 test('the replacement homepage has explicit desktop, tablet, and phone containment rules', () => {
   assert.match(homepage, /RollPage/);
-  assert.match(homepageStyles, /@media \(max-width: 780px\)/);
+  assert.match(homepageStyles, /min-width: 320px/);
   assert.match(homepageRoll, /@media \(max-width: 900px\)[\s\S]*grid-template-columns: minmax\(0, 420px\)/);
   assert.match(homepageRoll, /@media \(max-width: 600px\)/);
   assert.match(homepageScoring, /@media \(max-width: 820px\)[\s\S]*grid-template-columns: 1fr/);
@@ -45,8 +46,8 @@ test('the replacement homepage has explicit desktop, tablet, and phone containme
   assert.match(browserHarness, /VITE_CACHE_DIR: join\(evidenceDir, 'vite-cache'\)/);
   assert.match(homepageSmoke, /serverMode: externalAppUrl \? 'external' : 'isolated'/);
   assert.match(homepageSmoke, /rollPageCount === 1/);
-  assert.match(homepageSmoke, /profileSpecimenCount === 0/);
-  for (const viewport of ['1440, 900', '1280, 800', '1024, 900', '768, 1024', '390, 844', '375, 812']) {
+  assert.match(homepageSmoke, /removedSections === 0/);
+  for (const viewport of ['2048, 1024', '1440, 900', '1280, 720', '1024, 900', '900, 900', '768, 1024', '390, 844', '375, 812', '320, 812']) {
     assert.match(homepageSmoke, new RegExp(viewport.replace(', ', ', ')));
   }
   assert.match(homepageSmoke, /scrollWidth <= width \+ 1/);
@@ -56,27 +57,48 @@ test('non-Portfolio profiles leave wheel scrolling to the browser', () => {
   assert.match(profileShell, /scroll-snap-type: y proximity/);
   assert.match(profileShell, /scroll-snap-stop: normal/);
   assert.doesNotMatch(profileShell, /handleProfileWheel/);
-  const start = profileShell.indexOf('    let wheelLockedUntil');
-  const end = profileShell.indexOf("    profilePageElement?.addEventListener('wheel'", start);
-  assert.ok(start >= 0 && end > start, 'Portfolio wheel handler is present');
-  const context = vm.createContext({
-    profilePresentationLayoutVariant: 'compact',
-    performance: { now: () => 1000 }, activePortfolioPage: 0,
-    profilePageElement: { querySelectorAll: () => [{ getBoundingClientRect: () => ({ top: 0, bottom: 800 }) }], getBoundingClientRect: () => ({ top: 0, bottom: 800 }) },
-    scrollToPortfolioPage: () => {}
+  assert.match(profileShell, /portfolioScrollController\.js/);
+  let layout = 'compact';
+  const listeners = new Map();
+  const page = { getBoundingClientRect: () => ({ top: 0, bottom: 800 }) };
+  const container = {
+    clientHeight: 800,
+    scrollTop: 0,
+    addEventListener(type, handler) { listeners.set(type, handler); },
+    removeEventListener(type) { listeners.delete(type); },
+    querySelectorAll: () => [page],
+    getBoundingClientRect: () => ({ top: 0, bottom: 800, height: 800 }),
+    scrollBy() {}
+  };
+  const cleanup = attachProfilePortfolioScrollController({
+    container,
+    getMoreElement: () => null,
+    isPortfolioLayout: () => layout === 'portfolio',
+    getReducedMotion: () => false,
+    getActivePortfolioPage: () => 0,
+    onActivePortfolioPageChange: () => {},
+    onMoreActiveChange: () => {},
+    scrollToPortfolioPage: () => {},
+    now: () => 1000,
+    requestFrame: () => null,
+    cancelFrame: () => {}
   });
-  vm.runInContext(profileShell.slice(start, end) + '\nglobalThis.onWheel = handlePageWheel;', context);
-  for (const layout of ['compact', 'sleek', 'modern', 'full-bleed']) {
-    context.profilePresentationLayoutVariant = layout;
-    context.onWheel({ deltaY: 100, deltaX: 0, preventDefault() { assert.fail(layout + ' intercepted wheel scrolling'); } });
+  for (const nonPortfolioLayout of ['compact', 'sleek', 'modern', 'full-bleed']) {
+    layout = nonPortfolioLayout;
+    listeners.get('wheel')({
+      deltaY: 100,
+      deltaX: 0,
+      preventDefault() { assert.fail(nonPortfolioLayout + ' intercepted wheel scrolling'); }
+    });
   }
-  context.profilePresentationLayoutVariant = 'portfolio';
+  layout = 'portfolio';
   for (const event of [{ ctrlKey: true, deltaY: 100, deltaX: 0 }, { deltaY: 1, deltaX: 100 }]) {
-    context.onWheel({ ...event, preventDefault() { assert.fail('Portfolio intercepted zoom or horizontal scrolling'); } });
+    listeners.get('wheel')({ ...event, preventDefault() { assert.fail('Portfolio intercepted zoom or horizontal scrolling'); } });
   }
   let prevented = false;
-  context.onWheel({ deltaY: 100, deltaX: 0, preventDefault() { prevented = true; } });
+  listeners.get('wheel')({ deltaY: 100, deltaX: 0, preventDefault() { prevented = true; } });
   assert.equal(prevented, true, 'Portfolio retains its approved page gesture');
+  cleanup();
 });
 
 test('public profiles do not render a standalone Share profile control', () => {
@@ -148,7 +170,8 @@ test('Profile Studio keeps draft publishing and narrow editor surfaces usable', 
   assert.match(identityEditor, /if \(studio\) \{[\s\S]*dispatch\('dirty'/);
   assert.match(customize, /bind:this=\{identityEditor\}/);
   assert.match(customize, /on:identitypreview=\{event => forwardPatch\('identity', event\)\}/);
-  assert.match(settings, /publish_profile_studio_v2/);
+  assert.match(settings, /await loadConfigurationWriteService\(\)/);
+  assert.match(configurationWrites, /publish_profile_studio_v2/);
   assert.match(settings, /bio: context\?\.targetProfile\?\.bio \|\| ''/);
   assert.match(settings, /mobilePreviewAvailable=\{customizePreviewAvailable\}/);
   assert.match(dashboard, /profile-studio-shell__mobile-actions/);

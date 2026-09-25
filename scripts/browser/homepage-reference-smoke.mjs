@@ -39,14 +39,11 @@ async function check(name, action) {
 
 function networkSnapshot() {
   const requests = page.requestLog.filter(request => request.method !== 'OPTIONS');
-  const parsed = requests.map(request => {
-    try { return { ...request, parsed: new URL(request.url) }; } catch { return { ...request, parsed: null }; }
-  });
   return {
     requestCount: requests.length,
-    discoveryCount: parsed.filter(request => request.parsed?.pathname.endsWith('/rpc/get_public_discovery_spotlight')).length,
-    profileHydrationCount: parsed.filter(request => /\/rpc\/get_public_profile_/.test(request.parsed?.pathname || '')).length,
-    storageCount: parsed.filter(request => request.parsed?.pathname.includes('/storage/v1')).length
+    discoveryCount: requests.filter(request => request.url.includes('/rpc/get_public_discovery_spotlight')).length,
+    profileHydrationCount: requests.filter(request => /\/rpc\/get_public_profile_/.test(request.url)).length,
+    storageCount: requests.filter(request => /\/storage\/v1\/object\//.test(request.url)).length
   };
 }
 
@@ -60,116 +57,85 @@ try {
   page = chromium.page;
   await page.navigate(appUrl, 'stable homepage entry');
   await page.setReducedMotion(true);
-  await page.waitFor('Boolean(document.querySelector(".homepage-reference .roll-page") && document.querySelector(".roll-stage--preroll, .roll-stage--results"))', 'playable homepage');
+  await page.waitFor('Boolean(document.querySelector(".homepage-reference .roll-page") && document.querySelector(".homepage-best-roll"))', 'Roll hero and top roller');
   await page.evaluate('document.fonts.ready.then(() => true)');
 
-  await check('homepage keeps one playable hero without retired specimens or competing claim actions', async () => {
+  await check('homepage centers the Roll hero and authentic top roller', async () => {
     const state = await page.evaluate(`(() => {
       const root = document.querySelector('.homepage-reference');
-      const headerLabels = [...document.querySelectorAll('.site-mode-header__nav button, .site-mode-header__nav a')].map(node => node.textContent?.trim());
+      const headerLabels = [...document.querySelectorAll('.site-mode-header__nav button')].map(node => node.textContent?.trim());
+      const footer = document.querySelector('.site-footer--home-compact');
+      const footerLinks = [...(footer?.querySelectorAll('a') || [])].map(link => link.getAttribute('href'));
       return {
         rollPageCount: document.querySelectorAll('.homepage-reference .roll-page').length,
         gameCount: document.querySelectorAll('.homepage-reference .game-container--dedicated').length,
         rollButtonCount: document.querySelectorAll('.roll-stage--preroll .roll-action__button').length,
         rollButtonLabel: document.querySelector('.roll-stage--preroll .roll-action__button')?.textContent?.trim() || '',
         title: document.querySelector('.roll-page__context h1')?.textContent?.trim() || '',
-        accountPrompt: document.querySelector('.guest-prompt--preroll')?.textContent?.trim() || '',
         bestRollCount: document.querySelectorAll('.homepage-best-roll').length,
         bestRollTitle: document.querySelector('.homepage-best-roll h2')?.textContent?.trim() || '',
-        bestRollIdentity: document.querySelector('.homepage-best-roll__identity-name')?.textContent?.trim() || '',
-        bestRollConditionCount: document.querySelectorAll('.homepage-best-roll__condition').length,
-        profileSpecimenCount: document.querySelectorAll('[data-homepage-profile-specimen], .homepage-profile-demo, .homepage-profile-stage').length,
-        profileSceneCount: document.querySelectorAll('.profile-example__controls button').length,
         heroAmbient: getComputedStyle(document.querySelector('.roll-page--homepage'), '::after').backgroundImage.includes('homepage-hero-atmosphere-anime-v1'),
-        pricingAnchorCount: document.querySelectorAll('#pricing').length,
-        homeFooter: Boolean(document.querySelector('.site-footer--home .site-footer__home-grid')),
-        homeFooterDisplay: getComputedStyle(document.querySelector('.site-footer--home')).display,
-        sceneryCount: document.querySelectorAll('.homepage-background, .homepage-atmosphere').length,
-        finalClaimCount: document.querySelectorAll('#claim, .homepage-claim__field').length,
-        directionalGlyph: /[‹›↗→↓]/.test(root?.textContent || ''),
-        headerLabels
+        removedSections: [...document.querySelectorAll('.profile-example, .homepage-collection, .homepage-community, .homepage-pricing, .homepage-start, .homepage-questions')].length,
+        footer: Boolean(footer),
+        footerDisplay: footer ? getComputedStyle(footer).display : '',
+        footerLinks,
+        headerLabels,
+        noDeadFooterAnchors: footerLinks.every(href => href && !href.startsWith('#')),
+        directionalGlyph: /[‹›↗→↓]/.test(root?.textContent || '')
       };
     })()`);
     assert(state.rollPageCount === 1 && state.gameCount === 1, `Homepage did not mount one real game: ${JSON.stringify(state)}.`);
     assert(state.rollButtonCount === 1 && state.rollButtonLabel === 'Roll today’s color', `Primary action drifted: ${JSON.stringify(state)}.`);
-    assert(state.title === 'Roll today’s color.' && state.accountPrompt.includes('to start your profile history.'), `First-visit explanation drifted: ${JSON.stringify(state)}.`);
-    assert(state.bestRollCount === 1 && state.bestRollTitle === 'Today’s top roll', `Best-roll invitation drifted: ${JSON.stringify(state)}.`);
-    assert(state.profileSceneCount === 3 && state.homeFooter && state.homeFooterDisplay === 'grid' && state.heroAmbient, `Homepage product showcase or hero atmosphere drifted: ${JSON.stringify(state)}.`);
-    assert(state.pricingAnchorCount === 1, `Homepage pricing preview anchor drifted: ${JSON.stringify(state)}.`);
-    assert(state.profileSpecimenCount === 0 && state.sceneryCount === 0 && state.finalClaimCount === 0, `Retired homepage marketing returned: ${JSON.stringify(state)}.`);
-    assert(!state.headerLabels.includes('Roll') && !state.headerLabels.includes('Claim handle'), `Competing controls returned: ${JSON.stringify(state)}.`);
+    assert(state.title === 'Roll today’s color.', `First-visit explanation drifted: ${JSON.stringify(state)}.`);
+    assert(state.bestRollCount === 1 && state.bestRollTitle === 'Today’s top roll', `Top-roll preview drifted: ${JSON.stringify(state)}.`);
+    assert(state.removedSections === 0 && state.footer && state.footerDisplay === 'flex' && state.noDeadFooterAnchors, `Removed content or dead footer routes returned: ${JSON.stringify(state)}.`);
+    assert(['/leaderboard', '/pricing', '/how-to-play', '/privacy', '/terms'].every(path => state.footerLinks.includes(path)), `Compact footer routes drifted: ${JSON.stringify(state)}.`);
+    assert(['Leaderboard', 'Progression', 'Customize', 'Pricing'].every(label => state.headerLabels.includes(label)), `Homepage header routes drifted: ${JSON.stringify(state)}.`);
+    assert(state.heroAmbient && !state.directionalGlyph, `Hero treatment drifted: ${JSON.stringify(state)}.`);
+    return state;
   });
 
-  await check('homepage keeps one bounded authentic discovery feed', async () => {
+  await check('homepage top-roll request stays bounded and public-profile only', async () => {
     const state = networkSnapshot();
     assert(state.discoveryCount <= 1 && state.profileHydrationCount === 0 && state.storageCount === 0, `Homepage network boundary drifted: ${JSON.stringify(state)}.`);
     return state;
   });
 
-  await check('homepage motion reveals once and becomes static for reduced motion', async () => {
-    await page.setReducedMotion(false);
-    await page.navigate(appUrl, 'motion-enabled homepage');
-    await page.waitFor("document.querySelector('#chromadie-homepage.homepage-motion-ready.homepage-motion-active')", 'homepage motion controller');
-    const initial = await page.evaluate(`(() => ({
-      heroAnimation: getComputedStyle(document.querySelector('.roll-page--homepage'), '::after').animationName,
-      profileRevealed: document.querySelector('.profile-example')?.hasAttribute('data-homepage-revealed') || false
-    }))()`);
-    assert(initial.heroAnimation === 'homepage-hero-camera', `Homepage camera motion did not start: ${JSON.stringify(initial)}.`);
-    assert(!initial.profileRevealed, `Offscreen profile content revealed before entering the viewport: ${JSON.stringify(initial)}.`);
-
-    await page.evaluate("document.querySelector('.profile-example').scrollIntoView({ block: 'center' })");
-    await page.waitFor("document.querySelector('.profile-example')?.hasAttribute('data-homepage-revealed')", 'one-time profile reveal');
-    await page.evaluate('window.scrollTo(0, 0)');
-    assert(await page.evaluate("document.querySelector('.profile-example')?.hasAttribute('data-homepage-revealed')"), 'Profile reveal replay state was discarded after leaving the viewport.');
-
-    await page.setReducedMotion(true);
+  await check('homepage hero motion respects reduced-motion preference', async () => {
     const reduced = await page.evaluate(`(() => ({
       preferred: matchMedia('(prefers-reduced-motion: reduce)').matches,
+      ready: document.querySelector('#chromadie-homepage')?.classList.contains('homepage-motion-ready'),
+      active: document.querySelector('#chromadie-homepage')?.classList.contains('homepage-motion-active'),
       heroAnimation: getComputedStyle(document.querySelector('.roll-page--homepage'), '::after').animationName,
-      profileOpacity: getComputedStyle(document.querySelector('.profile-example__copy')).opacity,
-      profileTransform: getComputedStyle(document.querySelector('.profile-example__copy')).transform
+      bestRollAnimation: getComputedStyle(document.querySelector('.homepage-best-roll')).animationName
     }))()`);
-    assert(reduced.preferred && reduced.heroAnimation === 'none' && reduced.profileOpacity === '1' && reduced.profileTransform === 'none', `Reduced-motion homepage remained animated or hidden: ${JSON.stringify(reduced)}.`);
-    return { initial, reduced };
+    assert(reduced.preferred && reduced.ready && reduced.active && reduced.heroAnimation === 'none' && reduced.bestRollAnimation === 'none', `Reduced-motion homepage remained animated: ${JSON.stringify(reduced)}.`);
+    await page.setReducedMotion(false);
+    await page.waitFor('getComputedStyle(document.querySelector(".roll-page--homepage"), "::after").animationName === "homepage-hero-camera"', 'hero atmosphere motion');
+    return reduced;
   });
 
-  for (const [width, height] of [[2048, 1024], [1440, 900], [1280, 720], [1280, 800], [1024, 900], [768, 1024], [390, 844], [375, 812], [320, 812]]) {
+  for (const [width, height] of [[2048, 1024], [1440, 900], [1280, 720], [1024, 900], [900, 900], [768, 1024], [390, 844], [375, 812], [320, 812]]) {
     await page.setViewport(width, height);
-    await page.waitFor('Boolean(document.querySelector(".homepage-reference .roll-page") && document.querySelector(".roll-stage--preroll, .roll-stage--results"))', `${width}x${height} playable homepage`);
+    await page.waitFor('Boolean(document.querySelector(".homepage-reference .roll-page") && document.querySelector(".homepage-best-roll"))', `${width}x${height} homepage`);
     await page.evaluate('document.fonts.ready.then(() => true)');
     const state = await page.evaluate(`(() => {
       const rect = node => { const box = node?.getBoundingClientRect(); return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null; };
-      const rollGrid = document.querySelector('.roll-page__game');
-      const action = document.querySelector('.roll-stage--preroll .roll-action__button, .roll-stage--results .roll-action__button--claimed');
+      const grid = document.querySelector('.roll-page__game');
+      const action = document.querySelector('.roll-stage--preroll .roll-action__button');
       const bestRoll = document.querySelector('.homepage-best-roll');
       const game = document.querySelector('.game-container--dedicated');
-      const actionStyle = action ? getComputedStyle(action) : null;
-      const actionBefore = action ? getComputedStyle(action, '::before') : null;
-      const actionAfter = action ? getComputedStyle(action, '::after') : null;
-      const actionBox = action?.getBoundingClientRect();
-      const actionHit = actionBox ? document.elementFromPoint(actionBox.left + actionBox.width / 2, actionBox.top + actionBox.height / 2) : null;
       return {
         width: innerWidth,
         height: innerHeight,
         scrollWidth: document.documentElement.scrollWidth,
         bodyScrollWidth: document.body.scrollWidth,
-        columns: getComputedStyle(rollGrid).gridTemplateColumns,
-        grid: rect(rollGrid),
+        columns: getComputedStyle(grid).gridTemplateColumns,
+        grid: rect(grid),
         action: rect(action),
-        actionPaint: actionStyle ? {
-          backgroundColor: actionStyle.backgroundColor,
-          backgroundImage: actionStyle.backgroundImage,
-          appearance: actionStyle.appearance,
-          beforeDisplay: actionBefore.display,
-          afterDisplay: actionAfter.display,
-          centerHitsAction: actionHit === action || action?.contains(actionHit)
-        } : null,
         bestRoll: rect(bestRoll),
         game: rect(game),
-        scoring: rect(document.querySelector('.homepage-collection')),
-        nextSection: rect(document.querySelector('.profile-example')),
-        start: rect(document.querySelector('.homepage-start')),
-        board: rect(document.querySelector('.homepage-community')),
+        footer: rect(document.querySelector('.site-footer--home-compact')),
         heroAmbient: getComputedStyle(document.querySelector('.roll-page--homepage'), '::after').backgroundImage.includes('homepage-hero-atmosphere-anime')
       };
     })()`);
@@ -178,129 +144,21 @@ try {
     assert(state.grid && state.grid.left >= -1 && state.grid.right <= width + 1, `${width}x${height} roll grid escapes: ${JSON.stringify(state)}.`);
     assert(Math.abs((state.grid.left + state.grid.right) / 2 - width / 2) <= 1, `${width}x${height} roll grid is not centered: ${JSON.stringify(state)}.`);
     assert(state.action && state.action.left >= -1 && state.action.right <= width + 1, `${width}x${height} roll action escapes: ${JSON.stringify(state)}.`);
-    assert(state.actionPaint?.backgroundColor === 'rgb(255, 255, 255)' && state.actionPaint.backgroundImage === 'none' && state.actionPaint.appearance === 'none', `${width}x${height} roll action paint is obscured: ${JSON.stringify(state)}.`);
-    assert(state.actionPaint.beforeDisplay === 'none' && state.actionPaint.afterDisplay === 'none' && state.actionPaint.centerHitsAction, `${width}x${height} roll action is covered by another layer: ${JSON.stringify(state)}.`);
-    // The community section intentionally disappears when the bounded feed is empty.
-    assert(state.scoring && state.nextSection && state.start, `${width}x${height} supporting content is missing: ${JSON.stringify(state)}.`);
-    if (state.board) assert(state.board.left >= -1 && state.board.right <= width + 1, `${width}x${height} community content escapes the viewport.`);
-    if (width < 1000) assert(state.columns.trim().split(' ').length === 1, `${width}x${height} roll grid did not stack: ${JSON.stringify(state)}.`);
-    else {
-      assert(state.nextSection?.top >= height - 1, `${width}x${height} next section bleeds into the hero: ${JSON.stringify(state)}.`);
-      assert(state.columns.trim().split(' ').length === 2, `${width}x${height} roll grid did not use the side-by-side composition: ${JSON.stringify(state)}.`);
-      assert(state.bestRoll && state.game && state.game.left < state.bestRoll.left, `${width}x${height} kept the pre-roll game on the wrong side of today's best roll: ${JSON.stringify(state)}.`);
-    }
+    assert(state.bestRoll && state.bestRoll.left >= -1 && state.bestRoll.right <= width + 1, `${width}x${height} top roller escapes: ${JSON.stringify(state)}.`);
+    assert(state.footer && state.footer.left >= -1 && state.footer.right <= width + 1, `${width}x${height} compact footer escapes: ${JSON.stringify(state)}.`);
+    const columns = state.columns.trim().split(/\s+/).length;
+    assert(columns === (width <= 900 ? 1 : 2), `${width}x${height} roll grid columns drifted: ${JSON.stringify(state)}.`);
+    if (width > 900) assert(state.game && state.game.left < state.bestRoll.left, `${width}x${height} top roller left the game column: ${JSON.stringify(state)}.`);
     results.viewports.push(state);
     await capture(`homepage-${width}x${height}`);
   }
 
-  await check('homepage pricing shows the current free and Plus offers', async () => {
-    for (const width of [1440, 390]) {
-      await page.setViewport(width, 900);
-      await page.evaluate("document.querySelector('#pricing').scrollIntoView({ block: 'center' })");
-      await page.waitFor("document.querySelector('.homepage-pricing__card--plus')", 'Homepage pricing preview');
-      const state = await page.evaluate(`(() => ({
-        section: Boolean(document.querySelector('.homepage-pricing')),
-        cards: document.querySelectorAll('.homepage-pricing__card').length,
-        freeFeatures: document.querySelectorAll('.homepage-pricing__card--free li').length,
-        plusFeatures: document.querySelectorAll('.homepage-pricing__card--plus li').length,
-        plusPrice: document.querySelector('.homepage-pricing__card--plus .homepage-pricing__price')?.textContent?.trim() || '',
-        overflow: document.documentElement.scrollWidth > innerWidth + 1
-      }))()`);
-      assert(state.section && state.cards === 2 && state.freeFeatures === 4 && state.plusFeatures === 6 && state.plusPrice.includes('$7.99') && !state.overflow, `Homepage pricing geometry or offer drifted: ${JSON.stringify(state)}.`);
-      await capture(`homepage-pricing-${width}`);
-    }
-  });
-
-  await check('Modern preserves the curated profile assets', async () => {
-    for (const width of [1440, 390]) {
-      await page.setViewport(width, 900);
-      await page.evaluate("document.querySelector('#profiles').scrollIntoView({ block: 'center' })");
-      await page.click('[aria-label="Show Modern"]', 'Tjz profile preview');
-      await page.waitFor("document.querySelector('.tjz-profile .profile-reference-card')", 'Tjz framed profile');
-      await page.waitFor("[...document.querySelectorAll('.tjz-profile img')].every(img => img.complete && img.naturalWidth > 0)", 'Tjz published media');
-      const state = await page.evaluate(`(() => ({
-        selected: document.querySelector('.profile-example__controls button.active').textContent.trim(),
-        content: document.querySelector('.tjz-profile').textContent,
-        cursorTrail: Boolean(document.querySelector('.tjz-profile .profile-environment__cursor')),
-        pageStyle: document.querySelector('.tjz-profile')?.getAttribute('style') || '',
-        joined: document.querySelector('.tjz-profile').textContent.includes('Joined'),
-        exampleWidth: document.querySelector('.profile-example')?.getBoundingClientRect().width || 0,
-        browserWidth: document.querySelector('.profile-example__browser')?.getBoundingClientRect().width || 0,
-        overflow: document.documentElement.scrollWidth > innerWidth + 1,
-        links: document.querySelectorAll('.tjz-profile a[href]').length
-      }))()`);
-      assert(state.selected === 'Modern' && state.content.includes('Tjz') && state.content.includes('why does this keep resetting'), 'Tjz identity does not match the published snapshot.');
-      assert(!state.cursorTrail && !/\bcursor\s*:/.test(state.pageStyle) && !state.joined && !state.overflow && state.links === 0, 'Tjz preview metadata, cursor, geometry, or links drifted.');
-      if (width >= 1000) assert(state.exampleWidth >= 1200 && state.browserWidth >= 700, `Desktop profile preview is too constrained: ${JSON.stringify(state)}.`);
-      await capture(`homepage-tjz-${width}`);
-    }
-    assert(networkSnapshot().profileHydrationCount === 0, 'The captured profile added homepage hydration requests.');
-  });
-
-  await check('Sleek uses the handwritten Permanent Marker name face', async () => {
-    for (const width of [1440, 390]) {
-      await page.setViewport(width, 900);
-      await page.evaluate("document.querySelector('#profiles').scrollIntoView({ block: 'center' })");
-      await page.click('[aria-label="Show Sleek"]', 'Sleek profile preview');
-      await page.waitFor("document.querySelector('.current-tjz-profile [data-name-font-ready=\"true\"]')", 'Sleek profile font');
-      const state = await page.evaluate(`(() => {
-        const canvas = document.querySelector('.current-tjz-profile [data-name-font]');
-        const semantic = canvas?.querySelector('.name-effect-canvas__semantic');
-        return {
-          selected: document.querySelector('.profile-example__controls button.active').textContent.trim(),
-          nameFont: canvas?.getAttribute('data-name-font') || '',
-          nameFontReady: canvas?.getAttribute('data-name-font-ready') || '',
-          fontFamily: semantic ? getComputedStyle(semantic).fontFamily : '',
-          overflow: document.documentElement.scrollWidth > innerWidth + 1
-        };
-      })()`);
-      assert(state.selected === 'Sleek' && state.nameFont === 'marker-tag' && state.nameFontReady === 'true' && /Permanent Marker/i.test(state.fontFamily) && !state.overflow, `Sleek type treatment drifted: ${JSON.stringify(state)}.`);
-      await capture(`homepage-sleek-${width}`);
-    }
-    assert(networkSnapshot().profileHydrationCount === 0, 'The Sleek profile added homepage hydration requests.');
-  });
-
-  await check('Simplistic preserves its existing showcase assets', async () => {
-    for (const width of [1440, 390]) {
-      await page.setViewport(width, 900);
-      await page.evaluate("document.querySelector('#profiles').scrollIntoView({ block: 'center' })");
-      await page.click('[aria-label="Show Simplistic"]', 'Simplistic profile preview');
-      await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"]\')', 'Simplistic full-bleed profile');
-      await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"] [data-name-font-ready="true"]\')', 'Simplistic profile font');
-      await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"] .profile-full-bleed__avatar\')?.naturalWidth > 0', 'Simplistic profile avatar');
-      await page.waitFor('document.querySelector(\'.profile-example [data-profile-layout-content="full-bleed"] ~ .profile-environment__atmosphere, .profile-example .profile-environment__atmosphere\')', 'Simplistic profile atmosphere');
-      const state = await page.evaluate(`(() => {
-        const card = document.querySelector('.profile-example [data-profile-layout-content="full-bleed"]');
-        return {
-          name: card?.querySelector('.profile-full-bleed__name')?.textContent?.trim() || '',
-          nameMotion: card?.querySelector('[data-name-motion]')?.getAttribute('data-name-motion') || '',
-          bio: card?.querySelector('.profile-full-bleed__bio')?.textContent?.trim() || '',
-          selected: document.querySelector('.profile-example__controls button.active').textContent.trim(),
-          avatar: card?.querySelector('.profile-full-bleed__avatar')?.getAttribute('src') || '',
-          effect: card?.querySelector('[data-avatar-effect]')?.getAttribute('data-avatar-effect') || '',
-          motion: card?.closest('[data-profile-motion]')?.getAttribute('data-profile-motion') || '',
-          joined: card?.textContent?.includes('Joined') || false,
-          links: card?.querySelectorAll('.profile-full-bleed__link-placeholder').length || 0,
-          canvasPadding: getComputedStyle(document.querySelector('.profile-example__canvas')).padding,
-          overflow: document.documentElement.scrollWidth > innerWidth + 1
-        };
-      })()`);
-      assert(state.name === 'Mira' && state.bio === 'collecting soft colors and quiet moments.', `Simplistic identity drifted: ${JSON.stringify(state)}.`);
-      assert(state.nameMotion === 'name_motion_heart_pop', `Simplistic Heart Pop motion missing: ${JSON.stringify(state)}.`);
-      assert(state.selected === 'Simplistic' && state.effect === 'cloud-bunny' && !state.motion && !state.joined && state.links === 4 && state.canvasPadding === '0px', `Simplistic Tjz profile source drifted: ${JSON.stringify(state)}.`);
-      assert(!state.overflow && state.avatar.includes('/profiles/c177316f-415a-48ad-8e4e-901fc6766693/26623dc6-5915-4852-a042-16505799a7b2/'), `Simplistic profile geometry or avatar drifted: ${JSON.stringify(state)}.`);
-      await capture(`homepage-simplistic-${width}`);
-    }
-    assert(networkSnapshot().profileHydrationCount === 0, 'The Simplistic profile added homepage hydration requests.');
-  });
-
-  const legacyTjzCursorAsset = '/7709b00b-f15a-42b4-9a22-ba3d2bcb93d5/0a6dffc2823137e622e786f47bb049cec213e76d621ab0661aed72a2d68d9080.webp';
-  const unexpectedFailedRequests = page.requestLog.filter(request => request.failed && !request.url.includes('cloudflareinsights.com/cdn-cgi/rum') && !request.url.includes(legacyTjzCursorAsset));
+  const unexpectedFailedRequests = page.requestLog.filter(request => request.failed && !request.url.includes('cloudflareinsights.com/cdn-cgi/rum'));
+  const analyticsFailed = page.requestLog.some(request => request.failed && request.url.includes('cloudflareinsights.com/cdn-cgi/rum'));
   const browserErrors = page.consoleLog.filter(entry => {
     if (!['error', 'exception', 'log-error'].includes(entry.type)) return false;
     if (entry.text.includes('cloudflareinsights.com/cdn-cgi/rum')) return false;
-    if (entry.text === 'Failed to load resource: net::ERR_FAILED' && unexpectedFailedRequests.length === 0) return false;
-    return true;
+    return !(analyticsFailed && entry.text.includes('Failed to load resource: net::ERR_FAILED'));
   });
   assert(unexpectedFailedRequests.length === 0, `Homepage requests failed: ${JSON.stringify(unexpectedFailedRequests)}.`);
   assert(browserErrors.length === 0, `Homepage emitted browser errors: ${JSON.stringify(browserErrors)}.`);

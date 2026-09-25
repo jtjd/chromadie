@@ -27,16 +27,22 @@ test('portfolio navigation only includes pages backed by visible profile modules
 });
 
 test('portfolio pages and audio controls retain the bounded profile contracts', async () => {
-  const [shell, continuation, music, controls] = await Promise.all([
+  const [shell, continuation, music, controls, scrollController] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/profile-layout/ProfilePortfolioContinuation.svelte'),
     read('src/lib/ProfileMusic.svelte'),
-    read('src/lib/ProfileAudioControls.svelte')
+    read('src/lib/ProfileAudioControls.svelte'),
+    read('src/lib/profile-layout/portfolioScrollController.js')
   ]);
 
   assert.match(shell, /profile-shell__portfolio-pagination/);
   assert.match(shell, /scroll-snap-type: y mandatory/);
   assert.match(shell, /scrollToPortfolioPage/);
+  assert.match(shell, /import\('\.\/profile-layout\/portfolioScrollController\.js'\)/);
+  assert.match(shell, /profilePresentationLayoutVariant === 'portfolio' && profilePageElement/);
+  assert.match(shell, /profileShellDestroyed \|\| !profilePageElement/);
+  assert.match(scrollController, /data-profile-portfolio-page/);
+  assert.doesNotMatch(shell, /function updatePortfolioPageState/);
   assert.match(shell, /\{#if hasHostedAudio\}[\s\S]*<ProfileMusic[\s\S]*audioSrc=\{audioSrc\}[\s\S]*audioPlaylist=\{richAudioPlaylist\}/);
   assert.match(shell, /hasProfileMusic && !hasHostedAudio/);
   assert.match(continuation, /data-profile-portfolio-page="content"/);

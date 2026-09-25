@@ -134,19 +134,28 @@ test('renderer contexts keep catalog, effect-card, name-control, and live-profil
 });
 
 test('dashboard ownership keeps routing, rendering, and dirty-state boundaries separate', async () => {
-  const [settings, header, workspace, preview, dirtyPrompt, registry, shell] = await Promise.all([
+  const [settings, header, workspace, preview, dirtyPrompt, registry, shell, navigation] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileStudioDirtyPrompt.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
-    read('src/lib/ProfileStudioShell.svelte')
+    read('src/lib/ProfileStudioShell.svelte'),
+    read('src/lib/profile-studio/profileStudioNavigation.js')
   ]);
+  const configurationWrites = await read('src/lib/profile-studio/configurationWrites.js');
 
-  assert.match(settings, /save_profile_configuration_v2/);
-  assert.match(settings, /publish_profile_studio_v2/);
-  assert.match(settings, /resolveProfileStudioLocation/);
+  assert.match(settings, /await loadConfigurationWriteService\(\)/);
+  assert.match(settings, /import\('\.\/profile-studio\/configurationWrites\.js'\)/);
+  assert.doesNotMatch(settings, /supabase\.rpc\('(save_profile_configuration_v2|publish_profile_studio_v2)'/);
+  assert.match(configurationWrites, /save_profile_configuration_v2/);
+  assert.match(configurationWrites, /publish_profile_studio_v2/);
+  assert.match(navigation, /resolveProfileStudioLocation/);
+  assert.match(settings, /createProfileStudioNavigationController/);
+  assert.match(settings, /navigationController\.start\(\)/);
+  assert.match(settings, /navigationController\.stop\(\)/);
+  assert.match(settings, /isNavigationDirty: \(\) => navigationDirty/);
   assert.match(settings, /createProfileStudioPreviewModel/);
   assert.match(settings, /previewRenderSnapshot/);
   for (const presentationalComponent of [header, workspace, preview, dirtyPrompt]) {

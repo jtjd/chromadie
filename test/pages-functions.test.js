@@ -45,6 +45,20 @@ test('preview gate leaves Cloudflare ACME validation reachable without opening t
     next: () => new Response('site', { status: 200 })
   });
   assert.equal(normalResponse.status, 503);
+  assert.equal(normalResponse.headers.get('x-frame-options'), 'DENY');
+  assert.match(normalResponse.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+  assert.match(normalResponse.headers.get('strict-transport-security'), /max-age=31536000/);
+
+  const loginResponse = await previewMiddleware({
+    request: new Request('https://chm.lol/profile/settings'),
+    env: { PREVIEW_PASSWORD: 'preview-test-password' },
+    next: () => new Response('should remain behind the preview gate', { status: 200 })
+  });
+  assert.equal(loginResponse.status, 401);
+  assert.equal(loginResponse.headers.get('x-frame-options'), 'DENY');
+  assert.match(loginResponse.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+  assert.match(loginResponse.headers.get('strict-transport-security'), /max-age=31536000/);
+  assert.equal(loginResponse.headers.get('cache-control'), 'no-store, no-cache, must-revalidate');
 });
 
 test('preview gate can be lifted explicitly for the public release', async () => {

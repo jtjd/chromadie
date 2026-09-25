@@ -1,5 +1,6 @@
 <script>
-  import { supabase } from './supabase';
+import { supabase } from './supabase';
+import { rpcWithAccessToken } from './rpcWithAccessToken.js';
   import { session, profile, authUser, equippedBadges, addToast, followedUsers, toggleFollow, isAuthenticated } from './stores';
   import { getTitleText, getStaffTitleText } from './cosmetics';
   import { getRank, getRankState } from './ranks';
@@ -8,12 +9,14 @@
   import ProfileAccountSettings from './ProfileAccountSettings.svelte';
   import { isOwnProfileTarget } from './profileContract';
   import { loadProfileContext } from './profileData';
-  import { afterUpdate, createEventDispatcher } from 'svelte';
+  import { afterUpdate, createEventDispatcher, onDestroy } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
+  import { createProfileRivalLifecycle } from './profileRivalLifecycle.js';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import { NON_PINNABLE_BADGE_IDS, resolveAchievementProgress } from './achievementProgress.js';
+  import { saveAchievementPins } from './achievementBadgeMutation.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -34,7 +37,20 @@
   let moodColorInput = '';
   let loadRequestId = 0;
   let activeProfileKey = null;
-  let followedSignature = '';
+  const profileRivalLifecycle = createProfileRivalLifecycle({
+    supabaseClient: supabase,
+    getTodayString,
+    onRows: rows => { rivalsData = rows; }
+  });
+
+  function invalidateProfileContextLoad() {
+    loadRequestId += 1;
+  }
+
+  onDestroy(() => {
+    invalidateProfileContextLoad();
+    profileRivalLifecycle.dispose();
+  });
 
   $: pinnedAchievements = targetProfile?.equipped_badges
     ? targetProfile.equipped_badges.map(id => allAchievements.find(a => a.id === id)).filter(Boolean)
@@ -59,46 +75,72 @@
   }
 
   async function saveBadges() {
-    const { data, error } = await supabase.rpc('equip_badges', { p_badge_ids: selectedBadges });
-    if (error) addToast("Error saving badges.");
-    else if (data.success) {
-      addToast("Pinned badges updated!", "success");
-      equippedBadges.set(data.badges);
-      if (targetProfile) {
-        targetProfile = {
-          ...targetProfile,
-          equipped_badges: data.badges
-        };
+    const ownerId = targetProfile?.id || '';
+    const requestId = loadRequestId;
+    if (!isOwnProfile || !ownerId || ownerId !== $session?.user?.id) return;
+    const isCurrent = () => requestId === loadRequestId
+      && targetProfile?.id === ownerId
+      && ownerId === $session?.user?.id;
+    try {
+      const authResult = await supabase.auth.getSession();
+      const accessToken = authResult?.data?.session?.access_token || '';
+      if (!accessToken || authResult?.data?.session?.user?.id !== ownerId || !isCurrent()) return;
+      const result = await saveAchievementPins({
+        supabaseClient: supabase,
+        badgeIds: [...selectedBadges],
+        accessToken,
+        isCurrent
+      });
+      if (result.stale || !isCurrent()) return;
+      if (!result.success) {
+        addToast(result.error, "error");
+        return;
       }
-    } else {
-      addToast(data.error, "error");
+      addToast("Pinned badges updated!", "success");
+      equippedBadges.set(result.badges);
+      profile.update(value => value?.id === ownerId ? { ...value, equipped_badges: result.badges } : value);
+      if (targetProfile) targetProfile = { ...targetProfile, equipped_badges: result.badges };
+    } catch {
+      if (isCurrent()) addToast("Error saving badges.");
     }
   }
 
   async function saveMeta() {
+    const ownerId = targetProfile?.id || '';
+    const requestId = loadRequestId;
+    if (!isOwnProfile || !ownerId || ownerId !== $session?.user?.id) return;
+    const isCurrent = () => requestId === loadRequestId
+      && targetProfile?.id === ownerId
+      && ownerId === $session?.user?.id;
     const colorToSave = moodColorInput === '' ? null : moodColorInput;
-
-    const { data, error } = await supabase.rpc('update_profile_meta', {
-      p_mood_color: colorToSave
-    });
-
-    if (error) {
-      addToast(error.message, "error");
-    } else if (data.success) {
-      addToast("Profile updated!", "success");
-      if (targetProfile) {
-        targetProfile = {
-          ...targetProfile,
-          mood_color: data.mood_color
-        };
+    try {
+      const authResult = await supabase.auth.getSession();
+      const accessToken = authResult?.data?.session?.access_token || '';
+      if (!accessToken || authResult?.data?.session?.user?.id !== ownerId || !isCurrent()) return;
+      const { data, error } = await rpcWithAccessToken(supabase, 'update_profile_meta', {
+        p_mood_color: colorToSave
+      }, accessToken);
+      if (!isCurrent()) return;
+      if (error) {
+        addToast(error.message, "error");
+      } else if (data?.success) {
+        addToast("Profile updated!", "success");
+        if (targetProfile?.id === ownerId) {
+          targetProfile = { ...targetProfile, mood_color: data.mood_color };
+        }
+        profile.update(value => value?.id === ownerId ? { ...value, mood_color: data.mood_color } : value);
+        editMode = false;
+      } else {
+        addToast(data?.error || 'Profile could not be updated.', "error");
       }
-      editMode = false;
-    } else {
-      addToast(data.error, "error");
+    } catch (saveError) {
+      if (isCurrent()) addToast(saveError instanceof Error ? saveError.message : 'Profile could not be updated.', "error");
     }
   }
 
   function resetProfileState() {
+    invalidateProfileContextLoad();
+    profileRivalLifecycle.invalidate();
     targetProfile = null;
     targetScores = [];
     allAchievements = [];
@@ -151,37 +193,22 @@
     }
 
     if (!isOwnProfile) {
-      followedSignature = '';
-      rivalsData = [];
+      void profileRivalLifecycle.sync({
+        profileKey: nextProfileKey,
+        isOwner: false,
+        followedIds: []
+      });
       return;
     }
 
-    const nextFollowedSignature = ($followedUsers || []).join('|');
-    if (nextFollowedSignature !== followedSignature) {
-      followedSignature = nextFollowedSignature;
-      void fetchRivals($followedUsers);
-    }
+    void profileRivalLifecycle.sync({
+      profileKey: nextProfileKey,
+      isOwner: true,
+      followedIds: $followedUsers || []
+    });
   }
 
   afterUpdate(syncProfileData);
-
-  async function fetchRivals(followedIds) {
-    if (!isOwnProfile || followedIds.length === 0) {
-        rivalsData = [];
-        return;
-    }
-    const today = getTodayString();
-    const { data, error } = await supabase
-        .from('leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff, rank')
-        .eq('roll_date', today)
-        .in('user_id', followedIds)
-        .order('score', { ascending: false })
-        .order('user_id', { ascending: true });
-
-    if (error) console.error('Error fetching rivals:', error);
-    rivalsData = data || [];
-  }
 
   async function loadProfileData() {
     const requestId = ++loadRequestId;

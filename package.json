@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "test": "node --test",
     "test:browser": "node scripts/browser/profile-studio-smoke.mjs",
+    "pretest:browser:how-to-play": "node scripts/browser/build-how-to-play-preview.mjs",
+    "test:browser:how-to-play": "node scripts/browser/how-to-play-smoke.mjs",
     "test:browser:homepage": "node scripts/browser/homepage-reference-smoke.mjs",
     "test:browser:homepage-account": "node scripts/browser/homepage-account-smoke.mjs",
     "test:browser:progression": "node scripts/browser/progression-smoke.mjs",

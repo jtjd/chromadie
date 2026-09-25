@@ -108,11 +108,14 @@
     const item = event.detail?.item;
     if (!item?.userId || removingId) return;
     removingId = item.userId;
-    const result = await toggleFollow(item.userId);
-    if (result?.success && result.action === 'unfollowed') {
-      items = items.filter(current => current.userId !== item.userId);
+    try {
+      const result = await toggleFollow(item.userId);
+      if (result?.success && result.action === 'unfollowed') {
+        items = items.filter(current => current.userId !== item.userId);
+      }
+    } finally {
+      removingId = '';
     }
-    removingId = '';
   }
 
   onMount(() => {

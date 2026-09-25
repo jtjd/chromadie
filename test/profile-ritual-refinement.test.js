@@ -27,11 +27,16 @@ test('the profile identity surface stays sparse and keeps the archive outside th
 
 test('the dedicated roll uses a staged presentation without moving authority into the client', async () => {
   const roll = await read('src/lib/Game.svelte');
+  const revealStage = await read('src/lib/RollRevealStage.svelte');
+  const revealSequence = await read('src/lib/rollRevealSequence.js');
 
-  assert.match(roll, /getRollRevealTimeline/);
+  assert.match(roll, /playRollRevealSequence/);
+  assert.match(revealSequence, /getRollRevealTimeline/);
+  assert.match(revealSequence, /isCurrent/);
   assert.match(roll, /ROLL_REVEAL_STEPS/);
-  assert.match(roll, /roll-stage--rolling/);
-  assert.match(roll, /Skip reveal/);
+  assert.match(roll, /<RollRevealStage/);
+  assert.match(revealStage, /roll-stage--rolling/);
+  assert.match(revealStage, /Skip reveal/);
   assert.match(roll, /prefersReducedMotion/);
   assert.match(roll, /requestRoll\(supabase, isReroll\)/);
   assert.doesNotMatch(roll, /Math\.random\(\)|calculate_roll_v2|clientScore|clientReward/);
@@ -41,14 +46,15 @@ test('profile and account hydration remain non-visual', async () => {
   const shell = await read('src/lib/ProfileShell.svelte');
   const legacyProfile = await read('src/lib/Profile.svelte');
   const app = await read('src/App.svelte');
+  const routeTarget = await read('src/lib/routeTarget.js');
   const accountUnavailable = await read('src/lib/AccountUnavailable.svelte');
   const header = await read('src/lib/SiteModeHeader.svelte');
 
   assert.match(shell, /aria-busy=\{loading\}/);
   assert.match(legacyProfile, /aria-busy=\{loading\}/);
   assert.doesNotMatch(shell + legacyProfile, /Loading profile|Loading color identity|profile-shell-loading/);
-  assert.match(app, /staticComponent: RouteLoading/);
-  assert.match(app, /currentLegacyProfile \? 'profileLegacy' : 'profileShell'/);
+  assert.match(routeTarget, /staticComponent: routeLoading/);
+  assert.match(routeTarget, /legacyProfile \? 'profileLegacy' : 'profileShell'/);
   assert.doesNotMatch(header, /Loading account|Preparing your account/);
   assert.match(accountUnavailable, /Account unavailable/);
   assert.match(header, /Retry account/);

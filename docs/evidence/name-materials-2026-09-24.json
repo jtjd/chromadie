@@ -1,0 +1,66 @@
+{
+  "date": "2026-09-24",
+  "renderer": "src/lib/name/render/luminousMaterials.js",
+  "sha256": "d99b79d013ed28343d9489b38b532a83457db462e1d8da9ac2a5097d15228df1",
+  "unitTests": 846,
+  "requiredChecks": "all passed locally",
+  "remoteDeployment": false,
+  "materials": {
+    "frames": 1700,
+    "materials": 20,
+    "seams": {
+      "glass-emboss": 0.3568810800168925,
+      "carbon-cut": 0.0868416811569619,
+      "neon-tube": 0.29140833740019517,
+      "velvet-ink": 0.1123708798057646,
+      "engraved-stone": 0.24590501819725685,
+      "crt-phosphor": 0,
+      "blueprint-ink": 0.06829167886059896,
+      "halo-edge": 0,
+      "mercury-polish": 0.11970907820508252,
+      "gilded-leaf": 0.2291355299023857,
+      "opal-lustre": 0.10594566224649642,
+      "prism-dispersion": 0.42592494481236554,
+      "aurora-weave": 0.09065567819034487,
+      "ember-enamel": 0.027683630003431145,
+      "ocean-caustic": 0.19010384588278223,
+      "glacier-cut": 0.09908883093467273,
+      "rose-satin": 0.32452932759903236,
+      "stardust-ink": 0.21307553029322085,
+      "porcelain-lacquer": 0.13149279694651342,
+      "candy-shell": 0
+    },
+    "failures": []
+  },
+  "fontMaterialMotionMatrix": {
+    "frames": 54432,
+    "fonts": 18,
+    "materials": 21,
+    "motions": 36,
+    "edits": {
+      "initial": 2037013626,
+      "changed": 2271034048,
+      "restored": 2037013626,
+      "long": {
+        "hash": 3578303554,
+        "visible": 3245,
+        "chromatic": 2639
+      },
+      "neutral": 2678925338,
+      "moved": 509045259,
+      "reduced": 3088528654,
+      "reducedStill": 3088528654
+    }
+  },
+  "motionCollection": {
+    "frames": 12068,
+    "failures": [],
+    "raster": {
+      "hash": 2674799677,
+      "visible": 11344,
+      "green": 11344
+    },
+    "minimumMotionChange": 801,
+    "maximumNameCoverageLoss": 0
+  }
+}

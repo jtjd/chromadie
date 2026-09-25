@@ -72,7 +72,7 @@ test('profile-wide Name Font scope stays bounded to the public profile tree', as
 });
 
 test('dashboard uses its self-contained shell and aggregate profile action contract', async () => {
-  const [app, settings, contract, registry, workspace, preview, header, appearance, layout, migration, shell] = await Promise.all([
+  const [app, settings, contract, registry, workspace, preview, header, appearance, layout, migration, shell, navigation] = await Promise.all([
     read('src/App.svelte'),
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/dashboardContract.js'),
@@ -83,9 +83,11 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileLinksEditor.svelte'),
     read('supabase/migrations/20260808220000_profile_configuration_v2.sql'),
-    read('src/lib/ProfileStudioShell.svelte')
+    read('src/lib/ProfileStudioShell.svelte'),
+    read('src/lib/profile-studio/profileStudioNavigation.js')
   ]);
-  const studio = [settings, contract, registry, workspace, preview, header].join('\n');
+  const configurationWrites = await read('src/lib/profile-studio/configurationWrites.js');
+  const studio = [settings, contract, registry, workspace, preview, header, navigation].join('\n');
   assert.match(app, /\{#if !profileModeVisible && !homeModeVisible && !profileSettingsModeVisible && !homepageHeaderTransitionPending\}/);
   assert.match(registry, /id: 'account', destination: 'account',[\s\S]*ProfileAccountSettings\.svelte/);
   assert.match(studio, /id: 'customize'/);
@@ -103,8 +105,8 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
   assert.doesNotMatch(studio, /import\('\.\/ProfileShell\.svelte'\)|renderSnapshot=\{previewRenderSnapshot\}/);
   assert.doesNotMatch(appearance, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(layout, /save_profile_configuration_section|publish_profile_configuration_section/);
-  assert.match(settings, /save_profile_configuration_v2/);
-  assert.match(settings, /publish_profile_studio_v2/);
+  assert.match(configurationWrites, /save_profile_configuration_v2/);
+  assert.match(configurationWrites, /publish_profile_studio_v2/);
   assert.match(settings, /on:publish=\{publishDashboard\}/);
   assert.match(shell, /profile-studio-shell__publish[\s\S]*Publish profile/);
   assert.match(shell, /dispatch\('reset'\)/);

@@ -12,7 +12,7 @@
 
   const dispatch = createEventDispatcher();
   export let surface = 'roll';
-  export let signupNext = '/roll';
+  export let signupNext = '/';
   export let showAcquisitionActions = false;
   export let homepage = false;
   export let bestRollRows = [];

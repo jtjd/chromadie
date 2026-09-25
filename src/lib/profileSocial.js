@@ -135,7 +135,11 @@ export async function invokeProfileSocialRpc(client, functionName, args = {}) {
   if (!client || typeof client.rpc !== 'function') {
     return { data: null, error: new Error('Social service unavailable.') };
   }
-  return client.rpc(functionName, args);
+  try {
+    return await client.rpc(functionName, args);
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export function getProfileSocialError(result, fallback = 'That social action could not be completed.') {

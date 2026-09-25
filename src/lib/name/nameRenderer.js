@@ -196,6 +196,12 @@ export function getNameFrameModel(options = {}) {
     : null;
   const font = getNameFont(definition.font);
   const material = getNameMaterial(definition.material);
+  // Material light has its own cycle; choosing Still only stops glyph motion.
+  // Quantized frames bound texture repaint work without adding a second clock.
+  const materialDuration = Math.max(1000, material.durationMs || 12000);
+  const materialTicks = Math.round(materialDuration * .03);
+  const materialTick = Math.floor((((time % materialDuration) + materialDuration) % materialDuration) * .03);
+  const materialProgress = material.animated && !staticFrame ? materialTick / materialTicks : .32;
   const displayText = definition.smallCaps ? text.toUpperCase() : text;
   const metrics = getTextMetrics(displayText, font, width, height, compact, options.fontSize, options.inline === true, options.contentWidth);
   const seed = hashString(`${rendererKey}:${text}:${todayColor}:${recentColors.join(',')}`);
@@ -220,6 +226,7 @@ export function getNameFrameModel(options = {}) {
     staticFrame,
     time,
     progress,
+    materialProgress,
     todayColor,
     baseColor,
     pointer,
@@ -245,6 +252,7 @@ export function getNameFrameSignature(model) {
     frame.width,
     frame.height,
     frame.progress.toFixed(6),
+    (frame.materialProgress ?? .32).toFixed(6),
     frame.baseColor,
     frame.todayColor,
     frame.recentColors.join(',')

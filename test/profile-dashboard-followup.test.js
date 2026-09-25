@@ -10,8 +10,13 @@ test('Studio navigation has one canonical ordered IA and safe compact menu behav
     read('src/lib/profile-studio/dashboardContract.js'),
     read('src/lib/ProfileStudioShell.svelte')
   ]);
+  const studioNavigation = await read('src/lib/profile-studio/profileStudioNavigation.js');
   const studio = [contract, settings].join('\n');
-  const [app, routeMetadata] = await Promise.all([read('src/App.svelte'), read('src/lib/routeMetadata.js')]);
+  const [app, navigation, routeMetadata] = await Promise.all([
+    read('src/App.svelte'),
+    read('src/lib/routeNavigation.js'),
+    read('src/lib/routeMetadata.js')
+  ]);
   const ids = ['overview', 'customize', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'account'];
   let previous = -1;
   for (const id of ids) {
@@ -24,10 +29,11 @@ test('Studio navigation has one canonical ordered IA and safe compact menu behav
   }
   assert.match(contract, /\{ id: 'links', label: 'Links'/);
   assert.match(settings, /history\.pushState/);
-  assert.match(settings, /popstate/);
-  assert.match(settings, /beforeunload/);
-  assert.match(settings, /chromadie:navigation-request/);
-  assert.match(app, /chromadie:navigation-request/);
+  assert.match(studioNavigation, /popstate/);
+  assert.match(studioNavigation, /beforeunload/);
+  assert.match(studioNavigation, /chromadie:navigation-request/);
+  assert.match(navigation, /chromadie:navigation-request/);
+  assert.match(app, /routeNavigation\.start\(\)/);
   assert.match(routeMetadata, /view === 'progression'/);
   assert.match(contract, /PROFILE_STUDIO_PRIMARY_SECTION_IDS/);
   assert.match(shell, /getProfileStudioNavigation/);
@@ -46,6 +52,7 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioShell.svelte')
   ]);
+  const configurationWrites = await read('src/lib/profile-studio/configurationWrites.js');
   assert.doesNotMatch(layout, /export function getDraftConfig/);
   assert.match(layout, /export function validateDraft/);
   assert.doesNotMatch(layout, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section/);
@@ -58,8 +65,9 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(appearance, /invalidHex/);
   assert.match(appearance, /export function getDraftAppearance/);
   assert.doesNotMatch(appearance, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section|profile-appearance-editor__actions/);
-  assert.match(settings, /save_profile_configuration_v2/);
-  assert.match(settings, /publish_profile_studio_v2/);
+  assert.match(settings, /await loadConfigurationWriteService\(\)/);
+  assert.match(configurationWrites, /save_profile_configuration_v2/);
+  assert.match(configurationWrites, /publish_profile_studio_v2/);
   assert.match(shell, /profile-studio-shell__publish[\s\S]*Publish profile/);
   assert.match(shell, /--studio-accent/);
   assert.match(appearance, /appearance-editor__color-input:focus-within/);

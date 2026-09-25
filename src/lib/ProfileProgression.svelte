@@ -6,7 +6,16 @@
   import ProgressionRewardPreview from './ProgressionRewardPreview.svelte';
   import { getRankState } from './ranks.js';
   import { getProfileStoryUnlocks } from './profileStory.js';
-  import { PROGRESSION_JOURNEY_LANES } from './progressionState.js';
+  import { buildProgressionJourneyModel } from './progressionJourneyModel.js';
+  import {
+    formatProgressionNumber as formatNumber,
+    getNodePercent,
+    getNodeProgressLabel,
+    getNodeTarget,
+    isIntentionalObjective,
+    isUnlocked,
+    resolveFocusGoal
+  } from './progressionPresentation.js';
   import { trackProductEvent } from './productAnalytics.js';
 
   export let profile = null;
@@ -50,21 +59,13 @@
   $: rankRingDashOffset = rankRingCircumference * (1 - progressPercent / 100);
   $: journeyEnabled = featureFlags?.progressionJourney !== false;
   $: journeyState = progression?.journeyState || 'unavailable';
-  $: milestoneTrack = Array.isArray(progression?.milestones) ? progression.milestones : [];
   $: recentUnlocks = Array.isArray(progression?.recentUnlocks) ? progression.recentUnlocks : [];
   $: weeklyFocus = progression?.weeklyFocus || null;
-  $: laneModels = [
-    {
-      id: 'rank',
-      label: 'Rank / mastery',
-      description: 'Lifetime experience points turn steady play into a lasting profile record.',
-      nodes: getTrackNodes('rank', progression, milestoneTrack)
-    },
-    ...PROGRESSION_JOURNEY_LANES.map(lane => ({ ...lane, nodes: getTrackNodes(lane.id, progression, milestoneTrack) }))
-  ].map(lane => buildLaneModel(lane, progression));
-  $: journeyGoalTotal = laneModels.reduce((total, lane) => total + lane.nodes.length, 0);
-  $: journeyGoalComplete = laneModels.reduce((total, lane) => total + lane.completed.length, 0);
-  $: earnedCosmeticCount = laneModels.reduce((total, lane) => total + lane.completed.filter(node => node.reward).length, 0);
+  $: journeyModel = buildProgressionJourneyModel(progression);
+  $: laneModels = journeyModel.laneModels;
+  $: journeyGoalTotal = journeyModel.journeyGoalTotal;
+  $: journeyGoalComplete = journeyModel.journeyGoalComplete;
+  $: earnedCosmeticCount = journeyModel.earnedCosmeticCount;
   $: safeCollectionItems = Array.isArray(collectionItems) ? collectionItems : [];
   $: safeTimelineEvents = Array.isArray(timelineEvents) ? timelineEvents : [];
   $: previewIdentity = account.display_name || account.username || 'You';
@@ -105,10 +106,6 @@
     }
   }
 
-  function formatNumber(value) {
-    return Number(value || 0).toLocaleString();
-  }
-
   function formatDate(value) {
     if (!value) return 'Recent roll';
     const date = new Date(value);
@@ -122,138 +119,14 @@
     return event?.payload?.rarity ? `${event.payload.rarity} roll` : 'Color roll';
   }
 
-  function getTrackNodes(track, currentProgression = progression, currentMilestones = milestoneTrack) {
-    const source = track === 'rank'
-      ? (Array.isArray(currentProgression?.rankNodes) ? currentProgression.rankNodes : currentMilestones.filter(node => node?.track === 'rank'))
-      : (Array.isArray(currentProgression?.journeyByTrack?.[track])
-        ? currentProgression.journeyByTrack[track]
-        : currentMilestones.filter(node => node?.track === track));
-
-    return source
-      .filter(node => node && node.published !== false && node.status !== 'legacy')
-      .slice(0, 32);
-  }
-
-  function isUnlocked(node) {
-    return node?.unlocked === true || Boolean(node?.unlockedAt || node?.unlocked_at);
-  }
-
-  function explicitNodeState(node) {
-    const state = String(node?.presentationState || node?.presentation_state || node?.state || '').toLowerCase();
-    if (state === 'new' || state === 'active' || state === 'current') return state === 'new' ? 'new' : 'active';
-    if (state === 'future') return 'future';
-    return '';
-  }
-
-  function getNodeState(node, track, nodes, currentProgression = progression) {
-    if (isUnlocked(node)) return 'complete';
-    const explicit = explicitNodeState(node);
-    if (explicit) return explicit;
-    if (track === 'discovery') return 'active';
-    if (currentProgression?.nextJourney?.[track]?.id === node?.id) return 'active';
-    if (Number(node?.progress?.current) > 0) return 'active';
-    if (track === 'rank' && nodes.findIndex(candidate => !isUnlocked(candidate)) === nodes.indexOf(node)) return 'active';
-    return 'future';
-  }
-
-  function buildLaneModel(lane, currentProgression = progression) {
-    const decorated = lane.nodes.map(node => ({
-      ...node,
-      presentationState: getNodeState(node, lane.id, lane.nodes, currentProgression)
-    }));
-    const activeNodes = decorated.filter(node => node.presentationState === 'active' || node.presentationState === 'new');
-    if (!activeNodes.length) {
-      const fallback = decorated.find(node => !isUnlocked(node));
-      if (fallback) {
-        fallback.presentationState = 'active';
-        activeNodes.push(fallback);
-      }
-    }
-    if (lane.id === 'discovery') {
-      const locked = decorated.filter(node => !isUnlocked(node));
-      return {
-        ...lane,
-        nodes: decorated,
-        activeNodes: [],
-        featuredNode: null,
-        additionalActive: [],
-        openDiscoveries: locked.filter(node => node.presentationRole === 'open_discovery'),
-        lifetimeDiscoveries: locked.filter(node => node.presentationRole === 'lifetime_discovery'),
-        completed: decorated.filter(node => node.presentationState === 'complete' || node.presentationState === 'new'),
-        future: []
-      };
-    }
-    return {
-      ...lane,
-      nodes: decorated,
-      activeNodes: lane.id === 'discovery' ? activeNodes : activeNodes.slice(0, 2),
-      featuredNode: activeNodes[0] || null,
-      additionalActive: activeNodes.slice(1),
-      completed: decorated.filter(node => node.presentationState === 'complete'),
-      future: decorated.filter(node => node.presentationState === 'future')
-    };
-  }
-
-  function resolveFocusGoal(currentProgression = progression) {
-    const candidates = [
-      currentProgression?.nextJourney?.ritual,
-      currentProgression?.nextJourney?.rank,
-      currentProgression?.nextObjective
-    ];
-    return candidates.find(node => isIntentionalObjective(node) && !isUnlocked(node)) || null;
-  }
-
-  function isIntentionalObjective(node) {
-    if (!node) return false;
-    return (node.presentationRole || node.presentation_role || '') === 'objective'
-      || node.track !== 'discovery';
-  }
-
-  function nodeTarget(node) {
-    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
-    return Number.isFinite(target) && target > 0 ? target : null;
-  }
-
-  function nodeCurrent(node) {
-    if (node?.progress?.current !== undefined) return Math.max(0, Number(node.progress.current) || 0);
-    if (node?.track === 'rank') return lifetimeEp;
-    return 0;
-  }
+  const nodeTarget = getNodeTarget;
 
   function nodePercent(node) {
-    if (isUnlocked(node)) return 100;
-    const target = nodeTarget(node);
-    if (!target) return 0;
-    return Math.min(100, Math.round((nodeCurrent(node) / target) * 100));
+    return getNodePercent(node, lifetimeEp);
   }
 
   function nodeProgressLabel(node) {
-    if (isUnlocked(node)) return 'Complete';
-    const target = nodeTarget(node);
-    if (target && (node?.progress || node?.track === 'rank')) {
-      const rawUnit = node?.progress?.unit || (node?.track === 'rank' ? 'points' : 'rolls');
-      const unit = String(rawUnit).toLowerCase() === 'ep' ? 'points' : rawUnit;
-      return `${formatNumber(nodeCurrent(node))} / ${formatNumber(target)} ${unit}`.trim();
-    }
-    return goalPaceLabel(node);
-  }
-
-  function goalPaceLabel(node) {
-    const expectedRolls = Number(node?.expectedRolls ?? node?.expected_rolls);
-    const role = node?.presentationRole || node?.presentation_role;
-    if (node?.track === 'discovery' && Number.isFinite(expectedRolls) && expectedRolls > 0) {
-      const odds = `About 1 in ${formatNumber(Math.round(expectedRolls))} rolls`;
-      return role === 'lifetime_discovery' ? `Lifetime discovery · ${odds}` : odds;
-    }
-    if (Number.isFinite(expectedRolls) && expectedRolls > 0 && expectedRolls <= 90) {
-      return `Often within ${formatNumber(expectedRolls)} rolls`;
-    }
-    const pace = String(node?.paceBand || node?.pace_band || '').toLowerCase();
-    if (pace === 'days') return 'A few days of rolling';
-    if (pace === 'weeks') return 'A few weeks of rolling';
-    if (pace === 'months') return 'A longer-term goal';
-    if (pace === 'years' || pace === 'lifetime') return 'A long-term milestone';
-    return node?.metric === 'achievement' ? 'Find it whenever it appears' : 'Coming later';
+    return getNodeProgressLabel(node, lifetimeEp);
   }
 
   function nodeStateLabel(node) {
@@ -377,7 +250,7 @@
         <strong>{focusGoal?.reward?.name || 'Your next cosmetic'}</strong>
         <small>{focusGoal?.reward ? 'Preview what you can earn.' : 'Keep rolling to reveal it.'}</small>
       </div>
-      <a class="site-button" href="/roll">{focusActionLabel(focusGoal)}</a>
+      <a class="site-button" href="/">{focusActionLabel(focusGoal)}</a>
     </section>
 
     <section class="profile-progression-rank" aria-labelledby="profile-progression-rank-title">

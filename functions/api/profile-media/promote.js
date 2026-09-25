@@ -9,24 +9,12 @@ import {
   optionsResponse,
   parseJsonRequest,
   requestR2Object,
-  requireUser
+  requireUser,
+  verifyStoredProfileMediaObject
 } from '../../_profileMediaControl.js';
 
 export function onRequestOptions({ request }) {
   return optionsResponse(request);
-}
-
-function publicObjectMatches(head, asset) {
-  if (!head?.ok) return false;
-  const expectedSize = Number(asset.byte_size);
-  const actualSize = Number(head.headers.get('content-length'));
-  const expectedMime = String(asset.mime_type || '').toLowerCase();
-  const actualMime = String(head.headers.get('content-type') || '').toLowerCase().split(';')[0].trim();
-  const actualHash = String(head.headers.get('x-amz-meta-sha256') || '').toLowerCase().trim();
-  if (!Number.isSafeInteger(actualSize) || actualSize !== expectedSize) return false;
-  if (actualMime && expectedMime && actualMime !== expectedMime) return false;
-  if (actualHash && asset.content_hash_sha256 && actualHash !== String(asset.content_hash_sha256).toLowerCase()) return false;
-  return true;
 }
 
 export async function onRequestPost({ request, env }) {
@@ -46,13 +34,24 @@ export async function onRequestPost({ request, env }) {
     const publicKey = asset.r2_public_key || asset.r2_private_key;
     if (!publicKey) return jsonResponse({ success: false, error: 'The R2 asset keys are incomplete.' }, 422, request);
 
-    let publicHead = await requestR2Object(env, { method: 'HEAD', bucket: config.publicBucket, key: publicKey });
-    if (!publicHead.ok) {
-      // A previously published asset may have already discarded its private
-      // source key. It cannot be re-created if the immutable public object is
-      // missing, so fail loudly instead of attempting an invalid copy.
+    let verifiedPublic = await verifyStoredProfileMediaObject(env, {
+      bucket: config.publicBucket,
+      key: publicKey,
+      asset
+    });
+    if (!verifiedPublic.success) {
+      // Never copy from a ready flag or uploader-provided hash metadata. The
+      // private source must pass the same bounded byte validation first.
       if (!asset.r2_private_key) {
-        return jsonResponse({ success: false, error: 'The published R2 object could not be found.' }, 502, request);
+        return jsonResponse({ success: false, error: 'The published media object needs to be uploaded again.' }, 422, request);
+      }
+      const verifiedPrivate = await verifyStoredProfileMediaObject(env, {
+        bucket: config.privateBucket,
+        key: asset.r2_private_key,
+        asset
+      });
+      if (!verifiedPrivate.success) {
+        return jsonResponse({ success: false, error: 'The private media object did not pass verification.' }, 422, request);
       }
       const copyResponse = await copyR2Object(env, {
         sourceBucket: config.privateBucket,
@@ -63,10 +62,24 @@ export async function onRequestPost({ request, env }) {
         metadataHash: asset.content_hash_sha256
       });
       if (!copyResponse.ok) return jsonResponse({ success: false, error: 'The media asset could not be promoted to public delivery.' }, 502, request);
-      publicHead = await requestR2Object(env, { method: 'HEAD', bucket: config.publicBucket, key: publicKey });
+      verifiedPublic = await verifyStoredProfileMediaObject(env, {
+        bucket: config.publicBucket,
+        key: publicKey,
+        asset
+      });
+      if (!verifiedPublic.success) {
+        return jsonResponse({ success: false, error: 'The promoted public object did not pass verification.' }, 502, request);
+      }
     }
-    if (!publicObjectMatches(publicHead, asset)) {
-      return jsonResponse({ success: false, error: 'The public R2 object did not match the verified source.' }, 502, request);
+
+    if (Number(asset.content_validation_version) !== 1) {
+      const validated = await callSupabaseRpc(env, 'mark_my_profile_media_content_validated', {
+        p_user_id: auth.user.id,
+        p_asset_id: asset.id,
+        p_content_hash_sha256: verifiedPublic.contentHash,
+        p_validation_policy_version: 1
+      }, { service: true });
+      if (!validated?.success) return jsonResponse({ success: false, error: validated?.error || 'The media content could not be revalidated.' }, 422, request);
     }
 
     const marked = await callSupabaseRpc(env, 'mark_my_profile_media_public', {

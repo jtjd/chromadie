@@ -1,3 +1,5 @@
+import { getBadgeMeta } from './badgeData.js';
+
 const BADGE_ID_PATTERN = /^[a-z0-9_]{1,80}$/;
 
 export function getPercentileTier(percentile, totalRollers) {
@@ -30,4 +32,19 @@ export function getAuthoritativeBadgeIds(data) {
   return [...new Set((supplied.length ? supplied : contributorIds)
     .filter(id => typeof id === 'string' && BADGE_ID_PATTERN.test(id))
     .slice(0, 80))];
+}
+
+function getContributorPoints(contributor) {
+  return Number(contributor?.awardedPoints || contributor?.points || 0);
+}
+
+/** Derive the unassigned portion of a confirmed score for the result breakdown. */
+export function getDisplayedBaseRollScore(displayScore, score, contributors = []) {
+  const contributorTotal = contributors.reduce((total, contributor) => total + getContributorPoints(contributor), 0);
+  return Math.max(0, Number(displayScore || score || 0) - contributorTotal);
+}
+
+/** Order displayed badge IDs by their canonical presentation point values. */
+export function sortRollBadgesDescending(badgeIds) {
+  return (badgeIds || []).slice().sort((left, right) => getBadgeMeta(right).points - getBadgeMeta(left).points);
 }

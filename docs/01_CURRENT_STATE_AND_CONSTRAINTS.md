@@ -10,7 +10,8 @@ This plan is based on the uploaded Chromadie source.
 - Guest play remains local-only.
 - Server-authoritative gameplay mutations.
 - Existing public profile route: `/u/<username>`.
-- Existing shop, leaderboard, profile, game, auth, FAQ, privacy, and challenge flows.
+- The homepage at `/` owns the daily Roll; `/c/<id>` remains the challenge flow.
+- Existing shop, leaderboard, profile, auth, FAQ, privacy, and challenge flows.
 - Existing tests and security/parity scripts.
 
 ## Important Existing Assets to Preserve

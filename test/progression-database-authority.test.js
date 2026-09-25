@@ -64,3 +64,16 @@ test('the executable progression SQL test covers authority, backfill, presentati
     assert.match(sql, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), token);
   }
 });
+
+test('progression analytics quota stays private, bounded, and race-safe', async () => {
+  const migration = await read('supabase/migrations/20260924120000_progression_analytics_account_quota.sql');
+  const sql = await read('supabase/tests/progression_behavior.sql');
+  assert.match(migration, /event_count integer NOT NULL CHECK \(event_count BETWEEN 1 AND 500\)/);
+  assert.match(migration, /ENABLE ROW LEVEL SECURITY/);
+  assert.match(migration, /ON public\.progression_analytics_user_daily_limit \(event_date\)/);
+  assert.match(migration, /REVOKE ALL ON TABLE public\.progression_analytics_user_daily_limit FROM PUBLIC, anon, authenticated, service_role/);
+  assert.match(migration, /WHERE public\.progression_analytics_user_daily_limit\.event_count < 500/);
+  assert.match(migration, /'rate_limited'/);
+  assert.match(migration, /DELETE FROM public\.progression_analytics_user_daily_limit/);
+  assert.match(sql, /daily quota failed to reject without changing shared aggregates/);
+});

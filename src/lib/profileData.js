@@ -220,7 +220,15 @@ export async function loadProfileStudioContext({
  * so a renderer cannot accidentally broaden a public request into an owner
  * request (or expose owner-only achievement progress to visitors).
  */
-export async function loadProfileContext({
+export async function loadProfileContext(options = {}) {
+  try {
+    return await loadProfileContextData(options);
+  } catch {
+    return emptyProfileContext({ loadError: PROFILE_LOAD_MESSAGE });
+  }
+}
+
+async function loadProfileContextData({
   supabaseClient = null,
   profileRecord = null,
   isAuthenticated = false,

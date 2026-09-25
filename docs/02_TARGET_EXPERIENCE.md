@@ -3,13 +3,13 @@
 ## Authenticated Profile Destination
 
 Authenticated players use their own profile as the product destination, not a
-separate game dashboard. The public `/` marketing page remains available as a
-minimal introduction and points signed-in players back to their profile.
+separate game dashboard. The public `/` homepage owns the daily Roll and points
+players toward their profile and public discovery as part of the result flow.
 
 The profile contains:
 
 1. Identity hero.
-2. Today's static roll result and progression state, with a clear path to `/roll`.
+2. Today's static roll result and progression state, with a clear path back to `/`.
 3. Today's result and visible profile consequences.
 4. Pinned accomplishments or collections.
 5. Personal links or creator content.
@@ -32,18 +32,18 @@ Visitors should quickly understand:
 
 The visitor experience must not display owner-only controls or require authentication to appreciate the page.
 
-## Dedicated Roll Sequence
+## Homepage Roll Sequence
 
-The dedicated `/roll` surface owns the complete interactive daily-roll
-experience. The profile remains the player's identity destination and shows
-the resulting color, score, progression, history, and profile consequences
-without embedding a second game application.
+The homepage owns the complete interactive daily-roll experience. The profile
+remains the player's identity destination and shows the resulting color, score,
+progression, history, and profile consequences without embedding a second game
+application.
 
 Recommended sequence:
 
 1. The profile or navigation signals that today's roll is available.
-2. The player enters `/roll` for the interactive action.
-3. The dedicated Roll composition owns request, reveal, result, and reroll UI.
+2. The player rolls from `/`.
+3. The homepage Roll composition owns request, reveal, result, and reroll UI.
 4. The canonical server result updates account and profile state.
 5. The result becomes the dominant color moment.
 6. Rewards, rarity, conditions, and collection consequences appear progressively.

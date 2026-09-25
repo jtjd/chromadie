@@ -59,8 +59,15 @@ test('provider widget renderer and storage contract remain allowlisted', async (
   ]);
   assert.match(renderer, /loading="lazy"/);
   assert.match(renderer, /profileWidgetEmbedUrl/);
-  assert.match(renderer, /deferMedia/);
+  assert.match(renderer, /function isLoaded\(widget\) \{\s*return loaded\.includes\(widget\.order\);/);
+  assert.match(renderer, /External player deferred until you choose to load it/);
+  assert.match(renderer, /on:click=\{\(\) => loadWidget\(widget\.order\)\}/);
   assert.doesNotMatch(renderer, /innerHTML|new Function|eval\s*\(/);
+  const music = await read('src/lib/ProfileMusic.svelte');
+  assert.match(music, /spotifyEmbedSrc && spotifyActive/);
+  assert.match(music, /spotifyEmbedSrc\}\s*\n\s*<div[^>]*spotify-deferred/);
+  assert.match(music, /on:click=\{\(\) => spotifyActive = true\}/);
+  assert.doesNotMatch(music, /spotifyEmbedSrc && \(!deferMedia \|\| spotifyActive\)/);
   assert.match(shell, /<ProfileWidgets/);
   assert.match(registry, /ProfileWidgetEditor\.svelte/);
   assert.match(migration, /normalize_profile_widgets/);

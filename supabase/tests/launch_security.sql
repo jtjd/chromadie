@@ -245,6 +245,13 @@ SELECT pg_temp.audit_assert(
   'profile insights aggregate table must remain RLS-protected and service-owned'
 );
 SELECT pg_temp.audit_assert(
+  (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.progression_analytics_user_daily_limit'::regclass)
+    AND NOT has_table_privilege('anon', 'public.progression_analytics_user_daily_limit', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.progression_analytics_user_daily_limit', 'SELECT')
+    AND NOT has_table_privilege('service_role', 'public.progression_analytics_user_daily_limit', 'SELECT'),
+  'per-account progression quota table must stay private and RLS-protected'
+);
+SELECT pg_temp.audit_assert(
   NOT has_function_privilege('anon', 'public.record_public_profile_view(text)', 'EXECUTE')
     AND NOT has_function_privilege('authenticated', 'public.record_public_profile_view(text)', 'EXECUTE')
     AND has_function_privilege('service_role', 'public.record_profile_insight_from_edge(text,text,text,text,text,text,text,uuid)', 'EXECUTE')
@@ -405,9 +412,9 @@ SELECT pg_temp.audit_assert(
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.shop_items'::regclass AND conname = 'shop_items_catalog_status_check'
   )
-  AND (SELECT count(*) = 60 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
+  AND (SELECT count(*) = 72 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
   AND (SELECT count(*) = 17 FROM public.shop_items WHERE slot = 'name_font' AND catalog_status = 'active')
-  AND (SELECT count(*) = 8 FROM public.shop_items WHERE slot = 'name_material' AND catalog_status = 'active')
+  AND (SELECT count(*) = 20 FROM public.shop_items WHERE slot = 'name_material' AND catalog_status = 'active')
   AND (SELECT count(*) = 35 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
   AND (SELECT count(*) = 12 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
   AND (SELECT count(*) = 23 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
@@ -415,7 +422,7 @@ SELECT pg_temp.audit_assert(
   AND (SELECT count(*) = 5 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
   AND (SELECT count(*) = 14 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
   AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 134 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 146 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -445,7 +452,7 @@ SELECT pg_temp.audit_assert(
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 132
+    AND (SELECT count(*) = 144
          FROM public.get_shop_catalog()
          WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),
@@ -1370,6 +1377,18 @@ SELECT pg_temp.audit_assert(
   'challenge creation is not idempotent'
 );
 
+INSERT INTO public.user_roll_best_candidates (user_id, roll_date, score, hex_code, rarity)
+VALUES ('10000000-0000-0000-0000-000000000001', public.game_utc_date(), 5000000, '#ABCDEF', 'Legendary')
+ON CONFLICT (user_id, roll_date) DO UPDATE
+SET score = EXCLUDED.score, hex_code = EXCLUDED.hex_code, rarity = EXCLUDED.rarity;
+SELECT pg_temp.audit_assert(
+  (SELECT rarity = 'Legendary'
+   FROM public.user_roll_best_candidates
+   WHERE user_id = '10000000-0000-0000-0000-000000000001'
+     AND roll_date = public.game_utc_date()),
+  'authoritative Legendary rarity was rejected by the best-roll candidate contract'
+);
+
 UPDATE public.scores
 SET score = 9000000000, hex_code = '#ABCDEF', rarity = 'Mythic'
 WHERE user_id = '10000000-0000-0000-0000-000000000001' AND roll_date = public.game_utc_date();
@@ -1631,22 +1650,100 @@ SELECT pg_temp.audit_expect_error(
   $staff_audio$SELECT public.update_my_profile_audio(NULL)$staff_audio$,
   'non-staff account received the staff-only profile audio boundary'
 );
-SELECT set_config(
-  'request.jwt.claims',
-  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
-  true
-);
+SELECT set_config('request.jwt.claims', '{"role":"anon"}', true);
 INSERT INTO audit_results VALUES ('config_public_expression', public.get_public_profile_configuration('10000000-0000-0000-0000-000000000001'));
 SELECT pg_temp.audit_assert(
-  (SELECT payload->>'avatar_path' = 'avatars/10000000-0000-0000-0000-000000000001/avatar.webp'
-      AND payload->>'background_path' = 'backgrounds/10000000-0000-0000-0000-000000000001/background.webp'
+  (SELECT payload->>'avatar_path' IS NULL
+      AND payload->>'background_path' IS NULL
       AND payload->>'audio_path' IS NULL
       AND payload->>'spotify_type' = 'track'
       AND payload->>'spotify_id' = '1234567890123456789012'
       AND NOT (payload ? 'draft')
    FROM audit_results WHERE name = 'config_public_expression'),
-  'public profile expression projection was not bounded'
+  'public profile expression projection exposed inert legacy media paths'
 );
+INSERT INTO audit_results VALUES (
+  'config_public_expression_v2',
+  public.get_public_profile_configuration_v2('10000000-0000-0000-0000-000000000001')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload #>> '{published,avatar_path}' IS NULL
+      AND payload #>> '{published,background_path}' IS NULL
+      AND payload #>> '{published,audio_path}' IS NULL
+      AND payload #>> '{published,base,avatar_path}' IS NULL
+      AND payload #>> '{published,base,background_path}' IS NULL
+   FROM audit_results WHERE name = 'config_public_expression_v2'),
+  'public V2 profile configuration serialized legacy media paths'
+);
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
+  true
+);
+
+-- Rich public projections must redact legacy path metadata while retaining
+-- those paths in owner projections so the existing editor can recover it.
+CREATE TEMP TABLE profile_media_projection_original AS
+SELECT user_id, audio_path, background_video_path, banner_path, cursor_path,
+       pointer_cursor_path, audio_playlist
+FROM public.profile_configurations
+WHERE user_id = '10000000-0000-0000-0000-000000000001';
+UPDATE public.profile_configurations
+SET audio_path = 'profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3',
+    background_video_path = 'profile_media/10000000-0000-0000-0000-000000000001/30000000-0000-0000-0000-000000000001.mp4',
+    banner_path = 'profile_media/10000000-0000-0000-0000-000000000001/30000000-0000-0000-0000-000000000002.webp',
+    cursor_path = 'profile_media/10000000-0000-0000-0000-000000000001/30000000-0000-0000-0000-000000000003.webp',
+    pointer_cursor_path = 'profile_media/10000000-0000-0000-0000-000000000001/30000000-0000-0000-0000-000000000004.webp',
+    audio_playlist = jsonb_build_object(
+      'tracks', jsonb_build_array(jsonb_build_object(
+        'path', 'profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3',
+        'order', 0
+      )),
+      'shuffle', false,
+      'loop', true,
+      'autoplay', false,
+      'volume', 0.75,
+      'controls', true
+    )
+WHERE user_id = '10000000-0000-0000-0000-000000000001';
+INSERT INTO audit_results VALUES (
+  'public_rich_media_expression_projection',
+  (SELECT public.profile_media_expression_projection(c, true, true, true)
+   FROM public.profile_configurations c
+   WHERE user_id = '10000000-0000-0000-0000-000000000001')
+);
+INSERT INTO audit_results VALUES (
+  'owner_rich_media_expression_projection',
+  (SELECT public.profile_media_expression_projection(c, true, true, false)
+   FROM public.profile_configurations c
+   WHERE user_id = '10000000-0000-0000-0000-000000000001')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'audio_path' IS NULL
+      AND payload->>'background_video_path' IS NULL
+      AND payload->>'banner_path' IS NULL
+      AND payload->>'cursor_path' IS NULL
+      AND payload->>'pointer_cursor_path' IS NULL
+      AND NOT ((payload->'audio_playlist'->'tracks'->0) ? 'path')
+   FROM audit_results WHERE name = 'public_rich_media_expression_projection'),
+  'rich public profile projection exposed legacy storage paths'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'audio_path' = 'profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3'
+      AND payload->>'background_video_path' = 'profile_media/10000000-0000-0000-0000-000000000001/30000000-0000-0000-0000-000000000001.mp4'
+      AND payload->'audio_playlist'->'tracks'->0->>'path' = 'profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3'
+   FROM audit_results WHERE name = 'owner_rich_media_expression_projection'),
+  'owner profile projection no longer preserves editable legacy media paths'
+);
+UPDATE public.profile_configurations AS c
+SET audio_path = original.audio_path,
+    background_video_path = original.background_video_path,
+    banner_path = original.banner_path,
+    cursor_path = original.cursor_path,
+    pointer_cursor_path = original.pointer_cursor_path,
+    audio_playlist = original.audio_playlist
+FROM profile_media_projection_original AS original
+WHERE c.user_id = original.user_id;
 
 -- Supabase is no longer a profile-media provider. The retired Storage-facing
 -- RPC names remain inert for migration compatibility, while the R2 selection
@@ -1715,7 +1812,26 @@ INSERT INTO public.profile_media_assets (
   ('30000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000001', 'background_video', NULL, 'r2', 'profiles/v-selected.mp4', 'active', 'ready', true, 'video/mp4', 1, 'Selected video'),
   ('30000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000001', 'cursor', NULL, 'r2', 'profiles/c-unused.webp', 'active', 'ready', true, 'image/webp', 1, 'Unused cursor'),
   ('30000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000001', 'cursor', NULL, 'r2', 'profiles/c-selected.webp', 'active', 'ready', true, 'image/webp', 1, 'Selected cursor'),
-  ('30000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000001', 'animated_avatar', NULL, 'r2', 'profiles/a-animated.webp', 'active', 'ready', true, 'image/webp', 1, 'Animated avatar');
+  ('30000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000001', 'animated_avatar', NULL, 'r2', 'profiles/a-animated.webp', 'active', 'ready', true, 'image/webp', 1, 'Animated avatar'),
+  ('30000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000001', 'avatar', 'legacy-media/account-a/avatar.webp', 'supabase', NULL, 'active', 'ready', true, 'image/webp', 1, 'Legacy storage row');
+UPDATE public.profile_media_assets
+SET content_validation_version = 1,
+    content_hash_sha256 = repeat('a', 64)
+WHERE id IN (
+  '30000000-0000-0000-0000-000000000002',
+  '30000000-0000-0000-0000-000000000004',
+  '30000000-0000-0000-0000-000000000006',
+  '30000000-0000-0000-0000-000000000008',
+  '30000000-0000-0000-0000-000000000011'
+);
+SELECT pg_temp.audit_assert(
+  public.profile_media_public_reference('30000000-0000-0000-0000-000000000001', NULL) IS NULL,
+  'unvalidated legacy R2 media received a public reference'
+);
+SELECT pg_temp.audit_assert(
+  public.profile_media_public_reference('30000000-0000-0000-0000-000000000012', NULL) IS NULL,
+  'retired Supabase media was restored to an anonymous profile projection'
+);
 UPDATE public.profile_configurations
 SET avatar_asset_id = '30000000-0000-0000-0000-000000000002',
     background_asset_id = '30000000-0000-0000-0000-000000000004',
@@ -1730,6 +1846,17 @@ WHERE user_id = '10000000-0000-0000-0000-000000000001';
 UPDATE public.profile_configurations
 SET animated_avatar_asset_id = '30000000-0000-0000-0000-000000000011'
 WHERE user_id = '10000000-0000-0000-0000-000000000001';
+INSERT INTO audit_results VALUES (
+  'public_validated_r2_media_projection_v2',
+  public.get_public_profile_configuration_v2('10000000-0000-0000-0000-000000000001')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload #>> '{published,avatar_path}' IS NULL
+      AND payload #>> '{published,media_references,avatar,storage_provider}' = 'r2'
+      AND payload #>> '{published,media_references,avatar,r2_public_key}' = 'profiles/a-selected.webp'
+   FROM audit_results WHERE name = 'public_validated_r2_media_projection_v2'),
+  'public profile projection hid its validated R2 avatar or exposed a legacy path'
+);
 SELECT set_config(
   'request.jwt.claims',
   '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',

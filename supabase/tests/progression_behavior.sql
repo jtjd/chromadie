@@ -443,6 +443,57 @@ SELECT pg_temp.progression_assert(
   'authenticated progression analytics write failed'
 );
 
+INSERT INTO public.progression_analytics_user_daily_limit (user_id, event_date, event_count)
+VALUES ('20000000-0000-0000-0000-000000000002', public.game_utc_date(), 499)
+ON CONFLICT (user_id, event_date)
+DO UPDATE SET event_count = EXCLUDED.event_count;
+DO $$
+DECLARE
+  v_result jsonb;
+  v_limit_count integer;
+BEGIN
+  v_result := public.record_progression_event('progression_viewed', 'progression', 'authenticated', 'all', 'ritual');
+  SELECT event_count INTO v_limit_count
+  FROM public.progression_analytics_user_daily_limit
+  WHERE user_id = '20000000-0000-0000-0000-000000000002'
+    AND event_date = public.game_utc_date();
+  IF v_result->>'recorded' <> 'true' OR v_limit_count <> 500 THEN
+    RAISE EXCEPTION 'the final allowed account analytics event was not recorded: result %, quota %', v_result, v_limit_count;
+  END IF;
+END;
+$$;
+DO $$
+DECLARE
+  v_before integer;
+  v_after integer;
+  v_result jsonb;
+BEGIN
+  SELECT event_count INTO v_before
+  FROM public.progression_analytics_daily
+  WHERE event_date = public.game_utc_date()
+    AND event_name = 'progression_viewed'
+    AND surface = 'progression'
+    AND account_mode = 'authenticated'
+    AND rollout_stage = 'all'
+    AND track = 'ritual';
+
+  v_result := public.record_progression_event('progression_viewed', 'progression', 'authenticated', 'all', 'ritual');
+
+  SELECT event_count INTO v_after
+  FROM public.progression_analytics_daily
+  WHERE event_date = public.game_utc_date()
+    AND event_name = 'progression_viewed'
+    AND surface = 'progression'
+    AND account_mode = 'authenticated'
+    AND rollout_stage = 'all'
+    AND track = 'ritual';
+
+  IF v_result->>'reason' <> 'rate_limited' OR v_after IS DISTINCT FROM v_before THEN
+    RAISE EXCEPTION 'progression event daily quota failed to reject without changing shared aggregates';
+  END IF;
+END;
+$$;
+
 SELECT set_config(
   'request.jwt.claims',
   '{"sub":"20000000-0000-0000-0000-000000000002","role":"anon"}',

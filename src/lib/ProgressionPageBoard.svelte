@@ -3,6 +3,14 @@
   import ProgressionPathIcon from './ProgressionPathIcon.svelte';
   import ProgressionRankBadge from './ProgressionRankBadge.svelte';
   import ProgressionRewardPreview from './ProgressionRewardPreview.svelte';
+  import {
+    formatProgressionNumber as formatNumber,
+    getNodeCurrent,
+    getNodePercent,
+    getNodeProgressLabel,
+    getNodeTarget,
+    isUnlocked
+  } from './progressionPresentation.js';
   import { trackProductEvent } from './productAnalytics.js';
 
   export let journeyEnabled = true;
@@ -37,10 +45,6 @@
   let expandedLane = '';
   const seenGoals = new SvelteSet();
 
-  function formatNumber(value) {
-    return Number(value || 0).toLocaleString();
-  }
-
   function formatCompactNumber(value) {
     const numeric = Math.max(0, Number(value) || 0);
     if (numeric >= 1000000) return `${(Math.floor(numeric / 100000) / 10).toFixed(1).replace(/\.0$/, '')}M`;
@@ -51,8 +55,8 @@
   function focusProgressLabel(node) {
     if (!node) return 'Roll today';
     const current = Number(node?.progress?.current);
-    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
-    if (Number.isFinite(current) && Number.isFinite(target) && target > 0) {
+    const target = getNodeTarget(node);
+    if (Number.isFinite(current) && target) {
       const rawUnit = node?.progress?.unit || (node?.track === 'rank' ? 'points' : 'rolls');
       const unit = String(rawUnit).toLowerCase() === 'ep' ? 'points' : rawUnit;
       return `${formatNumber(current)} / ${formatNumber(target)} ${unit}`;
@@ -61,54 +65,10 @@
     return 'Keep rolling';
   }
 
-  function isUnlocked(node) {
-    return node?.unlocked === true || Boolean(node?.unlockedAt || node?.unlocked_at);
-  }
-
-  function nodeTarget(node) {
-    const target = Number(node?.progress?.target ?? node?.progressTarget ?? node?.threshold);
-    return Number.isFinite(target) && target > 0 ? target : null;
-  }
-
-  function nodeCurrent(node) {
-    if (node?.progress?.current !== undefined) return Math.max(0, Number(node.progress.current) || 0);
-    if (node?.track === 'rank') return lifetimeEp;
-    return 0;
-  }
-
-  function nodePercent(node) {
-    if (isUnlocked(node)) return 100;
-    const target = nodeTarget(node);
-    if (!target) return 0;
-    return Math.min(100, Math.round((nodeCurrent(node) / target) * 100));
-  }
-
-  function goalPaceLabel(node) {
-    const expectedRolls = Number(node?.expectedRolls ?? node?.expected_rolls);
-    const role = node?.presentationRole || node?.presentation_role;
-    if (node?.track === 'discovery' && Number.isFinite(expectedRolls) && expectedRolls > 0) {
-      const odds = `About 1 in ${formatNumber(Math.round(expectedRolls))} rolls`;
-      return role === 'lifetime_discovery' ? `Lifetime discovery · ${odds}` : odds;
-    }
-    if (Number.isFinite(expectedRolls) && expectedRolls > 0 && expectedRolls <= 90) return `Often within ${formatNumber(expectedRolls)} rolls`;
-    const pace = String(node?.paceBand || node?.pace_band || '').toLowerCase();
-    if (pace === 'days') return 'A few days of rolling';
-    if (pace === 'weeks') return 'A few weeks of rolling';
-    if (pace === 'months') return 'A longer-term goal';
-    if (pace === 'years' || pace === 'lifetime') return 'A long-term milestone';
-    return node?.metric === 'achievement' ? 'Find it whenever it appears' : 'Coming later';
-  }
-
-  function nodeProgressLabel(node) {
-    if (isUnlocked(node)) return 'Complete';
-    const target = nodeTarget(node);
-    if (target && (node?.progress || node?.track === 'rank')) {
-      const rawUnit = node?.progress?.unit || (node?.track === 'rank' ? 'points' : 'rolls');
-      const unit = String(rawUnit).toLowerCase() === 'ep' ? 'points' : rawUnit;
-      return `${formatNumber(nodeCurrent(node))} / ${formatNumber(target)} ${unit}`.trim();
-    }
-    return goalPaceLabel(node);
-  }
+  const nodeTarget = getNodeTarget;
+  function nodeCurrent(node) { return getNodeCurrent(node, lifetimeEp); }
+  function nodePercent(node) { return getNodePercent(node, lifetimeEp); }
+  function nodeProgressLabel(node) { return getNodeProgressLabel(node, lifetimeEp); }
 
   function laneAccent(track) {
     if (track === 'rank') return '#FFD21C';
@@ -200,14 +160,14 @@
                 {#if dailyRollData?.score !== undefined}<strong><svg class="progression-page__score-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 2.75 5.65 6.25.9-4.5 4.4 1.06 6.2L12 17.2l-5.56 2.95 1.06-6.2L3 9.55l6.25-.9L12 3Z" /></svg>{formatNumber(dailyRollData.score)} pts</strong>{/if}
               </div>
               <small>{dailyRollData?.rarity || 'Recorded roll'}</small>
-              <a class="progression-page__detail-link" href="/roll">View full roll</a>
+              <a class="progression-page__detail-link" href="/">View today’s roll</a>
             {:else if dailyRollLoaded && dailyRollError}
               <h2 id="progression-today-roll-title">Roll status unavailable</h2>
               <small>Refresh before starting another roll.</small>
             {:else if dailyRollLoaded}
               <h2 id="progression-today-roll-title">Ready to roll</h2>
               <small>{focusGoal ? `${focusGoal.name} · ${focusProgressLabel(focusGoal)}` : 'No color recorded for today.'}</small>
-              <a class="site-button" href="/roll">Roll today</a>
+              <a class="site-button" href="/">Roll today</a>
             {:else}
               <h2 id="progression-today-roll-title">Checking today</h2>
               <small>Reading your server record.</small>

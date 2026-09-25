@@ -27,9 +27,11 @@ test('profile-first projection reserves four primary regions and demotes legacy 
   assert.equal(composition.activeModules.some(module => module.id === 'roll'), false);
 });
 
-test('the landing route stays separate from explicit roll and profile routes', () => {
+test('the homepage owns daily Roll while profile and challenge routes remain distinct', () => {
   assert.equal(parseRouteLocation('/').view, 'home');
-  assert.equal(parseRouteLocation('/', '?view=game').view, 'game');
+  assert.equal(parseRouteLocation('/', '?view=game').view, 'home');
+  assert.equal(parseRouteLocation('/roll').routeMode, 'not-found');
+  assert.equal(parseRouteLocation('/c/challenge-42').view, 'game');
   assert.equal(parseRouteLocation('/u/OtherUser').view, 'profile');
   assert.equal(parseRouteLocation('/profile/settings').view, 'profile-settings');
 });
@@ -38,8 +40,10 @@ test('profile settings keeps secondary features available away from the public c
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
   const renderModel = await readFile(new URL('../src/lib/profileRenderModel.js', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+  const settingsLoadState = await readFile(new URL('../src/lib/profile-studio/settingsLoadState.js', import.meta.url), 'utf8');
   const registry = await readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8');
   const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
+  const routeTarget = await readFile(new URL('../src/lib/routeTarget.js', import.meta.url), 'utf8');
 
   assert.match(shell, /data-profile-region="identity"/);
   assert.match(shell, /ProfileReferenceCard/);
@@ -56,11 +60,11 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(renderModel, /getProfileStoryVisible\(configuration\)/);
   assert.match(renderModel, /showRoll = getProfileRollVisible/);
   assert.match(shell, /visibilitychange/);
-  assert.match(settings, /Profile settings/);
+  assert.match(settingsLoadState, /Profile settings are available only for your own profile/);
   assert.match(renderModel, /A founding color identity/);
   assert.doesNotMatch(shell, /Public boundary|What visitors can see/);
   assert.doesNotMatch(shell, /profileRollComponent|todayColorComponent|roll_die\s*\(/);
   assert.match(app, /view === 'home'/);
-  assert.match(app, /loaderKey: 'home'/);
+  assert.match(routeTarget, /loaderKey: 'home'/);
   assert.doesNotMatch(app, /shouldUseAuthenticatedProfileHome/);
 });

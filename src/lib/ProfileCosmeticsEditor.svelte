@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import Surface from './foundation/Surface.svelte';
   import ShopItemPreview from './ShopItemPreview.svelte';
   import { PROFILE_RENDER_CONTEXTS } from './profile-studio/previewContexts.js';
@@ -18,7 +18,8 @@
     cosmeticCatalogError,
     cosmeticCatalogLoading
   } from './catalogState.js';
-  import { supabase } from './supabase';
+import { supabase } from './supabase';
+import { rpcWithAccessToken } from './rpcWithAccessToken.js';
   import { trackProductEvent } from './productAnalytics.js';
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer, getNamePreviewLoadoutForSlot } from './name/nameLoadout.js';
   import { isCuratedNameMotion } from './name/nameMotions.js';
@@ -41,6 +42,8 @@
   let loadingSlot = '';
   let error = '';
   let syncedLoadoutKey = '';
+  let activeSessionUserId = '';
+  let mutationGeneration = 0;
 
   const NAME_DEFAULT_LABELS = Object.freeze({
     name_font: 'Platform default font',
@@ -124,6 +127,16 @@
     : `staged:${JSON.stringify(stagedLoadout || {})}`;
   $: previewSourceLoadout = stagedLoadout === null ? $equippedItems : stagedLoadout;
   $: syncPreviewLoadout(previewSourceKey, previewSourceLoadout);
+  $: syncMutationOwner($session?.user?.id || '');
+
+  function syncMutationOwner(userId) {
+    if (userId === activeSessionUserId) return;
+    activeSessionUserId = userId;
+    mutationGeneration += 1;
+    loadingSlot = '';
+  }
+
+  onDestroy(() => { mutationGeneration += 1; });
 
   onMount(() => {
     void loadCosmeticCatalog();
@@ -190,22 +203,37 @@
 
   async function applyChanges() {
     if (loadingSlot || !hasPendingChanges) return;
+    const userId = $session?.user?.id || '';
+    const actionGeneration = mutationGeneration;
+    if (!userId || userId !== $profile?.id) return;
     const changedSlots = COSMETIC_SLOTS.filter(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
     loadingSlot = 'all';
     error = '';
 
     try {
-      const userId = $session?.user?.id;
+      const authResult = await supabase.auth.getSession();
+      const accessToken = authResult?.data?.session?.access_token || '';
+      if (!accessToken || authResult?.data?.session?.user?.id !== userId) {
+        throw new Error('Your session could not authorize this appearance change.');
+      }
+      const isCurrent = () => Boolean(
+        mutationGeneration === actionGeneration
+        && activeSessionUserId === userId
+        && userId === $session?.user?.id
+        && userId === $profile?.id
+      );
+      if (!isCurrent()) return;
       const result = await applyCosmeticChanges({
         changedSlots,
         previewLoadout,
         equippedItems: $equippedItems,
         getItem: itemKey => $cosmeticCatalogItems[itemKey] || null,
         hasEntitlement: item => hasShopEntitlement(item, fittingRoom),
-        rpc: (name, args) => supabase.rpc(name, args),
+        isCurrent,
+        rpc: (name, args) => rpcWithAccessToken(supabase, name, args, accessToken),
         refresh: () => userId ? refreshProfileState(userId) : null
       });
-      if (userId !== $session?.user?.id) return;
+      if (!isCurrent() || result.stale) return;
       // Reconciliation returns either the server snapshot or confirmed RPC changes.
       equippedItems.set({ ...result.loadout });
       previewLoadout = result.loadout;
@@ -221,12 +249,13 @@
       }
       addToast(`${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'} applied.`, 'success');
     } catch (actionError) {
+      if (userId !== $session?.user?.id || mutationGeneration !== actionGeneration) return;
       previewLoadout = { ...$equippedItems };
       syncedLoadoutKey = '';
       dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
       error = actionError instanceof Error ? actionError.message : 'The appearance change could not be saved.';
     } finally {
-      loadingSlot = '';
+      if (userId === $session?.user?.id && mutationGeneration === actionGeneration) loadingSlot = '';
     }
   }
 </script>

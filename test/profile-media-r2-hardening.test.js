@@ -10,6 +10,7 @@ import {
 import { selectedRows } from '../scripts/profile-media-migration-model.mjs';
 import { triggerProfileMediaCleanup } from '../workers/profile-media-cleanup-scheduler/index.js';
 import { onRequestPost as deleteLegacyAudio } from '../functions/api/profile-media/delete-legacy-audio.js';
+import { processAnimatedAvatarPoster } from '../src/lib/profileMediaProcessing.js';
 
 const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 const config = {
@@ -23,6 +24,103 @@ const config = {
 };
 const emptyHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 const fixedDate = new Date('2013-05-24T00:00:00.000Z');
+
+function animatedGif(width, height, frameCount = 2) {
+  const frame = [0x2c, 0, 0, 0, 0, width & 0xff, width >> 8, height & 0xff, height >> 8, 0, 2, 2, 0x44, 0x01, 0];
+  return new Uint8Array([
+    ...Buffer.from('GIF89a'), width & 0xff, width >> 8, height & 0xff, height >> 8, 0, 0, 0,
+    ...Array.from({ length: frameCount }, () => frame).flat(), 0x3b
+  ]);
+}
+
+function animatedWebp(width, height, frameCount = 2) {
+  const little = value => [value & 0xff, (value >> 8) & 0xff, (value >> 16) & 0xff];
+  const chunk = (name, data) => [
+    ...Buffer.from(name), data.length & 0xff, (data.length >> 8) & 0xff,
+    (data.length >> 16) & 0xff, (data.length >> 24) & 0xff, ...data,
+    ...(data.length % 2 ? [0] : [])
+  ];
+  const frame = [0, 0, 0, 0, 0, 0, ...little(width - 1), ...little(height - 1), 0, 0, 0, 0];
+  const chunks = [
+    ...chunk('VP8X', [0x02, 0, 0, 0, ...little(width - 1), ...little(height - 1)]),
+    ...chunk('ANIM', [0, 0, 0, 0, 0, 0]),
+    ...Array.from({ length: frameCount }, () => chunk('ANMF', frame)).flat()
+  ];
+  return new Uint8Array([
+    ...Buffer.from('RIFF'), ...[chunks.length + 4, 0, 0, 0], ...Buffer.from('WEBP'), ...chunks
+  ]);
+}
+
+function concatBytes(...parts) {
+  return Uint8Array.from(parts.flatMap(part => [...part]));
+}
+
+function u32be(value) {
+  return [(value >>> 24) & 0xff, (value >>> 16) & 0xff, (value >>> 8) & 0xff, value & 0xff];
+}
+
+function isoBox(type, payload) {
+  return concatBytes(u32be(8 + payload.length), Buffer.from(type), payload);
+}
+
+function mp4Video(width, height, durationMs) {
+  const mdhd = isoBox('mdhd', Uint8Array.from([
+    0, 0, 0, 0, ...u32be(0), ...u32be(0), ...u32be(1000), ...u32be(durationMs), 0, 0, 0, 0
+  ]));
+  const hdlr = isoBox('hdlr', Uint8Array.from([0, 0, 0, 0, 0, 0, 0, 0, ...Buffer.from('vide'), ...new Uint8Array(12)]));
+  const visualEntry = new Uint8Array(78);
+  visualEntry[24] = (width >> 8) & 0xff;
+  visualEntry[25] = width & 0xff;
+  visualEntry[26] = (height >> 8) & 0xff;
+  visualEntry[27] = height & 0xff;
+  const sampleEntry = isoBox('avc1', visualEntry);
+  const stsd = isoBox('stsd', Uint8Array.from([0, 0, 0, 0, ...u32be(1), ...sampleEntry]));
+  const stbl = isoBox('stbl', stsd);
+  const minf = isoBox('minf', stbl);
+  const mdia = isoBox('mdia', concatBytes(mdhd, hdlr, minf));
+  const trak = isoBox('trak', mdia);
+  const ftyp = isoBox('ftyp', Uint8Array.from([...Buffer.from('isom'), ...u32be(0), ...Buffer.from('isom')]));
+  return concatBytes(ftyp, isoBox('moov', trak));
+}
+
+function ebmlElement(idHex, payload) {
+  if (payload.length >= 127) throw new Error('Test EBML element is too large for its short size vint.');
+  return concatBytes(Buffer.from(idHex, 'hex'), Uint8Array.of(0x80 | payload.length), payload);
+}
+
+function ebmlUnsignedElement(idHex, value, byteLength = 1) {
+  const bytes = new Uint8Array(byteLength);
+  for (let index = byteLength - 1; index >= 0; index -= 1) {
+    bytes[index] = value & 0xff;
+    value = Math.floor(value / 256);
+  }
+  return ebmlElement(idHex, bytes);
+}
+
+function webmVideo(width, height, durationMs) {
+  const duration = new Uint8Array(8);
+  new DataView(duration.buffer).setFloat64(0, durationMs, false);
+  const info = ebmlElement('1549a966', concatBytes(
+    ebmlUnsignedElement('2ad7b1', 1_000_000, 3),
+    ebmlElement('4489', duration)
+  ));
+  const video = ebmlElement('e0', concatBytes(
+    ebmlUnsignedElement('b0', width, 2),
+    ebmlUnsignedElement('ba', height, 2)
+  ));
+  const track = ebmlElement('ae', concatBytes(ebmlUnsignedElement('83', 1), video));
+  const tracks = ebmlElement('1654ae6b', track);
+  const header = ebmlElement('1a45dfa3', concatBytes(
+    ebmlUnsignedElement('4286', 1),
+    ebmlUnsignedElement('42f7', 1),
+    ebmlUnsignedElement('42f2', 4),
+    ebmlUnsignedElement('42f3', 8),
+    ebmlElement('4282', Buffer.from('webm')),
+    ebmlUnsignedElement('4287', 4),
+    ebmlUnsignedElement('4285', 2)
+  ));
+  return concatBytes(header, ebmlElement('18538067', concatBytes(info, tracks)));
+}
 
 test('R2 header signatures use canonical sorted headers including x-amz-date', async () => {
   const signed = await buildSignature({
@@ -63,26 +161,59 @@ test('R2 presigned PUT derives SignedHeaders instead of hard-coding their order'
   assert.equal(parsed.searchParams.get('X-Amz-Signature'), '9e031194eee0569d033104c2451fb2435287b14acdf49fb9f1e520898eb65f35');
 });
 
-test('server-side media signatures accept supported containers and reject mismatches', () => {
-  const webp = new Uint8Array([...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WEBP')]);
+test('server-side media signatures accept supported containers and reject mismatches', async () => {
+  const webp = new Uint8Array(await readFile(new URL('./fixtures/profile-media/static-64.webp', import.meta.url)));
   const ani = new Uint8Array([...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('ACON')]);
-  const mp4 = new Uint8Array([...new Uint8Array([0, 0, 0, 20]), ...Buffer.from('ftypisom')]);
-  const webm = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, ...Buffer.from('webm')]);
+  const mp4 = new Uint8Array(await readFile(new URL('./fixtures/profile-media/h264-320x180.mp4', import.meta.url)));
+  const webm = new Uint8Array(await readFile(new URL('./fixtures/profile-media/vp8-320x180.webm', import.meta.url)));
   const mp3 = new Uint8Array([...Buffer.from('ID3'), 4, 0, 0, 0, 0, 0, 0]);
-  const gif = new Uint8Array([...Buffer.from('GIF89a'), 0x2c, 0, 0, 0x2c]);
-  const animatedWebp = new Uint8Array([...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WEBPVP8XANIM')]);
-  const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xdb, 0, 0xff, 0xd9]);
+  const gif = animatedGif(64, 64);
+  const animatedWebpBytes = animatedWebp(64, 64);
+  const jpeg = new Uint8Array(await readFile(new URL('./fixtures/profile-media/static-64x32.jpg', import.meta.url)));
   assert.equal(validateProfileMediaSignature({ bytes: webp, kind: 'avatar', extension: 'webp', mimeType: 'image/webp' }), true);
-  assert.equal(validateProfileMediaSignature({ bytes: ani, kind: 'cursor', extension: 'ani', mimeType: 'application/x-navi-animation' }), true);
+  assert.equal(validateProfileMediaSignature({ bytes: ani, kind: 'cursor', extension: 'ani', mimeType: 'application/x-navi-animation' }), false);
   assert.equal(validateProfileMediaSignature({ bytes: mp4, kind: 'background_video', extension: 'mp4', mimeType: 'video/mp4' }), true);
   assert.equal(validateProfileMediaSignature({ bytes: webm, kind: 'background_video', extension: 'webm', mimeType: 'video/webm' }), true);
   assert.equal(validateProfileMediaSignature({ bytes: mp3, kind: 'audio', extension: 'mp3', mimeType: 'audio/mpeg' }), true);
+  assert.equal(validateProfileMediaSignature({ bytes: mp4, kind: 'background_video', extension: 'mp4', mimeType: 'video/mp4' }), true);
+  const oversizedMp4 = new Uint8Array(await readFile(new URL('./fixtures/profile-media/h264-1920x1080.mp4', import.meta.url)));
+  assert.equal(validateProfileMediaSignature({ bytes: oversizedMp4, kind: 'background_video', extension: 'mp4', mimeType: 'video/mp4' }), false);
+  assert.equal(validateProfileMediaSignature({ bytes: webmVideo(320, 180, 30_001), kind: 'background_video', extension: 'webm', mimeType: 'video/webm' }), false);
+  assert.equal(validateProfileMediaSignature({ bytes: mp4.slice(0, 20), kind: 'background_video', extension: 'mp4', mimeType: 'video/mp4' }), false);
   assert.equal(validateProfileMediaSignature({ bytes: gif, kind: 'animated_avatar', extension: 'gif', mimeType: 'image/gif' }), true);
-  assert.equal(validateProfileMediaSignature({ bytes: animatedWebp, kind: 'animated_avatar', extension: 'webp', mimeType: 'image/webp' }), true);
+  assert.equal(validateProfileMediaSignature({ bytes: animatedWebpBytes, kind: 'animated_avatar', extension: 'webp', mimeType: 'image/webp' }), true);
+  assert.equal(validateProfileMediaSignature({ bytes: animatedGif(2048, 2048), kind: 'animated_avatar', extension: 'gif', mimeType: 'image/gif' }), false);
+  assert.equal(validateProfileMediaSignature({ bytes: animatedWebp(1024, 1024, 13), kind: 'animated_avatar', extension: 'webp', mimeType: 'image/webp' }), false);
+  assert.equal(validateProfileMediaSignature({ bytes: animatedWebp(64, 64, 61), kind: 'animated_avatar', extension: 'webp', mimeType: 'image/webp' }), false);
   assert.equal(validateProfileMediaSignature({ bytes: webp, kind: 'animated_avatar', extension: 'webp', mimeType: 'image/webp' }), false);
   assert.equal(validateProfileMediaSignature({ bytes: jpeg, kind: 'share_image', extension: 'jpg', mimeType: 'image/jpeg' }), true);
   assert.equal(validateProfileMediaSignature({ bytes: new TextEncoder().encode('not a webp'), kind: 'avatar', extension: 'webp', mimeType: 'image/webp' }), false);
   assert.equal(validateProfileMediaSignature({ bytes: webp, kind: 'avatar', extension: 'zip', mimeType: 'image/webp' }), false);
+});
+
+test('animated avatar bounds are checked before the browser tries to decode the source', async () => {
+  const previousDocument = globalThis.document;
+  const originalCreateObjectUrl = URL.createObjectURL;
+  let createdObjectUrl = false;
+  globalThis.document = {};
+  URL.createObjectURL = () => {
+    createdObjectUrl = true;
+    return 'blob:unexpected';
+  };
+  try {
+    const file = {
+      name: 'oversized.gif',
+      type: 'image/gif',
+      size: 100,
+      arrayBuffer: async () => animatedGif(2048, 2048).buffer
+    };
+    await assert.rejects(processAnimatedAvatarPoster(file), /1024×1024 pixels/);
+    assert.equal(createdObjectUrl, false);
+  } finally {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+    URL.createObjectURL = originalCreateObjectUrl;
+  }
 });
 
 test('exact public media purge is scoped to the immutable media URL', async () => {
@@ -158,7 +289,7 @@ test('legacy audio cleanup remains path-guarded and metadata-only', async () => 
   const editor = await read('src/lib/ProfileExpressionEditor.svelte');
   const endpoint = await read('functions/api/profile-media/delete-legacy-audio.js');
   const migration = await read('supabase/migrations/20260814010000_profile_audio_legacy_delete_order.sql');
-  assert.match(editor, /deleteLegacyProfileAudio\(previousPath\)/);
+  assert.match(editor, /clearLegacyProfileExpressionAudio\(previousPath,[\s\S]*authorization,[\s\S]*isCurrent: action\.isCurrent/);
   assert.doesNotMatch(editor, /supabase\.storage\.from\([\s\S]*remove/);
   assert.doesNotMatch(endpoint, /deleteSupabaseStorageObject|storage\/v1/);
   assert.match(endpoint, /clear_my_legacy_profile_audio/);
@@ -270,8 +401,8 @@ test('R2 final correctness keeps deletion operation state and scheduler control-
 test('permanent R2 library deletion stays on the provider control plane after rollback', async () => {
   const expressionEditor = await read('src/lib/ProfileExpressionEditor.svelte');
   const richMediaEditor = await read('src/lib/ProfileRichMediaEditor.svelte');
-  assert.match(expressionEditor, /const data = await deleteProfileMediaAsset\(asset\.id\)/);
-  assert.match(richMediaEditor, /const data = await deleteProfileMediaAsset\(asset\.id\)/);
+  assert.match(expressionEditor, /deleteProfileExpressionAsset\(asset\.id,[\s\S]*authorization,[\s\S]*isCurrent: action\.isCurrent/);
+  assert.match(richMediaEditor, /const data = await deleteProfileMediaAsset\(asset\.id, authorization\)/);
   assert.match(expressionEditor, /Avatar unequipped\.[\s\S]*saved asset remains in your library/);
   assert.match(expressionEditor, /Background unequipped\.[\s\S]*saved asset remains in your library/);
   assert.match(expressionEditor, /profile-expression-editor__compact-library/);

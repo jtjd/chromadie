@@ -1,57 +1,56 @@
 <script>
-  import RollTile from './RollTile.svelte';
+  import RollRevealStage from './RollRevealStage.svelte';
   import RollPreRoll from './RollPreRoll.svelte';
   import RollResultBreakdown from './RollResultBreakdown.svelte';
   import RollResultHero from './RollResultHero.svelte';
+  import RollResultRewards from './RollResultRewards.svelte';
+  import RollResultActions from './RollResultActions.svelte';
   import { supabase } from './supabase';
   import { session, profile, authUser, authInitialized, accountState, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
   import { ACCOUNT_STATES } from './authState.js';
   import { createChallengeLink } from './challenges';
-  import { sleep, getTodayString, normalizeHexColor } from './utils';
-  import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
+  import { getTodayString, normalizeHexColor } from './utils';
+  import { getReadableTextColor } from './colorContrast.js';
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
   import { getBadgeMeta } from './badgeData';
   import { canInitiateRoll, createCanonicalRollData, getRollAccountMode, isRollReady, normalizeCanonicalRoll } from './rollState';
   import { normalizeNewMilestones } from './progressionState.js';
-  import { getPercentileTier } from './rollPresentation.js';
+  import { getDisplayedBaseRollScore, getPercentileTier, sortRollBadgesDescending } from './rollPresentation.js';
   import { getRarityPresentation } from './rarityPresentation.js';
   import { getRank } from './ranks.js';
-  import { clearRerollLock, hasActiveRerollLock, requestRoll, requestRollPercentile, setRerollLock } from './rollService.js';
+import { requestRoll } from './rollService.js';
+import { executeRollAttempt } from './rollAttempt.js';
+import { loadAuthenticatedRollSnapshot, loadGuestRollSnapshot } from './rollHydration.js';
+import { runInitialRollHydration } from './rollInitialState.js';
+import { runRollTextShare } from './rollTextShare.js';
+  import {
+    clearGuestRoll,
+    clearRerollLock,
+    GUEST_ROLL_STORAGE_KEY,
+    hasActiveRerollLock,
+    saveGuestRoll,
+    setRerollLock
+  } from './rollStorage.js';
   import { getAppOrigin } from './authUrls';
   import { trackProductEvent } from './productAnalytics.js';
   import { createScoreCountUpController } from './rollRevealController.js';
-  import {
-    getRevealHexCharacters,
-    getRollRevealItems,
-    getRollRevealTimeline,
-    ROLL_REVEAL_SIGNAL_COLORS,
-    ROLL_REVEAL_STEPS
-  } from './rollReveal.js';
+  import { ROLL_REVEAL_STEPS } from './rollReveal.js';
+  import { playRollRevealSequence } from './rollRevealSequence.js';
 
   const dispatch = createEventDispatcher();
   export let profileMode = false;
   export let dedicated = false;
   export let surface = 'roll';
-  export let signupNext = '/roll';
+  export let signupNext = '/';
   export let showAcquisitionActions = false;
   let phase = 'preroll';
   let loading = false;
   let error = null;
+  let copiedFeedbackVersion = 0;
+  let rollTextShareAttemptId = 0;
 
   let displayHex = '#000000';
   let displayColor = '#222';
-
-  function getReadableTextColor(value) {
-    const hex = normalizeHexColor(value, '#ffffff').slice(1);
-    const channels = [0, 2, 4].map(offset => {
-      const channel = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
-      return channel <= 0.03928
-        ? channel / 12.92
-        : ((channel + 0.055) / 1.055) ** 2.4;
-    });
-    const luminance = (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
-    return luminance > 0.179 ? '#0e0e10' : '#ffffff';
-  }
 
   $: rollActionInk = getReadableTextColor(displayColor);
 
@@ -78,11 +77,8 @@
   let milestoneGranted = '';
   let newMilestones = [];
 
-  let showImageModal = false;
-  let imagePreviewUrl = '';
-  let imageCopied = false;
-  let imageDialog = null;
-  let imageOpener = null;
+  let shareImageDialog = null;
+  let RollShareImageDialogComponent = null;
   let guestProgressRestored = false;
   let rerollRequestInFlight = false;
   let rerollLocked = false;
@@ -93,8 +89,6 @@
 
   let cotwColor = null;
   let cotwHit = false;
-
-  const MAX_STORED_ROLL_SCORE = 100000000;
 
   const SYSTEM_BADGE_IDS = ['beat_your_best', 'cotw_hit', 'streak_bonus_7', 'reroll_shard_earned', 'milestone_30', 'milestone_100', 'milestone_365'];
   $: systemBadges = badges.filter(b => SYSTEM_BADGE_IDS.includes(b));
@@ -116,25 +110,12 @@
     });
   }
 
-  function getContributorPoints(contributor) {
-    return Number(contributor?.awardedPoints || contributor?.points || 0);
-  }
-
-  function getBaseRollScore() {
-    const contributorTotal = rollContributors.reduce((total, contributor) => total + getContributorPoints(contributor), 0);
-    return Math.max(0, Number(displayScore || score || 0) - contributorTotal);
-  }
-
-  function sortBadgesDescending(arr) {
-      return (arr || []).slice().sort((a, b) => getBadgeMeta(b).points - getBadgeMeta(a).points);
-  }
-
   function setRollPresentationFromData(data) {
       const canonical = normalizeCanonicalRoll(data);
       traits = canonical.traits;
       identity = canonical.identity;
       rollContributors = canonical.contributors;
-      badges = sortBadgesDescending(canonical.badges);
+      badges = sortRollBadgesDescending(canonical.badges);
   }
 
   function getTomorrowMidnightUTC() {
@@ -158,75 +139,44 @@
   }
 
   async function shareResultsText() {
+      const shareAttemptId = ++rollTextShareAttemptId;
       const shareRequestId = rollRequestId;
       const shareAccountId = $session?.user?.id || null;
-      const shareHex = normalizeHexColor(displayColor);
-      const senderUsername = $profile?.username || $authUser?.user_metadata?.username || null;
-      let shareUrl = getAppOrigin();
-
-      const challengeLink = $isAuthenticated
-        ? await createChallengeLink(supabase, {
-            score,
-            hex: shareHex,
-            senderUsername
-          })
-        : { success: false };
-
-      if (shareRequestId !== rollRequestId || shareAccountId !== ($session?.user?.id || null)) return;
-
-      if (challengeLink.success && challengeLink.shareUrl) {
-          shareUrl = new URL(challengeLink.shareUrl, getAppOrigin()).toString();
-      } else if ($isAuthenticated) {
-          addToast('The result was copied without a challenge link because the server could not create one.', 'error');
-      }
-
-      const callToAction = challengeLink.success ? `Challenge me: ${shareUrl}` : `Play ChromaDie: ${shareUrl}`;
-      const rankName = $isAuthenticated ? getRank(Number($profile?.lifetime_ep) || 0).name : '';
-      const earnedLine = $isAuthenticated
+      const authenticated = $isAuthenticated;
+      const rankName = authenticated ? getRank(Number($profile?.lifetime_ep) || 0).name : '';
+      const earnedLine = authenticated
         ? newMilestones.length
           ? `Unlocked: ${newMilestones.map(milestone => milestone.reward?.name || milestone.name).join(', ')}`
           : `Rank: ${rankName}`
         : '';
-      let shareString = `🎲 ChromaDie Daily Roll\n${shareHex} • ${score.toLocaleString()} pts • ${rarity}${earnedLine ? `\n${earnedLine}` : ''}\n${callToAction}`;
 
-      trackProductEvent('progression_share_started', {
-        surface: 'roll',
+      await runRollTextShare({
+        requestId: shareRequestId,
+        accountId: shareAccountId,
+        authenticated,
         accountMode: getRollAccountMode($session),
-        method: 'clipboard'
-      });
-
-      try {
-          await navigator.clipboard.writeText(shareString);
-          if (shareRequestId !== rollRequestId || shareAccountId !== ($session?.user?.id || null)) return;
+        score,
+        shareHex: normalizeHexColor(displayColor),
+        rarity,
+        earnedLine,
+        senderUsername: $profile?.username || $authUser?.user_metadata?.username || null,
+        appOrigin: getAppOrigin()
+      }, {
+        isCurrent: () => shareAttemptId === rollTextShareAttemptId
+          && shareRequestId === rollRequestId
+          && shareAccountId === ($session?.user?.id || null),
+        createChallengeLink: payload => createChallengeLink(supabase, payload),
+        writeText: text => navigator.clipboard.writeText(text),
+        track: trackProductEvent,
+        toast: addToast,
+        onCopied: () => {
+          const feedbackVersion = ++copiedFeedbackVersion;
           copied = true;
-          setTimeout(() => copied = false, 2000);
-      } catch {
-          addToast('Could not copy the result. Please try again.', 'error');
-      }
-  }
-
-  function getSavedGuestRoll() {
-    try {
-      return localStorage.getItem('chromadie-roll');
-    } catch {
-      return null;
-    }
-  }
-
-  function saveGuestRoll(rollData) {
-    try {
-      localStorage.setItem('chromadie-roll', JSON.stringify(rollData));
-    } catch {
-      // Ignore storage failures in private browsing or hardened browser modes.
-    }
-  }
-
-  function clearGuestRoll() {
-    try {
-      localStorage.removeItem('chromadie-roll');
-    } catch {
-      // Ignore storage failures.
-    }
+          setTimeout(() => {
+            if (feedbackVersion === copiedFeedbackVersion) copied = false;
+          }, 2000);
+        }
+      });
   }
 
   function prefersReducedMotion() {
@@ -257,163 +207,38 @@
     revealDetail = 'Showing the confirmed result';
   }
 
+  /** @param {Record<string, any>} patch */
+  function applyRollRevealState(patch) {
+    if (Object.hasOwn(patch, 'score')) score = patch.score;
+    if (Object.hasOwn(patch, 'rarity')) rarity = patch.rarity;
+    if (Object.hasOwn(patch, 'identity')) identity = patch.identity;
+    if (Object.hasOwn(patch, 'traits')) traits = patch.traits;
+    if (Object.hasOwn(patch, 'rollContributors')) rollContributors = patch.rollContributors;
+    if (Object.hasOwn(patch, 'revealConditions')) revealConditions = patch.revealConditions;
+    if (Object.hasOwn(patch, 'revealItemTotal')) revealItemTotal = patch.revealItemTotal;
+    if (Object.hasOwn(patch, 'revealStep')) revealStep = patch.revealStep;
+    if (Object.hasOwn(patch, 'revealDetail')) revealDetail = patch.revealDetail;
+    if (Object.hasOwn(patch, 'displayHex')) displayHex = patch.displayHex;
+    if (Object.hasOwn(patch, 'displayColor')) displayColor = patch.displayColor;
+    if (Object.hasOwn(patch, 'displayScore')) displayScore = patch.displayScore;
+    if (Object.hasOwn(patch, 'scanProgress')) scanProgress = patch.scanProgress;
+  }
+
   async function presentRollResult(data, requestIsCurrent) {
-    const canonical = normalizeCanonicalRoll(data);
     const reducedMotion = prefersReducedMotion();
-    const conditionCount = canonical.contributors.length;
-    const revealItems = getRollRevealItems(canonical);
-    const timing = getRollRevealTimeline({
-      rarity: canonical.rarity,
-      score: canonical.score,
-      conditionCount,
-      reducedMotion
-    });
-    revealConditions = [];
-    revealItemTotal = revealItems.length;
-
-    const revealCondition = async item => {
-      revealConditions = [...revealConditions, item];
-      await tick();
-      revealListElement?.scrollTo({
-        top: revealListElement.scrollHeight,
-        behavior: reducedMotion ? 'auto' : 'smooth'
-      });
-    };
-
-    const waitForBeat = async delay => {
-      if (revealSkipRequested) return requestIsCurrent();
-      if (delay > 0) await sleep(delay);
-      return requestIsCurrent() && !revealSkipRequested;
-    };
-    const waitThroughStage = async (duration, messages, onBeat) => {
-      const safeMessages = messages.length ? messages : [''];
-      const beatDuration = duration / safeMessages.length;
-      const beatHandler = typeof onBeat === 'function' ? onBeat : () => {};
-      for (let index = 0; index < safeMessages.length; index += 1) {
-        if (revealSkipRequested) return false;
-        beatHandler(index, safeMessages[index]);
-        if (!await waitForBeat(beatDuration)) return false;
-      }
-      return true;
-    };
-    const finalize = () => {
-      const finalHex = normalizeHexColor(canonical.hex, '#000000');
-      score = Number(canonical.score) || 0;
-      rarity = canonical.rarity || 'Common';
-      identity = canonical.identity;
-      traits = canonical.traits;
-      rollContributors = canonical.contributors;
-      revealConditions = [...revealItems];
-      revealStep = ROLL_REVEAL_STEPS.length - 1;
-      revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
-      displayHex = finalHex;
-      displayColor = finalHex;
-      displayScore = score;
-      scanProgress = 100;
-      return canonical;
-    };
-
-    if (!requestIsCurrent()) return null;
-    if (reducedMotion) return finalize();
-
-    displayColor = '#222';
-    displayHex = getRevealHexCharacters(canonical.hex, 0);
-    dispatchRollState();
-    revealStep = 0;
-    revealDetail = 'Waiting for the roll result';
-    scanProgress = ROLL_REVEAL_STEPS[0].progress;
-    displayScore = 0;
-    score = 0;
-    rarity = '';
-    identity = '';
-    traits = [];
-    rollContributors = [];
-
-    if (!await waitThroughStage(
-      timing.color,
-      ['Color signal received'],
-      (index, message) => {
-        revealDetail = message;
-        displayColor = ROLL_REVEAL_SIGNAL_COLORS[index % ROLL_REVEAL_SIGNAL_COLORS.length];
-      }
-    )) {
-      if (!requestIsCurrent()) return null;
-      if (revealSkipRequested) return finalize();
-    }
-
-    for (let revealedCharacters = 1; revealedCharacters <= 6; revealedCharacters += 1) {
-      if (revealSkipRequested) return finalize();
-      revealDetail = `${revealedCharacters}/6 HEX characters revealed`;
-      displayHex = getRevealHexCharacters(canonical.hex, revealedCharacters);
-      displayColor = ROLL_REVEAL_SIGNAL_COLORS[(revealedCharacters + 1) % ROLL_REVEAL_SIGNAL_COLORS.length];
-      dispatchRollState();
-      if (!await waitForBeat(timing.channel)) {
-        if (!requestIsCurrent()) return null;
-        if (revealSkipRequested) return finalize();
-      }
-    }
-
-    displayHex = normalizeHexColor(canonical.hex, '#000000');
-    displayColor = normalizeHexColor(canonical.hex, '#000000');
-    dispatchRollState();
-    revealStep = 1;
-    scanProgress = ROLL_REVEAL_STEPS[1].progress;
-    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} confirmed`;
-    if (!await waitForBeat(timing.conditionIntro)) {
-      if (!requestIsCurrent()) return null;
-      if (revealSkipRequested) return finalize();
-    }
-
-    for (let index = 0; index < revealItems.length; index += 1) {
-      if (revealSkipRequested) return finalize();
-      const item = revealItems[index];
-      await revealCondition(item);
-      revealDetail = item.kind === 'condition' && item.points > 0
-        ? `${item.label} · +${item.points.toLocaleString()} score`
-        : `${item.label} checked`;
-      if (!await waitForBeat(timing.conditionBeat)) {
-        if (!requestIsCurrent()) return null;
-        if (revealSkipRequested) return finalize();
-      }
-    }
-
-    revealDetail = 'Confirming conditions';
-    if (!await waitForBeat(timing.conditionSettle)) {
-      if (!requestIsCurrent()) return null;
-      if (revealSkipRequested) return finalize();
-    }
-
-    if (revealSkipRequested) return finalize();
-    revealStep = 2;
-    scanProgress = ROLL_REVEAL_STEPS[2].progress;
-    score = Number(canonical.score) || 0;
-    rollContributors = canonical.contributors;
-    traits = canonical.traits;
-    identity = canonical.identity;
-    revealDetail = 'Counting confirmed score';
-    const scoreComplete = await animateScoreCountUp(
-      score,
-      requestIsCurrent,
-      timing.score,
+    return playRollRevealSequence(data, {
+      isCurrent: requestIsCurrent,
+      isSkipped: () => revealSkipRequested,
       reducedMotion,
-      () => {
-        revealDetail = 'Counting confirmed score';
-      }
-    );
-    if (!scoreComplete || !requestIsCurrent()) {
-      if (!requestIsCurrent()) return null;
-      if (revealSkipRequested) return finalize();
-    }
-
-    if (revealSkipRequested) return finalize();
-    revealStep = 3;
-    scanProgress = ROLL_REVEAL_STEPS[3].progress;
-    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} · ${score.toLocaleString()} score confirmed`;
-    if (!await waitForBeat(timing.settle)) {
-      if (!requestIsCurrent()) return null;
-      if (revealSkipRequested) return finalize();
-    }
-    return finalize();
+      applyState: applyRollRevealState,
+      dispatchRollState,
+      tick,
+      scrollRevealList: behavior => revealListElement?.scrollTo({
+        top: revealListElement.scrollHeight,
+        behavior
+      }),
+      animateScoreCountUp
+    });
   }
 
   function resetRollPresentation() {
@@ -442,96 +267,42 @@
     cotwHit = false;
     guestProgressRestored = false;
     copied = false;
-    imageCopied = false;
-    showImageModal = false;
-    imagePreviewUrl = '';
   }
 
-  async function loadAuthenticatedRollState(userId, requestId) {
-    loading = true;
+  function applyInitialRollSnapshot(snapshot, accountMode) {
+    const isGuest = accountMode === 'guest';
+    if (!isGuest && snapshot.error) error = snapshot.error.message || 'Today’s roll could not be loaded.';
 
-    const { data: dbRoll, error: dailyRollError } = await supabase.rpc('get_my_daily_roll');
-
-    if (requestId !== initialStateRequestId || userId !== $session?.user?.id) return;
-
-    if (dailyRollError) error = dailyRollError.message || 'Today’s roll could not be loaded.';
-
-    if (dbRoll) {
-      phase = 'results';
-      score = dbRoll.score;
-      displayScore = dbRoll.score;
-      rarity = dbRoll.rarity;
-      displayColor = dbRoll.hex_code;
-      setRollPresentationFromData({ ...dbRoll, hex: dbRoll.hex_code });
-
-      if (dbRoll.badges && dbRoll.badges.includes('cotw_hit')) {
-          cotwHit = true;
+    const roll = snapshot.roll;
+    if (roll) {
+      if (isGuest) {
+        guestProgressRestored = true;
+        guestProgressActive.set(true);
       }
+      phase = 'results';
+      score = roll.score;
+      displayScore = roll.score;
+      rarity = roll.rarity;
+      displayColor = isGuest ? roll.hex : roll.hex_code;
+      setRollPresentationFromData(isGuest ? roll : { ...roll, hex: roll.hex_code });
 
-      const percData = await requestRollPercentile(supabase, dbRoll.score);
-      if (requestId !== initialStateRequestId || userId !== $session?.user?.id) return;
-      if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
+      if (roll.badges && roll.badges.includes('cotw_hit')) cotwHit = true;
+
+      const percentileData = snapshot.percentileData;
+      if (percentileData) {
+        percentileDisplay = getPercentileTier(percentileData.percentile, percentileData.total_rollers);
+      }
     } else {
       phase = 'preroll';
       guestProgressRestored = false;
-      if (!dailyRollError) {
-        trackProductEvent('roll_ready', {
-          surface,
-          accountMode: 'authenticated'
-        });
-      }
+      if (isGuest) guestProgressActive.set(false);
     }
 
     dispatchRollState();
     loading = false;
-  }
-
-  async function loadGuestRollState(requestId) {
-    const savedRoll = getSavedGuestRoll();
-
-    if (requestId !== initialStateRequestId) return;
-
-    if (savedRoll) {
-      try {
-        const rollData = JSON.parse(savedRoll);
-        const validHex = normalizeHexColor(rollData?.hex, '');
-        const validScore = Number.isSafeInteger(rollData?.score) && rollData.score >= 0 && rollData.score <= MAX_STORED_ROLL_SCORE;
-        const validRarity = ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Anomaly', 'Mythic'].includes(rollData?.rarity);
-        if (rollData.date === getTodayString() && validHex && validScore && validRarity) {
-          guestProgressRestored = true;
-          guestProgressActive.set(true);
-          phase = 'results';
-          score = rollData.score; displayScore = rollData.score;
-          rarity = rollData.rarity;
-          displayColor = rollData.hex;
-          setRollPresentationFromData(rollData);
-
-          if (rollData.badges && rollData.badges.includes('cotw_hit')) {
-              cotwHit = true;
-          }
-
-          const percData = await requestRollPercentile(supabase, rollData.score);
-          if (requestId !== initialStateRequestId) return;
-          if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
-          dispatchRollState();
-          loading = false;
-          return;
-        }
-        clearGuestRoll();
-      } catch {
-        clearGuestRoll();
-      }
+    if (!roll && (isGuest || !snapshot.error)) {
+      trackProductEvent('roll_ready', { surface, accountMode });
     }
-
-    guestProgressRestored = false;
-    guestProgressActive.set(false);
-    phase = 'preroll';
-    dispatchRollState();
-    loading = false;
-    trackProductEvent('roll_ready', {
-      surface,
-      accountMode: 'guest'
-    });
   }
 
   async function syncInitialState() {
@@ -542,6 +313,7 @@
 
     initialStateKey = nextKey;
     initialStateDate = getTodayString();
+    void shareImageDialog?.close(false);
     rollRequestId += 1;
     const requestId = ++initialStateRequestId;
     rerollRequestInFlight = false;
@@ -550,93 +322,41 @@
     dispatchRollState();
     loading = true;
 
-    try {
-      if (getRollAccountMode($session) === 'authenticated') {
-        guestProgressActive.set(false);
-        await loadAuthenticatedRollState($session.user.id, requestId);
-      } else {
-        await loadGuestRollState(requestId);
-      }
-    } catch (loadError) {
-      if (requestId === initialStateRequestId) {
+    const userId = getRollAccountMode($session) === 'authenticated' ? $session.user.id : null;
+    if (userId) guestProgressActive.set(false);
+    await runInitialRollHydration({
+      userId,
+      isRequestCurrent: () => requestId === initialStateRequestId,
+      isSnapshotCurrent: () => requestId === initialStateRequestId
+        && (!userId || userId === $session?.user?.id),
+      loadAuthenticated: (accountId, isCurrent) => loadAuthenticatedRollSnapshot(supabase, {
+        isCurrent: () => isCurrent() && accountId === $session?.user?.id
+      }),
+      loadGuest: isCurrent => loadGuestRollSnapshot({ supabaseClient: supabase, isCurrent }),
+      applySnapshot: applyInitialRollSnapshot,
+      onError: loadError => {
         error = loadError?.message || 'Today’s roll could not be loaded. Please try again.';
-      }
-    } finally {
-      if (requestId === initialStateRequestId) loading = false;
-    }
+      },
+      onFinally: () => { loading = false; }
+    });
   }
 
   function handleGuestStorageChange(event) {
-    if (event.key !== 'chromadie-roll' || $session?.user?.id) return;
+    if (event.key !== GUEST_ROLL_STORAGE_KEY || $session?.user?.id) return;
     initialStateKey = null;
     void syncInitialState();
   }
 
-  async function buildShareCardCanvas() {
-    const { buildRollShareCardCanvas } = await import('./rollShareExport.js');
-    return buildRollShareCardCanvas({
-      score,
-      rarity,
-      color: displayColor,
-      origin: getAppOrigin()
-    });
-  }
-
   async function generateShareImage() {
-    const shareRequestId = rollRequestId;
-    const exportCanvas = await buildShareCardCanvas();
-    if (!exportCanvas || shareRequestId !== rollRequestId) return;
-
-    imagePreviewUrl = exportCanvas.toDataURL('image/png');
-    imageCopied = false;
-    showImageModal = true;
-    imageOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    await tick();
-    focusFirstElement(imageDialog) || imageDialog?.focus();
-  }
-
-  async function copyImageToClipboard() {
-    const exportCanvas = await buildShareCardCanvas();
-    if (!exportCanvas) return;
-
-    const { canvasToPngBlob } = await import('./rollShareExport.js');
-    const blob = await canvasToPngBlob(exportCanvas);
-    if (!blob) return;
-
-    try {
-      if (navigator.clipboard?.write && window.ClipboardItem) {
-        const item = new ClipboardItem({ 'image/png': blob });
-        await navigator.clipboard.write([item]);
-        imageCopied = true;
-        addToast('Image copied to clipboard.', 'success');
-        setTimeout(() => imageCopied = false, 2000);
-        return;
-      }
-
-      throw new Error('Image clipboard is not supported in this browser.');
-    } catch (err) {
-      console.error('Clipboard write failed', err);
-      addToast('Could not copy the share image in this browser.', 'error');
-      imageCopied = false;
+    const requestId = rollRequestId;
+    if (!RollShareImageDialogComponent) {
+      const { default: component } = await import('./RollShareImageDialog.svelte');
+      if (requestId !== rollRequestId) return;
+      RollShareImageDialogComponent = component;
+      await tick();
     }
-  }
-
-  async function closeImageModal() {
-    if (!showImageModal) return;
-    showImageModal = false;
-    await tick();
-    restoreFocus(imageOpener);
-    imageOpener = null;
-  }
-
-  function handleImageModalKeydown(event) {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      void closeImageModal();
-      return;
-    }
-
-    trapFocus(event, imageDialog);
+    if (requestId !== rollRequestId) return;
+    await shareImageDialog?.open(requestId, () => requestId === rollRequestId);
   }
 
   async function initiateRoll(isReroll = false) {
@@ -657,6 +377,7 @@
       displayColor, displayScore, percentileDisplay, milestoneGranted, newMilestones, cotwHit
     } : null;
     loading = true;
+    void shareImageDialog?.close(false);
     const requestId = ++rollRequestId;
     const requestUserId = $session?.user?.id || null;
     const requestDate = getTodayString();
@@ -687,129 +408,118 @@
       if (rerollLockHandle) clearRerollLock(undefined, rerollLockHandle);
     };
 
-    const { data, error: rpcError } = await requestRoll(supabase, isReroll);
+    await executeRollAttempt({
+      request: () => requestRoll(supabase, isReroll),
+      isCurrent: requestIsCurrent,
+      requestUserId,
+      requestDate,
+      saveGuestBeforeReveal: (data, date) => {
+        // A confirmed guest result must survive navigation during its reveal.
+        saveGuestRoll(createCanonicalRollData(data, date));
+        guestProgressActive.set(true);
+      },
+      reveal: data => presentRollResult(data, requestIsCurrent),
+      onRevealFailure: (_error, _data, canonical) => {
+        displayHex = normalizeHexColor(canonical.hex, '#000000');
+        displayColor = displayHex;
+        displayScore = Number(canonical.score) || 0;
+        addToast('Your roll was saved, but the reveal could not finish.', 'error');
+      },
+      onFailure: rpcError => {
+        error = rpcError?.message || "An error occurred while rolling. Please try again.";
+        if (previousResult) {
+          ({ score, rarity, badges, traits, identity, rollContributors, displayHex,
+            displayColor, displayScore, percentileDisplay, milestoneGranted, newMilestones, cotwHit } = previousResult);
+          phase = 'results';
+        } else phase = 'preroll';
+        loading = false;
+        rerollRequestInFlight = false;
+        if (isReroll && rerollLockHandle) clearRerollLock(undefined, rerollLockHandle);
+        dispatchRollState();
+      },
+      applyConfirmedResult: (data, canonical, date) => {
+        traits = canonical.traits;
+        identity = canonical.identity;
+        rollContributors = canonical.contributors;
+        const finalBadges = sortRollBadgesDescending(canonical.badges);
+        badges = finalBadges;
 
-    if (!requestIsCurrent()) {
-      abandonStaleRequest();
-      return;
-    }
+        if (!prefersReducedMotion() && finalBadges.some(badgeId => getBadgeMeta(badgeId).points >= 1000000)) {
+          document.querySelector('.container')?.classList.add('flash-jackpot', 'shake-screen');
+          setTimeout(() => document.querySelector('.container')?.classList.remove('flash-jackpot', 'shake-screen'), 500);
+        }
 
-    if (rpcError || !data || !data.success) {
-      error = rpcError?.message || "An error occurred while rolling. Please try again.";
-      if (previousResult) {
-        ({ score, rarity, badges, traits, identity, rollContributors, displayHex,
-          displayColor, displayScore, percentileDisplay, milestoneGranted, newMilestones, cotwHit } = previousResult);
+        score = data.score;
+        rarity = data.rarity;
+        milestoneGranted = data.milestone_granted || '';
+        // Prefer the additive field, while the legacy response remains a
+        // valid fallback during the migration window.
+        newMilestones = normalizeNewMilestones(data.new_progression_unlocks);
+        if (!newMilestones.length) {
+          newMilestones = normalizeNewMilestones(data.new_milestones);
+        }
+
+        if (data.badges && data.badges.includes('cotw_hit')) {
+          cotwHit = true;
+          trackProductEvent('progression_weekly_focus_completed', {
+            surface,
+            accountMode: getRollAccountMode($session)
+          });
+        }
+
+        if (data.percentile !== undefined && data.total_rollers !== undefined) {
+          percentileDisplay = getPercentileTier(data.percentile, data.total_rollers);
+        }
+
         phase = 'results';
-      } else phase = 'preroll';
-      loading = false;
-      rerollRequestInFlight = false;
-      if (isReroll) {
-        if (rerollLockHandle) clearRerollLock(undefined, rerollLockHandle);
-      }
-      dispatchRollState();
-      return;
-    }
+        dispatchRollState();
+        // The result card settles on the same confirmed score as its context.
+        const rollData = createCanonicalRollData(data, date, finalBadges);
 
-    // Guest results must survive navigation during the presentation timeline.
-    if (!requestUserId) {
-      saveGuestRoll(createCanonicalRollData(data, requestDate));
-      guestProgressActive.set(true);
-    }
-
-    // The server has already returned the authoritative result. The staged
-    // reveal below only explains that result to the player; it never chooses,
-    // scores, or mutates the roll.
-    const canonical = await presentRollResult(data, requestIsCurrent);
-    if (!canonical || !requestIsCurrent()) {
-      abandonStaleRequest();
-      return;
-    }
-
-    traits = canonical.traits;
-    identity = canonical.identity;
-    rollContributors = canonical.contributors;
-    const finalBadges = sortBadgesDescending(canonical.badges);
-    badges = finalBadges;
-
-    if (!prefersReducedMotion() && finalBadges.some(badgeId => getBadgeMeta(badgeId).points >= 1000000)) {
-      document.querySelector('.container')?.classList.add('flash-jackpot', 'shake-screen');
-      setTimeout(() => document.querySelector('.container')?.classList.remove('flash-jackpot', 'shake-screen'), 500);
-    }
-
-    score = data.score;
-    rarity = data.rarity;
-    milestoneGranted = data.milestone_granted || '';
-    // The additive field is preferred, while the legacy response remains a
-    // valid fallback during the migration window.
-    newMilestones = normalizeNewMilestones(data.new_progression_unlocks);
-    if (!newMilestones.length) {
-      newMilestones = normalizeNewMilestones(data.new_milestones);
-    }
-
-    if (data.badges && data.badges.includes('cotw_hit')) {
-        cotwHit = true;
-        trackProductEvent('progression_weekly_focus_completed', {
+        trackProductEvent('roll_completed', {
+          surface,
+          accountMode: getRollAccountMode($session),
+          isReroll
+        });
+        trackProductEvent('progression_roll_completed', {
           surface,
           accountMode: getRollAccountMode($session)
         });
-    }
-
-    if (data.percentile !== undefined && data.total_rollers !== undefined) {
-        percentileDisplay = getPercentileTier(data.percentile, data.total_rollers);
-    }
-
-    phase = 'results';
-    dispatchRollState();
-    // The server-confirmed score was already counted during the rolling
-    // timeline. Mount the final card atomically so the dedicated context and
-    // result card settle on the same value.
-
-    const rollData = createCanonicalRollData(data, requestDate, finalBadges);
-
-    trackProductEvent('roll_completed', {
-      surface,
-      accountMode: getRollAccountMode($session),
-      isReroll
+        return rollData;
+      },
+      completeGuestResult: rollData => {
+        saveGuestRoll(rollData);
+        guestProgressRestored = true;
+        guestProgressActive.set(true);
+      },
+      refreshAccount: async userId => {
+        const hadLaunchBadge = $profile?.equipped_badges?.includes('launch_edition');
+        const refreshResults = await Promise.allSettled([
+          refreshProfileState(userId),
+          fetchInventoryState(userId),
+          fetchWalletBalance(userId)
+        ]);
+        return {
+          refreshFailed: refreshResults.some(result => result.status === 'rejected')
+            || (refreshResults[0].status === 'fulfilled' && !refreshResults[0].value),
+          launchEditionUnlocked: !hadLaunchBadge
+            && $profile?.equipped_badges?.includes('launch_edition')
+        };
+      },
+      onAccountRefresh: refreshResult => {
+        if (refreshResult.refreshFailed) {
+          addToast('Your roll was saved, but account details could not refresh. Reload to update them.', 'error');
+        }
+        if (refreshResult.launchEditionUnlocked) addToast('Launch Edition badge unlocked!', 'success');
+      },
+      onStale: abandonStaleRequest,
+      onComplete: () => {
+        dispatchRollState();
+        rerollRequestInFlight = false;
+        if (isReroll && rerollLockHandle) clearRerollLock(undefined, rerollLockHandle);
+        loading = false;
+      }
     });
-    trackProductEvent('progression_roll_completed', {
-      surface,
-      accountMode: getRollAccountMode($session)
-    });
-
-    if (!requestIsCurrent()) {
-      abandonStaleRequest();
-      return;
-    }
-
-    if (getRollAccountMode($session) === 'guest') {
-      saveGuestRoll(rollData);
-      guestProgressRestored = true;
-      guestProgressActive.set(true);
-    } else {
-      const hadLaunchBadge = $profile?.equipped_badges?.includes('launch_edition');
-      const refreshResults = await Promise.allSettled([
-        refreshProfileState(requestUserId),
-        fetchInventoryState(requestUserId),
-        fetchWalletBalance(requestUserId)
-      ]);
-      if (!requestIsCurrent()) {
-        abandonStaleRequest();
-        return;
-      }
-      if (refreshResults.some(result => result.status === 'rejected') || (refreshResults[0].status === 'fulfilled' && !refreshResults[0].value)) {
-        addToast('Your roll was saved, but account details could not refresh. Reload to update them.', 'error');
-      }
-      if (!hadLaunchBadge && $profile?.equipped_badges?.includes('launch_edition')) {
-        addToast('Launch Edition badge unlocked!', 'success');
-      }
-    }
-
-    dispatchRollState();
-    rerollRequestInFlight = false;
-    if (isReroll) {
-      if (rerollLockHandle) clearRerollLock(undefined, rerollLockHandle);
-    }
-    loading = false;
   }
 
   function beginGuestSignup(next = '') {
@@ -854,50 +564,17 @@
     window.removeEventListener('storage', handleGuestStorageChange);
   });
 
-  $: if (typeof document !== 'undefined') {
-    document.body.style.overflow = showImageModal ? 'hidden' : '';
-  }
-
-  onDestroy(() => {
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = '';
-    }
-  });
 </script>
 
-<!-- Image Preview Modal -->
-{#if showImageModal}
-  <div
-    class="image-modal-overlay"
-    style={`--share-image-accent: ${normalizeHexColor(displayColor, '#ffffff')}; --share-image-ink: ${rollActionInk};`}
-    role="presentation"
-    on:click|self={closeImageModal}
-  >
-    <div
-      class="image-modal-content"
-      bind:this={imageDialog}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="share-image-title"
-      tabindex="-1"
-      on:keydown={handleImageModalKeydown}
-    >
-      <header class="image-modal-header">
-        <p class="image-modal-kicker">Daily roll</p>
-        <h3 id="share-image-title">Share this roll</h3>
-        <p class="image-modal-copy">Preview the result image or copy it to share elsewhere.</p>
-      </header>
-      <div class="image-modal-preview">
-        <img src={imagePreviewUrl} alt="ChromaDie daily roll share card" class="preview-img" />
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="download-btn" on:click={copyImageToClipboard}>
-          {#if imageCopied}Copied{:else}Copy image{/if}
-        </button>
-        <button type="button" class="close-btn" on:click={closeImageModal}>Close</button>
-      </div>
-    </div>
-  </div>
+{#if RollShareImageDialogComponent}
+  <svelte:component
+    this={RollShareImageDialogComponent}
+    bind:this={shareImageDialog}
+    score={score}
+    {rarity}
+    color={displayColor}
+    ink={rollActionInk}
+  />
 {/if}
 
 <div
@@ -949,62 +626,19 @@
     {/if}
 
   {:else if phase === 'rolling'}
-    <div class="card roll-stage roll-stage--rolling" aria-live="polite">
-      <div class="roll-card-header">
-        <div class="roll-card-header__copy">
-          <h2 class="roll-card-header__title">Daily Roll</h2>
-          <p class="roll-card-header__meta">Processing today’s roll</p>
-        </div>
-        <span class="roll-mode-pill">IN PROGRESS</span>
-      </div>
-      <div class="roll-rolling-display" data-reveal-step={revealStep}>
-        <RollTile displayColor={displayColor} rarity={rarity || 'Common'} label="Color being rolled" />
-        <h2 class="roll-stage__title">{revealStep === ROLL_REVEAL_STEPS.length - 1 ? 'Result ready.' : 'Generating today’s color.'}</h2>
-        <div class="rolling-hex">{displayHex}</div>
-        <p class="roll-stage__status" role="status">
-          {revealDetail}
-        </p>
-        <div
-          class="roll-reveal-discovery"
-          class:roll-reveal-discovery--pending={revealStep < 1}
-          aria-hidden={revealStep < 1}
-          aria-label="Server-confirmed score conditions being revealed"
-        >
-            <div class="roll-reveal-discovery__header">
-              <span>Condition breakdown</span>
-              <strong>{`${revealConditions.length}/${revealItemTotal} conditions`}</strong>
-            </div>
-            <div class="roll-reveal-discovery__list" bind:this={revealListElement}>
-              {#each revealConditions as item (item.id)}
-                <div class="roll-reveal-discovery__item">
-                  <span class="roll-reveal-discovery__mark" aria-hidden="true">{item.symbol || '✦'}</span>
-                  <span>{item.label}</span>
-                  {#if item.points}<strong>+{item.points.toLocaleString()}</strong>{/if}
-                  {#if item.kind === 'condition' && item.conditionRarity}
-                    <em class="roll-reveal-discovery__rarity" data-rarity={item.conditionRarity.toLowerCase()}>{item.conditionRarity}</em>
-                  {/if}
-                </div>
-              {/each}
-            </div>
-        </div>
-        <div
-          class="roll-score-reveal"
-          class:roll-score-reveal--pending={revealStep < 2}
-          aria-hidden={revealStep < 2}
-          aria-live="polite"
-        >
-            <span>Confirmed score</span>
-            <strong>{displayScore.toLocaleString()}</strong>
-            <small>EP · counting live</small>
-        </div>
-      </div>
-      <div class="scan-container" role="progressbar" aria-label="Daily roll reveal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(scanProgress)}>
-        <div class="scan-bar" style="width: {scanProgress}%"></div>
-      </div>
-      <button type="button" class="roll-reveal-skip" on:click={skipReveal}>
-        Skip reveal
-      </button>
-    </div>
+    <RollRevealStage
+      displayColor={displayColor}
+      displayHex={displayHex}
+      rarity={rarity || 'Common'}
+      {revealStep}
+      {revealDetail}
+      {revealConditions}
+      {revealItemTotal}
+      {displayScore}
+      {scanProgress}
+      bind:revealListElement={revealListElement}
+      on:skip={skipReveal}
+    />
 
   {:else if phase === 'results'}
     <div class="card roll-stage roll-stage--results" style={`--roll-action-ink: ${rollActionInk}; --roll-result-color: ${normalizeHexColor(displayColor, '#ffffff')}; --roll-rarity: ${getRarityPresentation(rarity || 'Common').color};`} aria-labelledby="roll-result-title">
@@ -1018,7 +652,7 @@
 
       <RollResultBreakdown
         contributors={rollContributors}
-        baseScore={getBaseRollScore()}
+        baseScore={getDisplayedBaseRollScore(displayScore, score, rollContributors)}
         totalScore={displayScore}
         showScore={false}
       />
@@ -1038,33 +672,27 @@
         {/if}
 
         {#if dedicated}
-          <div class="roll-acquisition-actions roll-acquisition-actions--dedicated" aria-label="Roll result actions">
-            {#if showAcquisitionActions && $isAuthenticated}
-              <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
-            {/if}
-            <div class="post-score-actions post-score-actions--dedicated" aria-label="Share and continue">
-              <button type="button" class="chroma-btn result-action roll-acquisition-actions__tool" on:click={shareResultsText}>
-                {copied ? 'Copied' : 'Share result'}
-              </button>
-              <button type="button" class="chroma-btn result-action roll-acquisition-actions__tool" data-roll-action="share-image" on:click={generateShareImage}>View / share image</button>
-              {#if $isAuthenticated && $rerollShards > 0}
-                <button type="button" class="reroll-btn result-action result-action--reroll roll-acquisition-actions__tool" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}>Reroll · {$rerollShards} left</button>
-              {/if}
-            </div>
-          </div>
+          <RollResultActions
+            placement="dedicated"
+            {showAcquisitionActions}
+            isAuthenticated={$isAuthenticated}
+            copied={copied}
+            rerollShards={$rerollShards}
+            rerollDisabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}
+            on:navigate={event => dispatch('navigate', event.detail)}
+            on:share={shareResultsText}
+            on:shareimage={generateShareImage}
+            on:reroll={() => initiateRoll(true)}
+          />
         {:else if showAcquisitionActions}
-          <div class="roll-acquisition-actions" aria-label="Roll result actions">
-            {#if $isAuthenticated}
-              <button class="chroma-btn result-action result-action--primary" type="button" on:click={() => dispatch('navigate', { view: 'profile' })}>View your profile</button>
-              <button class="roll-acquisition-actions__quiet" on:click={shareResultsText}>
-                {copied ? 'Copied' : 'Share result'}
-              </button>
-            {:else if $accountState === ACCOUNT_STATES.SIGNED_OUT}
-              <button class="roll-acquisition-actions__quiet" type="button" on:click={shareResultsText}>
-                {copied ? 'Copied' : 'Share result'}
-              </button>
-            {/if}
-          </div>
+          <RollResultActions
+            placement="acquisition"
+            isAuthenticated={$isAuthenticated}
+            isSignedOut={$accountState === ACCOUNT_STATES.SIGNED_OUT}
+            copied={copied}
+            on:navigate={event => dispatch('navigate', event.detail)}
+            on:share={shareResultsText}
+          />
         {/if}
       </div>
 
@@ -1082,24 +710,17 @@
           </div>
         {/if}
 
-        <div class="post-score-actions" aria-label="Roll result actions">
-          <div class="countdown-inline">
-            <span class="countdown-inline__label">Next roll</span>
-            <strong>{countdownString}</strong>
-          </div>
-          <button class="chroma-btn result-action result-action--primary" on:click={shareResultsText}>
-            {copied ? 'Copied' : 'Share result'}
-          </button>
-          <button class="chroma-btn result-action" on:click={generateShareImage}>
-            View image
-          </button>
-
-          {#if $isAuthenticated && $rerollShards > 0}
-            <button class="reroll-btn result-action result-action--reroll" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}>
-              Reroll · {$rerollShards} left
-            </button>
-          {/if}
-        </div>
+        <RollResultActions
+          placement="post-score"
+          isAuthenticated={$isAuthenticated}
+          copied={copied}
+          {countdownString}
+          rerollShards={$rerollShards}
+          rerollDisabled={loading || rerollRequestInFlight || rerollLocked || !$authInitialized}
+          on:share={shareResultsText}
+          on:shareimage={generateShareImage}
+          on:reroll={() => initiateRoll(true)}
+        />
       {/if}
 
       {#if milestoneGranted}
@@ -1124,51 +745,7 @@
       {/if}
 
       {#if !dedicated}
-        <div class="roll-detail-grid">
-      {#if systemBadges.length > 0}
-        <section class="roll-detail-section badges-container badges-container-tight" aria-labelledby="roll-rewards-title">
-          <div class="roll-detail-section__heading">
-            <div class="badges-title" id="roll-rewards-title">EP bonuses & milestones</div>
-            <div class="badges-subtitle">Wallet rewards · separate from score</div>
-          </div>
-          {#each systemBadges as badgeId (badgeId)}
-            {@const badge = getBadgeMeta(badgeId)}
-            <div class="badge-result roll-detail-item rarity-Mythic">
-              <span class="badge-symbol">{badge.symbol || '✨'}</span>
-              <div class="badge-text">
-                <span class="badge-title">{badge.name}</span>
-                <span class="badge-desc">{badge.desc || ''}</span>
-              </div>
-              {#if badge.points > 0}
-                <span class="badge-points ep-points">+{badge.points.toLocaleString()} EP</span>
-              {:else}
-                <span class="badge-points ep-points">Granted</span>
-              {/if}
-            </div>
-          {/each}
-        </section>
-      {/if}
-
-      {#if earnedAchievements.length > 0}
-        <section class="roll-detail-section badges-container badges-container-tight" aria-labelledby="roll-achievements-title">
-          <div class="roll-detail-section__heading">
-            <div class="badges-title" id="roll-achievements-title">Achievements unlocked</div>
-            <div class="badges-subtitle">New rewards from this roll</div>
-          </div>
-          {#each earnedAchievements as badgeId (badgeId)}
-            {@const badge = getBadgeMeta(badgeId)}
-            <div class="badge-result roll-detail-item rarity-Mythic">
-              <span class="badge-symbol">{badge.symbol || '🏆'}</span>
-              <div class="badge-text">
-                <span class="badge-title">{badge.name}</span>
-                <span class="badge-desc">{badge.desc}</span>
-              </div>
-              <span class="badge-points ep-points">+{badge.points.toLocaleString()} EP</span>
-            </div>
-          {/each}
-        </section>
-      {/if}
-        </div>
+        <RollResultRewards {systemBadges} {earnedAchievements} />
       {/if}
 
       {#if $isAuthenticated && !dedicated}
@@ -1187,162 +764,13 @@
 </div>
 
 <style>
-  .roll-rolling-display {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-  }
-  .roll-rolling-display::before {
-    position: absolute;
-    z-index: -1;
-    inset: 18% 12%;
-    border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--color-accent, #8b7cf6) 20%, transparent), transparent 68%);
-    content: '';
-    filter: blur(1rem);
-    opacity: .65;
-    animation: rollRevealGlow 3.2s ease-in-out infinite;
-    pointer-events: none;
-  }
-  .roll-rolling-display > * { position: relative; z-index: 1; }
-  .roll-reveal-discovery {
-    display: grid;
-    gap: 8px;
-    width: min(100%, 360px);
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid color-mix(in srgb, var(--color-line-subtle, #ffffff) 72%, transparent);
-  }
-  .roll-reveal-discovery__header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    color: var(--text-muted, #a4a4b5);
-    font: 600 .62rem/1.2 var(--font-mono-stack);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-  .roll-reveal-discovery__header strong {
-    color: var(--color-ink-strong, #ffffff);
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .roll-reveal-discovery__list {
-    display: grid;
-    height: 174px;
-    align-content: start;
-    grid-auto-rows: max-content;
-    gap: 5px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-    overflow-anchor: none;
-    scroll-behavior: smooth;
-  }
-  .roll-reveal-discovery--pending,
-  .roll-score-reveal--pending {
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .roll-reveal-discovery__item {
-    display: grid;
-    grid-template-columns: 16px minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 7px;
-    min-height: 24px;
-    padding: 4px 7px;
-    border: 1px solid color-mix(in srgb, var(--color-accent, #8b7cf6) 18%, var(--card-border, rgba(255, 255, 255, .12)));
-    border-radius: 7px;
-    background: color-mix(in srgb, var(--color-accent, #8b7cf6) 6%, transparent);
-    color: var(--text-muted, #a4a4b5);
-    font-size: .68rem;
-    animation: rollRevealCondition .48s cubic-bezier(.22, .8, .25, 1) both;
-  }
-  .roll-reveal-discovery__item > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .roll-reveal-discovery__mark { color: var(--color-accent-bright, #c4b5fd); text-align: center; }
-  .roll-reveal-discovery__item strong { color: var(--roll-score-color, var(--color-earned, #f5c26f)); font: 600 .62rem/1 var(--font-mono-stack); white-space: nowrap; }
-  .roll-reveal-discovery__rarity { color: var(--color-ink-muted, #a7a3b5); font: 700 .55rem/1 var(--font-mono-stack); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-  .roll-score-reveal {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 7px;
-    width: min(100%, 360px);
-    margin-top: 12px;
-    padding: 9px 11px;
-    border: 1px solid color-mix(in srgb, var(--color-accent, #8b7cf6) 32%, var(--card-border, rgba(255, 255, 255, .12)));
-    border-radius: 9px;
-    background: color-mix(in srgb, var(--color-accent, #8b7cf6) 9%, transparent);
-  }
-  .roll-score-reveal span { color: var(--text-muted, #a4a4b5); font: 600 .62rem/1 var(--font-mono-stack); letter-spacing: .08em; text-transform: uppercase; }
-  .roll-score-reveal strong { color: var(--roll-score-color, var(--color-earned, #f5c26f)); font: 600 1.35rem/1 var(--font-display-stack); letter-spacing: -.04em; }
-  .roll-score-reveal small { color: var(--text-muted, #a4a4b5); font: 600 .58rem/1 var(--font-mono-stack); letter-spacing: .06em; text-transform: uppercase; }
-  .roll-reveal-skip {
-    align-self: center;
-    min-height: 36px;
-    margin-top: 8px;
-    padding: 6px 10px;
-    border: 1px solid var(--card-border, rgba(255, 255, 255, .12));
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-muted, #a4a4b5);
-    cursor: pointer;
-    font: 600 .68rem/1 var(--font-mono-stack);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    transition: color 220ms ease, border-color 220ms ease, background 220ms ease;
-  }
-  .roll-reveal-skip:hover,
-  .roll-reveal-skip:focus-visible {
-    border-color: var(--color-accent, #8b7cf6);
-    background: color-mix(in srgb, var(--color-accent, #8b7cf6) 10%, transparent);
-    color: var(--color-ink-strong, #ffffff);
-  }
-  .roll-reveal-skip:focus-visible { outline: 2px solid var(--color-accent-bright, #c4b5fd); outline-offset: 3px; }
-  @keyframes rollRevealGlow {
-    0%, 100% { opacity: .45; transform: scale(.92); }
-    50% { opacity: .8; transform: scale(1.08); }
-  }
-  @keyframes rollRevealCondition {
-    from { opacity: 0; transform: translateY(4px) scale(.98); }
-    to { opacity: 1; transform: none; }
-  }
+  :global(.game-container .chroma-btn) { display: inline-flex; align-items: center; gap: 5px; min-height: 42px; padding: 0 18px; border: 1px solid var(--card-border); border-radius: 9px; background: transparent; color: #f8f8f8; cursor: pointer; font: 600 .88rem/1 var(--font-body-stack); transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease; }
+  :global(.game-container .chroma-btn:hover) { transform: translateY(-1px); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 9%, transparent); }
+  :global(.game-container .chroma-btn:active) { transform: translateY(1px); }
+  :global(.game-container .reroll-btn) { background: transparent; color: var(--color-accent-bright); border: 1px solid color-mix(in srgb, var(--color-accent) 58%, transparent); padding: 7px 18px; font-size: 0.85rem; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-body-stack); font-weight: 600; transition: all 0.2s; }
+  :global(.game-container .reroll-btn:hover) { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+  :global(.game-container .reroll-btn:disabled) { opacity: 0.5; cursor: not-allowed; }
 
-  .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
-  .roll-acquisition-actions--dedicated { gap: 12px; }
-  .post-score-actions--dedicated { width: 100%; margin: 0; gap: 8px; }
-  .post-score-actions--dedicated .roll-acquisition-actions__tool {
-    min-height: 40px;
-    padding: 0 13px;
-    border-color: var(--roll-border, var(--card-border));
-    background: var(--roll-panel-card, rgba(255, 255, 255, .025));
-    color: var(--roll-muted, var(--text-muted));
-    font: 650 .72rem/1 var(--site-font, var(--font-body-stack));
-  }
-  .post-score-actions--dedicated .roll-acquisition-actions__tool:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--roll-accent, var(--color-accent)) 60%, var(--roll-border, var(--card-border)));
-    background: color-mix(in srgb, var(--roll-accent, var(--color-accent)) 9%, var(--roll-panel-card, transparent));
-    color: var(--roll-text, var(--text));
-  }
-  .post-score-actions--dedicated .reroll-btn.roll-acquisition-actions__tool {
-    border-color: color-mix(in srgb, var(--roll-accent, var(--color-accent)) 58%, transparent);
-    background: transparent;
-    color: var(--roll-accent, var(--color-accent-bright));
-  }
-  .post-score-actions--dedicated .reroll-btn.roll-acquisition-actions__tool:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--roll-accent, var(--color-accent)) 10%, transparent);
-  }
-  .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-body-stack); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 9px; border: 1px solid var(--card-border); }
-  .chroma-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 42px; padding: 0 18px; border: 1px solid var(--card-border); border-radius: 9px; background: transparent; color: #f8f8f8; cursor: pointer; font: 600 .88rem/1 var(--font-body-stack); transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease; }
-  .chroma-btn:hover { transform: translateY(-1px); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 9%, transparent); }
-  .chroma-btn:active { transform: translateY(1px); }
-  .reroll-btn { background: transparent; color: var(--color-accent-bright); border: 1px solid color-mix(in srgb, var(--color-accent) 58%, transparent); padding: 7px 18px; font-size: 0.85rem; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-body-stack); font-weight: 600; transition: all 0.2s; }
-  .reroll-btn:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
-  .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .badges-container-tight { margin-bottom: 0 !important; margin-top: 20px; }
   .local-progress-banner {
     background: color-mix(in srgb, var(--color-accent) 6%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
@@ -1386,29 +814,6 @@
     max-width: 34rem;
     margin: 0 auto;
   }
-  .roll-acquisition-actions {
-    display: grid;
-    gap: 12px;
-    width: 100%;
-    text-align: center;
-  }
-  .roll-acquisition-actions__quiet {
-    justify-self: center;
-    min-height: 0;
-    padding: 4px 8px;
-    border: 0;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    font: 650 .78rem/1.3 var(--font-body-stack);
-    text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, var(--text-muted) 45%, transparent);
-    text-underline-offset: 4px;
-  }
-  .roll-acquisition-actions__quiet:hover { color: var(--text); text-decoration-color: var(--text); }
-  .roll-acquisition-actions__quiet:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
-  .badges-subtitle { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 10px; text-align: left; opacity: 0.8; }
-
   .studio-onboarding {
     display: flex;
     align-items: center;
@@ -1465,35 +870,7 @@
     border-radius: 9px; margin-bottom: 20px; font-weight: 600; text-align: left; font-size: 0.9rem;
   }
 
-  .ep-points { color: #f1c40f !important; text-shadow: 0 0 10px rgba(241, 196, 15, 0.3) !important; }
-
-  .image-modal-overlay {
-    position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: clamp(16px, 4vw, 32px);
-    background: rgba(8, 8, 10, .86); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  }
-  .image-modal-content {
-    display: grid; gap: 18px; width: min(100%, 680px); max-height: calc(100dvh - 32px); overflow-y: auto; padding: clamp(18px, 4vw, 28px);
-    border: 1px solid color-mix(in srgb, var(--share-image-accent, #ffffff) 32%, var(--card-border)); border-radius: 16px;
-    background: #161619; box-shadow: 0 24px 80px rgba(0, 0, 0, .48); text-align: left;
-  }
-  .image-modal-header { display: grid; gap: 6px; }
-  .image-modal-kicker { margin: 0; color: var(--share-image-accent, var(--color-accent)); font: 700 .62rem/1 var(--font-mono-stack); letter-spacing: .14em; text-transform: uppercase; }
-  .image-modal-content h3 { margin: 0; color: #fff; font: 750 1.45rem/1.05 var(--font-display-stack); letter-spacing: -.03em; }
-  .image-modal-copy { margin: 0; color: var(--text-muted); font: 500 .78rem/1.4 var(--font-body-stack); }
-  .image-modal-preview { padding: 8px; border: 1px solid var(--card-border); border-radius: 12px; background: #0e0e10; }
-  .preview-img { display: block; width: 100%; max-height: min(63vw, calc(100dvh - 12rem)); object-fit: contain; border-radius: 7px; }
-  .modal-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
-  .download-btn,
-  .close-btn { min-height: 42px; padding: 0 16px; border-radius: 9px; cursor: pointer; font: 650 .76rem/1 var(--font-body-stack); }
-  .download-btn { border: 1px solid var(--share-image-accent, #fff); background: var(--share-image-accent, #fff); color: var(--share-image-ink, #0e0e10); }
-  .download-btn:hover { filter: brightness(1.08); }
-  .close-btn { border: 1px solid var(--card-border); background: transparent; color: var(--text); }
-  .close-btn:hover { border-color: var(--share-image-accent, var(--color-accent)); background: color-mix(in srgb, var(--share-image-accent, var(--color-accent)) 8%, transparent); }
-
   @media (max-width: 600px) {
-    .roll-reveal-discovery__header { font-size: .56rem; }
-    .roll-reveal-discovery__list { height: 145px; }
-    .roll-reveal-skip { width: 100%; }
     .final-color-display {
       width: 116px;
       height: 116px;
@@ -1501,11 +878,6 @@
     .roll-preview-frame {
       width: 116px;
       height: 116px;
-    }
-    .rolling-hex {
-      font-size: 1.35rem;
-      letter-spacing: 2px;
-      word-break: break-word;
     }
     .score-display {
       font-size: 2.4rem;
@@ -1517,15 +889,9 @@
       max-width: 100%;
       overflow-wrap: anywhere;
     }
-    .post-score-actions {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
-    }
-    .post-score-actions--dedicated { gap: 8px; }
-    .countdown-inline,
-    .chroma-btn,
-    .reroll-btn {
+    :global(.game-container .countdown-inline),
+    :global(.game-container .chroma-btn),
+    :global(.game-container .reroll-btn) {
       width: 100%;
       justify-content: center;
     }
@@ -1547,24 +913,6 @@
       width: 100%;
       justify-content: center;
     }
-    .badges-container {
-      gap: 6px;
-    }
-    .badge-pop,
-    .badge-result {
-      align-items: flex-start;
-      gap: 10px;
-      padding: 9px 12px;
-    }
-    .badge-text {
-      min-width: 0;
-    }
-    .badge-points {
-      padding-left: 0;
-      margin-left: 0;
-      width: 100%;
-      text-align: right;
-    }
     .cotw-widget {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -1583,25 +931,6 @@
       width: 44px;
       height: 44px;
     }
-    .image-modal-content {
-      padding: 18px 16px;
-      border-radius: 14px;
-    }
-    .image-modal-content h3 { font-size: 1.25rem; }
-    .image-modal-preview { padding: 5px; }
-    .modal-actions {
-      flex-direction: column;
-    }
-    .download-btn,
-    .close-btn {
-      width: 100%;
-    }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .roll-rolling-display::before { animation: none; }
-    .roll-reveal-discovery__list { scroll-behavior: auto; }
-    .roll-reveal-discovery__item { animation: none; }
-    .roll-reveal-skip { transition: none; }
-  }
 </style>

@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { hasDirtySources } from '../src/lib/profile-studio/dirtyState.js';
 import { applyCosmeticChanges } from '../src/lib/profile-studio/cosmeticMutations.js';
+import { writeProfileStudioConfiguration } from '../src/lib/profile-studio/configurationWrites.js';
 
 const source = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
 const cosmetics = await readFile(new URL('../src/lib/ProfileCosmeticsEditor.svelte', import.meta.url), 'utf8');
@@ -20,10 +21,12 @@ function setup() {
     asConfigurationV2: value => value, toEditorProfileConfig: value => value,
     getDashboardEditor: () => null, getDashboardDraft: () => ({}), getDashboardIdentity: () => ({}),
     buildConfigurationV2: value => value, accountUsername: 'alice',
-    profile: { update: () => {} }, workspace: { acceptSaved: () => {} }
+    profile: { update: () => {} }, workspace: { acceptSaved: () => {} },
+    rpcWithAccessToken: (client, name, args, token) => client.rpcWithAccessToken(name, args, token)
   };
   vm.createContext(state);
   vm.runInContext(handlers, state);
+  state.loadConfigurationWriteService = async () => ({ writeProfileStudioConfiguration });
   return state;
 }
 function recompute(state) { vm.runInContext(declarations, state); }
@@ -67,8 +70,12 @@ for (const failsRefresh of [false, true]) {
       loadingSlot: '', hasPendingChanges: true, COSMETIC_SLOTS: ['profile_border'],
       previewLoadout: state.cosmeticPreviewLoadout, applyCosmeticChanges,
       $cosmeticCatalogItems: { new: { item_key: 'new' } }, fittingRoom: {},
+      activeSessionUserId: 'a', mutationGeneration: 0, $profile: { id: 'a' },
       hasShopEntitlement: () => true,
-      supabase: { rpc: async () => ({ data: { success: true } }) },
+      supabase: {
+        auth: { getSession: async () => ({ data: { session: { user: { id: 'a' }, access_token: 'account-a-token' } } }) },
+        rpcWithAccessToken: async () => ({ data: { success: true } })
+      },
       refreshProfileState: async () => { if (failsRefresh) throw new Error('offline'); return { equipped_cosmetics: { profile_border: 'new' } }; },
       equippedItems: { set: value => { state.$equippedItems = value; } },
       dispatch: (name, detail) => { if (name === 'cosmeticpreview') state.cosmeticPreviewLoadout = detail.loadout; },

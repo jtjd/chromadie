@@ -90,12 +90,13 @@ test('latest database media projection and selection are R2-only', async () => {
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.select_my_profile_rich_media/);
 });
 
-test('R2 completion hashes actual private bytes and upload authorization enforces the global safety cap', async () => {
+test('R2 completion validates bounded stored bytes and upload authorization enforces the global safety cap', async () => {
   const complete = await read('functions/api/profile-media/complete.js');
   const control = await read('functions/_profileMediaControl.js');
   const foundation = await read('supabase/migrations/20260813100000_profile_media_r2_foundation.sql');
-  assert.match(complete, /objectResponse = await requestR2Object/);
-  assert.match(complete, /sha256Hex\(objectBytes\)/);
+  assert.match(complete, /verifyStoredProfileMediaObject/);
+  assert.match(control, /export async function verifyStoredProfileMediaObject/);
+  assert.match(control, /const actualHash = await sha256Hex\(bytes\)/);
   assert.match(control, /export async function sha256Hex/);
   assert.match(foundation, /8589934592/);
   assert.match(foundation, /chromadie:r2-profile-media-cap/);

@@ -10,7 +10,7 @@
   let sceneTimer;
   let sceneVisible = false;
   let reduceMotion = false;
-  let paused = false;
+  let paused = true;
   let hovered = false;
   let focused = false;
   let announcement = '';
@@ -192,14 +192,15 @@
   on:mouseleave={() => { hovered = false; restartSceneTimer(); }}
   on:focusin={() => { focused = true; stopSceneTimer(); }}
   on:focusout={(event) => { if (!host.contains(event.relatedTarget)) { focused = false; restartSceneTimer(); } }}>
+  <div class="profile-example__intro">
+    <h2 id="profile-example-title" class="homepage-section-heading">Your profile.<br />Entirely your own.</h2>
+    <p class="homepage-section-sub">A place for your colors, your links, and whatever you’re into. Start with a layout, then make every detail feel like you.</p>
+  </div>
   <div class="profile-example__copy">
-    <h2 id="profile-example-title" class="homepage-section-heading">Examples of what<br />you can build.</h2>
-    <p class="homepage-section-sub">Choose a layout. Add your colors, links, fonts, effects, and background.</p>
-
+    <p class="profile-example__control-label">Find your starting point</p>
     <div class="profile-example__controls" role="group" aria-label="Profile preview layouts">
       {#each scenes as item, index (item.id)}
         <button type="button" class:active={index === activeScene} aria-label={`Show ${item.label}`} aria-pressed={index === activeScene} on:click={() => setScene(index)}>
-          <span style={`--scene-color:${item.colors[0]}`}></span>
           <em>{item.label}</em>
         </button>
       {/each}
@@ -252,12 +253,21 @@
 <style>
   .profile-example {
     display: grid;
-    grid-template-columns: minmax(380px, .78fr) minmax(0, 1.42fr);
-    align-items: start;
-    gap: clamp(42px, 4.5vw, 72px);
-    padding-block: 82px 78px;
-    scroll-margin-top: 24px;
+    grid-template-columns: minmax(0, .55fr) minmax(0, 1.8fr);
+    align-items: center;
+    gap: 56px 64px;
   }
+
+  .profile-example__intro {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: end;
+    gap: 64px;
+  }
+
+  .profile-example__intro .homepage-section-sub { margin: 0; }
+  .profile-example__control-label { margin: 0; color: var(--homepage-muted); font-size: .82rem; line-height: 1.5; }
 
   .profile-example__copy {
     position: relative;
@@ -269,44 +279,35 @@
     margin: 18px 0 0;
     min-height: 3.1em;
     color: var(--homepage-secondary-muted);
-    font-size: .91rem;
-    line-height: 1.55;
+    font-size: .875rem;
+    line-height: 1.65;
   }
 
   .profile-example__controls {
     display: grid;
-    gap: 8px;
-    margin-top: 28px;
+    margin-top: 18px;
+    border-top: 1px solid var(--homepage-border);
   }
 
   .profile-example__controls button {
     display: flex;
-    width: fit-content;
-    min-height: 44px;
+    width: 100%;
+    min-height: 58px;
     align-items: center;
     gap: 9px;
-    padding: 0;
+    padding: 12px 0;
     border: 0;
+    border-bottom: 1px solid var(--homepage-border);
     background: transparent;
     color: var(--homepage-muted);
     cursor: pointer;
-    font: 500 1rem / 1.2 'Inter', sans-serif;
+    font: 500 1.05rem / 1.2 'Inter', sans-serif;
     text-align: left;
+    transition: color 180ms ease, border-color 180ms ease;
   }
 
-  .profile-example__controls button > span {
-    width: 18px;
-    height: 3px;
-    border-radius: 99px;
-    background: var(--scene-color);
-    opacity: .4;
-    transition: width .22s ease, opacity .22s ease, box-shadow .22s ease;
-  }
-
-  .profile-example__controls button.active { color: var(--homepage-text); }
-  .profile-example__controls button.active > span { width: 34px; opacity: 1; box-shadow: none; }
-  .profile-example__controls button:hover > span,
-  .profile-example__controls button:focus-visible > span { opacity: 1; }
+  .profile-example__controls button.active { color: var(--homepage-text); border-bottom-color: var(--homepage-text); }
+  .profile-example__controls button:hover { color: var(--homepage-text); }
   .profile-example__controls em { font-style: normal; }
 
   figure {
@@ -327,11 +328,10 @@
     position: relative;
     width: min(100%, 920px);
     overflow: visible;
-    border: 1px solid rgba(255,255,255,.15);
+    border: 1px solid var(--homepage-border-strong);
     border-radius: 18px;
-    background: rgba(15,15,19,.86);
-    box-shadow: 0 20px 48px rgba(0,0,0,.32);
-    padding: 8px;
+    background: var(--homepage-panel);
+    padding: 6px;
   }
 
   .profile-example__canvas {
@@ -383,16 +383,15 @@
     gap: 9px;
     min-height: 44px;
     margin-top: 12px;
-    padding: 10px 14px;
-    border: 1px solid rgba(255,255,255,.16);
-    border-radius: 8px;
-    background: rgba(22,22,26,.72);
+    padding: 10px 0;
+    border: 0;
+    background: transparent;
     color: var(--homepage-secondary-muted);
-    font: 500 .9rem / 1.3 var(--homepage-body, 'Inter', sans-serif);
+    font: 400 .8rem / 1.3 var(--homepage-body, 'Inter', sans-serif);
     cursor: pointer;
   }
   .profile-example__playback:hover,
-  .profile-example__playback:focus-visible { border-color: rgba(255,255,255,.32); background: rgba(32,32,38,.86); color: var(--homepage-text); }
+  .profile-example__playback:focus-visible { color: var(--homepage-text); }
   .profile-example__announcement { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 
   @keyframes profile-example-frame-in {
@@ -418,45 +417,43 @@
 
   @media (prefers-reduced-motion: reduce) {
     .profile-example__frame { animation: none; }
-    .profile-example__controls button > span { transition: none; }
+    .profile-example__controls button { transition: none; }
   }
 
-  @media (max-width: 1099px) {
+  @media (max-width: 980px) {
     .profile-example {
       grid-template-columns: minmax(0, 1fr);
-      gap: 30px;
-      padding-block: 58px;
+      gap: 28px;
     }
 
-    .profile-example__copy {
-      max-width: 650px;
-    }
-
-    .profile-example__controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-
-    .profile-example__stage {
-      min-height: 400px;
-    }
-
-    .profile-example__browser { width: min(100%, 860px); }
+    .profile-example__copy { display: grid; grid-template-columns: 1fr auto; gap: 16px; max-width: none; }
+    .profile-example__control-label { grid-column: 1 / -1; }
+    .profile-example__controls { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+    .profile-example__description { margin: 0; min-height: 0; }
+    .profile-example__playback { align-self: start; margin: 0; padding-block: 0; min-height: 44px; }
+    .profile-example__browser { width: 100%; }
+    .profile-example__intro { gap: 32px; }
   }
 
   @media (max-width: 600px) {
-    .profile-example__controls { display: flex; flex-wrap: wrap; gap: 4px 12px; }
-    .profile-example__controls button { font-size: .9rem; gap: 8px; }
-    .profile-example__controls button.active > span { width: 18px; }
-    .profile-example {
-      padding-block: 52px;
-    }
+    .profile-example__intro { grid-template-columns: 1fr; gap: 24px; }
+    .profile-example__copy { gap: 12px; }
+    .profile-example__controls button { font-size: .9rem; min-height: 48px; }
+    .profile-example__description { grid-column: 1 / -1; min-height: 2.8em; }
+    .profile-example__playback { min-height: 44px; }
 
     .profile-example__stage {
-      min-height: 350px;
+      min-height: 0;
     }
 
     .profile-example__canvas {
-      min-height: 340px;
+      min-height: 301px;
     }
 
+    /* Show the whole profile at this smaller preview size; its own authored
+       spacing and cosmetics continue to come from the shared renderer. */
+    .profile-example__motion-shell { zoom: .7; }
+    .profile-example__frame { display: grid; min-height: 430px; }
     .profile-example__current-shell { min-height: 340px; }
   }
 </style>

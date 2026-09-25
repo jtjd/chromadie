@@ -139,4 +139,29 @@ SELECT pg_temp.insight_assert(
   'malformed digests must not reach the aggregate'
 );
 
+DELETE FROM public.profile_insight_daily
+WHERE profile_id = '20000000-0000-0000-0000-000000000003'
+  AND insight_date = public.game_utc_date();
+INSERT INTO public.profile_insight_daily (
+  profile_id, insight_date, metric, entry_key, device_class,
+  country_code, referrer_host, event_count
+)
+SELECT
+  '20000000-0000-0000-0000-000000000003', public.game_utc_date(),
+  'click', 'portfolio', 'desktop', 'US',
+  'cap' || lpad(dimension_number::text, 4, '0') || '.example.com', 1
+FROM generate_series(1, 500) AS dimensions(dimension_number);
+SELECT pg_temp.insight_assert(
+  (public.record_profile_insight_from_edge(
+    'insightsdb', 'view', '', 'desktop', 'US', 'example.com', repeat('e', 64), NULL
+  )->>'reason') = 'dimension_limit',
+  'a new dimension must be rejected after the daily aggregate reaches its cap'
+);
+SELECT pg_temp.insight_assert(
+  (SELECT count(*) = 500 FROM public.profile_insight_daily
+   WHERE profile_id = '20000000-0000-0000-0000-000000000003'
+     AND insight_date = public.game_utc_date()),
+  'a rejected dimension must not exceed the daily aggregate cap'
+);
+
 ROLLBACK;

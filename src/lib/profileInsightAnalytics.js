@@ -1,6 +1,6 @@
-import { getProductAnalyticsConsent } from './productAnalytics.js';
+import { getProductAnalyticsConsent, PROFILE_INSIGHT_RECENCY_KEY } from './productAnalytics.js';
 
-export const PROFILE_INSIGHT_RECENCY_KEY = 'chromadie-profile-insight-recency-v1';
+export { PROFILE_INSIGHT_RECENCY_KEY } from './productAnalytics.js';
 const MAX_RECENCY_ENTRIES = 400;
 const USERNAME_PATTERN = /^[a-z0-9_]{1,20}$/;
 const ENTRY_KEY_PATTERN = /^[a-z0-9][a-z0-9_-]{0,31}$/;

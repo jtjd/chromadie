@@ -1,15 +1,4 @@
-const CHALLENGE_FUNCTION = 'challenge-link'
-
-function normalizeError(error, fallbackMessage = 'Unable to process the challenge.') {
-  const message = typeof error === 'string'
-    ? error
-    : error?.message || error?.error || error?.msg || fallbackMessage
-
-  return {
-    message,
-    code: 'challenge_error'
-  }
-}
+import { CHALLENGE_FUNCTION, normalizeChallengeError } from './challengeTransport.js';
 
 /**
  * @param {any} supabase
@@ -28,14 +17,14 @@ export async function createChallengeLink(supabase, { score, hex, senderUsername
   if (error) {
     return {
       success: false,
-      error: normalizeError(error)
+      error: normalizeChallengeError(error)
     }
   }
 
   if (!data?.success) {
     return {
       success: false,
-      error: normalizeError(data?.error)
+      error: normalizeChallengeError(data?.error)
     }
   }
 
@@ -43,33 +32,5 @@ export async function createChallengeLink(supabase, { score, hex, senderUsername
     success: true,
     challenge: data.challenge,
     shareUrl: data.share_url
-  }
-}
-
-export async function loadChallengeLink(supabase, challengeId) {
-  const { data, error } = await supabase.functions.invoke(CHALLENGE_FUNCTION, {
-    body: {
-      action: 'get',
-      id: challengeId
-    }
-  })
-
-  if (error) {
-    return {
-      success: false,
-      error: normalizeError(error)
-    }
-  }
-
-  if (!data?.success) {
-    return {
-      success: false,
-      error: normalizeError(data?.error, 'Challenge not found.')
-    }
-  }
-
-  return {
-    success: true,
-    challenge: data.challenge
   }
 }

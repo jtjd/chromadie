@@ -20,7 +20,7 @@ let supabaseClient = null
 if (missingVars.length > 0) {
   supabaseError = {
     title: 'Missing Supabase configuration',
-    message: 'The app cannot connect to Supabase until the required environment variables are set.',
+    message: 'Supabase configuration is missing.',
     details: `Missing: ${missingVars.join(', ')}`
   }
 } else {
@@ -29,7 +29,7 @@ if (missingVars.length > 0) {
     const isLoopback = ['localhost', '127.0.0.1', '::1'].includes(parsedUrl.hostname)
     const localIntegrationTest = import.meta.env?.VITE_LOCAL_INTEGRATION_TEST === 'true'
     if (parsedUrl.protocol !== 'https:' && !((import.meta.env.DEV || localIntegrationTest) && parsedUrl.protocol === 'http:' && isLoopback)) {
-      throw new Error('Supabase URL must use https (except loopback URLs in development)')
+      throw new Error('Use HTTPS for Supabase except on the development loopback.')
     }
 
     const transport = createSupabaseTransport({ supabaseUrl, supabaseKey, projectKeyIsLegacy: supabaseKeyIsLegacy })
@@ -37,8 +37,8 @@ if (missingVars.length > 0) {
   } catch (error) {
     supabaseError = {
       title: 'Invalid Supabase configuration',
-      message: 'The app could not initialize the Supabase client.',
-      details: error instanceof Error ? error.message : 'Unknown initialization failure'
+    message: 'Supabase client initialization failed.',
+    details: error instanceof Error ? error.message : 'Unknown error'
     }
   }
 }

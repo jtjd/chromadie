@@ -61,8 +61,8 @@ Exit criteria:
 
 ## Phase 3 — Historical Integrated Roll Vertical Slice (Superseded)
 
-> Historical milestone record. The launch architecture supersedes this phase:
-> `/roll` owns the full interactive experience and profiles render only the
+> Historical milestone record. The current launch architecture supersedes this
+> phase: `/` owns the interactive daily Roll and profiles render only the
 > resulting static roll/progression state.
 
 Goal: make today's roll feel like a living event inside the profile.
@@ -284,6 +284,11 @@ Deliverables:
 - Authenticated `/` → owner profile, signed-out `/` → guest Roll, and explicit
   `/?view=game` compatibility.
 - Focused route/source tests, browser screenshots, and a validation report.
+
+This historical contract was superseded on 2026-09-23: `/` now owns daily Roll,
+`/roll` and `/?view=game` are removed, and `/c/:id` remains for challenges. See
+[`DECISIONS.md`](DECISIONS.md) and
+[`milestones/HOMEPAGE_ROLL_AND_DISCOVERY.md`](milestones/HOMEPAGE_ROLL_AND_DISCOVERY.md).
 
 Exit criteria:
 

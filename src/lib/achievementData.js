@@ -13,6 +13,9 @@ export async function loadAchievementDefinitions(supabaseClient) {
         if (Array.isArray(response.data)) definitionsCache = response.data;
         definitionsRequest = null;
         return response;
+      }, error => {
+        definitionsRequest = null;
+        return { data: null, error };
       });
   }
   return definitionsRequest;

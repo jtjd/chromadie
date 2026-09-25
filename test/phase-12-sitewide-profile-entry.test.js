@@ -5,14 +5,16 @@ import { readFile } from 'node:fs/promises';
 import { parseRouteLocation } from '../src/lib/routes.js';
 
 const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
+const navigation = await readFile(new URL('../src/lib/routeNavigation.js', import.meta.url), 'utf8');
+const routeTarget = await readFile(new URL('../src/lib/routeTarget.js', import.meta.url), 'utf8');
 const routeLoaders = await readFile(new URL('../src/lib/routeLoaders.js', import.meta.url), 'utf8');
 const header = await readFile(new URL('../src/lib/SiteModeHeader.svelte', import.meta.url), 'utf8');
 const site = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
 
-test('the bare root is the landing page and explicit gameplay remains compatible', () => {
+test('the homepage is the daily-roll entry while challenge routes stay distinct', () => {
   assert.equal(parseRouteLocation('/').view, 'home');
-  assert.equal(parseRouteLocation('/', '?view=game').view, 'game');
-  assert.equal(parseRouteLocation('/roll').view, 'game');
+  assert.equal(parseRouteLocation('/', '?view=game').view, 'home');
+  assert.equal(parseRouteLocation('/roll').routeMode, 'not-found');
   assert.equal(parseRouteLocation('/c/challenge-1').view, 'game');
   assert.equal(parseRouteLocation('/u/OtherUser').view, 'profile');
   assert.equal(parseRouteLocation('/profile/settings').view, 'profile-settings');
@@ -27,16 +29,19 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.match(app, /on:edit=\{handleProfileHeaderEdit\}/);
   assert.match(app, /app-main--site/);
   assert.match(app, /setRoute\('profile', \{ username:/);
-  assert.match(app, /handleInternalLinkClick/);
-  assert.match(app, /navigateToPath\(nextPath\)/);
+  assert.match(app, /createRouteNavigationController/);
+  assert.match(app, /routeNavigation\.navigateToPath\(nextPath/);
+  assert.match(navigation, /function handleInternalLinkClick/);
+  assert.match(navigation, /function navigateToPath/);
   assert.match(app, /ACCOUNT_STATES\.SIGNED_OUT/);
-  assert.match(app, /loaderKey: 'home'/);
-  assert.match(app, /loaderKey: 'profileSettings'/);
+  assert.match(routeTarget, /loaderKey: 'home'/);
+  assert.match(routeTarget, /loaderKey: 'profileSettings'/);
   assert.match(routeLoaders, /profileSettings: \(\) => import\('\.\/ProfileSettings\.svelte'\)/);
   assert.match(app, /on:signup=\{\(\) => navigateToAuth\('signup'\)\}/);
   assert.match(header, /Profile/);
   assert.match(header, />Roll</);
-  assert.match(header, /prefetch\('game'\)/);
+  assert.match(header, /prefetch\('home'\)/);
+  assert.match(header, /navigate\('home'\)/);
   assert.match(header, /navigate\('home'\)/);
   assert.match(header, /Leaderboard/);
   assert.match(header, />Customize</);

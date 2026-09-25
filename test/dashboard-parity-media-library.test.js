@@ -30,6 +30,7 @@ test('reusable profile assets keep the same bounded bucket/path contract', () =>
 test('media library migration keeps registration and deletion owner-scoped', async () => {
   const migration = await read('supabase/migrations/20260808130000_profile_media_library.sql');
   const editor = await read('src/lib/ProfileExpressionEditor.svelte');
+  const actions = await read('src/lib/profile-studio/expressionMediaActions.js');
   assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.profile_media_assets/);
   assert.match(migration, /REVOKE ALL ON TABLE public\.profile_media_assets FROM PUBLIC, anon, authenticated/);
   assert.match(migration, /register_my_profile_media_asset/);
@@ -37,13 +38,17 @@ test('media library migration keeps registration and deletion owner-scoped', asy
   assert.match(migration, /storage\.objects/);
   assert.match(migration, /auth\.uid\(\)/);
   assert.match(migration, /COALESCE\(v_object\.metadata->>'mimetype', ''\) <> 'image\/webp'/);
-  assert.match(editor, /profile_media_assets/);
+  assert.match(actions, /profile_media_assets/);
+  assert.match(actions, /\.eq\('user_id', profileId\)/);
+  assert.doesNotMatch(editor, /profile_media_assets/);
+  assert.doesNotMatch(editor, /supabase\.rpc\('(select_my_profile_expression_assets|select_my_profile_audio_asset|update_my_profile_expression)'/);
   assert.doesNotMatch(editor, /register_my_profile_media_asset/);
-  assert.match(editor, /deleteProfileMediaAsset/);
-  const avatarRemove = editor.match(/async function removeAvatar\(\)[\s\S]*?(?=\n\x20{2}async function)/)?.[0] || '';
-  const backgroundRemove = editor.match(/async function removeBackground\(\)[\s\S]*?(?=\n\x20{2}async function)/)?.[0] || '';
-  assert.doesNotMatch(avatarRemove, /storage\.from\(reference\.bucket\)\.remove/);
-  assert.doesNotMatch(backgroundRemove, /storage\.from\(reference\.bucket\)\.remove/);
+  assert.match(editor, /deleteProfileExpressionAsset/);
+  assert.match(actions, /deleteProfileMediaAsset/);
+  const imageRemoval = editor.match(/async function removeImage\(kind\)[\s\S]*?(?=\n\x20{2}async function)/)?.[0] || '';
+  assert.match(editor, /async function removeAvatar\(\)[\s\S]*removeImage\('avatar'\)/);
+  assert.match(editor, /async function removeBackground\(\)[\s\S]*removeImage\('background'\)/);
+  assert.doesNotMatch(imageRemoval, /storage\.from\(reference\.bucket\)\.remove/);
   assert.doesNotMatch(editor, /verifyPersistedImage|Date\.now\(\)/);
   assert.doesNotMatch(editor, /cleanupFailedImageUpload/);
   assert.doesNotMatch(editor, /supabase\.storage[\s\S]*\.upload/);

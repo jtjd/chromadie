@@ -4,16 +4,22 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [app, outlet, loaders, header, profileData, progressionPage] = await Promise.all([
+const [app, outlet, loaders, header, profileData, progressionPage, routeTarget] = await Promise.all([
   read('src/App.svelte'),
   read('src/lib/RouteOutlet.svelte'),
   read('src/lib/routeLoaders.js'),
   read('src/lib/SiteModeHeader.svelte'),
   read('src/lib/profileData.js'),
-  read('src/lib/ProgressionPage.svelte')
+  read('src/lib/ProgressionPage.svelte'),
+  read('src/lib/routeTarget.js')
 ]);
 
 test('route loading keeps the shell and previous page mounted until a destination resolves', () => {
+  assert.match(app, /import \{ resolveRouteTarget \} from '\.\/lib\/routeTarget\.js'/);
+  assert.match(app, /routeTarget = resolveRouteTarget\(/);
+  assert.doesNotMatch(app, /function getRouteTarget\(/);
+  assert.match(routeTarget, /export function resolveRouteTarget\(/);
+  assert.match(app, /NotFound, AccountUnavailable, RouteLoading/);
   assert.match(app, /<RouteOutlet/);
   assert.match(app, /homepageHeaderTransitionPending/);
   assert.match(app, /on:loaded=\{handleRouteSettled\}/);
@@ -65,7 +71,8 @@ test('the app does not prefetch unrelated route trees during idle startup', () =
 test('direct refresh resolves the current route before lazy outlet startup', () => {
   assert.match(app, /const initialRoute = typeof window !== 'undefined'/);
   assert.match(app, /parseRouteLocation\(window\.location\.pathname, window\.location\.search\)/);
-  assert.match(app, /let view = initialRoute\?\.view \|\| 'home'/);
-  assert.match(app, /let routeMode = initialRoute\?\.routeMode \|\| 'app'/);
+  assert.match(app, /const initialRouteState = initialRoute \? resolveRouteState\(initialRoute\) : null/);
+  assert.match(app, /let view = initialRouteState\?\.view \|\| 'home'/);
+  assert.match(app, /let routeMode = initialRouteState\?\.routeMode \|\| 'app'/);
   assert.doesNotMatch(app, /let view = 'home';[\s\S]{0,180}onMount\(\(\) => \{[\s\S]{0,180}parseRoute\(\)/);
 });

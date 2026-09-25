@@ -6,7 +6,7 @@
   import { profile } from './stores';
   import UserAvatarFallback from './UserAvatarFallback.svelte';
 
-  export let activeView = 'game';
+  export let activeView = 'home';
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.SIGNED_OUT);
   export let username = '';
   export let avatarSrc = '';
@@ -70,7 +70,7 @@
 
     {#if !isProfileMode}
       <nav class="site-mode-header__nav" aria-label="Primary application navigation">
-        {#if !isHomeMode}<button type="button" class:active={activeView === 'game'} aria-current={activeView === 'game' ? 'page' : undefined} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>{/if}
+        {#if !isHomeMode}<button type="button" class:active={activeView === 'home'} aria-current={activeView === 'home' ? 'page' : undefined} on:mouseenter={() => prefetch('home')} on:focus={() => prefetch('home')} on:click={() => navigate('home')}>Roll</button>{/if}
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
         <button type="button" class:active={activeView === 'progression'} aria-current={activeView === 'progression' ? 'page' : undefined} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigateProtected('progression')}>Progression</button>
         <button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigateProtected('profile-settings')}>Customize</button>
@@ -126,7 +126,7 @@
       <div class="site-mode-header__mobile-panel" aria-hidden={!mobileMenuOpen}>
         {#if !isProfileMode}
           <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
-            {#if !isHomeMode}<button type="button" class:active={activeView === 'game'} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>{/if}
+            {#if !isHomeMode}<button type="button" class:active={activeView === 'home'} on:mouseenter={() => prefetch('home')} on:focus={() => prefetch('home')} on:click={() => navigate('home')}>Roll</button>{/if}
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
             <button type="button" class:active={activeView === 'progression'} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigateProtected('progression')}>Progression</button>
             <button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigateProtected('profile-settings')}>Customize</button>

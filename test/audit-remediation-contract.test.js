@@ -11,6 +11,40 @@ import {
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
+test('CI workflow limits the default GitHub token to repository read access', async () => {
+  const workflow = await read('.github/workflows/ci.yml');
+  assert.match(workflow, /^permissions:\s+contents: read$/m);
+});
+
+test('QA cosmetic inventory is granted only to the named staff account', async () => {
+  const migration = await read('supabase/migrations/20260919150000_grant_tjz_cosmetic_test_access.sql');
+  assert.match(migration, /WHERE lower\(COALESCE\(p\.username_key, p\.username\)\) = 'tjz'[\s\S]*AND p\.is_staff IS TRUE/);
+  assert.match(migration, /IF target_user IS NULL THEN[\s\S]*RETURN;/);
+});
+
+test('R2 media references require byte validation and legacy ready assets are rechecked', async () => {
+  const [migration, complete, promote, control] = await Promise.all([
+    read('supabase/migrations/20260924150000_profile_media_content_validation_version.sql'),
+    read('functions/api/profile-media/complete.js'),
+    read('functions/api/profile-media/promote.js'),
+    read('functions/_profileMediaControl.js')
+  ]);
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS content_validation_version smallint NOT NULL DEFAULT 0/);
+  assert.match(migration, /content_validation_version <> 1/);
+  assert.match(migration, /content_validation_version = 1/);
+  assert.match(migration, /mark_my_profile_media_content_validated/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.mark_my_profile_media_content_validated[\s\S]*TO service_role/);
+  assert.match(complete, /Rows created before content policy v1 are re-read and revalidated/);
+  assert.match(complete, /if \(!verified\.success && publicObject && asset\.r2_private_key\)/);
+  assert.match(complete, /purgePublicMediaKey\(env, asset\.r2_public_key\)/);
+  assert.match(complete, /verifyStoredProfileMediaObject/);
+  assert.match(promote, /verifyStoredProfileMediaObject/);
+  assert.match(control, /expectedSize > maximumSize/);
+  assert.match(control, /readResponseBytesBounded/);
+  assert.match(control, /actualHash !== expectedHash/);
+  assert.doesNotMatch(migration, /IF FOUND AND v_asset\.storage_provider = 'supabase'/);
+});
+
 test('edge-derived profile insight digests are opaque, daily, and request-bound', async () => {
   const request = new Request('https://chm.lol/analytics/profile', {
     headers: { 'cf-connecting-ip': '203.0.113.9', 'user-agent': 'Chromadie audit test' }
@@ -74,11 +108,12 @@ test('profile insight edge handler sends only an opaque digest to the service re
 });
 
 test('audit remediations keep browser catalog/insight writes fail-closed', async () => {
-  const [stores, legacyView, edge, migration, canonical, seed, releaseWorkflow, releaseScript, content, rolesMigration] = await Promise.all([
+  const [stores, legacyView, edge, migration, capMigration, canonical, seed, releaseWorkflow, releaseScript, content, rolesMigration] = await Promise.all([
     read('src/lib/stores.js'),
     read('src/lib/profileViewAnalytics.js'),
     read('functions/analytics/profile.js'),
     read('supabase/migrations/20260903110000_profile_insight_edge_deduplication.sql'),
+    read('supabase/migrations/20260924100000_profile_insight_daily_cap_serialization.sql'),
     read('supabase/migrations/20260903120000_canonical_authoritative_functions.sql'),
     read('supabase/seed.sql'),
     read('.github/workflows/release-preflight.yml'),
@@ -98,6 +133,12 @@ test('audit remediations keep browser catalog/insight writes fail-closed', async
   assert.match(migration, /visitor_rate_limited/);
   assert.match(migration, /pg_advisory_xact_lock\(hashtext\(v_digest\)/);
   assert.doesNotMatch(migration, /click_rate_limited/);
+  const sharedDimensionLock = capMigration.indexOf("'profile-insight-dimensions:' || v_profile_id::text || ':' || v_today::text");
+  const dimensionCount = capMigration.indexOf('SELECT count(*) INTO v_dimension_count');
+  assert.ok(sharedDimensionLock >= 0 && sharedDimensionLock < dimensionCount);
+  assert.match(capMigration, /pg_advisory_xact_lock\(hashtextextended\(/);
+  assert.match(capMigration, /GRANT EXECUTE ON FUNCTION public\.record_profile_insight_from_edge[\s\S]*TO service_role/);
+  assert.match(capMigration, /REVOKE ALL ON FUNCTION public\.record_profile_insight_from_edge[\s\S]*FROM PUBLIC, anon, authenticated/);
   assert.match(canonical, /CREATE OR REPLACE FUNCTION public\.calculate_roll_v6/);
   assert.match(canonical, /CREATE OR REPLACE FUNCTION public\.roll_die_impl_pre_audit/);
   assert.match(canonical, /CREATE OR REPLACE FUNCTION public\.roll_die_impl_progression_base/);

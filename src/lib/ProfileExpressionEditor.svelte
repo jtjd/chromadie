@@ -1,10 +1,21 @@
 <script>
   import { onDestroy, onMount, createEventDispatcher } from 'svelte';
   import { supabase } from './supabase.js';
+  import { session } from './stores.js';
   import { normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { deleteLegacyProfileAudio, deleteProfileMediaAsset, isR2MediaAsset, promoteProfileMediaR2 } from './profileMediaR2.js';
-  import { uploadProfileAudioAsset, uploadProfileImageAsset } from './profile-studio/expressionMediaActions.js';
+  import { getProfileMediaAuthorization, isR2MediaAsset, promoteProfileMediaR2, revalidateProfileMediaR2 } from './profileMediaR2.js';
+  import { hasProfileMediaRevalidationHash, partitionProfileMediaValidationAssets } from './profileMediaValidation.js';
+  import {
+    clearLegacyProfileExpressionAudio,
+    deleteProfileExpressionAsset,
+    loadProfileExpressionAssetLibrary,
+    saveProfileExpression,
+    selectProfileExpressionAsset,
+    uploadAndSelectProfileAudioAsset,
+    uploadAndSelectProfileImageAsset
+  } from './profile-studio/expressionMediaActions.js';
+  import { createPreviewPreparationHandler } from './profile-studio/previewPreparation.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
   import ProfileMediaIcon from './ProfileMediaIcon.svelte';
   import ProfileRichMediaEditor from './ProfileRichMediaEditor.svelte';
@@ -39,10 +50,14 @@
   let error = '';
   let avatarAssets = [];
   let backgroundAssets = [];
+  let unverifiedAssets = [];
   let assetsLoading = false;
   let assetsError = '';
   let expressionMediaReferences = {};
   let assetLoadRequestId = 0;
+  let editorActive = true;
+  let activeMediaOwnerKey = '';
+  let mediaActionGeneration = 0;
   const avatarRules = PROFILE_IMAGE_RULES.avatar;
   const backgroundRules = PROFILE_IMAGE_RULES.background;
   const actionButtonStyle = 'display:inline-flex;align-items:center;justify-content:center;min-height:2.65rem;border:1px solid transparent;border-radius:var(--radius-sm);padding:0 1rem;background:var(--color-ink-strong);color:var(--color-canvas-deep);font:600 var(--type-small)/1 var(--font-body-stack);cursor:pointer';
@@ -53,6 +68,40 @@
     config?.draft || config?.published || {}
   );
   $: incomingKey = `${profileId || ''}:${JSON.stringify(incomingExpression)}`;
+  $: syncMediaOwner($session?.user?.id || '', profileId || '');
+  function syncMediaOwner(sessionUserId, targetProfileId) {
+    const nextKey = `${sessionUserId}:${targetProfileId}`;
+    if (nextKey === activeMediaOwnerKey) return;
+    activeMediaOwnerKey = nextKey;
+    mediaActionGeneration += 1;
+    assetLoadRequestId += 1;
+    busy = false;
+    avatarAssets = [];
+    backgroundAssets = [];
+    unverifiedAssets = [];
+    assetsLoading = false;
+    assetsError = '';
+    expressionMediaReferences = {};
+    revokeAvatarPreview();
+    revokeBackgroundPreview();
+    setAudioPreview('');
+    if (sessionUserId && sessionUserId === targetProfileId) void loadAssetLibrary();
+  }
+
+  function beginMediaAction() {
+    const ownerId = $session?.user?.id || '';
+    const actionGeneration = ++mediaActionGeneration;
+    return {
+      ownerId,
+      isCurrent: () => Boolean(
+        editorActive
+        && ownerId
+        && ownerId === profileId
+        && ownerId === $session?.user?.id
+        && actionGeneration === mediaActionGeneration
+      )
+    };
+  }
   function syncIncomingExpression(nextExpression, nextKey) {
     if (busy || nextKey === syncedKey) return;
     expression = nextExpression;
@@ -87,29 +136,38 @@
     return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   }
 
+  function revokeImagePreview(kind) {
+    const source = kind === 'avatar' ? avatarPreviewSrc : backgroundPreviewSrc;
+    if (source && source.startsWith('blob:')) URL.revokeObjectURL(source);
+    if (kind === 'avatar') avatarPreviewSrc = '';
+    else backgroundPreviewSrc = '';
+  }
+
+  function setImagePreview(kind, source) {
+    revokeImagePreview(kind);
+    if (kind === 'avatar') avatarPreviewSrc = source;
+    else backgroundPreviewSrc = source;
+  }
+
   function revokeAvatarPreview() {
-    if (avatarPreviewSrc && avatarPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(avatarPreviewSrc);
-    avatarPreviewSrc = '';
+    revokeImagePreview('avatar');
   }
 
   function revokeBackgroundPreview() {
-    if (backgroundPreviewSrc && backgroundPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(backgroundPreviewSrc);
-    backgroundPreviewSrc = '';
-  }
-
-  function setPersistedAvatarPreview(source) {
-    if (avatarPreviewSrc && avatarPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(avatarPreviewSrc);
-    avatarPreviewSrc = source;
-  }
-
-  function setPersistedBackgroundPreview(source) {
-    if (backgroundPreviewSrc && backgroundPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(backgroundPreviewSrc);
-    backgroundPreviewSrc = source;
+    revokeImagePreview('background');
   }
 
   function setAudioPreview(source) {
     if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
     audioPreviewSrc = source;
+  }
+
+  function preparedPreviewHandler(onPreview) {
+    return createPreviewPreparationHandler({
+      isActive: () => editorActive,
+      createObjectURL: blob => URL.createObjectURL(blob),
+      onPreview
+    });
   }
 
   function setFeedback(nextError = '', nextStatus = '') {
@@ -120,32 +178,75 @@
   async function loadAssetLibrary() {
     if (!profileId) return;
     const requestId = ++assetLoadRequestId;
+    const requestedProfileId = profileId;
+    const requestedSessionId = $session?.user?.id || '';
+    if (requestedSessionId !== requestedProfileId) return;
     assetsLoading = true;
     assetsError = '';
     try {
-      const { data, error: assetError } = await supabase
-        .from('profile_media_assets')
-        .select('id, kind, storage_path, storage_provider, r2_public_key, label, created_at, status, delivery_status, ever_public')
-        .eq('user_id', profileId)
-        .order('created_at', { ascending: false });
-      if (requestId !== assetLoadRequestId) return;
-      if (assetError) throw new Error(assetError.message || 'The media library could not be loaded.');
-      avatarAssets = (data || []).filter(asset => asset.kind === 'avatar' && (!asset.status || asset.status === 'active'));
-      backgroundAssets = (data || []).filter(asset => asset.kind === 'background' && (!asset.status || asset.status === 'active'));
+      const data = await loadProfileExpressionAssetLibrary(supabase, requestedProfileId);
+      if (requestId !== assetLoadRequestId || requestedProfileId !== profileId || requestedSessionId !== $session?.user?.id) return;
+      const { assets, unverifiedAssets: pendingValidation } = partitionProfileMediaValidationAssets(data);
+      avatarAssets = assets.filter(asset => asset.kind === 'avatar');
+      backgroundAssets = assets.filter(asset => asset.kind === 'background');
+      unverifiedAssets = pendingValidation.filter(asset => ['avatar', 'background'].includes(asset.kind));
     } catch (loadError) {
-      if (requestId === assetLoadRequestId) assetsError = loadError instanceof Error ? loadError.message : 'The media library could not be loaded.';
+      if (requestId === assetLoadRequestId && requestedProfileId === profileId && requestedSessionId === $session?.user?.id) assetsError = loadError instanceof Error ? loadError.message : 'The media library could not be loaded.';
     } finally {
-      if (requestId === assetLoadRequestId) assetsLoading = false;
+      if (requestId === assetLoadRequestId && requestedProfileId === profileId && requestedSessionId === $session?.user?.id) assetsLoading = false;
     }
   }
 
-  async function selectR2ExpressionAsset(kind, assetId, { clear = false, mediaReference = null } = {}) {
+  async function revalidateAsset(asset) {
+    if (!asset?.id || !hasProfileMediaRevalidationHash(asset) || busy) return;
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
+    busy = true;
+    setFeedback('', 'Checking saved media against current safety limits…');
+    try {
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      if (!action.isCurrent()) return;
+      const result = await revalidateProfileMediaR2(asset.id, asset.content_hash_sha256, authorization);
+      if (!action.isCurrent()) return;
+      await loadAssetLibrary();
+      if (!action.isCurrent()) return;
+      const selectedKind = ['avatar', 'background'].find(kind => expression[`${kind}_asset_id`] === asset.id);
+      const verifiedAsset = result?.asset;
+      if (selectedKind && verifiedAsset?.r2_public_key) {
+        const reference = {
+          asset_id: asset.id,
+          storage_provider: 'r2',
+          r2_public_key: verifiedAsset.r2_public_key,
+          mime_type: verifiedAsset.mime_type || asset.mime_type,
+          byte_size: verifiedAsset.byte_size || asset.byte_size
+        };
+        expressionMediaReferences = { ...expressionMediaReferences, [selectedKind]: reference };
+        dispatch('expressionchange', {
+          ...expression,
+          media_references: { ...configuredMediaReferences, ...expressionMediaReferences },
+          updatedAt: null
+        });
+      }
+      if (action.isCurrent()) setFeedback('', `${asset.label || 'Saved media'} passed the current checks.`);
+    } catch (validationError) {
+      if (action.isCurrent()) setFeedback(validationError instanceof Error ? validationError.message : 'The saved media could not be rechecked.');
+    } finally {
+      if (action.isCurrent()) busy = false;
+    }
+  }
+
+  async function selectR2ExpressionAsset(kind, assetId, { clear = false, mediaReference = null, authorization = null, action = null } = {}) {
+    const currentAction = action || beginMediaAction();
+    authorization ||= await getProfileMediaAuthorization(currentAction.ownerId);
+    if (!currentAction.isCurrent()) throw new Error('The media action was canceled because the active account changed.');
+    const data = await selectProfileExpressionAsset(supabase, kind, assetId, {
+      clear,
+      avatarAssetId: selectedR2AssetId('avatar'),
+      backgroundAssetId: selectedR2AssetId('background'),
+      authorization
+    });
+    if (!currentAction.isCurrent()) throw new Error('The media action was canceled because the active account changed.');
     if (kind === 'audio') {
-      const { data, error: audioRpcError } = await supabase.rpc('select_my_profile_audio_asset', {
-        p_audio_id: clear ? null : assetId,
-        p_clear_audio: clear
-      });
-      if (audioRpcError || !data?.success) throw new Error(audioRpcError?.message || data?.error || 'The profile audio selection could not be saved.');
       expression = normalizeProfileExpression({ ...expression, ...data });
       expressionMediaReferences = {
         ...expressionMediaReferences,
@@ -156,13 +257,6 @@
       dispatch('expressionchange', { ...expression, media_references: expressionMediaReferences, updatedAt: data.updated_at || null });
       return data;
     }
-    const { data, error: rpcError } = await supabase.rpc('select_my_profile_expression_assets', {
-      p_avatar_id: kind === 'avatar' ? (clear ? null : assetId) : selectedR2AssetId('avatar'),
-      p_background_id: kind === 'background' ? (clear ? null : assetId) : selectedR2AssetId('background'),
-      p_clear_avatar: kind === 'avatar' && clear,
-      p_clear_background: kind === 'background' && clear
-    });
-    if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The profile media selection could not be saved.');
     expression = normalizeProfileExpression({ ...expression, ...data });
     expressionMediaReferences = {
       ...expressionMediaReferences,
@@ -187,31 +281,41 @@
       if (asset?.id && !busy) setFeedback('', 'This saved media is unavailable. Re-upload it to R2 to use it.');
       return;
     }
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
     busy = true;
     setFeedback('', `Applying ${kind}…`);
     try {
-      if (!asset.ever_public) await promoteProfileMediaR2(asset.id);
-      await selectR2ExpressionAsset(kind, asset.id);
-      setFeedback('', `${kind === 'avatar' ? 'Avatar' : 'Background'} applied to your profile.`);
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      if (!action.isCurrent()) return;
+      if (!asset.ever_public) await promoteProfileMediaR2(asset.id, authorization);
+      if (!action.isCurrent()) return;
+      await selectR2ExpressionAsset(kind, asset.id, { authorization, action });
+      if (action.isCurrent()) setFeedback('', `${kind === 'avatar' ? 'Avatar' : 'Background'} applied to your profile.`);
     } catch (selectionError) {
-      setFeedback(selectionError instanceof Error ? selectionError.message : `The ${kind} could not be applied.`);
+      if (action.isCurrent()) setFeedback(selectionError instanceof Error ? selectionError.message : `The ${kind} could not be applied.`);
     } finally {
-      busy = false;
+      if (action.isCurrent()) busy = false;
     }
   }
 
   async function deleteAsset(asset) {
     if (!asset?.id || busy) return;
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
     busy = true;
     setFeedback('', 'Removing media asset…');
     try {
       // All permanent library deletion goes through the server control plane.
       // It owns R2 deletion. Historical storage_path values remain inert and
       // are never sent to a Supabase Storage API.
-      const data = await deleteProfileMediaAsset(asset.id);
-      if (!data?.success) {
-        throw new Error(data?.error || 'The media asset could not be removed.');
-      }
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      if (!action.isCurrent()) return;
+      const data = await deleteProfileExpressionAsset(asset.id, {
+        authorization,
+        isCurrent: action.isCurrent
+      });
+      if (!action.isCurrent()) return;
       const field = `${asset.kind}_path`;
       if (expression[field] === asset.storage_path || expression[`${asset.kind}_asset_id`] === asset.id) {
         expression = normalizeProfileExpression({ ...expression, [field]: null, [`${asset.kind}_asset_id`]: null });
@@ -221,11 +325,11 @@
         dispatch('expressionchange', { ...expression, media_references: nextReferences, updatedAt: data.updated_at || null });
       }
       await loadAssetLibrary();
-      setFeedback('', 'Media asset deleted from your library.');
+      if (action.isCurrent()) setFeedback('', 'Media asset deleted from your library.');
     } catch (deleteError) {
-      setFeedback(deleteError instanceof Error ? deleteError.message : 'The media asset could not be removed.');
+      if (action.isCurrent()) setFeedback(deleteError instanceof Error ? deleteError.message : 'The media asset could not be removed.');
     } finally {
-      busy = false;
+      if (action.isCurrent()) busy = false;
     }
   }
 
@@ -264,16 +368,19 @@
     audioCurrentTime = audioElement.currentTime;
   }
 
-  async function saveExpression(nextExpression) {
+  async function saveExpression(nextExpression, authorization = null, action = null) {
+    const currentAction = action || beginMediaAction();
+    authorization ||= await getProfileMediaAuthorization(currentAction.ownerId);
+    if (!currentAction.isCurrent()) throw new Error('The media action was canceled because the active account changed.');
     const next = normalizeProfileExpression(nextExpression);
-    const { data, error: rpcError } = await supabase.rpc('update_my_profile_expression', {
-      p_avatar_path: next.avatar_path,
-      p_background_path: next.background_path,
-      p_spotify_url: spotifyUrlFromParts(next.spotify_type, next.spotify_id) || null
-    });
-    if (rpcError || !data?.success) {
-      throw new Error(rpcError?.message || data?.error || 'The profile cosmetics could not be saved.');
-    }
+    const data = await saveProfileExpression(
+      supabase,
+      next,
+      spotifyUrlFromParts(next.spotify_type, next.spotify_id),
+      authorization,
+      currentAction.isCurrent
+    );
+    if (!currentAction.isCurrent()) throw new Error('The media action was canceled because the active account changed.');
 
     expression = normalizeProfileExpression({ ...expression, ...data });
     syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
@@ -282,7 +389,7 @@
     return nextResult;
   }
 
-  async function handleAvatarChange(event) {
+  async function handleImageChange(kind, event) {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = '';
     if (!file || !profileId || busy) return;
@@ -292,100 +399,84 @@
     }
 
     busy = true;
-    setFeedback('', 'Preparing the avatar…');
-    let uploadedAssetId = '';
+    setFeedback('', `Preparing the ${kind}…`);
+    const { ownerId, isCurrent } = beginMediaAction();
     try {
-      const uploaded = await uploadProfileImageAsset({
+      const authorization = await getProfileMediaAuthorization(ownerId);
+      if (!isCurrent()) throw new Error('The media action was canceled because the active account changed.');
+      const uploaded = await uploadAndSelectProfileImageAsset({
         file,
-        kind: 'avatar',
-        onPrepared: blob => setPersistedAvatarPreview(URL.createObjectURL(blob))
+        kind,
+        authorization,
+        isCurrent,
+        onPrepared: preparedPreviewHandler(source => setImagePreview(kind, source)),
+        selectUploadedAsset: (asset, authorization) => selectR2ExpressionAsset(kind, asset.assetId, {
+          mediaReference: { storage_provider: 'r2', r2_public_key: asset.publicKey },
+          authorization,
+          action: { ownerId, isCurrent }
+        })
       });
-      uploadedAssetId = uploaded.assetId;
-      await selectR2ExpressionAsset('avatar', uploaded.assetId, {
-        mediaReference: { storage_provider: 'r2', r2_public_key: uploaded.publicKey }
-      });
-      uploadedAssetId = '';
-      setPersistedAvatarPreview(uploaded.publicUrl);
+      if (!isCurrent()) return;
+      setImagePreview(kind, uploaded.publicUrl);
       await loadAssetLibrary();
-      setFeedback('', `Avatar saved to your R2 library and profile (${formatStoredSize(uploaded.blob.size)} stored).`);
+      setFeedback('', kind === 'avatar'
+        ? `Avatar saved to your R2 library and profile (${formatStoredSize(uploaded.blob.size)} stored).`
+        : `Background saved to your R2 library and public atmosphere (${formatStoredSize(uploaded.blob.size)} stored).`);
     } catch (uploadError) {
-      if (uploadedAssetId) await deleteProfileMediaAsset(uploadedAssetId).catch(() => {});
-      setFeedback(uploadError instanceof Error ? uploadError.message : 'The avatar could not be saved.');
-      revokeAvatarPreview();
+      if (isCurrent()) {
+        setFeedback(uploadError instanceof Error ? uploadError.message : `The ${kind} could not be saved.`);
+        revokeImagePreview(kind);
+      }
     } finally {
-      busy = false;
+      if (isCurrent()) busy = false;
+    }
+  }
+
+  async function handleAvatarChange(event) {
+    await handleImageChange('avatar', event);
+  }
+
+  async function removeImage(kind) {
+    const pathField = `${kind}_path`;
+    const assetField = `${kind}_asset_id`;
+    if ((!expression[pathField] && !expression[assetField]) || busy) return;
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
+    busy = true;
+    setFeedback('', kind === 'avatar' ? 'Removing the avatar…' : 'Removing the background…');
+    try {
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      if (!action.isCurrent()) return;
+      let next;
+      if (selectedR2AssetId(kind)) {
+        await selectR2ExpressionAsset(kind, null, { clear: true, authorization, action });
+        next = normalizeProfileExpression({ ...expression, [pathField]: null, [assetField]: null });
+      } else {
+        next = await saveExpression({ ...expression, [pathField]: null }, authorization, action);
+      }
+      if (!action.isCurrent()) return;
+      expression = next;
+      revokeImagePreview(kind);
+      setFeedback('', kind === 'avatar'
+        ? 'Avatar unequipped. Your initials fallback is active; the saved asset remains in your library.'
+        : 'Background unequipped. The generated color atmosphere is active; the saved asset remains in your library.');
+    } catch (removeError) {
+      if (action.isCurrent()) setFeedback(removeError instanceof Error ? removeError.message : `The ${kind} could not be removed.`);
+    } finally {
+      if (action.isCurrent()) busy = false;
     }
   }
 
   async function removeAvatar() {
-    if ((!expression.avatar_path && !expression.avatar_asset_id) || busy) return;
-    busy = true;
-    setFeedback('', 'Removing the avatar…');
-    try {
-      const next = selectedR2AssetId('avatar')
-        ? (await selectR2ExpressionAsset('avatar', null, { clear: true }), normalizeProfileExpression({ ...expression, avatar_path: null, avatar_asset_id: null }))
-        : await saveExpression({ ...expression, avatar_path: null });
-      expression = next;
-      revokeAvatarPreview();
-      setFeedback('', 'Avatar unequipped. Your initials fallback is active; the saved asset remains in your library.');
-    } catch (removeError) {
-      setFeedback(removeError instanceof Error ? removeError.message : 'The avatar could not be removed.');
-    } finally {
-      busy = false;
-    }
+    await removeImage('avatar');
   }
 
   async function handleBackgroundChange(event) {
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = '';
-    if (!file || !profileId || busy) return;
-    if (!r2MediaEnabled) {
-      setFeedback('Profile media uploads are temporarily unavailable.');
-      return;
-    }
-
-    busy = true;
-    setFeedback('', 'Preparing the background…');
-    let uploadedAssetId = '';
-    try {
-      const uploaded = await uploadProfileImageAsset({
-        file,
-        kind: 'background',
-        onPrepared: blob => setPersistedBackgroundPreview(URL.createObjectURL(blob))
-      });
-      uploadedAssetId = uploaded.assetId;
-      await selectR2ExpressionAsset('background', uploaded.assetId, {
-        mediaReference: { storage_provider: 'r2', r2_public_key: uploaded.publicKey }
-      });
-      uploadedAssetId = '';
-      setPersistedBackgroundPreview(uploaded.publicUrl);
-      await loadAssetLibrary();
-      setFeedback('', `Background saved to your R2 library and public atmosphere (${formatStoredSize(uploaded.blob.size)} stored).`);
-    } catch (uploadError) {
-      if (uploadedAssetId) await deleteProfileMediaAsset(uploadedAssetId).catch(() => {});
-      setFeedback(uploadError instanceof Error ? uploadError.message : 'The background could not be saved.');
-      revokeBackgroundPreview();
-    } finally {
-      busy = false;
-    }
+    await handleImageChange('background', event);
   }
 
   async function removeBackground() {
-    if ((!expression.background_path && !expression.background_asset_id) || busy) return;
-    busy = true;
-    setFeedback('', 'Removing the background…');
-    try {
-      const next = selectedR2AssetId('background')
-        ? (await selectR2ExpressionAsset('background', null, { clear: true }), normalizeProfileExpression({ ...expression, background_path: null, background_asset_id: null }))
-        : await saveExpression({ ...expression, background_path: null });
-      expression = next;
-      revokeBackgroundPreview();
-      setFeedback('', 'Background unequipped. The generated color atmosphere is active; the saved asset remains in your library.');
-    } catch (removeError) {
-      setFeedback(removeError instanceof Error ? removeError.message : 'The background could not be removed.');
-    } finally {
-      busy = false;
-    }
+    await removeImage('background');
   }
 
   async function saveSpotify() {
@@ -396,20 +487,25 @@
       return;
     }
 
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
     busy = true;
     setFeedback('', parsed ? 'Saving Spotify…' : 'Removing Spotify…');
     try {
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      if (!action.isCurrent()) return;
       await saveExpression({
         ...expression,
         spotify_type: parsed?.type || null,
         spotify_id: parsed?.id || null
-      });
+      }, authorization, action);
+      if (!action.isCurrent()) return;
       spotifyUrl = parsed ? spotifyUrlFromParts(parsed.type, parsed.id) : '';
       setFeedback('', parsed ? 'Spotify is visible on your public profile.' : 'Spotify removed from your profile.');
     } catch (spotifyError) {
-      setFeedback(spotifyError instanceof Error ? spotifyError.message : 'Spotify could not be saved.');
+      if (action.isCurrent()) setFeedback(spotifyError instanceof Error ? spotifyError.message : 'Spotify could not be saved.');
     } finally {
-      busy = false;
+      if (action.isCurrent()) busy = false;
     }
   }
 
@@ -424,59 +520,79 @@
 
     busy = true;
     setFeedback('', 'Checking the audio…');
-    let uploadedAssetId = '';
+    const { ownerId, isCurrent } = beginMediaAction();
     try {
-      const uploaded = await uploadProfileAudioAsset({
+      const authorization = await getProfileMediaAuthorization(ownerId);
+      if (!isCurrent()) throw new Error('The media action was canceled because the active account changed.');
+      const uploaded = await uploadAndSelectProfileAudioAsset({
         file,
-        onPrepared: blob => setAudioPreview(URL.createObjectURL(blob))
+        authorization,
+        isCurrent,
+        onPrepared: preparedPreviewHandler(source => setAudioPreview(source)),
+        selectUploadedAsset: (asset, authorization) => selectR2ExpressionAsset('audio', asset.assetId, {
+          authorization,
+          action: { ownerId, isCurrent }
+        })
       });
-      uploadedAssetId = uploaded.assetId;
-      await selectR2ExpressionAsset('audio', uploaded.assetId);
-      uploadedAssetId = '';
+      if (!isCurrent()) return;
       expressionMediaReferences = { ...expressionMediaReferences, audio: { r2_public_key: uploaded.publicKey } };
       setAudioPreview(uploaded.publicUrl);
       setFeedback('', `Profile audio saved to R2 (${Math.round(uploaded.blob.size / 1024)} KB).`);
     } catch (audioError) {
-      if (uploadedAssetId) await deleteProfileMediaAsset(uploadedAssetId).catch(() => {});
-      setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be saved.');
-      setAudioPreview('');
+      if (isCurrent()) {
+        setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be saved.');
+        setAudioPreview('');
+      }
     } finally {
-      busy = false;
+      if (isCurrent()) busy = false;
     }
   }
 
   async function removeAudio() {
     if ((!expression.audio_path && !expression.audio_asset_id) || !staff || busy) return;
     if (selectedR2AssetId('audio')) {
+      const action = beginMediaAction();
+      if (!action.isCurrent()) return;
       busy = true;
       setFeedback('', 'Removing profile audio…');
       try {
-        await selectR2ExpressionAsset('audio', null, { clear: true });
+        const authorization = await getProfileMediaAuthorization(action.ownerId);
+        if (!action.isCurrent()) return;
+        await selectR2ExpressionAsset('audio', null, { clear: true, authorization, action });
+        if (!action.isCurrent()) return;
         if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
         audioPreviewSrc = '';
         setFeedback('', 'Profile audio unequipped. The saved asset remains in your library.');
       } catch (audioError) {
-        setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be removed.');
+        if (action.isCurrent()) setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be removed.');
       } finally {
-        busy = false;
+        if (action.isCurrent()) busy = false;
       }
       return;
     }
     if (!expression.audio_path) return;
     const previousPath = expression.audio_path;
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
     busy = true;
     setFeedback('', 'Removing profile audio…');
     try {
-      const data = await deleteLegacyProfileAudio(previousPath);
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      if (!action.isCurrent()) return;
+      const data = await clearLegacyProfileExpressionAudio(previousPath, {
+        authorization,
+        isCurrent: action.isCurrent
+      });
+      if (!action.isCurrent()) return;
       expression = normalizeProfileExpression({ ...expression, audio_path: null });
       syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
       setAudioPreview('');
       dispatch('expressionchange', { ...expression, updatedAt: data.updated_at || null });
       setFeedback('', 'Profile audio removed.');
     } catch (audioError) {
-      setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be removed.');
+      if (action.isCurrent()) setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be removed.');
     } finally {
-      busy = false;
+      if (action.isCurrent()) busy = false;
     }
   }
 
@@ -485,6 +601,8 @@
   });
 
   onDestroy(() => {
+    editorActive = false;
+    mediaActionGeneration += 1;
     revokeAvatarPreview();
     revokeBackgroundPreview();
     if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
@@ -696,6 +814,22 @@
       <p>{assetsError}</p>
       <button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={assetsLoading} on:click={loadAssetLibrary}>Retry loading media</button>
     </div>
+  {/if}
+  {#if unverifiedAssets.length > 0}
+    <section class="profile-expression-editor__asset-error" aria-label="Saved media needing a safety check">
+      <p>Some saved media needs a one-time check before it can appear on your profile.</p>
+      {#each unverifiedAssets as asset (asset.id)}
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
+          <span>{asset.label || (asset.kind === 'avatar' ? 'Saved avatar' : 'Saved background')}</span>
+          {#if hasProfileMediaRevalidationHash(asset)}
+            <button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={() => revalidateAsset(asset)}>Check saved media</button>
+          {:else}
+            <span>Re-upload required</span>
+          {/if}
+          <button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
+        </div>
+      {/each}
+    </section>
   {/if}
   {#if !compact}
   <details class="profile-expression-editor__advanced" open>

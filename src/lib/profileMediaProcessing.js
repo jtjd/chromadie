@@ -1,5 +1,7 @@
 import { PROFILE_AUDIO_RULES, PROFILE_IMAGE_RULES } from './profileExpression.js';
 import { PROFILE_RICH_MEDIA_RULES, validateRichMediaFile } from './profileRichMedia.js';
+import { inspectAnimatedImageBounds } from './animatedImageBounds.js';
+import { inspectRasterImageSourceBounds } from './profileImageBounds.js';
 
 export function validateProfileAudioFile(file) {
   if (!file || typeof file !== 'object') return 'Choose an MP3 file first.';
@@ -49,6 +51,14 @@ function loadImage(source) {
     image.onerror = () => reject(new Error('The image could not be read.'));
     image.src = source;
   });
+}
+
+async function validateRasterImageSource(file) {
+  const bounds = inspectRasterImageSourceBounds(new Uint8Array(await file.arrayBuffer()), file.type);
+  if (!bounds.valid) {
+    throw new Error('That image has invalid dimensions or uses an unsupported image encoding.');
+  }
+  return bounds;
 }
 
 function blobFromCanvas(canvas, quality, mimeType = 'image/webp') {
@@ -125,6 +135,7 @@ export async function processProfileRichImage(file, kind) {
     throw new Error('Image processing is only available in a browser.');
   }
 
+  await validateRasterImageSource(file);
   const sourceUrl = URL.createObjectURL(file);
   try {
     const image = await loadImage(sourceUrl);
@@ -148,6 +159,10 @@ export async function processAnimatedAvatarPoster(file) {
   if (validationError) throw new Error(validationError);
   if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
     throw new Error('Image processing is only available in a browser.');
+  }
+  const animationBounds = inspectAnimatedImageBounds(new Uint8Array(await file.arrayBuffer()), file.type);
+  if (!animationBounds.valid) {
+    throw new Error('Animated avatars must stay within 1024×1024 pixels, 60 frames, and 12 million decoded pixels.');
   }
   const sourceUrl = URL.createObjectURL(file);
   try {
@@ -183,6 +198,7 @@ export async function processProfileShareImage(file) {
   if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
     throw new Error('Image processing is only available in a browser.');
   }
+  await validateRasterImageSource(file);
   const sourceUrl = URL.createObjectURL(file);
   try {
     const image = await loadImage(sourceUrl);
@@ -227,6 +243,7 @@ export async function processProfileImage(file, kind) {
     throw new Error('Image processing is only available in a browser.');
   }
 
+  await validateRasterImageSource(file);
   const sourceUrl = URL.createObjectURL(file);
   try {
     const image = await loadImage(sourceUrl);

@@ -495,12 +495,12 @@ try {
       createdBy: 'local signup UI'
     };
 
-    await chromium.page.navigate(appUrl + '/roll', 'first authenticated daily roll');
+    await chromium.page.navigate(appUrl + '/', 'first authenticated daily roll');
     await chromium.page.waitFor("document.querySelector('.game-container') && document.querySelector('.roll-stage--preroll .roll-action__button:not([disabled])')", 'first-roll action', 30000);
     await chromium.page.click('.roll-stage--preroll .roll-action__button', 'first-roll action');
     await chromium.page.waitFor("document.querySelector('.roll-stage--results') && document.querySelector('.roll-stage--results #roll-result-title')", 'server-confirmed first-roll result', 30000);
     await chromium.page.waitFor('document.querySelector(".progression-unlock-queue")', 'first-roll progression unlock queue', 30000);
-    await chromium.page.waitFor('document.querySelector(".roll-stage--results .roll-result-summary__score strong")?.textContent?.trim()', 'first-roll confirmed score', 30000);
+    await chromium.page.waitFor('document.querySelector(".roll-stage--results .roll-result-hero__score strong")?.textContent?.trim()', 'first-roll confirmed score', 30000);
 
     const resultState = await chromium.page.evaluate(`(() => {
       const card = document.querySelector('.roll-stage--results');
@@ -518,7 +518,7 @@ try {
       return {
         path: location.pathname,
         result: card?.querySelector('#roll-result-title')?.textContent?.trim() || '',
-        score: card?.querySelector('.roll-result-summary__score strong')?.textContent?.trim() || '',
+        score: card?.querySelector('.roll-result-hero__score strong')?.textContent?.trim() || '',
         queue: Boolean(queue),
         compactQueue: queue?.classList.contains('progression-unlock-queue--compact') || false,
         queueTitle: queue?.querySelector('h3')?.textContent?.trim() || '',
@@ -534,7 +534,7 @@ try {
         horizontalOverflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1
       };
     })()`);
-    assert(resultState.path === '/roll', 'First roll settled at ' + resultState.path + '.');
+    assert(resultState.path === '/', 'First roll settled at ' + resultState.path + '.');
     assert(resultState.result && resultState.score, 'First roll result surface is incomplete: ' + JSON.stringify(resultState) + '.');
     assert(resultState.queue && resultState.queueTitle === 'Cosmetic earned', 'First roll did not render the progression unlock queue: ' + JSON.stringify(resultState) + '.');
     assert(resultState.reward, 'First roll unlock queue did not expose its reward preview trigger: ' + JSON.stringify(resultState) + '.');
@@ -689,7 +689,7 @@ try {
     const state = await inspectAuthenticatedProgression(390, 844, 'authenticated mobile reduced-motion');
     assert(state.reducedMotion, 'Chromium did not apply reduced motion to the authenticated progression surface.');
     assert(!state.horizontalOverflow, 'Authenticated mobile progression overflows horizontally.');
-    const focusState = await chromium.page.evaluate("(() => {\n      const focusable = [...document.querySelectorAll('a, button')].filter(element => !element.disabled && element.getClientRects().length);\n      const progressionLink = focusable.find(element => element.getAttribute('href') === '/roll');\n      progressionLink?.focus();\n      return {\n        focusedRollLink: document.activeElement === progressionLink,\n        width: innerWidth,\n        reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches\n      };\n    })()");
+    const focusState = await chromium.page.evaluate("(() => {\n      const focusable = [...document.querySelectorAll('a, button')].filter(element => !element.disabled && element.getClientRects().length);\n      const progressionLink = focusable.find(element => element.getAttribute('href') === '/');\n      progressionLink?.focus();\n      return {\n        focusedRollLink: document.activeElement === progressionLink,\n        width: innerWidth,\n        reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches\n      };\n    })()");
     assert(focusState.focusedRollLink && focusState.reducedMotion, 'Authenticated mobile keyboard/reduced-motion evidence is incomplete: ' + JSON.stringify(focusState) + '.');
     const screenshot = join(evidenceDir, 'authenticated-progression-mobile-reduced-motion.png');
     await chromium.page.screenshot(screenshot);

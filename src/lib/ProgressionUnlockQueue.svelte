@@ -2,9 +2,11 @@
   import { createEventDispatcher, onDestroy, onMount, tick } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
   import ProgressionRewardPreview from './ProgressionRewardPreview.svelte';
-  import { isAuthenticated } from './stores.js';
+  import { isAuthenticated, session } from './stores.js';
   import { supabase } from './supabase.js';
+  import { rpcWithAccessToken } from './rpcWithAccessToken.js';
   import { trackProgressionEvent } from './productAnalytics.js';
+  import { acknowledgeProgressionUnlock } from './progressionUnlockAcknowledge.js';
 
   export let unlocks = [];
   export let surface = 'roll';
@@ -26,6 +28,33 @@
   let visibilityObserver;
   let visibilityHandler;
   const requestedPresentationSignatures = new SvelteSet();
+  let activeUserId = '';
+  let accountGeneration = 0;
+  let componentActive = true;
+
+  $: syncAccount($session?.user?.id || '');
+
+  function syncAccount(userId) {
+    if (userId === activeUserId) return;
+    activeUserId = userId;
+    accountGeneration += 1;
+    dismissedIds = new SvelteSet();
+    presentedIds = new SvelteSet();
+    acknowledgedIds = new SvelteSet();
+    acknowledgingIds = new SvelteSet();
+    presentationRequestIds = new SvelteSet();
+    requestedPresentationSignatures.clear();
+    transitionError = '';
+  }
+
+  function isCurrentAccount(userId, generation) {
+    return componentActive
+      && Boolean(userId)
+      && userId === activeUserId
+      && generation === accountGeneration
+      && userId === $session?.user?.id
+      && $isAuthenticated;
+  }
 
   function normalizeUnlock(entry) {
     if (!entry || typeof entry !== 'object') return null;
@@ -96,8 +125,21 @@
     }
   }
 
-  async function presentUnlocks(entries) {
-    if (!$isAuthenticated) return [];
+  async function presentUnlocks(entries, accessToken = '') {
+    const ownerId = activeUserId;
+    const generation = accountGeneration;
+    if (!isCurrentAccount(ownerId, generation)) return [];
+    let boundToken = accessToken;
+    if (!boundToken) {
+      let authResult;
+      try {
+        authResult = await supabase.auth.getSession();
+      } catch {
+        return [];
+      }
+      boundToken = authResult?.data?.session?.access_token || '';
+      if (!boundToken || authResult?.data?.session?.user?.id !== ownerId || !isCurrentAccount(ownerId, generation)) return [];
+    }
     const candidates = (Array.isArray(entries) ? entries : [])
       .filter(unlock => unlock && !presentedIds.has(unlock.id) && !presentationRequestIds.has(unlock.id))
       .slice(0, 32);
@@ -109,7 +151,8 @@
     presentationRequestIds = requestIds;
 
     try {
-      const { data, error } = await supabase.rpc('present_progression_unlocks', { p_milestone_ids: ids });
+      const { data, error } = await rpcWithAccessToken(supabase, 'present_progression_unlocks', { p_milestone_ids: ids }, boundToken);
+      if (!isCurrentAccount(ownerId, generation)) return [];
       if (error || data?.success === false) return [];
       const transitioned = transitionedIds(data, 'presented', candidates);
       if (transitioned.length) {
@@ -122,9 +165,11 @@
     } catch {
       return [];
     } finally {
-      const nextRequestIds = new SvelteSet(presentationRequestIds);
-      ids.forEach(id => nextRequestIds.delete(id));
-      presentationRequestIds = nextRequestIds;
+      if (isCurrentAccount(ownerId, generation)) {
+        const nextRequestIds = new SvelteSet(presentationRequestIds);
+        ids.forEach(id => nextRequestIds.delete(id));
+        presentationRequestIds = nextRequestIds;
+      }
     }
   }
 
@@ -133,38 +178,54 @@
   }
 
   async function acknowledgeUnlock(unlock) {
-    if (!$isAuthenticated || !unlock || acknowledgedIds.has(unlock.id)) return false;
-    // Ensure a very fast acknowledgement still records the presentation
-    // transition before the server closes the live unlock.
-    await presentUnlocks([unlock]);
+    const ownerId = activeUserId;
+    const generation = accountGeneration;
+    if (!isCurrentAccount(ownerId, generation) || !unlock || acknowledgedIds.has(unlock.id)) return false;
+    let authResult;
     try {
-      const { data, error } = await supabase.rpc('acknowledge_progression_unlocks', {
-        p_milestone_ids: [unlock.id]
-      });
-      if (error || data?.success === false) return false;
-      const transitioned = transitionedIds(data, 'acknowledged', [unlock]);
-      // A zero count means the server has already closed the unlock. Treat it
-      // as acknowledged so a stale result cannot trap the user in the queue.
-      if (!transitioned.length) return true;
-      const nextAcknowledged = new SvelteSet(acknowledgedIds);
-      transitioned.forEach(id => nextAcknowledged.add(id));
-      acknowledgedIds = nextAcknowledged;
-      recordTransition('progression_unlock_acknowledged', transitioned);
-      return true;
+      authResult = await supabase.auth.getSession();
     } catch {
-      // Presentation is best-effort and must never block the roll result.
       return false;
     }
+    const accessToken = authResult?.data?.session?.access_token || '';
+    if (!accessToken || authResult?.data?.session?.user?.id !== ownerId || !isCurrentAccount(ownerId, generation)) return false;
+    // Ensure a very fast acknowledgement still records the presentation
+    // transition before the server closes the live unlock.
+    const result = await acknowledgeProgressionUnlock({
+      unlock,
+      isCurrent: () => isCurrentAccount(ownerId, generation),
+      present: entry => presentUnlocks([entry], accessToken),
+      acknowledge: entry => rpcWithAccessToken(supabase, 'acknowledge_progression_unlocks', {
+        p_milestone_ids: [entry.id]
+      }, accessToken)
+    });
+    if (result.stale || !isCurrentAccount(ownerId, generation)) return false;
+    if (!result.success) return false;
+    const transitioned = result.transitionedIds.length
+      ? result.transitionedIds
+      : transitionedIds({ acknowledged: 0 }, 'acknowledged', [unlock]);
+    // A zero count means the server has already closed the unlock. Treat it
+    // as acknowledged so a stale result cannot trap the user in the queue.
+    if (!transitioned.length) return true;
+    const nextAcknowledged = new SvelteSet(acknowledgedIds);
+    transitioned.forEach(id => nextAcknowledged.add(id));
+    acknowledgedIds = nextAcknowledged;
+    recordTransition('progression_unlock_acknowledged', transitioned);
+    return true;
   }
 
   async function finishUnlock(action) {
     if (!featuredUnlock || acknowledgingIds.has(featuredUnlock.id)) return;
+    const ownerId = activeUserId;
+    const generation = accountGeneration;
+    if (!isCurrentAccount(ownerId, generation)) return;
     const unlock = featuredUnlock;
     transitionError = '';
     const nextAcknowledging = new SvelteSet(acknowledgingIds);
     nextAcknowledging.add(unlock.id);
     acknowledgingIds = nextAcknowledging;
     const acknowledged = await acknowledgeUnlock(unlock);
+    if (!isCurrentAccount(ownerId, generation)) return;
     const remainingAcknowledging = new SvelteSet(acknowledgingIds);
     remainingAcknowledging.delete(unlock.id);
     acknowledgingIds = remainingAcknowledging;
@@ -202,6 +263,8 @@
   });
 
   onDestroy(() => {
+    componentActive = false;
+    accountGeneration += 1;
     visibilityObserver?.disconnect();
     if (visibilityHandler && typeof document !== 'undefined') document.removeEventListener('visibilitychange', visibilityHandler);
   });

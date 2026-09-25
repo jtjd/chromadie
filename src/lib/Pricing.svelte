@@ -60,7 +60,7 @@
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
     returnSessionId = params.get('session_id') || '';
-    if (window.location.pathname === '/pricing/success') {
+    if (window.location.pathname.replace(/\/+$/, '') === '/pricing/success') {
       void restoreAfterAuth();
     }
     else if (params.get('checkout') === 'cancelled') message = 'Checkout was cancelled. Nothing was charged.';

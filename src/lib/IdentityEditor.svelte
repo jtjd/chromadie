@@ -1,6 +1,8 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { supabase } from './supabase';
+  import { rpcWithAccessToken } from './rpcWithAccessToken.js';
+  import { session } from './stores.js';
   import {
     BIO_MAX_LENGTH,
     countIdentityCharacters,
@@ -35,6 +37,8 @@
   let saving = false;
   let status = '';
   let error = '';
+  let activeOwnerId = '';
+  let actionGeneration = 0;
 
   $: validation = normalizePublicIdentity({
     displayName: username,
@@ -43,6 +47,16 @@
   $: isDirty = draftBio !== baselineBio || JSON.stringify(draftPresentation) !== JSON.stringify(baselinePresentation);
   $: identityConfig = config && typeof config === 'object' ? config : {};
   $: incomingKey = JSON.stringify({ profileId, bio: bio || '', publishedBio: publishedBio ?? null, draft: identityConfig.draft || null, published: identityConfig.published || null });
+  $: syncOwner(profileId || '');
+
+  function syncOwner(ownerId) {
+    if (ownerId === activeOwnerId) return;
+    activeOwnerId = ownerId;
+    actionGeneration += 1;
+    saving = false;
+  }
+
+  onDestroy(() => { actionGeneration += 1; });
 
   function syncIncoming() {
     lastIncomingKey = incomingKey;
@@ -89,48 +103,74 @@
       return;
     }
 
+    const ownerId = profileId || '';
+    const generation = actionGeneration;
+    if (!ownerId || ownerId !== $session?.user?.id) {
+      error = 'Your active account could not authorize this identity change.';
+      return;
+    }
+    const isCurrent = () => generation === actionGeneration
+      && ownerId === activeOwnerId
+      && ownerId === profileId
+      && ownerId === $session?.user?.id;
+    const requestedBio = validation.bio;
+    const requestedPresentation = normalizeProfileIdentityPresentation(draftPresentation);
+    const savePresentation = JSON.stringify(requestedPresentation) !== JSON.stringify(baselinePresentation);
     saving = true;
     status = '';
     error = '';
-    const { data, error: rpcError } = await supabase.rpc('update_my_profile_identity', {
-      p_display_name: username || null,
-      p_bio: validation.bio
-    });
-
-    if (rpcError || !data || typeof data !== 'object') {
-      error = rpcError?.message || 'The identity could not be saved.';
-      saving = false;
-      return;
-    }
-
-    const published = normalizePublicIdentity({ displayName: username, bio: data.bio });
-    if (!published.valid) {
-      error = 'The server returned an invalid identity. Nothing was published.';
-      saving = false;
-      return;
-    }
-
-    draftBio = published.bio || '';
-    baselineBio = published.bio || '';
-    if (JSON.stringify(draftPresentation) !== JSON.stringify(baselinePresentation)) {
-      const { data: configurationData, error: configurationError } = await supabase.rpc('save_profile_identity_presentation', {
-        p_patch: { identityPresentation: draftPresentation }
-      });
-      if (configurationError || configurationData?.success === false) {
-        error = configurationError?.message || configurationData?.error || 'The identity presentation could not be saved.';
-        saving = false;
+    try {
+      const authResult = await supabase.auth.getSession();
+      const accessToken = authResult?.data?.session?.access_token || '';
+      if (!accessToken || authResult?.data?.session?.user?.id !== ownerId || !isCurrent()) return;
+      const identityResult = await rpcWithAccessToken(supabase, 'update_my_profile_identity', {
+        p_display_name: username || null,
+        p_bio: requestedBio
+      }, accessToken);
+      if (!isCurrent()) return;
+      const { data, error: rpcError } = identityResult || {};
+      if (rpcError || !data || typeof data !== 'object') {
+        error = rpcError?.message || 'The identity could not be saved.';
         return;
       }
-      baselinePresentation = normalizeProfileIdentityPresentation(configurationData?.draft?.identityPresentation || draftPresentation);
-      dispatch('configsaved', configurationData);
+
+      const published = normalizePublicIdentity({ displayName: username, bio: data.bio });
+      if (!published.valid) {
+        error = 'The server returned an invalid identity. Nothing was published.';
+        return;
+      }
+      draftBio = published.bio || '';
+      baselineBio = published.bio || '';
+
+      let configurationData = null;
+      if (savePresentation) {
+        if (!isCurrent()) return;
+        const presentationResult = await rpcWithAccessToken(supabase, 'save_profile_identity_presentation', {
+          p_patch: { identityPresentation: requestedPresentation }
+        }, accessToken);
+        if (!isCurrent()) return;
+        configurationData = presentationResult?.data;
+        if (presentationResult?.error || configurationData?.success === false) {
+          error = presentationResult?.error?.message || configurationData?.error || 'The identity presentation could not be saved.';
+          return;
+        }
+      }
+      if (!isCurrent()) return;
+      if (configurationData) {
+        baselinePresentation = normalizeProfileIdentityPresentation(configurationData?.draft?.identityPresentation || requestedPresentation);
+        dispatch('configsaved', configurationData);
+      }
+      status = 'Identity saved.';
+      dispatch('identitysaved', {
+        bio: published.bio,
+        username: data.username || null,
+        identityPresentation: requestedPresentation
+      });
+    } catch (saveError) {
+      if (isCurrent()) error = saveError instanceof Error ? saveError.message : 'The identity could not be saved.';
+    } finally {
+      if (isCurrent()) saving = false;
     }
-    status = 'Identity saved.';
-    dispatch('identitysaved', {
-      bio: published.bio,
-      username: data.username || null,
-      identityPresentation: draftPresentation
-    });
-    saving = false;
   }
 
   export function getDraftIdentity() {

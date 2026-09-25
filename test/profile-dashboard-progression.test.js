@@ -6,8 +6,9 @@ import { MILESTONE_MANIFEST, normalizeNewMilestones, normalizeProgressionData } 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio is a full-page dashboard with a responsive owner shell', async () => {
-  const [app, settings, registry, workspace, preview, shell, styles] = await Promise.all([
+  const [app, routeTarget, settings, registry, workspace, preview, shell, styles] = await Promise.all([
     read('src/App.svelte'),
+    read('src/lib/routeTarget.js'),
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
     read('src/lib/ProfileStudioWorkspace.svelte'),
@@ -18,7 +19,8 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   const studio = [settings, registry, workspace, preview].join('\n');
 
   assert.match(app, /\{#if !profileModeVisible && !homeModeVisible && !profileSettingsModeVisible && !homepageHeaderTransitionPending\}/);
-  assert.match(app, /componentProps: \{ logoutInProgress \}/);
+  assert.match(app, /resolveRouteTarget/);
+  assert.match(routeTarget, /componentProps: \{ logoutInProgress \}/);
   assert.match(settings, /<ProfileStudioShell/);
   assert.match(settings, /on:sectionchange/);
   assert.match(settings, /showPreview=\{showDashboardPreview\}/);

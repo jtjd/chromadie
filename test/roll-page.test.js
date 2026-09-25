@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [page, pageContext, game, preRoll, reveal, app, routeMetadata, routes, header, homepageHeader, footer, breakdown, resultHero] = await Promise.all([
+const [page, pageContext, game, preRoll, reveal, app, routeMetadata, routes, header, homepageHeader, footer, breakdown, resultHero, revealSequence, rollPresentation, shareImageDialog, revealStage, resultRewards, resultActions] = await Promise.all([
   read('src/lib/RollPage.svelte'),
   read('src/lib/rollPageContext.js'),
   read('src/lib/Game.svelte'),
@@ -17,25 +17,32 @@ const [page, pageContext, game, preRoll, reveal, app, routeMetadata, routes, hea
   read('src/lib/homepage/HomepageHeader.svelte'),
   read('src/lib/SiteFooter.svelte'),
   read('src/lib/RollResultBreakdown.svelte'),
-  read('src/lib/RollResultHero.svelte')
+  read('src/lib/RollResultHero.svelte'),
+  read('src/lib/rollRevealSequence.js'),
+  read('src/lib/rollPresentation.js'),
+  read('src/lib/RollShareImageDialog.svelte'),
+  read('src/lib/RollRevealStage.svelte'),
+  read('src/lib/RollResultRewards.svelte'),
+  read('src/lib/RollResultActions.svelte')
 ]);
 
-test('the Roll experience has a canonical page and shared navigation entry', () => {
-  assert.match(routes, /pathname === '\/roll'\) return 'game'/);
+test('the homepage owns the daily Roll while challenge presentation stays shared', () => {
+  assert.doesNotMatch(routes, /pathname === '\/roll'\) return 'game'/);
   assert.match(app, /viewToCanonicalPath\(nextView/);
-  assert.match(routeMetadata, /view === 'game' && !challengeData[\s\S]*'\/'/);
-  assert.match(header, /activeView === 'game'/);
-  assert.match(header, /navigate\('game'\)/);
+  assert.match(routeMetadata, /view === 'game' && challengeData[\s\S]*Challenge \| ChromaDie/);
+  assert.match(routeMetadata, /Page Not Found \| ChromaDie/);
+  assert.match(header, /navigate\('home'\)/);
+  assert.match(header, /prefetch\('home'\)/);
   assert.doesNotMatch(header, />Discover</);
   assert.match(header, />Pricing</);
   assert.match(header, />Create profile</);
   assert.match(header, />Login</);
   assert.match(homepageHeader, /SiteModeHeader/);
   assert.doesNotMatch(homepageHeader, /showClaim/);
-  assert.match(footer, /href="\/roll">Roll/);
+  assert.match(footer, /href="\/">Roll/);
 });
 
-test('the dedicated Roll page preserves the authoritative Game surface inside the new shell', () => {
+test('the homepage Roll composition preserves the authoritative Game surface', () => {
   assert.match(page, /<Game/);
   assert.match(page, /dedicated=\{true\}/);
   assert.match(page, /A NEW COLOR, EVERY DAY/);
@@ -50,7 +57,10 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(game, /export let dedicated = false/);
   assert.match(game, /game-container--dedicated/);
   assert.match(resultHero, /roll-result-hero/);
-  assert.match(game, /RollTile/);
+  assert.match(revealStage, /RollTile/);
+  assert.match(game, /<RollRevealStage/);
+  assert.match(game, /bind:revealListElement=\{revealListElement\}/);
+  assert.match(game, /on:skip=\{skipReveal\}/);
   assert.match(game, /<RollPreRoll/);
   assert.match(preRoll, /roll-pre-roll__unknown/);
   assert.match(preRoll, /#\?\?\?\?\?\?/);
@@ -74,16 +84,18 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(preRoll, /Roll to generate today’s color/);
   assert.doesNotMatch(game, /Ready to reveal|roll-color-rarity">DAILY ROLL/);
   assert.doesNotMatch(page + game, /roll-color-field|roll-chamber/);
-  assert.match(game, /roll-stage--rolling/);
+  assert.match(revealStage, /roll-stage--rolling/);
   assert.match(game, /roll-stage--results/);
-  assert.match(game, /getRevealHexCharacters/);
-  assert.match(game, /revealConditions = \[\.\.\.revealConditions, item\]/);
+  assert.match(revealSequence, /getRevealHexCharacters/);
+  assert.match(revealSequence, /visibleConditions = \[\.\.\.visibleConditions, item\]/);
+  assert.match(game, /applyRollRevealState/);
   assert.match(game, /revealListElement\?\.scrollTo/);
   assert.doesNotMatch(game, /roll-reveal-steps|roll-stage__eyebrow/);
   assert.doesNotMatch(game, /rarity \}\? rarity · counting confirmed score/);
   assert.doesNotMatch(game, /getRollRevealItems\(canonical, 8\)/);
   assert.match(page, /rollContext\.revealHex/);
-  assert.match(game, /roll-detail-grid/);
+  assert.match(game, /<RollResultRewards \{systemBadges\} \{earnedAchievements\} \/>/);
+  assert.match(resultRewards, /roll-detail-grid/);
   assert.match(breakdown, /roll-result-summary/);
   assert.match(breakdown, /Top conditions/);
   assert.match(breakdown, /View full breakdown/);
@@ -92,7 +104,12 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(breakdown, /max-height: min\(760px, calc\(100dvh - 32px\)\)/);
   assert.match(breakdown, /overflow-y: auto/);
   assert.match(game, /roll-action__button--claimed/);
-  assert.match(game, /function getReadableTextColor/);
+  assert.match(game, /getReadableTextColor\(displayColor\)/);
+  assert.match(rollPresentation, /export function getDisplayedBaseRollScore/);
+  assert.match(rollPresentation, /export function sortRollBadgesDescending/);
+  assert.match(game, /baseScore=\{getDisplayedBaseRollScore\(displayScore, score, rollContributors\)\}/);
+  assert.match(game, /sortRollBadgesDescending\(canonical\.badges\)/);
+  assert.doesNotMatch(game, /function getContributorPoints|function getBaseRollScore|function sortBadgesDescending/);
   assert.match(game, /--roll-action-ink: \$\{rollActionInk\}/);
   assert.match(page, /--roll-card-glow/);
   assert.match(page, /--roll-card-glow-soft/);
@@ -141,16 +158,18 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(breakdown, /roll-result-summary__score strong[\s\S]*color: var\(--roll-score-color/);
   assert.match(breakdown, /roll-result-summary__condition-points[\s\S]*color: var\(--roll-score-color/);
   assert.match(breakdown, /roll-result-breakdown-dialog__points[\s\S]*color: var\(--roll-score-color/);
-  assert.match(game, /roll-reveal-discovery__item strong[\s\S]*color: var\(--roll-score-color/);
-  assert.match(game, /roll-score-reveal strong[\s\S]*color: var\(--roll-score-color/);
+  assert.match(revealStage, /roll-reveal-discovery__item strong[\s\S]*color: var\(--roll-score-color/);
+  assert.match(revealStage, /roll-score-reveal strong[\s\S]*color: var\(--roll-score-color/);
   assert.doesNotMatch(breakdown, /roll-result-summary__rarity|export let rarity|safeRarity/);
   assert.match(page, /roll-acquisition-actions \.result-action[\s\S]*justify-content: center/);
-  assert.match(game, /roll-acquisition-actions--dedicated/);
-  assert.match(game, /post-score-actions--dedicated/);
-  assert.match(game, /data-roll-action="share-image"/);
-  assert.match(game, /View \/ share image/);
-  assert.match(game, /image-modal-preview/);
-  assert.match(game, /--share-image-accent/);
+  assert.match(game, /<RollResultActions/);
+  assert.match(resultActions, /roll-acquisition-actions--dedicated/);
+  assert.match(resultActions, /post-score-actions--dedicated/);
+  assert.match(resultActions, /data-roll-action="share-image"/);
+  assert.match(resultActions, /View \/ share image/);
+  assert.match(game, /<svelte:component[\s\S]*color=\{displayColor\}[\s\S]*ink=\{rollActionInk\}/);
+  assert.match(shareImageDialog, /image-modal-preview/);
+  assert.match(shareImageDialog, /--share-image-accent/);
   assert.doesNotMatch(page, /Save future rolls and earn EP\./);
   assert.match(page, /aria-live="polite"/);
   assert.match(page, /You rolled <span>\{rollContext\.identity\}\.<\/span>/);
@@ -167,13 +186,13 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.doesNotMatch(game, /roll-breakdown__row--base/);
   assert.doesNotMatch(game, /ACCOUNT MODE|GUEST MODE/);
   assert.match(preRoll, /Roll today’s color/);
-  assert.match(game, /result-action--primary/);
+  assert.match(resultActions, /result-action--primary/);
   assert.match(breakdown, /role="listitem"/);
   assert.doesNotMatch(game, /class="card roll-stage roll-stage--results"[^>]*aria-live/);
   assert.match(game, /roll-rarity--' \+ rarity/);
-  assert.match(game, /role="progressbar"/);
+  assert.match(revealStage, /role="progressbar"/);
   assert.match(game, /ROLL_REVEAL_STEPS/);
-  assert.match(game, /data-reveal-step={revealStep}/);
+  assert.match(revealStage, /data-reveal-step={revealStep}/);
   assert.match(reveal, /id: 'color'/);
   assert.match(reveal, /label: 'Conditions'/);
   assert.match(reveal, /label: 'Score'/);
@@ -183,12 +202,12 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.doesNotMatch(game + reveal, /condition scan|Finding your color|This one is yours|Signals aligning|The spectrum is narrowing/);
   assert.match(reveal, /getRollRevealTimeline/);
   assert.match(page, /homepage-rolling \.roll-page__context \{[\s\S]*align-self: center;/);
-  assert.match(game, /roll-reveal-discovery/);
-  assert.match(game, /roll-score-reveal/);
-  assert.match(game, /class:roll-reveal-discovery--pending=\{revealStep < 1\}/);
-  assert.match(game, /class:roll-score-reveal--pending=\{revealStep < 2\}/);
-  assert.match(game, /\.roll-reveal-discovery__list \{[\s\S]*height: 174px;[\s\S]*overflow-y: auto;/);
-  assert.match(game, /\.roll-reveal-discovery__list \{[\s\S]*align-content: start;[\s\S]*grid-auto-rows: max-content;/);
+  assert.match(revealStage, /roll-reveal-discovery/);
+  assert.match(revealStage, /roll-score-reveal/);
+  assert.match(revealStage, /class:roll-reveal-discovery--pending=\{revealStep < 1\}/);
+  assert.match(revealStage, /class:roll-score-reveal--pending=\{revealStep < 2\}/);
+  assert.match(revealStage, /\.roll-reveal-discovery__list \{[\s\S]*height: 174px;[\s\S]*overflow-y: auto;/);
+  assert.match(revealStage, /\.roll-reveal-discovery__list \{[\s\S]*align-content: start;[\s\S]*grid-auto-rows: max-content;/);
   assert.match(game, /beginGuestSignup\(signupNext\)/);
   assert.match(preRoll, /Sign up/);
   assert.match(preRoll, /to start your profile history\./);
@@ -196,8 +215,8 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.doesNotMatch(game, /guest-prompt__icon|>△</);
   assert.match(app, /requestedNext\.startsWith\('\/'\)/);
   assert.match(app, /params\.set\('next', next\)/);
-  assert.match(game, /Skip reveal/);
-  assert.match(game, /getRevealHex/);
+  assert.match(revealStage, /Skip reveal/);
+  assert.match(revealSequence, /getRevealHex/);
   assert.doesNotMatch(game, /Math\.random\(\)/);
   assert.doesNotMatch(game, /scoreCountUpInterval/);
   assert.match(pageContext, /getRarityPresentation/);

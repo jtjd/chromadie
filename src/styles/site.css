@@ -309,14 +309,14 @@ body {
   color: var(--site-muted);
 }
 
-.app-main--site :is(.section-kicker, .guide__eyebrow, .legal-kicker, .panel-label, .collection-number, .results-heading > div > span) {
+.app-main--site :is(.section-kicker, .legal-kicker, .panel-label, .collection-number, .results-heading > div > span) {
   color: var(--site-faint);
   font: 500 0.68rem / 1 var(--site-mono);
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
-.app-main--site :is(.card, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section) {
+.app-main--site :is(.card, .legal-section) {
   border: 1px solid var(--site-line);
   border-radius: 18px;
   background: var(--site-surface);
@@ -422,32 +422,31 @@ body {
   color: var(--site-ink);
 }
 
-/* Help, legal, and utility surfaces */
-.app-main--site :is(.guide, .legal-page, .terms) {
+/* Legal and utility surfaces */
+.app-main--site :is(.legal-page, .terms) {
   width: min(100%, 86.25rem);
   margin: 0 auto;
   padding: clamp(3.5rem, 8vw, 6rem) clamp(1rem, 4vw, 2.5rem) 5rem;
 }
 
-.app-main--site .guide__hero,
 .app-main--site .terms__hero {
   max-width: 58rem;
   padding-bottom: clamp(3.5rem, 8vw, 6rem);
 }
 
-.app-main--site :is(.guide h1, .terms h1, .legal-hero h1) {
+.app-main--site :is(.terms h1, .legal-hero h1) {
   max-width: 13ch;
   margin-top: 0.8rem;
   font-size: clamp(3.25rem, 7vw, 6rem);
   line-height: 0.9;
 }
 
-.app-main--site :is(.guide h2, .terms h2, .legal-section h2) {
+.app-main--site :is(.terms h2, .legal-section h2) {
   color: var(--site-ink);
   letter-spacing: -0.035em;
 }
 
-.app-main--site :is(.guide__section, .terms__section) {
+.app-main--site .terms__section {
   border-top-color: var(--site-line);
 }
 
@@ -459,42 +458,8 @@ body {
   margin-top: 0.75rem;
 }
 
-.app-main--site :is(.guide__callout, .guide__actions a, .guide__list span) {
-  border-color: var(--site-line);
-  border-radius: 9px;
-  background: var(--site-surface-soft);
-}
-
-.app-main--site :is(.guide__actions a, .guide__list span, .terms a, .legal-section a) {
+.app-main--site :is(.terms a, .legal-section a) {
   color: var(--site-accent);
-}
-
-.app-main--site .guide__actions a {
-  display: inline-flex;
-  min-height: 42px;
-  align-items: center;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 9px;
-  background: var(--site-ink);
-  color: var(--bg);
-  font: 600 .88rem/1 var(--site-display);
-}
-
-.app-main--site .guide__actions a:first-child:hover {
-  background: var(--site-accent);
-  color: var(--bg);
-}
-
-.app-main--site .guide__actions a + a {
-  border: 1px solid var(--site-line-strong);
-  background: transparent;
-  color: var(--site-ink);
-}
-
-.app-main--site .guide__actions a + a:hover {
-  border-color: var(--site-accent);
-  background: color-mix(in srgb, var(--site-accent) 9%, transparent);
 }
 
 /* Shared route states. These are intentionally small: they give loading,
@@ -646,12 +611,12 @@ body {
 .bootstrap-error-help { color: var(--text-muted) !important; }
 
 @media (max-width: 48rem) {
-  .app-main--site :is(.guide, .legal-page, .terms) {
+  .app-main--site :is(.legal-page, .terms) {
     width: 100%;
     padding-inline: 1rem;
   }
 
-  .app-main--site :is(.guide h1, .terms h1, .legal-hero h1) {
+  .app-main--site :is(.terms h1, .legal-hero h1) {
     font-size: clamp(2.85rem, 15vw, 4.75rem);
   }
 }
@@ -738,21 +703,21 @@ body {
 /* Supporting routes use the same quiet surface language as Profile Studio.
  * These rules only project existing page components into the new shell; they
  * do not change their route, data, or interaction contracts. */
-.app-main--site :is(.guide, .legal-page, .terms, .pricing-page) {
+.app-main--site :is(.legal-page, .terms, .pricing-page) {
   color: var(--site-ink);
   font-family: var(--site-font);
 }
 
-.app-main--site :is(.guide, .legal-page, .terms) {
+.app-main--site :is(.legal-page, .terms) {
   background: transparent;
 }
 
-.app-main--site :is(.guide h1, .terms h1, .legal-hero h1, .pricing-hero h1, .pricing-section-heading h2, .pricing-card h2, .pricing-card__price) {
+.app-main--site :is(.terms h1, .legal-hero h1, .pricing-hero h1, .pricing-section-heading h2, .pricing-card h2, .pricing-card__price) {
   font-family: var(--site-display) !important;
   font-weight: 600;
 }
 
-.app-main--site :is(.guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section, .pricing-page__notice) {
+.app-main--site :is(.legal-section, .pricing-page__notice) {
   border-color: var(--site-line);
   border-radius: 0.65rem;
   background: var(--site-surface);
@@ -795,7 +760,7 @@ body {
 }
 
 @media (max-width: 48rem) {
-  .app-main--site :is(.guide, .legal-page, .terms, .pricing-page) {
+  .app-main--site :is(.legal-page, .terms, .pricing-page) {
     padding-top: 2.5rem;
   }
 }

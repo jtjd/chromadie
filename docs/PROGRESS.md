@@ -1,5 +1,268 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-24 — Security and reliability audit remediations
+
+Fixed account-switch races across profile mutations, retry failures for
+rejected async reads, third-party embeds loading before visitor consent, and
+unbounded uploaded media work. Added server-verified animation and video
+limits, a per-account progression analytics event quota, and serialized the
+existing profile-insight dimension cap. Also applied Cloudflare function HTML
+headers, read-only CI token permissions, ignored local environment files, and
+resolved the vulnerable `devalue` dependency. The audit includes follow-up
+review of auth responses, consent cleanup, and native Profile Studio hash
+navigation.
+
+All 868 unit tests and mandatory checks pass. Local database reset, warning-level
+schema lint, progression behavior, database security, and profile-insight
+integrity checks pass. Catalog drift used local seed data; enforced performance
+budgets pass while advisory aggregate JS/CSS catalog targets remain over budget.
+Production email-confirmation settings and already-ready R2 videos were not
+available for retroactive verification. The historical `tjz` QA migration's
+target identity also needs production review before use. See
+[`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
+
+## 2026-09-24 — Material collection rebuilt and validated
+
+The primary agent replaced the eighteen rejected material drafts with the user's
+revised direction: bright, legible, simple, and pretty, with restrained animation.
+Removed the two rejected drawing modules. Soft Halo and Cathode Bloom remain.
+Reviewed profile/compact sizes, six animation phases, light/dark surfaces, and the
+complete collection together. See [design review](NAME_MATERIAL_DESIGN_REVIEW.md).
+
+Materials use the shared clock and cached surfaces. Fixed material seeds so motion
+selection cannot reshuffle glitter. Browser comparisons now use the same material
+phase when checking motion coverage; coverage thresholds were not relaxed.
+
+All mandatory checks pass, including local database reset/lint/security, build,
+Svelte check, ESLint, 846 unit tests, links/CSP/performance, and policy/catalog/
+balance/scoring drift. Browser evidence covers 54,432 full matrix frames, 12,068
+collection-motion frames with zero coverage loss, and 1,700 material frames.
+[Evidence](evidence/name-materials-2026-09-24.json) binds results to the renderer hash.
+The catalog migration is local and has not been deployed remotely.
+
+
+## 2026-09-23 — Authored collection motion rebuild
+
+Rebuilt all twenty collection name motions with scene-specific shapes, shading,
+color, and choreography. Replaced Cherry Blossom's repeated spinning flowers
+with a small branch and individual petals; corrected subject visibility, loop
+resets, bubble pops, confetti trajectories, butterfly flapping, and scene framing.
+Split drawing code into nature, object, and energy modules with shared paint
+helpers and a bounded lifecycle envelope. Selected name materials, saved IDs,
+shared scheduling, and reduced-motion behavior remain intact.
+
+Desktop/mobile and twelve-phase visual reviews are recorded in
+`/tmp/chromadie-motion-authored-verified/`. The browser matrix passes 5,492
+frames; all mandatory checks pass with 842 tests. Enforced performance budgets
+pass; aggregate JavaScript/CSS catalog advisories remain. Catalog drift was
+checked against the local seed. No schema change. See
+[`milestones/NAME_MOTION_AUTHORED_REBUILD.md`](milestones/NAME_MOTION_AUTHORED_REBUILD.md).
+
+## 2026-09-23 — How to Play guide refresh
+
+Replaced the outdated guide with a roll-first explanation and a static example
+rendered through the live result and score-breakdown components. Its score,
+traits, rarity, and all 19 condition awards are checked against the active
+scorer. The guide separates score from EP and collected conditions from
+cosmetics; explains guest behavior and shard rerolls; and describes Today’s top
+roll conditionally because the homepage has an empty state. A visible
+Leaderboard path remains available before rolling. Shared metadata and the
+no-JavaScript fallback use the same guide source. No schema, auth, or gameplay
+changes.
+
+Validation: build, Svelte check, ESLint, all 839 tests, link/CSP/performance,
+username/balance/catalog drift, scoring parity, and database security checks
+pass. The built-page browser smoke passes at 1440, 1024, 768, 390, and 320px,
+including interaction with the full score-breakdown dialog, keyboard
+navigation, disclosures, conditional discovery copy, reroll details, and
+reduced motion. The performance checker passes enforced route budgets;
+aggregate asset-catalog JavaScript and CSS targets remain advisory overages.
+Catalog validation used the local seed because remote catalog credentials were
+unavailable. No schema changes; database lint and reset were not applicable. See
+[`milestones/HOW_TO_PLAY_GUIDE.md`](milestones/HOW_TO_PLAY_GUIDE.md).
+
+## 2026-09-23 — Roll-first homepage and contextual discovery
+
+Reduced the homepage to the shared header, playable Roll hero, existing
+Today’s Top Roller, and compact footer. Today’s top roller remains the real
+public-profile preview and pre-roll discovery surface; its bounded spotlight
+fetch no longer depends on mounting the lower community section. The feed
+refreshes on mount, retry/result events, and UTC rollover, with stale-request
+and unmount guards. Removed the unused homepage showcase/marketing components
+from the page, their styles, and the lower-page reveal observer. After a
+homepage result, authenticated players can go to their profile, Customize, or
+Leaderboard; guests can browse the Leaderboard. The homepage is now the only
+daily-roll route: removed the separate `/roll` page, routed in-app Roll links
+and signup returns to `/`, and kept `/c/:id` challenge links intact. All
+roll/account authority stays unchanged.
+
+Validation: build, Svelte check, ESLint, all 836 unit tests, link/CSP/responsive
+build, performance, username/balance/catalog drift, 5,000-sample scoring
+parity, and database security checks pass. Homepage and account browser checks
+pass at desktop, tablet, and phone sizes, including the top-roll profile link,
+auth hydration, guest result, and public-feed retry states. Roll-reliability
+and progression browser smokes pass, including the homepage first-roll route
+and authenticated result/reward flow. The homepage route change required no
+schema migration; schema lint and local reset also pass for the full working
+tree migration set. Enforced route budgets pass;
+aggregate asset-catalog targets remain advisory and above their targets. The
+catalog check used the local seed because remote catalog credentials were not
+configured. See
+[`milestones/HOMEPAGE_ROLL_AND_DISCOVERY.md`](milestones/HOMEPAGE_ROLL_AND_DISCOVERY.md).
+
+## 2026-09-22 — Profile Studio lazy loading
+
+Moved lazy section and live-preview request state into a tested Profile Studio
+controller. It owns deduplication, retries, errors, loading snapshots, preview
+caching, and the existing Customize-tab loader groups. `ProfileSettings.svelte`
+continues to own navigation and rendering. No schema changes.
+
+Validation: all required checks pass, including 705 tests. Dashboard route
+JavaScript is 540.95/542 kB and enforced route budgets pass. Aggregate catalog
+overages remain advisory; catalog validation used the local seed because remote
+Supabase credentials were unavailable. See
+[`milestones/PROFILE_STUDIO_LAZY_LOADING.md`](milestones/PROFILE_STUDIO_LAZY_LOADING.md).
+
+## 2026-09-22 — Auth Turnstile lifecycle
+
+Moved Cloudflare Turnstile polling and widget operations out of `Auth.svelte`
+into a directly tested lifecycle controller. Preserved the localhost bypass,
+remote CAPTCHA token gate, signup/login/recovery payloads, OAuth redirect,
+widget timeout, and retry behavior. No schema changes.
+
+Validation: all required checks pass, including 700 tests. Auth route JavaScript
+is 299.87/300 kB and enforced route budgets pass. Aggregate asset catalog
+overages remain advisory; catalog validation used the local seed because
+remote Supabase credentials were unavailable. See
+[`milestones/AUTH_TURNSTILE_LIFECYCLE.md`](milestones/AUTH_TURNSTILE_LIFECYCLE.md).
+
+## 2026-09-22 — Extract the daily Roll reveal sequence
+
+Moved the staged canonical color, condition, and score reveal orchestration
+from `Game.svelte` into `rollRevealSequence.js`. The component retains its
+presentation fields, reduced-motion preference, skip state, Svelte updates,
+scrolling, and score-count animation through explicit callbacks. Added direct
+tests for staged completion, condition order, skip, reduced motion, and request
+cancellation.
+
+Validation passed: build, Svelte check (0 errors/warnings), ESLint, all 649 unit
+tests, links, CSP, performance, username and balance drift, local catalog drift,
+5,000-sample scoring parity, and database security. No schema changes; database
+lint and reset were not applicable. See
+[`milestones/ROLL_REVEAL_SEQUENCE_EXTRACTION.md`](milestones/ROLL_REVEAL_SEQUENCE_EXTRACTION.md).
+
+## 2026-09-22 — Extract daily Roll storage and initial hydration
+
+Moved guest result persistence and short-lived account/day reroll locks into
+`rollStorage.js`. Added `rollHydration.js` to load authenticated server results
+and validate guest snapshots before returning data to `Game.svelte`. The
+component still owns presentation state and stale-request checks, and the daily
+roll RPC remains authoritative. Added storage, hydration, account-switch, and
+invalid-snapshot coverage.
+
+Validation passed: build, Svelte check (0 errors/warnings), ESLint, all 644 unit
+tests, links, CSP, performance, username and balance drift, local catalog drift,
+5,000-sample scoring parity, and database security. Dashboard JavaScript is
+541.95 kB against the 542 kB cap. No schema changes; schema lint and reset were
+not applicable. See
+[`milestones/ROLL_STATE_HYDRATION_EXTRACTION.md`](milestones/ROLL_STATE_HYDRATION_EXTRACTION.md).
+
+## 2026-09-22 — Extract app route target selection
+
+Moved the route-state decision tree from `App.svelte` into the pure
+`src/lib/routeTarget.js` selector. The app shell still owns browser history,
+navigation side effects, and Svelte component imports; it passes the static
+components to the selector and sends the returned descriptor to the existing
+`RouteOutlet`. URL, profile privacy, auth, challenge, alias, and lazy-loading
+contracts remain unchanged. Added direct coverage for static, auth, information,
+app, profile, guest, loading, and error route states, and updated source tests to
+follow the new module boundary.
+
+Validation passed: build, Svelte check (0 errors/warnings), ESLint, all 638 unit
+tests, links, CSP, performance, username and balance drift, local catalog drift,
+5,000-sample scoring parity, and database security. Dashboard JavaScript is
+541.95 kB against the 542 kB route cap. No schema changes; database reset and
+schema lint were not applicable. See
+[`milestones/APP_ROUTE_TARGET_EXTRACTION.md`](milestones/APP_ROUTE_TARGET_EXTRACTION.md).
+
+## 2026-09-22 — Replace low-impact name collection motion
+
+Re-authored the twenty collection gestures after browser review found them
+faint, with unnecessary letter movement. Names now keep a steady silhouette;
+each effect gets a larger animated motif and a matching material highlight.
+Fuzzy, Raster Signal, Star Companions, Heart Pop, and Scramble remain untouched.
+Saved IDs, durations, catalog data, selected materials, reduced motion, and
+Hero Roll behavior stay unchanged. No database or account changes.
+
+The browser smoke now requires a visible pixel change from the still name and
+checks for lost name coverage at desktop and compact sizes. Final evidence and
+validation results are recorded in docs/milestones/NAME_MOTION_COLLECTION.md.
+
+## 2026-09-22 — Homepage composition and polish
+
+Recomposed the supporting homepage with a larger profile showcase, clearer layout
+selection, an uncluttered interactive collection, compact public-profile rows,
+an open Free/Plus comparison, FAQ before signup, and a consolidated footer.
+Replaced viewport-sized sections and animated lower-page scenery with natural
+pacing, consistent type and gutters, and a flat canvas. Profile specimens retain
+their real renderers and cosmetics; mobile previews fit the full composition.
+Preview playback is opt-in, and supporting entrances are brief and one-time.
+The pricing loader reserves space and offers an explicit reload after an import
+failure. Username validation is connected to its visible error message.
+
+Preserved all existing gameplay, authentication, public discovery, canonical
+pricing features, lazy rendering, and route boundaries. Verified the Hero Roll
+source/style files, its mounted props/events, and its hero motion against the
+original workspace. No schema changes or remote actions.
+
+Validation: all 633 tests pass. Build, Svelte check, ESLint, links, CSP,
+performance, username/balance/catalog drift, scoring parity, and database
+security checks pass. Focused browser review covers 320, 390, 768, and 1440px,
+profile/discovery/name selection, keyboard FAQ, reduced motion, guest rolling,
+and invalid signup input. Screenshot evidence is in
+`artifacts/homepage-polish/`; the community screenshots use browser-only fixtures.
+
+## 2026-09-20 — Homepage vertical pacing
+
+Expanded supporting section spacing and added a bounded viewport minimum on
+desktop. Centered each composition within that space; mobile keeps natural
+heights with increased padding. Extended the focused browser check to verify
+section heights/padding alongside responsive overflow and interaction checks.
+Follow-up composition work enlarges the profile stage, gives pricing two
+complete comparison cards, frames real community identities in their accent
+colors, and gives signup and FAQ distinct larger compositions. The required
+suite passed; build, Svelte check, lint, performance, and homepage source tests
+also passed after the composition changes. The focused full-page composition
+check passed at 1440/768/390/320px with local community fixtures, canonical plan
+features, and keyboard FAQ behavior. Screenshots in
+`/tmp/chromadie-composition-Y1GnaU` were reviewed for pricing, community, signup,
+and FAQ. The broader atmosphere browser script could not finish because the
+Sleek example's external image failed to load; its earlier stale owner-signup
+assertion was corrected to match the existing guest-only signup section.
+
+## 2026-09-20 — Homepage collection polish
+
+Reworked the section following user review of the initial gallery. The final
+composition pairs benefit-led copy with a large, interactive condition reveal,
+then offers three actual material finishes on the same example name. Canonical
+condition descriptions and rarity drive the selected artwork and lighting.
+Selection triggers brief entrance motion; reduced motion removes transitions.
+Native buttons expose selection and live regions announce the updated examples.
+The cosmetic renderer loads near the viewport with plain-text loading/error
+fallbacks. No migrations or data compatibility changes are needed.
+
+Focused browser checks cover loaded artwork/material, responsive geometry at
+1440/768/390/320px, all condition/material selections, reduced motion, normal
+entrance animation, and keyboard focus. Initial redesign screenshots were
+visually reviewed in `/tmp/chromadie-collection-MdUp1r`. Updated the previous
+static-gallery assertions. The required suite initially found an outdated source
+assertion and a 1.33 kB homepage JavaScript overage; the assertion was updated and
+the name renderer deferred. The final build, Svelte check, ESLint, performance
+budget, all 11 homepage source tests, and focused browser checks pass. Final
+browser evidence: `/tmp/chromadie-collection-Q8UcdY`. All other unit tests and
+the links, CSP, username/balance/catalog drift, scoring parity, and database
+security checks passed in the single full run; unrelated checks were not rerun.
+
 ## 2026-09-20 — Uploaded avatars in account chrome
 
 The authenticated shared header now renders the user's selected uploaded avatar
@@ -6448,3 +6711,555 @@ All gestures share the bounded Canvas renderer, material composition, shared
 clock and static reduced-motion fallback. No authority or ownership changes.
 
 Validation and release evidence: [motion collection milestone](milestones/NAME_MOTION_COLLECTION.md).
+
+## 2026-09-22 — Profile Studio configuration write extraction
+
+Moved the existing atomic publish and reset RPC transport plus shared failure
+envelope parsing into `profile-studio/configurationWrites.js`. Draft
+validation, account/request guards, and successful local state updates remain
+in `ProfileSettings.svelte`. A stale account is checked after lazy service
+loading and before the RPC. No database migration was needed.
+
+Validation: all required commands pass (653 tests), including build,
+`svelte-check`, ESLint, internal links, CSP, performance, username policy,
+balance, local catalog, scoring parity, and database security. Dashboard route
+JavaScript is 541.98 kB / 542.00 kB. The catalog check used the local seed
+because remote Supabase credentials were unavailable.
+
+## 2026-09-22 — Extract Roll result presentation helpers
+
+Moved the pure base-score display calculation and badge point ordering from
+`Game.svelte` to `rollPresentation.js`. The component still applies canonical
+hydrated and confirmed roll data; the display projection uses the same
+contributor fallback, metadata source, and non-negative clamp. Score, rarity,
+eligibility, and rewards remain server-authoritative. No migration was needed.
+
+Validation: all required commands pass (655 tests). The focused Roll suite
+passes (25 tests), including input immutability and existing roll lifecycle,
+hydration, and reveal behavior. Build, Svelte check, ESLint, links, CSP,
+performance, username policy, balance, local catalog, scoring parity, and
+database security pass. The catalog check used the local seed because remote
+Supabase credentials were unavailable. See
+[`milestones/ROLL_RESULT_PRESENTATION_HELPERS.md`](milestones/ROLL_RESULT_PRESENTATION_HELPERS.md).
+
+## 2026-09-22 — Share dynamic-color contrast calculation
+
+Moved the duplicated sRGB luminance calculation from `Game.svelte` and
+`ProgressionPage.svelte` into `colorContrast.js`. Both retain the existing
+white fallback, `0.179` threshold, and readable dark/white output. Added
+boundary and invalid-input tests plus source coverage for both consumers. No
+schema, route, or gameplay change.
+
+Validation: all required commands pass (657 tests). Homepage and Progression
+route budgets are 487.87/501 kB and 362.15/400 kB. Build, Svelte check, ESLint,
+links, CSP, performance, username policy, balance, local catalog, scoring
+parity, and database security pass. The catalog check used the local seed
+because remote Supabase credentials were unavailable. See
+[`milestones/SHARED_COLOR_CONTRAST.md`](milestones/SHARED_COLOR_CONTRAST.md).
+
+## 2026-09-22 — Extract the Roll image share dialog
+
+Moved image preview state, focus and keyboard handling, clipboard copy, page
+scroll locking, and dialog styles into `RollShareImageDialog.svelte`. `Game.svelte`
+loads it on demand and supplies confirmed score, rarity, color, and a callback
+that checks the active Roll request. Account/day hydration and new roll
+requests close it before invalidation. The existing action buttons and
+`rollShareExport.js` output remain unchanged.
+
+Validation: required checks pass with 660 tests. Dashboard route JavaScript is
+541.98/542.00 kB and Roll route JavaScript is 64.42 kB. Build, Svelte check,
+ESLint, links, CSP, performance, username policy, balance, local catalog,
+scoring parity, and database security pass. Catalog verification used the
+local seed because remote Supabase credentials were unavailable. See
+[`milestones/ROLL_IMAGE_SHARE_DIALOG_EXTRACTION.md`](milestones/ROLL_IMAGE_SHARE_DIALOG_EXTRACTION.md).
+
+## 2026-09-22 — Profile Studio settings load-state extraction
+
+Moved the accepted-context draft projection out of `ProfileSettings.svelte`
+into `profile-studio/settingsLoadState.js` and added direct tests for failed
+refreshes, configuration-unavailable reads, account isolation, and fresh
+context projection. The adapter retains async loading and stale request/account
+guards. The resolver is loaded in parallel with the context request; if that
+chunk fails, the fresh context is applied read-only and the prior draft is
+retained only for the same profile. No schema change.
+
+Validation: all required commands pass (665 tests). Dashboard JavaScript is
+541.94/542.00 kB and public-profile JavaScript is 471.89/475 kB. Build, Svelte
+check, ESLint, links, CSP, performance, username policy, balance, local
+catalog, scoring parity, and database security pass. Catalog verification used
+the local seed because remote Supabase credentials were unavailable. See
+[`milestones/PROFILE_STUDIO_SETTINGS_LOAD_STATE.md`](milestones/PROFILE_STUDIO_SETTINGS_LOAD_STATE.md).
+
+## 2026-09-22 — Shared progression focus selection
+
+Moved intentional-objective classification, unlocked-state compatibility, and
+Ritual/Rank/objective focus selection into `progressionPresentation.js`. The
+profile's progression story and the dedicated Progress page now use the same
+rules. Direct tests cover selection order, Discovery exclusions, explicit
+objective roles, and unlock aliases. No route, data, RPC, or reward authority
+changes.
+
+Validation: all required commands pass (669 tests). Progression route
+JavaScript is 361.89/400 kB; dashboard and public-profile routes remain within
+their budgets. The catalog check used the local seed because remote Supabase
+credentials were unavailable. See
+[`milestones/PROGRESSION_FOCUS_SELECTION_EXTRACTION.md`](milestones/PROGRESSION_FOCUS_SELECTION_EXTRACTION.md).
+
+## 2026-09-22 — Profile Portfolio scroll controller
+
+Moved active-page tracking, the profile-more threshold, Portfolio wheel
+filtering/stepping, overflow continuation, and listener cleanup from
+`ProfileShell.svelte` into `profile-layout/portfolioScrollController.js`.
+The controller loads only when the Portfolio layout is selected. Tests cover
+page tracking, scroll thresholds, wheel locks, horizontal/Ctrl gestures,
+reduced motion, and cleanup. Markup and profile data behavior did not change.
+
+Validation: all required commands pass (672 tests). Dashboard JavaScript is
+541.21/542.00 kB and public-profile JavaScript is 471.17/475 kB. The catalog
+check used the local seed because remote Supabase credentials were unavailable.
+See [`milestones/PROFILE_PORTFOLIO_SCROLL_CONTROLLER.md`](milestones/PROFILE_PORTFOLIO_SCROLL_CONTROLLER.md).
+
+## 2026-09-22 — Profile expression action boundary
+
+Moved media-library loading, avatar/background/audio selection, and profile
+expression save transport into the tested Profile Studio expression action
+module. The Svelte editor still owns retries, request-race handling, filtering,
+preview state, and UI feedback. Existing owner-scoped access and server-owned
+RPC contracts are unchanged. No schema changes.
+
+Validation: all required commands pass (676 tests). Dashboard JavaScript is
+541.21/542.00 kB and public-profile JavaScript is 471.17/475 kB. Route budgets
+pass; the performance check retains its advisory aggregate JavaScript/CSS
+catalog warnings. Catalog verification used the local seed because remote
+Supabase credentials were unavailable. See
+[`milestones/PROFILE_EXPRESSION_ACTION_BOUNDARY.md`](milestones/PROFILE_EXPRESSION_ACTION_BOUNDARY.md).
+
+## 2026-09-22 — Roll attempt orchestration
+
+Moved the asynchronous request-to-completion ordering from `Game.svelte` into
+`rollAttempt.js`. The controller preserves stale guards, request-day guest
+persistence before reveal, confirmed-result application, authenticated store
+refresh, and reroll completion cleanup. Roll eligibility, canonical result
+projection, and all UI/store effects remain in their existing boundaries. No
+schema or RPC changes.
+
+Validation: all required commands pass (682 tests). Dashboard JavaScript is
+541.21/542.00 kB and public-profile JavaScript is 471.17/475 kB. Route budgets
+pass; the performance check retains advisory aggregate JavaScript/CSS catalog
+warnings. Catalog verification used the local seed because remote Supabase
+credentials were unavailable. See
+[`milestones/ROLL_ATTEMPT_ORCHESTRATION.md`](milestones/ROLL_ATTEMPT_ORCHESTRATION.md).
+
+## 2026-09-22 — Profile Expression image lifecycle
+
+Consolidated avatar/background upload, preview cleanup, and removal into shared
+kind-parameterized editor handlers. Added a tested upload-and-select action
+that cleans up the promoted asset when the owner-scoped selection RPC fails.
+Preserved kind-specific feedback and legacy profile-path behavior. No schema or
+visual changes.
+
+Validation: all required commands pass (684 tests). Route performance budgets
+pass; the performance check reports advisory aggregate JavaScript/CSS catalog
+overages. Catalog verification used the local seed because remote Supabase
+credentials were unavailable. See
+[`milestones/PROFILE_EXPRESSION_IMAGE_LIFECYCLE.md`](milestones/PROFILE_EXPRESSION_IMAGE_LIFECYCLE.md).
+
+## 2026-09-22 — Profile Studio shared write lifecycle
+
+Unified the publish and reset mutation lifecycle in `ProfileSettings.svelte`.
+Both actions now share lazy transport loading, stale account/request/mutation
+guards, errors, and lock cleanup. Publish validation, live draft and identity
+inputs, account bio synchronization, and reset-to-published projection retain
+their action-specific behavior.
+
+Validation: all required commands pass (685 tests). Dashboard route JavaScript
+is 540.76/542 kB; route budgets pass and aggregate asset catalog overages remain
+advisory. Catalog verification used the local seed because remote Supabase
+credentials were unavailable. See
+[`milestones/PROFILE_STUDIO_SHARED_WRITE_LIFECYCLE.md`](milestones/PROFILE_STUDIO_SHARED_WRITE_LIFECYCLE.md).
+
+## 2026-09-22 — App route state projection
+
+Moved parsed URL-to-route-state mapping into the pure `routeState.js` module.
+`App.svelte` still owns location parsing, request invalidation, `/shop` URL
+repair, alias/challenge reads, stale-result checks, and route tracking. Direct
+tests cover auth, profile aliases, canonical and compatibility usernames,
+challenge paths, selected IDs, and tabs.
+
+Validation: all required commands pass (691 tests). Route budgets pass; initial
+JavaScript is 279.72/300 kB and dashboard JavaScript is 541.50/542 kB. Aggregate
+JS/CSS catalog warnings remain advisory. Catalog verification used the local
+seed because remote Supabase credentials were unavailable. See
+[`milestones/APP_ROUTE_STATE_PROJECTION.md`](milestones/APP_ROUTE_STATE_PROJECTION.md).
+
+## 2026-09-22 — Shared progression node presentation
+
+Centralized node target/current math, completion percentage, number formatting,
+progress labels, and goal pace copy for the Profile progression story and the
+dedicated Progression page. Kept the current lifetime EP input at each UI
+adapter. Added direct coverage for aliases, boundaries, discovery odds, and
+label output.
+
+Validation: all required commands pass (693 tests). Progression JavaScript is
+362.88/400 kB and CSS is 113.63/115 kB; route budgets pass. Aggregate catalog
+warnings remain advisory. Catalog verification used the local seed because
+remote Supabase credentials were unavailable. See
+[`milestones/SHARED_PROGRESSION_NODE_PRESENTATION.md`](milestones/SHARED_PROGRESSION_NODE_PRESENTATION.md).
+
+## 2026-09-22 — Profile Shell preview projection
+
+Moved preview identity, profile/configuration resolution, normalized profile
+values, collections, and empty progression/social state into the tested
+`profileShellPreview.js` projection. `ProfileShell.svelte` retains preview-key
+invalidation and state assignment; staged configuration stays outside the
+remount key. The full required validation suite passes with 711 tests; public
+profile and dashboard route budgets pass. Catalog verification used the local
+seed because remote Supabase credentials were unavailable.
+
+## 2026-09-22 — Shared App route initialization projection
+
+Initial URL state and mounted route changes now use `resolveRouteState()`, so
+the app shell has one route-to-state mapping. The initial projection remains
+synchronous and side-effect free; mounted routing retains alias/challenge reads,
+stale guards, URL repair, and store updates. The required validation suite
+passes with 711 tests; initial JavaScript is 278.33/300 kB and dashboard route
+JavaScript is 541.90/542 kB. Catalog verification used the local seed because
+remote Supabase credentials were unavailable.
+
+## 2026-09-22 — Roll reveal stage component
+
+Moved the rolling-stage view and its responsive/reduced-motion styles into
+`RollRevealStage.svelte`. `Game.svelte` retains request and reveal control,
+scroll handling, and result state; the child emits skip input and exposes the
+condition-list element. Required checks pass with 714 tests, including the
+Roll reliability browser smoke. Route budgets pass; aggregate asset catalog
+overages remain advisory. No schema or RPC changes.
+
+## 2026-09-22 — Roll result rewards component
+
+Moved the non-dedicated wallet-bonus and achievement rows into
+`RollResultRewards.svelte`, retaining canonical badge metadata, the existing
+result arrays, non-dedicated guard, empty grid wrapper, and mobile styling.
+Required checks pass with 716 tests; the Roll reliability browser smoke passes
+and route budgets remain within limits. Aggregate catalog overages remain
+advisory. No schema or RPC changes. See
+[`milestones/ROLL_RESULT_REWARDS_COMPONENT.md`](milestones/ROLL_RESULT_REWARDS_COMPONENT.md).
+
+## 2026-09-22 — Profile content draft projection
+
+Moved structured-content normalization and bounded typed-text preservation into
+the directly tested `profile-studio/contentDraft.js` helper. The editor still
+owns its draft state, dirty/error status, focus, and preview dispatch; public
+URL normalization and publish checks are unchanged. Required checks pass with
+719 tests; route budgets pass, with aggregate catalog overages remaining
+advisory. No schema or RPC changes. See
+[`milestones/PROFILE_CONTENT_DRAFT_PROJECTION.md`](milestones/PROFILE_CONTENT_DRAFT_PROJECTION.md).
+
+## 2026-09-22 — Profile Expression audio selection lifecycle
+
+Moved the audio upload-to-selection transaction into the tested
+`expressionMediaActions.js` boundary, matching the existing image action. The
+editor retains preview, media-reference, busy, and feedback state. The required
+suite passes with 722 tests and all route budgets; aggregate catalog overages
+remain advisory. No schema or RPC contract changes. See
+[`milestones/PROFILE_EXPRESSION_AUDIO_LIFECYCLE.md`](milestones/PROFILE_EXPRESSION_AUDIO_LIFECYCLE.md).
+
+## 2026-09-22 — App browser navigation adapter
+
+Moved guarded SPA history navigation, internal-link filtering, `popstate`, and
+browser listener lifecycle into `routeNavigation.js`. `App.svelte` retains
+route projection, canonical URL synchronization, auth route construction, and
+route loading. Direct tests cover navigation ordering, cancellation, challenge
+cleanup, native link exclusions, and listener lifecycle. Required checks pass
+with 728 tests; initial JavaScript is 278.41/300 kB and dashboard route
+JavaScript is 541.99/542 kB. Aggregate asset catalog overages remain advisory.
+Catalog drift used the local seed because remote Supabase credentials were
+unavailable. No schema or RPC changes. See
+[`milestones/APP_BROWSER_NAVIGATION_ADAPTER.md`](milestones/APP_BROWSER_NAVIGATION_ADAPTER.md).
+
+## 2026-09-22 — Progression journey model extraction
+
+Moved track selection, lane-state projection, discovery grouping, and summary
+counters into the pure `progressionJourneyModel.js` helper. The profile story
+and lazy Progress page continue to use the same projection and existing props;
+rendering, analytics, focus selection, and authoritative inputs are unchanged.
+Required checks pass with 733 tests; initial JavaScript is 278.41/300 kB and
+the progression route is 361.71/400 kB. Aggregate asset catalog overages remain
+advisory. Catalog drift used the local seed because remote Supabase credentials
+were unavailable. No schema or RPC changes. See
+[`milestones/PROGRESSION_JOURNEY_MODEL_EXTRACTION.md`](milestones/PROGRESSION_JOURNEY_MODEL_EXTRACTION.md).
+
+## 2026-09-22 — Roll result actions component
+
+Moved the dedicated result controls, optional acquisition actions, and
+embedded post-score toolbar into `RollResultActions.svelte`. Kept account and
+reroll state, eligibility, and action handlers in `Game.svelte`; preserved
+their placements and RollPage/browser selectors. Required checks pass with
+737 tests and the Roll reliability browser smoke. Route budgets pass, with the
+dashboard route at 541.99/542.00 kB JavaScript; aggregate asset catalog
+overages remain advisory. Catalog drift used the local seed because remote
+Supabase credentials were unavailable. No schema or RPC changes. See
+[`milestones/ROLL_RESULT_ACTIONS_COMPONENT.md`](milestones/ROLL_RESULT_ACTIONS_COMPONENT.md).
+
+## 2026-09-22 — App route URL synchronization
+
+Moved reactive path selection into the pure `resolveRouteSyncPath()` helper;
+`App.svelte` still owns browser checks and `replaceState`. Preserved checkout
+success and cancellation query state, including trailing-slash routes, and
+kept explicit Pricing navigation canonical. Required checks pass with 742
+tests; dashboard JavaScript is 541.95/542.00 kB. Catalog drift used the local
+seed because remote Supabase credentials were unavailable. No schema or RPC
+changes. See
+[`milestones/APP_ROUTE_URL_SYNCHRONIZATION.md`](milestones/APP_ROUTE_URL_SYNCHRONIZATION.md).
+## 2026-09-22 — Profile Studio full-context refresh projection
+
+- Moved accepted full-context response reconciliation into the tested lazy
+  settings load-state module; request freshness and async lifecycle stay in
+  `ProfileSettings.svelte`.
+- Preserved staged configuration and dirty identity edits, kept failed reads
+  retryable, and ensured current full-context reads release initial loading.
+- Required validation passes with 753 tests; dashboard JavaScript is
+  541.94/542.00 kB. Catalog drift used the valid local seed because remote
+  Supabase credentials were unavailable. No schema or RPC changes.
+## 2026-09-22 — Daily Roll initial-state coordinator
+
+- Moved authenticated/guest snapshot ordering, stale snapshot handling, error
+  reporting, and current-request completion into `rollInitialState.js`.
+- Kept UTC-day/account deduplication, server-owned snapshot loading, guest
+  progress stores, result presentation, and dispatch in `Game.svelte`.
+- Required validation passes with 762 tests; dashboard JavaScript is
+  541.94/542.00 kB. Catalog drift used the valid local seed because remote
+  Supabase credentials were unavailable. No schema or RPC changes.
+
+## 2026-09-23 — App challenge lifecycle extraction
+
+- Split challenge creation and lookup transport. Dynamically imported lookup
+  and lifecycle code run only for explicit challenge routes; App keeps the
+  loading placeholder, an import-generation guard, import-failure feedback,
+  and synchronous URL cleanup.
+- Preserved sender/error mapping, stale request handling, challenge query
+  behavior, and navigation order without schema or RPC changes.
+- Required validation passes with 769 tests. Initial JavaScript is
+  277.96/300 kB and dashboard route JavaScript is 541.53/542 kB. The lookup
+  operation stays out of the ordinary Roll route graph; aggregate asset catalog
+  overages remain advisory. Catalog drift used the valid local seed because
+  remote Supabase credentials were unavailable.
+
+## 2026-09-23 — App profile alias lifecycle extraction
+
+- Moved alias lookup and canonical-path projection into a lifecycle module
+  that loads only for explicit `/a/<alias>` routes. App retains the immediate
+  loading route, URL replacement, search/hash preservation, and reparsing.
+- Added stale import and lookup guards plus direct coverage for missing,
+  failed, invalidated, and superseded results, navigation during module load,
+  and canonical URL query/hash preservation. No schema or RPC changes.
+- Required checks pass with 776 tests. Initial JavaScript is 276.99/300 kB
+  and dashboard route JavaScript is 540.56/542 kB. Aggregate asset catalog
+  overages remain advisory. Catalog verification used the local seed because
+  remote Supabase credentials were unavailable. See
+[`milestones/APP_PROFILE_ALIAS_LIFECYCLE.md`](milestones/APP_PROFILE_ALIAS_LIFECYCLE.md).
+
+## 2026-09-23 — Profile Studio navigation controller
+
+Moved Studio hash/popstate handling, dirty-history restoration, unload and app
+navigation guards, and browser listener cleanup into the directly tested
+`profileStudioNavigation.js` controller. `ProfileSettings.svelte` retains live
+Studio state, section effects, staged drafts, and prompt/discard behavior.
+Required checks pass with 784 tests; dashboard route JavaScript is
+540.94/542.00 kB. Blocking route budgets pass; aggregate JavaScript and CSS
+catalog totals remain advisory overages. Catalog drift used the valid local
+seed because remote Supabase credentials were unavailable. No schema or RPC
+changes. See
+[`milestones/PROFILE_STUDIO_NAVIGATION_CONTROLLER.md`](milestones/PROFILE_STUDIO_NAVIGATION_CONTROLLER.md).
+
+## 2026-09-23 — Roll text-share lifecycle
+
+Moved share text composition, challenge/fallback selection, analytics, clipboard
+outcomes, and freshness checks into `rollTextShare.js`. `Game.svelte` supplies a
+click-time confirmed-result snapshot and keeps the server challenge, browser,
+toast, and copied-state adapters. Added stale challenge/clipboard coverage and
+protected the latest copied feedback from older timers. Required checks pass
+with 791 tests; dashboard JavaScript is 540.94/542.00 kB. Blocking route
+budgets pass; aggregate JS/CSS totals remain advisory overages. Catalog drift
+used the valid local seed because remote Supabase credentials were
+unavailable. No schema or RPC changes. See
+[`milestones/ROLL_TEXT_SHARE_LIFECYCLE.md`](milestones/ROLL_TEXT_SHARE_LIFECYCLE.md).
+
+## 2026-09-23 — Legacy Profile Rivals read lifecycle
+
+Moved the owner-only current-day Rivals query and stale-response handling into
+`profileRivalLifecycle.js`. Profile retains the rendered Svelte state and
+invalidates reads when its target or followed-user scope changes, when the
+follow list empties, and on component teardown. Added direct query-contract,
+deduplication, clearing, stale-result, error, and disposal tests. No schema or
+RPC changes. Required validation passes with 799 tests; dashboard JavaScript
+is 540.94/542.00 kB and route budgets pass. Aggregate asset catalog targets
+remain advisory overages; catalog drift used the valid local seed because
+remote Supabase credentials were unavailable. See
+[`milestones/PROFILE_RIVAL_READ_LIFECYCLE.md`](milestones/PROFILE_RIVAL_READ_LIFECYCLE.md).
+
+## 2026-09-23 — Roll image clipboard lifecycle
+
+Moved image canvas/blob/clipboard sequencing and stale completion checks into
+`rollImageCopy.js`, keeping browser APIs and dialog presentation in the lazy
+image-share component. Stale clipboard rejection can no longer toast over a
+new result, and versioned feedback timers prevent earlier copies from clearing
+newer status. Required validation passes with 807 tests; dashboard JavaScript
+is 540.94/542.00 kB and route budgets pass. Aggregate JS/CSS catalog targets
+remain advisory overages; catalog drift used the valid local seed because
+remote Supabase credentials were unavailable. See
+[`milestones/ROLL_IMAGE_CLIPBOARD_LIFECYCLE.md`](milestones/ROLL_IMAGE_CLIPBOARD_LIFECYCLE.md).
+
+## 2026-09-23 — App challenge banner component
+
+Moved challenge prompt rendering and desktop/mobile styles into
+`ChallengeBanner.svelte`, while App keeps the immediate route gate, challenge
+state, and URL cleanup. Added checks for all displayed states, dismissal,
+accessibility labels, and responsive styles. Required validation passes with
+812 tests; initial JavaScript is 277.22/300 kB and dashboard JavaScript is
+541.17/542 kB. Aggregate asset catalog targets remain advisory overages.
+Catalog drift used the valid local seed because remote Supabase credentials
+were unavailable. No schema or RPC changes. See
+[`milestones/APP_CHALLENGE_BANNER_COMPONENT.md`](milestones/APP_CHALLENGE_BANNER_COMPONENT.md).
+
+## 2026-09-23 — Roll image-copy attempt freshness
+
+Closed a same-result clipboard race with a per-attempt freshness generation.
+An older write can no longer report failure after a newer copy succeeds, and
+opening, closing, or destroying the dialog invalidates pending copy effects.
+Added regression coverage for older success and rejection after a newer copy,
+plus invalidation while a clipboard write is pending. Required validation
+passes with 815 tests; initial JavaScript is 277.22/300 kB and dashboard
+JavaScript is 541.17/542 kB. Aggregate asset catalog targets remain advisory
+overages. Catalog drift used the valid local seed because remote Supabase
+credentials were unavailable. No schema or RPC changes. See
+[`milestones/ROLL_IMAGE_CLIPBOARD_LIFECYCLE.md`](milestones/ROLL_IMAGE_CLIPBOARD_LIFECYCLE.md).
+
+## 2026-09-23 — Roll text-share attempt freshness
+
+Added a per-attempt ID to the current roll/account checks, so a late challenge
+failure or clipboard result from an earlier same-roll share cannot toast or
+update copied feedback. Added coverage for invalidation and for an older
+challenge failure completing after newer success. Required validation passes
+with 816 tests; initial JavaScript is 277.22/300 kB and dashboard JavaScript
+is 541.17/542 kB. Aggregate asset catalog targets remain advisory overages.
+Catalog drift used the valid local seed because remote Supabase credentials
+were unavailable. No schema or RPC changes. See
+[`milestones/ROLL_TEXT_SHARE_ATTEMPT_FRESHNESS.md`](milestones/ROLL_TEXT_SHARE_ATTEMPT_FRESHNESS.md).
+
+## 2026-09-23 — Legacy Profile context-read lifecycle
+
+Profile state reset and teardown now invalidate the existing context-read
+generation, preventing a late response from repopulating cleared state after
+an account or route transition. Rival query disposal remains in the same
+teardown. Added a deferred-response regression test. Required validation passes
+with 817 tests; initial JavaScript is 277.22/300 kB and dashboard JavaScript is
+541.17/542 kB. Aggregate JS/CSS catalog targets remain advisory overages.
+Catalog drift used the valid local seed because remote Supabase credentials
+were unavailable. No schema or RPC changes. See
+[`milestones/PROFILE_CONTEXT_READ_LIFECYCLE.md`](milestones/PROFILE_CONTEXT_READ_LIFECYCLE.md).
+
+## 2026-09-23 — Profile Expression preview teardown
+
+Image, background, and audio preparation now checks whether the editor remains
+active before allocating a temporary Blob URL. A late preparation result after
+unmount no longer creates a URL beyond the reach of teardown cleanup. Added
+deferred-preparation coverage for inactive and active completion. Required
+validation passes with 820 tests; route budgets pass at 277.22/300 kB initial
+JavaScript and 541.17/542 kB dashboard JavaScript. Aggregate JS/CSS catalog
+totals remain advisory overages at 1385.43/800 kB and 670.60/400 kB. Catalog
+drift used the valid local seed because remote Supabase credentials were
+unavailable. No schema or RPC changes. See
+[`milestones/PROFILE_EXPRESSION_PREVIEW_TEARDOWN.md`](milestones/PROFILE_EXPRESSION_PREVIEW_TEARDOWN.md).
+
+## 2026-09-23 — Social follow action lifecycle
+
+Follow requests now discard store and toast effects after auth clears social
+state, preventing an old account's result from changing the next account's
+Rivals list. Rejected RPC transports return the existing error feedback, and
+Profile/Leaderboard locks always release. Added deferred cross-account,
+network-failure, success, and UI-lock tests. Required validation passes with
+827 tests; route budgets pass at 277.57/300 kB initial JavaScript and
+541.53/542 kB dashboard JavaScript. Aggregate JS/CSS catalog totals remain
+advisory overages at 1385.81/800 kB and 670.60/400 kB. Catalog drift used the
+valid local seed because remote Supabase credentials were unavailable. No
+schema or RPC changes. See
+[`milestones/SOCIAL_FOLLOW_LIFECYCLE.md`](milestones/SOCIAL_FOLLOW_LIFECYCLE.md).
+
+## 2026-09-23 — App challenge lookup rejection recovery
+
+Rejected challenge lookups now settle the banner into its unavailable state
+instead of leaving the initial loading placeholder indefinitely. A rejected
+older lookup remains ignored after a newer request supersedes it. Required
+validation passes with 829 tests; route budgets pass at 277.57/300 kB initial
+JavaScript and 541.53/542 kB dashboard JavaScript. Aggregate JS/CSS catalog
+totals remain advisory overages at 1385.96/800 kB and 670.60/400 kB. Catalog
+drift used the valid local seed because remote Supabase credentials were
+unavailable. No schema or RPC changes. See
+[`milestones/APP_CHALLENGE_REJECTION_RECOVERY.md`](milestones/APP_CHALLENGE_REJECTION_RECOVERY.md).
+
+## 2026-09-23 — Profile Social RPC rejection recovery
+
+Unexpected rejected RPC promises now resolve through the existing error
+result shape, so social action, sort, report, and settings flows can complete
+their loading state. Resolved responses remain unchanged. Required validation
+passes with 831 tests; route budgets pass at 277.57/300 kB initial JavaScript,
+297.71/300 kB auth JavaScript, and 541.53/542 kB dashboard JavaScript.
+Aggregate JS/CSS catalog totals remain advisory overages at 1385.96/800 kB and
+670.60/400 kB. Catalog drift used the valid local seed because remote Supabase
+credentials were unavailable. No schema changes. See
+[`milestones/PROFILE_SOCIAL_RPC_REJECTION_RECOVERY.md`](milestones/PROFILE_SOCIAL_RPC_REJECTION_RECOVERY.md).
+
+## 2026-09-23 — Roll reveal failure recovery
+
+If the result animation rejects after the server confirms a roll, the attempt
+now applies the normalized server result immediately, refreshes account state,
+and releases loading/reroll locks. Stale reveal failures remain ignored.
+Required validation passes with 834 tests; route budgets pass at 277.57/300 kB
+initial JavaScript, 78.92/100 kB largest lazy JavaScript, and 541.59/542 kB
+dashboard JavaScript. Aggregate JS/CSS catalog totals remain advisory overages
+at 1386.24/800 kB and 670.60/400 kB. Catalog drift used the valid local seed
+because remote Supabase credentials were unavailable. No schema changes. See
+[`milestones/ROLL_REVEAL_FAILURE_RECOVERY.md`](milestones/ROLL_REVEAL_FAILURE_RECOVERY.md).
+
+## 2026-09-23 — Roll stale-state and candidate-rarity follow-up
+
+Moved the reveal sequence freshness check before its first presentation-state
+write, so an already-stale sequence cannot clear conditions from a newer result.
+The database security run also exposed that the v6 scorer's valid `Legendary`
+rarity was missing from the best-roll candidate constraint. Added the value
+through an additive migration and a deterministic SQL regression assertion.
+
+The full required application checks pass with 834 unit tests. Route budgets
+pass at 277.57/300 kB initial JavaScript, 78.92/100 kB largest lazy JavaScript,
+and 541.59/542 kB dashboard JavaScript. Aggregate JavaScript and CSS catalogs
+remain advisory overages. Catalog drift used the local seed because remote
+Supabase credentials were unavailable. Schema lint, local database reset, and
+database-security checks pass. See
+[`milestones/ROLL_CANDIDATE_LEGENDARY_RARITY.md`](milestones/ROLL_CANDIDATE_LEGENDARY_RARITY.md).
+
+## 2026-09-24 — Codebase security and reliability audit
+
+Bound uploaded media from actual encoded bytes, including image dimensions,
+animated-image frames, ANI cursor resources with complete DIB/PNG frame data,
+H.264 SPS and MP4 sample/presentation timing, and VP8/VP9 video frames.
+Unsupported MP4 edit rates and nested APNG cursor frames fail closed. Existing
+R2 rows now stay out of public profile references until an owner rechecks the
+stored bytes under the current policy; the media libraries offer recheck and
+deletion and identify rows that need re-upload. A valid private copy can
+restore a broken legacy public copy. Public V1/V2 projections now suppress
+legacy storage paths, including audio playlist track paths, while owner views
+retain recovery data. Closed stale account effects in media deletion, gated
+the QA inventory grant on staff status, and preserved the existing RLS,
+scoring, roll, and progression authorities.
+
+Validation passes with 885 tests: production build, Svelte checks, ESLint,
+links, CSP, enforced performance budgets, username/balance/catalog drift,
+scoring parity, database reset/lint/security, progression behavior, and profile
+insight integrity. npm audit reports zero high-severity vulnerabilities. The
+catalog-size check remains an advisory overage. Production Supabase rows, R2
+objects, and deployed environment bindings were unavailable, so the number of
+legacy assets needing recheck or re-upload is not known. The optional release
+configuration check failed closed because local `PREVIEW_PROTECTION` was not
+set to `off`; no deployment was attempted. See
+[`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).

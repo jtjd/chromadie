@@ -1,5 +1,174 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-24 — Security and reliability audit
+
+- Bind asynchronous profile mutations to the account that started them, reset
+  Profile Studio state on account changes, preserve native same-page fragment
+  navigation, and recover from rejected reads.
+- Keep auth account-state responses generic and clear profile-insight recency
+  when analytics consent is denied.
+- Require an explicit visitor action before public profile provider embeds load.
+- Validate animated image structure before decode/promotion and verify actual
+  MP4/WebM dimensions and duration before background-video promotion.
+- Preserve the profile-insight dimension cap under concurrency and add an
+  atomic 500-events-per-account/day limit for progression analytics.
+- Apply security headers to Cloudflare function HTML, make CI token permissions
+  read-only, ignore local environment files, and resolve the vulnerable
+  `devalue` lockfile version.
+- Pass all 868 unit tests, source/security/drift checks, enforced performance
+  budgets, local database reset and schema lint, and SQL behavior checks.
+- Note production follow-ups for existing ready R2 videos, Supabase
+  email-confirmation configuration, and the historical `tjz` QA grant target.
+- See [`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
+
+## 2026-09-24 — Luminous name materials
+
+- Replace all eighteen rejected material designs with bright, restrained finishes:
+  shimmer, fine glitter, star glints, pearl, neon, gloss, and soft colored light.
+- Keep Soft Halo and Cathode Bloom; the catalog now has twenty effects plus Plain.
+- Animate materials independently of name motion, with stable texture seeds,
+  bounded surface reuse, and fixed reduced-motion frames.
+- Add twelve catalog entries through an additive migration and update presentation
+  for six existing entries. Preserve existing prices, ownership, and access tiers.
+- Pass 846 unit tests, 54,432 font/material/motion frames, 12,068 collection-motion
+  frames, and 1,700 material review frames, plus all mandatory local checks.
+- Save the [design review](NAME_MATERIAL_DESIGN_REVIEW.md) and
+  [collection preview](evidence/name-materials-2026-09-24.png). Not deployed remotely.
+
+
+## 2026-09-23 — Rebuild collection name motion artwork
+
+- Replace twenty repeating primitive animations with individually drawn scenes
+  and deliberate arrival, action, settling, and departure timing.
+- Give scene artwork its own thematic palette while keeping the selected name
+  material and stable text silhouette visible.
+- Fit scene framing to compact and narrow canvases and close each animation
+  loop through a shared quiet interval.
+- Extend browser evidence with twelve-phase motion strips, loop-boundary
+  comparisons, and short/long-name edge checks.
+- Preserve existing motion IDs, ownership, durations, and reduced-motion mode;
+  no schema migration.
+- All required checks pass with 842 tests and 5,492 browser matrix frames;
+  reviewed desktop/mobile galleries and twelve-phase sequences.
+
+## 2026-09-23 — Refresh the How to Play guide
+
+- Reframed the guide around the daily roll, the player's evolving profile, and
+  public profile discovery.
+- Added a static current-result example using the shared result and score
+  breakdown components; its score, rarity, traits, and condition awards are
+  checked against the live model.
+- Clarified guest result limits, account persistence, score versus EP, color
+  collection versus cosmetics, UTC reset, shard rerolls, and the homepage's
+  empty top-roll state. Kept the visible pre-roll Leaderboard path.
+- Synchronized page metadata and no-JavaScript fallback content and added
+  responsive, keyboard, disclosure, reduced-motion, and route checks.
+- Removed repeated discovery instructions and described Today’s top roll only
+  when a public result is available.
+- Required validation passes with 839 tests; no schema changes.
+
+## 2026-09-23 — Focus the homepage on Roll and discovery
+
+- Kept the playable Roll hero and Today’s Top Roller as the authentic
+  pre-roll profile preview and Browse path.
+- Removed the additional homepage showcase, collection, community, pricing,
+  FAQ, and signup sections; retained their standalone routes/components.
+- Moved the bounded top-roll feed out of the removed community section and
+  preserved loading, error/retry, empty, and public-profile link behavior.
+- Added contextual post-roll routes to the player profile, Customize, and
+  Leaderboard; guests can browse the Leaderboard without signing up.
+- Made `/` the only daily-roll page and removed the standalone `/roll` route.
+- Pointed in-app Roll links and signup returns to `/`; challenge links remain
+  on `/c/:id`.
+- Kept roll authority and authentication behavior intact.
+- Validated with 836 unit tests, the required static/security/drift checks, the
+  local schema lint/reset, and homepage, account, roll-reliability, and
+  progression browser smokes.
+
+## 2026-09-23 — Roll lifecycle and rarity contract hardening
+
+- A stale reveal sequence now exits before it clears any presentation state.
+- Best-roll candidates now accept the `Legendary` rarity emitted by the
+  authoritative v6 scorer; a database-security regression covers persistence.
+- Full required validation passes with 834 unit tests; schema lint and local
+  database reset pass.
+
+## 2026-09-22 — Profile Studio lazy loading
+
+- Moved section and preview chunk loading, deduplication, retry, error, and
+  loading state into a tested Studio controller.
+- Preserved Customize-tab loader groups and the existing lazy import targets.
+- Required validation passes with 705 tests; no schema changes.
+
+## 2026-09-22 — Authentication lifecycle refactor
+
+- Extracted Turnstile polling, widget operations, token lifecycle, retries, and
+  cleanup into a directly tested controller.
+- Preserved local development bypass and mandatory remote CAPTCHA submission.
+- Required validation passes with 700 tests; no schema changes.
+
+## 2026-09-22 — Separate Roll reveal sequencing
+
+- Moved the staged reveal timeline into a Svelte-independent sequence module.
+- Kept the component responsible for presentation updates, scrolling, score
+  animation, skip input, reduced motion, and current-request checks.
+- Preserved the canonical server result and all gameplay authority.
+
+## 2026-09-22 — Separate Roll storage and snapshot hydration
+
+- Moved guest-roll persistence and reroll-lock handling out of `Game.svelte`.
+- Added snapshot loaders for server-owned authenticated results and validated
+  guest results; the component retains request identity and presentation state.
+- Preserved account cleanup, guest result recovery, optional percentile
+  behavior, and server authority. No database or route changes.
+
+## 2026-09-22 — Separate route target selection
+
+- Moved the app shell's route-to-component decision tree into a pure selector.
+- Kept URL handling, navigation side effects, account boundaries, and lazy
+  loading behavior in their existing interfaces.
+- Added route-state coverage and preserved all route, auth, profile, and
+  challenge contracts.
+
+## 2026-09-22 — Authored name motion polish
+
+- Replaced faint name collection effects with larger, distinct animated motifs
+  and matching color passes.
+- Kept the name lettering steady; removed blanket glyph waving and jiggling.
+- Preserved Fuzzy, Raster Signal, Star Companions, Heart Pop, Scramble, saved
+  IDs, durations, materials, and reduced-motion behavior.
+- No catalog, account-data, or database change.
+
+## 2026-09-22 — A more intentional homepage
+
+- Rebuilt the supporting layout around a larger profile showcase, interactive
+  discoveries, compact community profiles, and a clear Free/Plus comparison.
+- Reordered FAQ and signup, aligned typography and spacing, and simplified
+  navigation in the footer.
+- Removed lower-page scenery, glows, decorative icons, and animated accents.
+  Kept short entrances, clear focus states, and optional profile-preview playback.
+- Improved small-screen profile previews, pricing loading/error behavior, and
+  accessible username validation.
+- Preserved the complete Hero Roll implementation and existing game behavior.
+
+## 2026-09-20 — Homepage vertical pacing
+
+- Give supporting sections more vertical space and center their compositions.
+- Use viewport-aware desktop heights and comfortable mobile padding, allowing
+  long content to grow naturally.
+- Rebalance the profile showcase, redesign Free/Plus comparison cards with all
+  canonical features, and frame community profiles in their own colors.
+- Give signup a larger closing treatment and FAQ clearer, roomier disclosures.
+
+## 2026-09-20 — Homepage collection polish
+
+- Reimagine collection discovery as a large interactive showcase with canonical
+  examples, rarity-colored lighting, and brief selection animations.
+- Let visitors try Raised Glass, Afterglow, and Draftline on an oversized name.
+- Add clearer product benefits, responsive composition, keyboard selection,
+  reduced-motion support, and deferred cosmetic loading.
+- Preserve canonical condition data, cosmetic rendering, and gameplay behavior.
+
 ## 2026-09-20 — Uploaded avatars in account chrome
 
 - The authenticated shared header now uses the user's selected uploaded avatar.
@@ -5028,3 +5197,365 @@ All gestures share the bounded Canvas renderer, material composition, shared
 clock and static reduced-motion fallback. No authority or ownership changes.
 
 Validation and release evidence: [motion collection milestone](milestones/NAME_MOTION_COLLECTION.md).
+
+## 2026-09-22 — Profile Studio configuration write extraction
+
+- Moved publish/reset RPC transport and response parsing behind one Profile
+  Studio service while preserving the existing server contract.
+- Kept draft validation, account race checks, and local profile updates in the
+  Studio adapter; stale accounts are rechecked before RPC dispatch.
+- No schema changes. Required validation passes, and the dashboard route stays
+  within its existing JavaScript budget.
+
+## 2026-09-22 — Roll result presentation extraction
+
+- Moved the result breakdown's base-score display calculation and canonical
+  badge ordering into the existing Roll presentation module.
+- Preserved the server-confirmed score, contributor metadata, badge point
+  source, and roll lifecycle behavior. No schema or gameplay changes.
+
+## 2026-09-22 — Shared dynamic-color contrast
+
+- Centralized the Roll and Progression text-ink calculation with the existing
+  color threshold and fallback, preserving both screens' rendered contrast.
+- Added tests for threshold edges, invalid colors, and both component consumers.
+
+## 2026-09-22 — Roll image share dialog extraction
+
+- Moved the Roll image preview, keyboard/focus handling, scroll lock, and
+  clipboard copy into a focused component loaded on demand.
+- Kept the existing share buttons and canonical share-card output; stale Roll
+  results are ignored when account or request state changes.
+- Added coverage for the component boundary, invalidation, and dialog keyboard
+  behavior. Required validation passes with 660 tests.
+
+## 2026-09-22 — Profile Studio settings load-state extraction
+
+- Moved accepted profile-context reconciliation into a directly tested helper
+  while keeping request/account guards and Svelte state updates in the Studio
+  adapter.
+- Kept unavailable configuration read-only, preserved same-profile drafts, and
+  prevented a previous account's draft from entering a new account context.
+- Loaded the small resolver alongside the context request to preserve route
+  budgets. No schema, route, or authority changes. Required validation passes
+  with 665 tests; dashboard route JavaScript is 541.94/542 kB.
+
+## 2026-09-22 — Shared progression focus selection
+
+- Centralized focus-goal selection and objective/unlocked predicates used by
+  the profile progression story and `/progression`.
+- Preserved Ritual, Rank, and objective priority, authored Discovery-objective
+  overrides, and historical unlock timestamps. No gameplay or reward changes.
+- Added direct compatibility tests; required validation passes with 669 tests.
+
+## 2026-09-22 — Profile Portfolio scroll controller
+
+- Moved Portfolio page tracking and wheel/overflow navigation into a tested
+  controller that loads only for the Portfolio layout.
+- Preserved native scroll snap, gesture filtering, reduced-motion behavior,
+  and page navigation. Required validation passes with 672 tests.
+
+## 2026-09-22 — Profile expression action boundary
+
+- Moved media-library reads and expression selection/save RPC transport into
+  the Profile Studio expression action module.
+- Kept stale-request handling, preview state, and user feedback in the editor;
+  preserved the existing owner query and server-authoritative RPC contracts.
+- Added direct action tests. Required validation passes with 676 tests; route
+  performance budgets pass.
+
+## 2026-09-22 — Roll attempt orchestration
+
+- Moved request, guest persistence, reveal, confirmed-result, refresh, and stale
+  ordering into a directly tested Roll controller.
+- Preserved guest results before interruptible reveal, failed-reroll recovery,
+  and authenticated account refresh after the confirmed result is applied.
+- Kept eligibility and roll authority on their existing client/server
+  boundaries. Required validation passes with 682 tests.
+
+## 2026-09-22 — Profile Expression image lifecycle
+
+- Consolidated avatar/background upload, preview cleanup, and removal while
+  preserving per-kind feedback and legacy profile-path behavior.
+- Added staged-asset cleanup when server selection fails. Required validation
+  passes with 684 tests; route performance budgets pass.
+
+## 2026-09-22 — Profile Studio shared write lifecycle
+
+- Unified publish/reset stale-response handling and save-lock cleanup while
+  preserving publish validation, identity synchronization, and reset semantics.
+- Required validation passes with 685 tests; dashboard route JavaScript is
+  540.76/542 kB.
+
+## 2026-09-22 — App route state projection
+
+- Separated parsed URL state projection from App browser and data-loading
+  effects while preserving profile, auth, alias, challenge, and tab behavior.
+- Required validation passes with 691 tests; route performance budgets pass.
+
+## 2026-09-22 — Shared progression node presentation
+
+- Unified progression node metrics, completion labels, and goal pace copy
+  across the profile story and dedicated Progression page.
+- Required validation passes with 693 tests; progression route budgets pass.
+
+## 2026-09-22 — Profile Shell preview projection
+
+- Moved the Studio preview profile and related empty progression/social state
+  into a tested projection while retaining shell-owned invalidation and state
+  updates.
+- Kept staged configuration outside the remount key. Required validation passes
+  with 711 tests; route budgets pass.
+
+## 2026-09-22 — Shared App route initialization
+
+- Reused the tested route-state projection for the first render and mounted
+  navigation while leaving browser and asynchronous effects in `App.svelte`.
+- Preserved initial lazy-route selection, alias/challenge loading, and stale
+guards. Required validation passes with 711 tests.
+
+## 2026-09-22 — Roll reveal stage component
+
+- Extracted the rolling-stage view and its stage-specific responsive and
+  reduced-motion styles into `RollRevealStage.svelte`.
+- Preserved accessible reveal states, the parent-owned condition-list scroll
+  callback, and the existing skip handler. Required validation passes with
+  714 tests and the Roll reliability browser smoke; route budgets pass.
+
+## 2026-09-22 — Roll result rewards component
+
+- Extracted the existing wallet-bonus and achievement sections into
+  `RollResultRewards.svelte` using canonical badge metadata.
+- Preserved the non-dedicated guard, empty grid wrapper, row labels and order,
+  and mobile styling. Required validation passes with 716 tests and the Roll
+  reliability browser smoke; route budgets pass.
+
+## 2026-09-22 — Profile content draft projection
+
+- Extracted structured content normalization and bounded typed-text retention
+  into a directly tested Profile Studio helper.
+- Kept editor state and events local; preserved incomplete URL typing while
+  public projection rejects invalid URLs. Required checks pass with 719 tests.
+
+## 2026-09-22 — Profile Expression audio selection lifecycle
+
+- Moved audio upload, promotion, selection, and failed-selection cleanup into
+  the tested Profile Studio media action boundary.
+- Kept audio preview and feedback in the editor. Required checks pass with 722
+  tests; route budgets pass.
+
+## 2026-09-22 — App browser navigation adapter
+
+- Moved SPA link handling, cancelable history navigation, popstate, and browser
+  listener lifecycle into a directly tested route navigation adapter.
+- Kept route state and canonical synchronization in App. Required checks pass
+  with 728 tests; the dashboard route remains within its JavaScript budget. No
+  schema or RPC changes.
+
+## 2026-09-22 — Progression journey model extraction
+
+- Extracted the shared rank, Ritual, and Discovery lane projection and summary
+  counters into a directly tested pure helper.
+- Preserved both progression render modes, state precedence, and server-owned
+  progression data. Required checks pass with 733 tests; no schema or RPC
+  changes.
+
+## 2026-09-22 — Roll result actions component
+
+- Extracted the dedicated Roll actions, optional acquisition actions, and
+  embedded post-score toolbar into `RollResultActions.svelte`.
+- Preserved parent-owned auth/reroll state and handlers, existing placements,
+  browser selectors, and responsive styling. Required checks pass with 737
+  tests; the Roll reliability smoke passes. No schema or RPC changes.
+
+## 2026-09-22 — App route URL synchronization
+
+- Extracted reactive URL selection into a pure route helper while keeping
+  browser history effects in `App.svelte`.
+- Preserved Stripe checkout and cancellation query state through route sync,
+  including trailing-slash return paths. Explicit Pricing navigation remains
+  `/pricing`.
+- Required checks pass with 742 tests; dashboard JavaScript is
+  541.95/542.00 kB. No schema or RPC changes.
+## 2026-09-22 — Profile Studio full-context refresh projection
+
+Moved accepted full-context refresh reconciliation into the tested lazy
+settings load-state module. Kept fetches, freshness checks, loading, retries,
+and promise cleanup in `ProfileSettings.svelte`. Same-profile staged
+configuration and dirty identity edits survive refresh; failed reads stay
+retryable. Required checks pass with 753 tests and dashboard JavaScript at
+541.94/542.00 kB. Catalog drift used the local seed because remote Supabase
+credentials were unavailable. No schema or RPC changes. See
+[`milestones/PROFILE_STUDIO_FULL_CONTEXT_REFRESH.md`](milestones/PROFILE_STUDIO_FULL_CONTEXT_REFRESH.md).
+## 2026-09-22 — Daily Roll initial-state coordinator
+
+Moved initial snapshot sequencing for authenticated and guest accounts into
+`rollInitialState.js`. `Game.svelte` retains request/account/day identity,
+Svelte stores, result presentation, event dispatch, and error text. Existing
+snapshot loaders and the authenticated daily-roll RPC remain unchanged.
+Required checks pass with 762 tests and dashboard JavaScript at
+541.94/542.00 kB. Catalog drift used the local seed because remote Supabase
+credentials were unavailable. No schema or RPC changes. See
+[`milestones/ROLL_INITIAL_STATE_COORDINATOR.md`](milestones/ROLL_INITIAL_STATE_COORDINATOR.md).
+
+## 2026-09-23 — App challenge lifecycle extraction
+
+Split challenge creation and lookup transport and load lookup/result lifecycle
+code only when an explicit challenge route is entered. Kept the loading
+placeholder, import-generation guard and failure feedback, synchronous
+dismissal URL cleanup, banner, and navigation order in the route shell. Added
+direct tests for transport payloads, result mapping, stale requests, and URL
+cleanup. Required checks pass with 769 tests; dashboard JavaScript is
+541.53/542.00 kB. No schema or RPC changes. See
+[`milestones/APP_CHALLENGE_LIFECYCLE.md`](milestones/APP_CHALLENGE_LIFECYCLE.md).
+
+## 2026-09-23 — App profile alias lifecycle extraction
+
+Moved alias lookup and result projection behind a dynamic import for explicit
+alias routes. Preserved immediate loading, stale-route protection, canonical
+`replaceState`, query/hash values, and existing not-found behavior. Required
+checks pass with 776 tests; dashboard JavaScript is 540.56/542.00 kB. No schema
+or RPC changes. See
+[`milestones/APP_PROFILE_ALIAS_LIFECYCLE.md`](milestones/APP_PROFILE_ALIAS_LIFECYCLE.md).
+
+## 2026-09-23 — Profile Studio navigation controller
+
+Extracted browser hash/history listeners and dirty-navigation guards into a
+directly tested controller, supplied with live Studio state through injected
+callbacks. Preserved legacy hashes, dirty prompt targets, and section-owned
+side effects. Required checks pass with 784 tests; dashboard JavaScript is
+540.94/542.00 kB. No schema or RPC changes. See
+[`milestones/PROFILE_STUDIO_NAVIGATION_CONTROLLER.md`](milestones/PROFILE_STUDIO_NAVIGATION_CONTROLLER.md).
+
+## 2026-09-23 — Roll text-share lifecycle
+
+Extracted result share text composition, authenticated challenge/fallback
+handling, analytics, clipboard outcomes, and stale-result checks into a tested
+helper. `Game.svelte` keeps the click-time snapshot and browser/application
+adapters. Added protection against an earlier copy timer clearing newer
+feedback. Required checks pass with 791 tests; dashboard JavaScript is
+540.94/542.00 kB. No schema or RPC changes. See
+[`milestones/ROLL_TEXT_SHARE_LIFECYCLE.md`](milestones/ROLL_TEXT_SHARE_LIFECYCLE.md).
+
+## 2026-09-23 — Legacy Profile Rivals read lifecycle
+
+Moved the legacy Profile's owner-only Rivals query into a directly tested
+lifecycle that drops results after the followed-user or profile scope changes
+and on component teardown. Preserved the current leaderboard fields, date and
+follow filters, ordering, error message, and empty-data fallback. Required
+validation passes with 799 tests; dashboard JavaScript is 540.94/542.00 kB.
+No schema, RPC, or route changes. See
+[`milestones/PROFILE_RIVAL_READ_LIFECYCLE.md`](milestones/PROFILE_RIVAL_READ_LIFECYCLE.md).
+
+## 2026-09-23 — Roll image clipboard lifecycle
+
+Moved confirmed-image canvas, PNG blob, and clipboard sequencing into a tested
+helper. Stale success and rejection no longer affect current copy feedback or
+show errors for a replacement result; older timers cannot clear newer
+feedback. Required validation passes with 807 tests; dashboard JavaScript is
+540.94/542.00 kB. No route, schema, RPC, or gameplay authority changes. See
+[`milestones/ROLL_IMAGE_CLIPBOARD_LIFECYCLE.md`](milestones/ROLL_IMAGE_CLIPBOARD_LIFECYCLE.md).
+
+## 2026-09-23 — App challenge banner component
+
+Moved the challenge prompt and responsive styles into a focused component.
+App retains the route gate, challenge lifecycle, and URL cleanup. Added
+coverage for loading/error/ready states, score/color accessibility, dismissal,
+and mobile layout. Required validation passes with 812 tests; route budgets
+pass at 277.22/300 kB initial JavaScript and 541.17/542 kB dashboard
+JavaScript. Aggregate catalog overages remain advisory. No schema or RPC
+changes. See
+[`milestones/APP_CHALLENGE_BANNER_COMPONENT.md`](milestones/APP_CHALLENGE_BANNER_COMPONENT.md).
+
+## 2026-09-23 — Roll image-copy attempt freshness
+
+Added a freshness generation per image-copy attempt. An older clipboard
+rejection can no longer override a newer success for the same roll, and
+pending attempts are invalidated when the dialog is reopened, closed, or
+destroyed. Added coverage for both stale success and rejection. Required
+validation passes with 815 tests; initial JavaScript is
+277.22/300 kB and dashboard JavaScript is 541.17/542 kB. Aggregate catalog
+overages remain advisory. No schema or RPC changes. See
+[`milestones/ROLL_IMAGE_CLIPBOARD_LIFECYCLE.md`](milestones/ROLL_IMAGE_CLIPBOARD_LIFECYCLE.md).
+
+## 2026-09-23 — Roll text-share attempt freshness
+
+Added a per-attempt ID to the existing roll and account freshness checks. An
+older text-share attempt can no longer show a challenge warning or apply
+clipboard feedback after a newer same-roll share completes. Required
+validation passes with 816 tests; initial JavaScript is 277.22/300 kB and
+dashboard JavaScript is 541.17/542 kB. Aggregate catalog overages remain
+advisory. No schema or RPC changes. See
+[`milestones/ROLL_TEXT_SHARE_ATTEMPT_FRESHNESS.md`](milestones/ROLL_TEXT_SHARE_ATTEMPT_FRESHNESS.md).
+
+## 2026-09-23 — Legacy Profile context-read lifecycle
+
+Profile reset and teardown now invalidate an in-flight context read, so a late
+response cannot restore stale profile, score, or achievement data. Added a
+deferred-read regression test while preserving the existing Rivals cleanup.
+Required validation passes with 817 tests; route budgets pass at
+277.22/300 kB initial JavaScript and 541.17/542 kB dashboard JavaScript.
+Aggregate catalog overages remain advisory. No schema or RPC changes. See
+[`milestones/PROFILE_CONTEXT_READ_LIFECYCLE.md`](milestones/PROFILE_CONTEXT_READ_LIFECYCLE.md).
+
+## 2026-09-23 — Profile Expression preview teardown
+
+Late image, background, or audio preparation now skips temporary preview URL
+creation after the editor unmounts, closing a Blob URL leak while preserving
+the current preview behavior during editing. Added active and deferred-after-
+teardown regression coverage. Required validation passes with 820 tests; route
+budgets pass at 277.22/300 kB initial JavaScript and 541.17/542 kB dashboard
+JavaScript. Aggregate catalog overages remain advisory. No schema or RPC
+changes. See
+[`milestones/PROFILE_EXPRESSION_PREVIEW_TEARDOWN.md`](milestones/PROFILE_EXPRESSION_PREVIEW_TEARDOWN.md).
+
+## 2026-09-23 — Social follow action lifecycle
+
+An in-flight follow response can no longer update a different account's
+Rivals state or display stale feedback after account state is cleared.
+Rejected RPC transports now return a recoverable failure, and Profile and
+Leaderboard loading locks are released in `finally`. Required validation
+passes with 827 tests; route budgets pass at 277.57/300 kB initial JavaScript
+and 541.53/542 kB dashboard JavaScript. Aggregate catalog overages remain
+advisory. No schema or RPC changes. See
+[`milestones/SOCIAL_FOLLOW_LIFECYCLE.md`](milestones/SOCIAL_FOLLOW_LIFECYCLE.md).
+
+## 2026-09-23 — App challenge lookup rejection recovery
+
+Challenge lookup transport rejection now projects an unavailable state and
+stops the loading indicator. Stale rejected lookups cannot replace the current
+challenge. Required validation passes with 829 tests; route budgets pass at
+277.57/300 kB initial JavaScript and 541.53/542 kB dashboard JavaScript.
+Aggregate catalog overages remain advisory. No schema or RPC changes. See
+[`milestones/APP_CHALLENGE_REJECTION_RECOVERY.md`](milestones/APP_CHALLENGE_REJECTION_RECOVERY.md).
+
+## 2026-09-23 — Profile Social RPC rejection recovery
+
+Social RPC rejections now return through the existing error handling so action,
+sort, report, and settings loading states settle cleanly. Successful and
+resolved-error responses keep their current shape. Required validation passes
+with 831 tests. No schema changes. See
+[`milestones/PROFILE_SOCIAL_RPC_REJECTION_RECOVERY.md`](milestones/PROFILE_SOCIAL_RPC_REJECTION_RECOVERY.md).
+
+## 2026-09-23 — Roll reveal failure recovery
+
+A rejected reveal now settles on the already-confirmed server result, reports
+the skipped animation, refreshes account state, and releases the roll locks.
+Stale failures remain ignored. Required validation passes with 834 tests. No
+schema changes. See
+[`milestones/ROLL_REVEAL_FAILURE_RECOVERY.md`](milestones/ROLL_REVEAL_FAILURE_RECOVERY.md).
+
+## 2026-09-24 — Codebase security and reliability audit
+
+Media validation now reads encoded dimensions and frames for image, ANI,
+H.264, and VP8/VP9 uploads. ANI DIB/PNG frame payloads are checked, nested
+APNG is rejected, and MP4 timing validation includes absolute presentation
+timestamps and a bounded edit-list contract. Public R2 references require the
+current validation policy; public profile projections omit legacy storage
+paths, while owner projections retain them for recovery. Existing assets can be
+rechecked or deleted from Profile Studio, while assets without a stored
+SHA-256 require re-upload. Account changes invalidate late media deletion
+effects, and the QA inventory grant now requires staff status. The full
+required validation suite passes with 885 tests. Production media state was
+not accessible for impact measurement. See
+[`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).

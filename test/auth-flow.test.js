@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [auth, authPage] = await Promise.all([
+const [auth, authPage, turnstileLifecycle] = await Promise.all([
   readFile(new URL('../src/lib/Auth.svelte', import.meta.url), 'utf8'),
-  readFile(new URL('../src/lib/AuthPage.svelte', import.meta.url), 'utf8')
+  readFile(new URL('../src/lib/AuthPage.svelte', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/auth/turnstileLifecycle.js', import.meta.url), 'utf8')
 ]);
 
 test('staged signup keeps the username check and account fields in one auth flow', () => {
@@ -24,11 +25,15 @@ test('staged signup keeps the username check and account fields in one auth flow
 
 test('Turnstile remains required for non-local auth submissions', () => {
   assert.match(auth, /https:\/\/challenges\.cloudflare\.com\/turnstile\/v0\/api\.js/);
-  assert.match(auth, /window\.turnstile\.render/);
+  assert.match(auth, /createTurnstileLifecycle/);
+  assert.match(turnstileLifecycle, /api\.render/);
+  assert.match(turnstileLifecycle, /api\.reset/);
+  assert.match(turnstileLifecycle, /api\.remove/);
   assert.match(auth, /if \(!localDevelopment && !token\)/);
   assert.match(auth, /captchaToken: token/);
   assert.match(auth, /!isLocalDevelopment\(\)/);
   assert.match(auth, /removeTurnstile/);
+  assert.doesNotMatch(auth, /window\.turnstile/);
 });
 
 test('auth completion defaults to the homepage while preserving safe handoffs', () => {

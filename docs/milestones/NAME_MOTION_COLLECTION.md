@@ -1,5 +1,33 @@
 # Authored name motion collection — 2026-09-22
 
+## User feedback revision — 2026-09-22
+
+Browser review found the collection gestures too faint and the repeated letter
+waving/jiggling unmotivated. Re-authored the twenty collection effects around a
+steady name silhouette. Each now uses a larger, unmistakably animated motif
+and a related light or color pass clipped into the existing material. There is
+no per-glyph translation, rotation, or scaling in this collection.
+
+Fuzzy, Raster Signal, Star Companions, Heart Pop, and Scramble keep their
+existing renderers. The collection IDs, labels, durations, material catalog,
+shared animation clock, static/reduced-motion compositor, and Hero Roll remain
+unchanged. This follow-up changes no catalog rows, database state, ownership,
+profile data, or account behavior.
+
+The updated browser smoke checks that the motifs produce a visible pixel change
+at desktop size, preserve name coverage at desktop and compact sizes, remain
+deterministic, and resolve to the same material under reduced motion. Visual
+captures are in `/tmp/chromadie-name-motion-final`. It passed 4,592 sampled
+frames with no failures, a minimum 1,208 changed pixels, and zero name-coverage
+loss. Build, Svelte check, ESLint, all 633 tests, links, CSP, performance,
+username/balance/catalog drift, 5,000-sample scoring parity, and database
+security checks passed. This follow-up changes no schema, so reset and schema
+lint were not applicable.
+
+The scope, acceptance, and release notes below document the original collection
+launch; this feedback follow-up is renderer-only and makes no catalog or remote
+database changes.
+
 ## Scope and plan
 
 Preserve Fuzzy, Heart Pop, Raster Signal, Scramble and Star Companions. Replace

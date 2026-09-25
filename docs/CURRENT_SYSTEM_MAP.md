@@ -26,12 +26,13 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 
 | URL / input | Client interpretation | Primary owner | Server / metadata behavior | Access notes |
 | --- | --- | --- | --- | --- |
-| `/` | `view = home` | `App.svelte` → lazy `HomePage.svelte` | `functions/index.js` serves homepage metadata | Public landing page; signed-in users receive an owner-profile CTA |
-| `/?view=game` | `view = game` | `App.svelte` → `Game.svelte` | Compatibility shell metadata remains canonicalized to `/` | Guest and authenticated daily roll |
+| `/` | `view = home` | `App.svelte` → lazy `HomePage.svelte` → `RollPage.svelte` → `Game.svelte` | `functions/index.js` serves homepage metadata | Public daily-roll entry with Today’s Top Roller and contextual post-roll actions |
+| `/roll` | `routeMode = not-found` | No Roll route or function | SPA fallback renders the not-found state | Prelaunch has no `/roll` compatibility alias |
+| `/?view=game` | Resolves to `view = home` | `App.svelte` → lazy `HomePage.svelte` | Root metadata stays canonical at `/` | The homepage is the only daily-roll entry |
 | `/shop` | `view = profile-settings` after one-way alias normalization | `App.svelte` → Profile Studio Customize | Old bookmarks are redirected to `/profile/settings#customize-appearance`; no Shop surface or purchase UI is mounted | Authenticated Profile Studio route; existing auth guard remains authoritative |
 | `/leaderboard` or `/?view=leaderboard` | `view = leaderboard` | `Leaderboard.svelte` | `functions/leaderboard.js` serves crawler metadata for `/leaderboard` | Public Today and This month roll rankings |
 | `/leaderboard?tab=today|monthly` | Leaderboard period | `Leaderboard.svelte` | Tab is client state; route accepts only the two active values | Anonymous/authenticated public projection |
-| `/profile` or `/?view=profile` | Owner profile when authenticated; otherwise guest lock | `ProfileShell.svelte` by default, with a static canonical roll summary; `Profile.svelte` with `legacy=1` | Client metadata is profile-aware; private owner form is `noindex` when no public username is selected | Interactive rolling remains on `/roll` |
+| `/profile` or `/?view=profile` | Owner profile when authenticated; otherwise guest lock | `ProfileShell.svelte` by default, with a static canonical roll summary; `Profile.svelte` with `legacy=1` | Client metadata is profile-aware; private owner form is `noindex` when no public username is selected | Interactive rolling remains on `/` |
 | `/profile/settings` or `/shop` | `view = profile-settings` after one-way alias normalization | `App.svelte` → `ProfileSettings.svelte` / Profile Studio | `/shop` redirects to `/profile/settings#customize-appearance`; the authenticated route remains `noindex` | Authenticated owner expression/editing surface; legacy progression hashes redirect to `/progression` |
 | `/progression` | `view = progression` | `App.svelte` → lazy `ProgressionPage.svelte` | Client metadata is `Progression \| ChromaDie`, canonical `/progression`, and `noindex,follow` | Authenticated owner progression destination; signed-out visitors receive an explanatory state and safe login/roll links |
 | `/u/<username>` | `view = profile`, `selectedProfileUsername` | `App.svelte` → `ProfileShell.svelte` | `functions/u/[[username]].js` validates the username, fetches minimal public metadata, sets OG/JSON-LD/noscript, and returns 404 for missing profiles | Public profile surface; only approved fields are used |
@@ -303,8 +304,8 @@ Svelte text interpolation, with links rejected at the database boundary.
 ## Roll transaction flow
 
 1. `authInitialized` gates the roll. The account mode is either authenticated (`session.user.id`) or guest; an absent session is never treated as an authenticated account.
-2. `Game.svelte` on `/roll` restores state once per account key. Authenticated restoration uses `get_my_daily_roll`; guest restoration validates `localStorage['chromadie-roll']` for the current UTC date.
-3. The dedicated Roll flow calls `roll_die({ p_is_reroll })` through `rollService.js`. The database wrapper/implementation owns eligibility, row locking, UTC daily identity, reroll shard consumption, score calculation, rewards, achievements, best-roll updates, and stored presentation.
+2. `Game.svelte` inside the homepage Roll composition restores state once per account key. Authenticated restoration uses `get_my_daily_roll`; guest restoration validates `localStorage['chromadie-roll']` for the current UTC date.
+3. The homepage Roll flow calls `roll_die({ p_is_reroll })` through `rollService.js`. The database wrapper/implementation owns eligibility, row locking, UTC daily identity, reroll shard consumption, score calculation, rewards, achievements, best-roll updates, and stored presentation.
 4. `calculate_roll_v2` and the final migration persist the authoritative `condition_ids`, `contributors`, `traits`, and `identity` alongside the score. Rerolls retain the server's transaction semantics and do not increment the normal daily total in the same way as a first roll.
 5. The client animates only the already returned result. `rollState.js` normalizes server aliases/bounds and uses the authoritative badge ids; it does not calculate score, rarity, rewards, or eligibility.
 6. After presentation, guest data is saved locally in `Game.svelte`. Authenticated data triggers guarded profile, inventory, and wallet refreshes. Profiles consume the refreshed canonical result on their next bounded load; stale responses are discarded if the session/roll request changed.
@@ -394,7 +395,7 @@ The Phase 1 prototype is development/internal-preview only. Normal production bu
 - The latest audit migration is additive/reconciling existing data and has an intentional pending working-tree comment change. Phase 0 introduced no schema migration and did not alter production data semantics.
 - The Phase 1 prototype remains fixture-only. The live Phase 2 shell is a separate renderer backed by the shared profile contract; it must not import fixture data or bypass the public/owner query split.
 - The current schema has no public `bio` or avatar field. Phase 2/4 uses a safe monogram plus the existing logo mark and does not invent profile content. Adding a configurable bio/avatar belongs to a later milestone and requires a separate migration/privacy review.
-- `/roll` is the sole full interactive roll surface. Profiles render only the bounded canonical result/progression presentation and must never acquire roll authority.
+- `/` is the sole unchallenged daily-roll surface. `/c/<id>` uses the shared game presentation for challenge context; profiles render only the bounded canonical result/progression presentation and must never acquire roll authority.
 - Profile configuration has two intentionally different projections: owner reads include a private draft, while public reads expose only the published JSON. A new configuration field must be added to the server normalizer, the client safe normalizer, editor controls, and security assertions together.
 - `profile_configurations` is a new protected table with no browser table grants. The RPCs are security-definer boundaries; changing `search_path`, grants, default publication, or the profile-delete cascade can expose drafts or create an unpublishable account state.
 - The editor's preview is local and temporary. Treating it as persisted state, rendering links without the HTTPS/label normalizer, or making module visibility client-authoritative would create XSS, phishing, or public/private parity hazards.
@@ -439,6 +440,6 @@ The Phase 1 prototype is development/internal-preview only. Normal production bu
 
 ## Milestone boundary
 
-Phases 0–3 historically introduced the profile shell and an integrated owner-roll experiment. That experiment is superseded: the launch system retains the shared secure request contracts but owns all interactive rolling in `Game.svelte` on `/roll`.
+Phases 0–3 historically introduced the profile shell and an integrated owner-roll experiment. That experiment is superseded: the launch system retains the shared secure request contracts but owns the daily Roll in `Game.svelte` mounted on `/`.
 
 Historical phase reports remain the record of their implementation state. The current launch boundary supersedes their integrated-roll doctrine, gates the prototype outside normal production, and preserves every server-authoritative roll, profile, progression, social, renderer, and compatibility contract described above.

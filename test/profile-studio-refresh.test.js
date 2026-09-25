@@ -5,10 +5,10 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('token refresh cannot remount Profile Studio or clear a hydrated account', async () => {
-  const [stores, settings, app, outlet, transport] = await Promise.all([
+  const [stores, settings, routeTarget, outlet, transport] = await Promise.all([
     read('src/lib/stores.js'),
     read('src/lib/ProfileSettings.svelte'),
-    read('src/App.svelte'),
+    read('src/lib/routeTarget.js'),
     read('src/lib/RouteOutlet.svelte'),
     read('src/lib/supabaseTransport.js')
   ]);
@@ -19,7 +19,7 @@ test('token refresh cannot remount Profile Studio or clear a hydrated account', 
   assert.match(stores, /if \(!sameAuthenticatedAccount \|\| !currentSession\) \{[\s\S]*clearUserState\(\)/);
   assert.doesNotMatch(stores, /session\.set\(currentSession\)\s*\n\s*clearUserState\(\)/);
 
-  assert.match(app, /componentKey: 'profile-settings-loading'/);
+  assert.match(routeTarget, /componentKey: 'profile-settings-loading'/);
   assert.match(outlet, /\{#key activeKey\}/);
 
   assert.match(settings, /const settingsLoadAccounts = new SvelteSet\(\)/);

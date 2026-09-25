@@ -1,7 +1,9 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy } from 'svelte';
   import Module from './foundation/Module.svelte';
-  import { supabase } from './supabase';
+import { supabase } from './supabase';
+import { rpcWithAccessToken } from './rpcWithAccessToken.js';
+  import { profile, session } from './stores.js';
   import {
     createEmptyProfileInsights,
     createProfileInsightsCsv,
@@ -22,6 +24,10 @@
   let notice = '';
   let saveError = '';
   let preferencesLoaded = false;
+  let activeOwnerId = '';
+  let ownerGeneration = 0;
+  let requestId = 0;
+  let componentActive = true;
   const dispatch = createEventDispatcher();
 
   $: dailyRows = insights.daily.slice(-insights.windowDays);
@@ -39,15 +45,54 @@
   $: links = configValue(configuration).published?.links || configValue(configuration).links || [];
   $: projects = configValue(configuration).published?.content?.projects || configValue(configuration).content?.projects || [];
 
-  onMount(() => {
+  $: syncOwner($session?.user?.id || $profile?.id || '');
+
+  function syncOwner(ownerId) {
+    if (ownerId === activeOwnerId) return;
+    activeOwnerId = ownerId;
+    ownerGeneration += 1;
+    requestId += 1;
+    insights = createEmptyProfileInsights();
+    enabledDraft = false;
     publicViewsVisibleDraft = socialSettings?.profileViewsVisible !== false;
-    void loadInsights();
+    preferencesLoaded = false;
+    saving = false;
+    error = '';
+    notice = '';
+    saveError = '';
+    loading = Boolean(ownerId);
+    if (ownerId) void loadInsights(ownerId, ownerGeneration);
+  }
+
+  function isCurrentOwner(ownerId, generation, request = requestId) {
+    return componentActive
+      && ownerId === activeOwnerId
+      && generation === ownerGeneration
+      && request === requestId
+      && ownerId === $session?.user?.id;
+  }
+
+  onDestroy(() => {
+    componentActive = false;
+    ownerGeneration += 1;
+    requestId += 1;
   });
 
-  async function loadInsights() {
+  async function loadInsights(ownerId = activeOwnerId, generation = ownerGeneration) {
+    if (!ownerId) return;
+    const request = ++requestId;
     loading = true;
     error = '';
-    const result = await Promise.resolve(supabase.rpc('get_my_profile_insights', { p_days: windowDays })).catch(error => ({ error }));
+    let result;
+    try {
+      const authResult = await supabase.auth.getSession();
+      const accessToken = authResult?.data?.session?.access_token || '';
+      if (!accessToken || authResult?.data?.session?.user?.id !== ownerId || !isCurrentOwner(ownerId, generation, request)) return;
+      result = await rpcWithAccessToken(supabase, 'get_my_profile_insights', { p_days: windowDays }, accessToken);
+    } catch (loadError) {
+      result = { error: loadError };
+    }
+    if (!isCurrentOwner(ownerId, generation, request)) return;
     if (result.error || result.data?.success === false) {
       error = getProfileInsightsError(result);
       loading = false;
@@ -65,14 +110,27 @@
     await loadInsights();
   }
 
+  function retryLoadInsights() {
+    void loadInsights(activeOwnerId, ownerGeneration);
+  }
+
   async function savePreference() {
     if (saving || loading || !hasUnsavedPreference) return;
+    const ownerId = activeOwnerId;
+    const generation = ownerGeneration;
+    if (!ownerId || ownerId !== $session?.user?.id) return;
+    const request = ++requestId;
+    const isCurrent = () => isCurrentOwner(ownerId, generation, request);
     saving = true;
     saveError = '';
     notice = '';
     try {
+      const authResult = await supabase.auth.getSession();
+      const accessToken = authResult?.data?.session?.access_token || '';
+      if (!accessToken || authResult?.data?.session?.user?.id !== ownerId || !isCurrent()) return;
       if (enabledDraft !== insights.enabled) {
-        const result = await supabase.rpc('update_my_profile_insights_settings', { p_enabled: enabledDraft });
+        const result = await rpcWithAccessToken(supabase, 'update_my_profile_insights_settings', { p_enabled: enabledDraft }, accessToken);
+        if (!isCurrent()) return;
         if (result.error || result.data?.success === false) {
           saveError = getProfileInsightsError(result, 'That profile-insights preference could not be saved.');
           return;
@@ -82,19 +140,22 @@
         enabledDraft = insights.enabled;
       }
       if (publicViewsVisibleDraft !== (socialSettings?.profileViewsVisible !== false)) {
-        const result = await supabase.rpc('update_my_profile_view_visibility', { p_visible: publicViewsVisibleDraft });
+        if (!isCurrent()) return;
+        const result = await rpcWithAccessToken(supabase, 'update_my_profile_view_visibility', { p_visible: publicViewsVisibleDraft }, accessToken);
+        if (!isCurrent()) return;
         if (result.error || result.data?.success === false) {
           saveError = getProfileInsightsError(result, 'The public view-count preference could not be saved.');
           return;
         }
         socialSettings = result.data?.settings || result.data;
       }
+      if (!isCurrent()) return;
       dispatch('socialchange');
       notice = 'Preferences saved.';
     } catch (error) {
-      saveError = error instanceof Error ? error.message : 'Preferences could not be saved. Try again.';
+      if (isCurrent()) saveError = error instanceof Error ? error.message : 'Preferences could not be saved. Try again.';
     } finally {
-      saving = false;
+      if (isCurrent()) saving = false;
     }
   }
 
@@ -141,7 +202,7 @@
       <div class="profile-insights__state" role="alert">
         <strong>Insights are temporarily unavailable.</strong>
         <p>{error}</p>
-        <button type="button" class="profile-insights__button profile-insights__button--quiet" on:click={loadInsights}>Try again</button>
+        <button type="button" class="profile-insights__button profile-insights__button--quiet" on:click={retryLoadInsights}>Try again</button>
       </div>
     {:else}
       {#if saveError}<p role="alert">{saveError}</p>{/if}

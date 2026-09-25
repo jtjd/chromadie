@@ -41,25 +41,28 @@ test('profile content is bounded, structured, and safe by default', () => {
 });
 
 test('content renderer and editor stay inside the structured public boundary', async () => {
-  const [content, shell, renderModel, settings, registry, migration] = await Promise.all([
+  const [content, shell, renderModel, settings, registry, lazyComponents, migration] = await Promise.all([
     read('src/lib/ProfileContent.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/profileRenderModel.js'),
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
+    read('src/lib/profile-studio/lazyComponents.js'),
     read('supabase/migrations/20260808140000_profile_content_regions.sql')
   ]);
+  const configurationWrites = await read('src/lib/profile-studio/configurationWrites.js');
   assert.match(content, /getVisibleProfileContent/);
   assert.match(content, /rel="noopener noreferrer"/);
   assert.doesNotMatch(content, /innerHTML|iframe|new Function|eval\s*\(/);
   assert.match(shell, /<ProfileContent/);
   assert.match(renderModel, /getVisibleProfileContent/);
   assert.match(registry, /ProfileContentEditor\.svelte/);
-  assert.match(settings, /activeCustomizeTab === 'content'/);
+  assert.match(lazyComponents, /content: Object\.freeze\(\['customize', 'profile-content', 'profile-widgets'\]\)/);
   assert.match(migration, /normalize_profile_content/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content'\)/);
   assert.match(migration, /profile_content_patch/);
-  assert.match(settings, /publish_profile_studio_v2/);
+  assert.match(settings, /await loadConfigurationWriteService\(\)/);
+  assert.match(configurationWrites, /publish_profile_studio_v2/);
 });
 
 test('content renderer omits the default empty About surface', async () => {

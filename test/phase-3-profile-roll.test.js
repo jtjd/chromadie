@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { getPercentileTier } from '../src/lib/rollPresentation.js';
+import { requestRoll } from '../src/lib/rollService.js';
 import {
   clearRerollLock,
   getRerollLockKey,
   hasActiveRerollLock,
-  requestRoll,
   setRerollLock
-} from '../src/lib/rollService.js';
+} from '../src/lib/rollStorage.js';
 
 function createStorage() {
   const values = new Map();
@@ -105,7 +105,7 @@ test('percentile presentation retains the existing rank tiers', () => {
   assert.equal(getPercentileTier(0, 100).text, '💀 Bottom 5% today');
 });
 
-test('the dedicated Roll page is the only interactive roll surface', async () => {
+test('the homepage hosts the interactive daily Roll surface', async () => {
   const profileShell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
   const rollPage = await readFile(new URL('../src/lib/RollPage.svelte', import.meta.url), 'utf8');
   const game = await readFile(new URL('../src/lib/Game.svelte', import.meta.url), 'utf8');

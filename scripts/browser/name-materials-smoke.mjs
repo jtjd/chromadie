@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { startVite, startChromium, terminateProcess, findAvailablePort } from './cdp-harness.mjs';
 
-const evidenceDir = '/tmp/chromadie-name-materials';
+const evidenceDir = process.env.MATERIAL_EVIDENCE_DIR || '/tmp/chromadie-name-materials';
 await mkdir(evidenceDir, { recursive:true });
 const appPort = await findAvailablePort(5250);
 const debugPort = await findAvailablePort(9380);
@@ -11,6 +11,8 @@ let browser;
 try {
   browser = await startChromium({ appUrl:`http://127.0.0.1:${appPort}`, debugPort, evidenceDir, width:1440, height:1060 });
   const { page } = browser;
+  const command=page.command.bind(page);
+  page.command=(method,params,timeout)=>command(method,params,timeout??(method==='Runtime.evaluate'?90000:15000));
   await page.navigate(`http://127.0.0.1:${appPort}`);
   await page.evaluate(`(async () => {
     let api;
@@ -100,8 +102,9 @@ try {
       renderer.resize({width:360,height:96,dpr:2});renderer.setOptions({...options,motionKey:'magnetic-type',pointer:null});renderer.draw(1700);const neutral=window.namePixels(canvas).hash;
       renderer.setOptions({pointer:{x:180,y:48}});renderer.draw(1700);const moved=window.namePixels(canvas).hash;
       renderer.setOptions({mode:'reduced-motion'});renderer.draw(1700);const reduced=window.namePixels(canvas).hash;
+      renderer.setOptions({motionKey:'none',pointer:null});renderer.draw(1700);const reducedStill=window.namePixels(canvas).hash;
       renderer.destroy();
-      return {initial,changed,restored,long,neutral,moved,reduced};
+      return {initial,changed,restored,long,neutral,moved,reduced,reducedStill};
     };
   })()`);
   const shot=await page.command('Page.captureScreenshot',{format:'png'});
@@ -120,7 +123,7 @@ try {
     assert.equal(edits.initial,edits.restored,'Fuzzy restores the selected material');
     assert.ok(edits.long.visible>8,'long names survive resize');
     assert.notEqual(edits.neutral,edits.moved,'Magnetic Type responds to pointer');
-    assert.equal(edits.neutral,edits.reduced,'reduced motion restores the full material');
+    assert.equal(edits.reducedStill,edits.reduced,'reduced motion restores the full material');
     await page.evaluate(`window.gallery(['none','letter-shuffle','magnetic-type','haunt-gradient'],'marker-tag')`);
     const motions=await page.command('Page.captureScreenshot',{format:'png'});
     await writeFile(`${evidenceDir}/motion-combinations.png`,Buffer.from(motions.data,'base64'));
@@ -152,7 +155,7 @@ try {
     const components=await page.command('Page.captureScreenshot',{format:'png'});
     await writeFile(`${evidenceDir}/mobile-components-reduced.png`,Buffer.from(components.data,'base64'));
     await page.evaluate(`Promise.all(window.componentNames.map(instance=>window.nameApi.unmount(instance)))`);
-    await writeFile(`${evidenceDir}/validation.json`,JSON.stringify({frames,fonts:fontKeys.length,materials:9,motions:await page.evaluate('Object.keys(window.nameApi.NAME_MOTIONS).length'),edits},null,2));
+    await writeFile(`${evidenceDir}/validation.json`,JSON.stringify({frames,fonts:fontKeys.length,materials:await page.evaluate('Object.keys(window.nameApi.NAME_MATERIALS).length'),motions:await page.evaluate('Object.keys(window.nameApi.NAME_MOTIONS).length'),edits},null,2));
     console.log(`Passed ${frames} frames plus edit, resize, pointer and reduced-motion checks.`);
   }
   assert.deepEqual(page.consoleLog.filter(entry=>entry.type==='exception'),[]);

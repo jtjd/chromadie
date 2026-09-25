@@ -3,52 +3,21 @@
   export let variant = 'site';
 </script>
 
-<footer class="site-footer" class:site-footer--studio={variant === 'studio'} class:site-footer--home={variant === 'home'} data-site-chrome="footer">
-  {#if variant === 'home'}
-    <div class="site-footer__home-heading">
-      <div class="site-footer__home-identity">
-        <a class="site-footer__home-brand" href="/" aria-label="chm.lol home">
-          <img src="/brand/am-mark-v1.webp" alt="" width="64" height="52" decoding="async" />
-        </a>
-        <div>
-          <strong>chm.lol</strong>
-          <p>A public profile that changes every day.</p>
-        </div>
-      </div>
+<footer class="site-footer" class:site-footer--studio={variant === 'studio'} class:site-footer--home={variant === 'home'} class:site-footer--home-compact={variant === 'home-compact'} data-site-chrome="footer">
+  {#if variant === 'home' || variant === 'home-compact'}
+    <div class="site-footer__identity">
+      <span class="site-footer__name">chm.lol</span>
+      <span class="site-footer__tagline">A public profile that changes every day.</span>
     </div>
 
-    <div class="site-footer__home-grid">
-      <div>
-        <h2>Play</h2>
-        <a href="/roll">Roll today’s color</a>
-        <a href="/how-to-play">How to play</a>
-        <a href="/leaderboard">Leaderboard</a>
-      </div>
-      <div>
-        <h2>Build</h2>
-        <a href={isAuthenticated ? '/profile/settings' : '/signup?next=%2Fprofile%2Fsettings'}>{isAuthenticated ? 'Customize profile' : 'Create a profile'}</a>
-        {#if isAuthenticated}<a href="/progression">Progress</a>{/if}
-        <a href="/pricing">Pricing</a>
-      </div>
-      <div>
-        <h2>Explore</h2>
-        <a href="#profiles">Profile examples</a>
-        <a href="#how">Collections</a>
-        <a href="#community">Community</a>
-      </div>
-      <div>
-        <h2>About</h2>
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-        <a href="mailto:support@chromadie.com">Support</a>
-        <a href="mailto:business@chromadie.com">Business</a>
-      </div>
-    </div>
-
-    <div class="site-footer__home-bottom">
-      <span>© 2026 chm.lol</span>
-      <span>Roll something worth keeping.</span>
-    </div>
+    <nav class="site-footer__nav" aria-label="Footer navigation">
+      <a href="/leaderboard">Leaderboard</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/how-to-play">How to play</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:support@chromadie.com">Support</a>
+    </nav>
   {:else}
     <div class="site-footer__identity">
       {#if variant === 'studio'}
@@ -62,7 +31,7 @@
     </div>
 
     <nav class="site-footer__nav" aria-label="Footer navigation">
-      <a href="/roll">Roll</a>
+      <a href="/">Roll</a>
       <a href="/leaderboard">Leaderboard</a>
       {#if isAuthenticated}<a href="/progression">Progress</a>{/if}
       {#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}
@@ -108,6 +77,15 @@
   }
 
   .site-footer__tagline { color: rgba(245,245,247,.52); }
+
+  .site-footer--home,
+  .site-footer--home-compact {
+    width: min(1160px, calc(100% - 48px));
+    padding-block: 24px 30px;
+  }
+
+  .site-footer--home .site-footer__nav,
+  .site-footer--home-compact .site-footer__nav { gap: 8px 16px; }
 
   .site-footer__nav {
     display: flex;

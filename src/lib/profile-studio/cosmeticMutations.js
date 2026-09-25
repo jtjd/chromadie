@@ -20,14 +20,17 @@ export async function applyCosmeticChanges({
   equippedItems = {},
   getItem = defaultGetItem,
   hasEntitlement = defaultHasEntitlement,
+  isCurrent = () => true,
   rpc,
   refresh
 }) {
   const appliedSlots = [];
   const knownLoadout = { ...(equippedItems || {}) };
   const refreshAuthoritative = async fallback => {
+    if (!isCurrent()) return { ok: false, stale: true, loadout: { ...(fallback || {}) } };
     try {
       const refreshed = await refresh?.();
+      if (!isCurrent()) return { ok: false, stale: true, loadout: { ...(fallback || {}) } };
       if (refreshed?.equipped_cosmetics && typeof refreshed.equipped_cosmetics === 'object') {
         return { ok: true, loadout: { ...refreshed.equipped_cosmetics } };
       }
@@ -40,6 +43,7 @@ export async function applyCosmeticChanges({
   let mutationError = null;
   try {
     for (const slot of changedSlots) {
+      if (!isCurrent()) return { success: false, stale: true, loadout: { ...knownLoadout }, appliedSlots };
       const item = previewLoadout[slot] ? getItem(previewLoadout[slot]) : null;
       if (item && !hasEntitlement(item)) {
         throw new Error(`${item.name} is not unlocked for this profile yet.`);
@@ -48,6 +52,7 @@ export async function applyCosmeticChanges({
         item ? 'equip_item' : 'unequip_item',
         item ? { p_item_key: item.item_key } : { p_slot: slot }
       );
+      if (!isCurrent()) return { success: false, stale: true, loadout: { ...knownLoadout }, appliedSlots };
       if (response?.error || !response?.data?.success) {
         throw new Error(response?.error?.message || response?.data?.error || 'The appearance change could not be saved.');
       }
@@ -60,6 +65,9 @@ export async function applyCosmeticChanges({
   }
 
   const reconciliation = await refreshAuthoritative(knownLoadout);
+  if (reconciliation.stale || !isCurrent()) {
+    return { success: false, stale: true, loadout: reconciliation.loadout, appliedSlots };
+  }
   if (mutationError) {
     return {
       success: false,

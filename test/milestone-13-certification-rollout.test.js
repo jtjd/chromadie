@@ -97,7 +97,7 @@ test('R2 media can be enabled for one UUID without changing unrelated rollout fl
 });
 
 test('M13 client surfaces retain reversible gates and V1 fallbacks', async () => {
-  const [pricing, expression, settings, contract, workspace, shell, renderModel, data, social, env, operations, milestone] = await Promise.all([
+  const [pricing, expression, settings, contract, workspace, shell, renderModel, data, social, env, operations, milestone, previewProjection] = await Promise.all([
     read('src/lib/Pricing.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ProfileSettings.svelte'),
@@ -109,7 +109,8 @@ test('M13 client surfaces retain reversible gates and V1 fallbacks', async () =>
     read('src/lib/ProfileSocial.svelte'),
     read('.env.example'),
     read('docs/operations/M13_ROLLOUT_DASHBOARD.md'),
-    read('docs/milestones/COMPETITOR_PARITY_M13_CERTIFICATION_ROLLOUT.md')
+    read('docs/milestones/COMPETITOR_PARITY_M13_CERTIFICATION_ROLLOUT.md'),
+    read('src/lib/profileShellPreview.js')
   ]);
   assert.match(pricing, /isProfileFeatureEnabled\('commerce'/);
   assert.match(pricing, /Available soon/);
@@ -120,7 +121,9 @@ test('M13 client surfaces retain reversible gates and V1 fallbacks', async () =>
   assert.match(workspace, /socialDepthEnabled={featureFlags\.socialDepth}/);
   assert.match(shell, /isProfileFeatureEnabled\('expandedAnalytics'/);
   assert.match(renderModel, /featureFlags\.richMedia/);
-  assert.match(shell, /resolvedPreviewProfile/);
+  assert.match(shell, /createProfileShellPreviewState/);
+  assert.match(previewProjection, /sourceProfile\.username \|\| 'Chromanaut'/);
+  assert.match(previewProjection, /sourceProfile\.id \|\| 'profile-studio-preview'/);
   assert.match(shell, /socialDepthEnabled={socialDepthEnabled}/);
   assert.match(data, /isProfileFeatureEnabled\('profileConfigurationV2'/);
   assert.match(data, /normalizeProfileConfig\(configResponse\.data/);

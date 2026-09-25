@@ -92,3 +92,39 @@ test('painted surfaces reuse allocation and invalidate all relevant appearance i
   assert.equal(paints,before+1,'font readiness invalidates the fallback face');
   assert.equal(allocations,1);
 });
+
+test('material time is independent of motion and Still keeps the surface alive', () => {
+  const input={text:'Chromadie',materialKey:'glass-emboss',time:2100};
+  const still=getNameFrameModel({...input,motionKey:'none'});
+  const moving=getNameFrameModel({...input,motionKey:'cherry-blossom'});
+  const later=getNameFrameModel({...input,time:4100,motionKey:'none'});
+  assert.equal(still.materialProgress,moving.materialProgress);
+  assert.notEqual(still.materialProgress,later.materialProgress);
+  assert.equal(still.materialProgress,getNameFrameModel({...input,time:14100}).materialProgress);
+  assert.equal(still.materialProgress,getNameFrameModel({...input,time:2101}).materialProgress);
+  for(const mode of ['reduced-motion','static','static-signature','paused']) {
+    assert.equal(getNameFrameModel({...input,mode}).materialProgress,.32);
+    assert.equal(getNameFrameModel({...input,mode,time:9000}).materialProgress,.32);
+  }
+  assert.equal(getNameFrameModel({...input,materialKey:'halo-edge'}).materialProgress,.32);
+  assert.equal(getNameFrameModel({...input,materialKey:'crt-phosphor'}).materialProgress,.32);
+});
+
+test('animated material surfaces repaint in place only when the material frame changes', () => {
+  const {ctx}=recordingContext();
+  let allocations=0,paints=0;
+  ctx.canvas={ownerDocument:{createElement:()=>{
+    allocations++;
+    return {width:1,height:1,getContext:()=>recordingContext().ctx};
+  }}};
+  const paint=()=>paints++;
+  const first=getNameFrameModel({text:'Wi',materialKey:'glass-emboss',time:1000});
+  const surface=getPaintedTextSurface(ctx,first,paint);
+  getPaintedTextSurface(ctx,{...first,progress:.8},paint);
+  assert.equal(paints,1);
+  getPaintedTextSurface(ctx,{...first,materialProgress:.5},paint);
+  assert.equal(paints,2);
+  assert.equal(getPaintedTextSurface(ctx,{...first,materialProgress:.5},paint).canvas,surface.canvas);
+  assert.equal(paints,2);
+  assert.equal(allocations,1);
+});

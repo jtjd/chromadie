@@ -1,8 +1,10 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onDestroy } from 'svelte';
   import { hasChromadiePlus } from './premiumEntitlements.js';
   import ProfileMediaIcon from './ProfileMediaIcon.svelte';
-  import { supabase } from './supabase.js';
+import { supabase } from './supabase.js';
+import { rpcWithAccessToken } from './rpcWithAccessToken.js';
+  import { session } from './stores.js';
   import Module from './foundation/Module.svelte';
   import {
     PROFILE_ANIMATED_CURSOR_MIME,
@@ -15,7 +17,9 @@
   } from './profileRichMedia.js';
   import { prepareProfileAudioFile, processAnimatedAvatarPoster, processProfileRichImage, processProfileShareImage } from './profileMediaProcessing.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { deleteProfileMediaAsset, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
+  import { PROFILE_VIDEO_LIMITS } from './videoContainerBounds.js';
+  import { deleteProfileMediaAsset, getProfileMediaAuthorization, isR2MediaAsset, promoteProfileMediaR2, revalidateProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
+  import { hasProfileMediaRevalidationHash, partitionProfileMediaValidationAssets } from './profileMediaValidation.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
 
   export let profileId = null;
@@ -31,10 +35,12 @@
   const fieldStyle = 'width:100%;min-height:2.3rem;min-width:0;border:1px solid var(--color-line-subtle);border-radius:var(--radius-sm);padding:0 .6rem;background:var(--surface-inset);color:var(--color-ink-strong);font:500 var(--type-small)/1 var(--font-body-stack)';
 
   let assets = [];
+  let unverifiedAssets = [];
   let loading = false;
   let busy = false;
   let status = '';
   let error = '';
+  let assetLibraryError = '';
   let incomingKey = '';
   let richConfig = normalizeRichMediaConfig();
   let audioTracks = [];
@@ -44,16 +50,21 @@
   let audioVolume = 0.75;
   let audioControls = true;
   let loadedAssetKey = '';
+  let assetLoadRequestId = 0;
   let videoInput;
   let animatedAvatarInput;
   let shareImageInput;
   let cursorInput;
   let pointerCursorInput;
   let audioInput;
+  let activeMediaScope = '';
+  let actionGeneration = 0;
+  let editorActive = true;
 
   $: hasAccess = staff || hasChromadiePlus(entitlements);
   $: r2MediaEnabled = isProfileFeatureEnabled('profileMediaR2', { userId: profileId, isStaff: staff });
   $: assetAccessKey = `${profileId || ''}:${hasAccess ? 'rich' : 'free'}`;
+  $: syncMediaScope($session?.user?.id || '', profileId || '');
   // Entitlements can arrive after the lazy Media section mounts. Load the
   // private library when access becomes authoritative, not only on mount.
   $: if (profileId && hasAccess && assetAccessKey !== loadedAssetKey) {
@@ -77,6 +88,44 @@
   $: primaryAudioTrack = audioTracks[0] || null;
   $: primaryAudioAsset = primaryAudioTrack ? assetForPath(primaryAudioTrack.path, primaryAudioTrack.asset_id) : null;
 
+  function syncMediaScope(sessionUserId, targetProfileId) {
+    const nextScope = `${sessionUserId}:${targetProfileId}`;
+    if (nextScope === activeMediaScope) return;
+    activeMediaScope = nextScope;
+    actionGeneration += 1;
+    assetLoadRequestId += 1;
+    busy = false;
+    loading = false;
+    assets = [];
+    unverifiedAssets = [];
+    loadedAssetKey = '';
+    assetLibraryError = '';
+  }
+
+  function beginMediaAction() {
+    const ownerId = $session?.user?.id || '';
+    const generation = ++actionGeneration;
+    return {
+      ownerId,
+      isCurrent: () => Boolean(
+        editorActive
+        && ownerId
+        && ownerId === profileId
+        && ownerId === $session?.user?.id
+        && generation === actionGeneration
+      )
+    };
+  }
+
+  function assertCurrent(action) {
+    if (!action.isCurrent()) throw new Error('The media action was canceled because the active account changed.');
+  }
+
+  onDestroy(() => {
+    editorActive = false;
+    actionGeneration += 1;
+  });
+
   function syncIncoming(next, key) {
     richConfig = next;
     audioShuffle = next.audio_playlist.shuffle;
@@ -95,22 +144,64 @@
 
   async function loadAssets(requestKey = '') {
     if (!profileId || !hasAccess) return false;
+    const requestId = ++assetLoadRequestId;
+    const requestedProfileId = profileId;
+    const requestedSessionId = $session?.user?.id || '';
     if (requestKey) loadedAssetKey = requestKey;
     loading = true;
-    const { data, error: loadError } = await supabase
-      .from('profile_media_assets')
-      .select('id, kind, storage_path, storage_provider, r2_public_key, label, status, delivery_status, ever_public, mime_type, byte_size, duration_ms, width, height, metadata, created_at')
-      .eq('user_id', profileId)
-      .in('kind', PROFILE_RICH_MEDIA_KINDS)
-      .order('created_at', { ascending: false });
+    let data;
+    let loadError;
+    try {
+      ({ data, error: loadError } = await supabase
+        .from('profile_media_assets')
+        .select('id, kind, storage_path, storage_provider, r2_public_key, content_validation_version, content_hash_sha256, label, status, delivery_status, ever_public, mime_type, byte_size, duration_ms, width, height, metadata, created_at')
+        .eq('user_id', requestedProfileId)
+        .in('kind', PROFILE_RICH_MEDIA_KINDS)
+        .order('created_at', { ascending: false }));
+    } catch (queryError) {
+      loadError = queryError;
+    }
+    if (requestId !== assetLoadRequestId || requestedProfileId !== profileId || requestedSessionId !== ($session?.user?.id || '')) return false;
     loading = false;
     if (loadError) {
-      setFeedback(loadError.message || 'The rich media library could not be loaded.');
+      assetLibraryError = loadError instanceof Error ? loadError.message : loadError?.message || 'The rich media library could not be loaded.';
       return false;
     }
-    assets = (data || []).filter(asset => asset.status === 'active');
+    assetLibraryError = '';
+    const partitioned = partitionProfileMediaValidationAssets(data || []);
+    assets = partitioned.assets.filter(asset => asset.status === 'active');
+    unverifiedAssets = partitioned.unverifiedAssets;
     syncIncoming(incomingConfig, nextIncomingKey);
     return true;
+  }
+
+  async function revalidateAsset(asset) {
+    if (!asset?.id || !hasProfileMediaRevalidationHash(asset) || busy) return;
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
+    busy = true;
+    setFeedback('', `Checking ${asset.label || asset.kind.replace('_', ' ')}…`);
+    try {
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      assertCurrent(action);
+      const result = await revalidateProfileMediaR2(asset.id, asset.content_hash_sha256, authorization);
+      assertCurrent(action);
+      const loaded = await loadAssets(assetAccessKey);
+      assertCurrent(action);
+      if (!loaded) throw new Error('The saved media passed its check, but the library could not refresh. Retry loading media.');
+      if (action.isCurrent()) setFeedback('', `${asset.label || 'Saved media'} passed the current checks.`);
+      return result;
+    } catch (validationError) {
+      if (action.isCurrent()) setFeedback(validationError instanceof Error ? validationError.message : 'The saved media could not be rechecked.');
+    } finally {
+      if (action.isCurrent()) busy = false;
+    }
+  }
+
+  function retryLoadAssets() {
+    if (!profileId || !hasAccess) return;
+    loadedAssetKey = '';
+    void loadAssets(assetAccessKey);
   }
 
   function assetForPath(path, assetId = '') {
@@ -168,9 +259,24 @@
     };
   }
 
-  async function saveSelection(next = {}) {
+  async function saveSelection(next = {}, authorization = null, action = null) {
+    if (action) assertCurrent(action);
     const animatedAvatarId = next.animated_avatar_id === undefined ? selectedAssetId('animated_avatar') : next.animated_avatar_id;
-    const { data, error: rpcError } = await supabase.rpc('select_my_profile_r2_media_v2', {
+    const rpc = authorization?.accessToken
+      ? rpcWithAccessToken(supabase, 'select_my_profile_r2_media_v2', {
+        p_background_video_id: next.background_video_id === undefined ? selectedAssetId('background_video') : next.background_video_id,
+        p_animated_avatar_id: animatedAvatarId,
+        p_avatar_fallback_id: animatedAvatarId
+          ? (next.avatar_fallback_id === undefined
+            ? (activeAnimatedAvatar?.metadata?.fallback_asset_id || config?.draft?.avatar_asset_id || config?.published?.avatar_asset_id || null)
+            : next.avatar_fallback_id)
+          : null,
+        p_share_image_id: next.share_image_id === undefined ? selectedAssetId('share_image') : next.share_image_id,
+        p_cursor_id: next.cursor_id === undefined ? selectedAssetId('cursor') : next.cursor_id,
+        p_pointer_cursor_id: next.pointer_cursor_id === undefined ? selectedAssetId('pointer_cursor') : next.pointer_cursor_id,
+        p_audio_config: next.audio_config || audioConfigPayload()
+      }, authorization.accessToken)
+      : supabase.rpc('select_my_profile_r2_media_v2', {
       p_background_video_id: next.background_video_id === undefined ? selectedAssetId('background_video') : next.background_video_id,
       p_animated_avatar_id: animatedAvatarId,
       p_avatar_fallback_id: animatedAvatarId
@@ -183,6 +289,8 @@
       p_pointer_cursor_id: next.pointer_cursor_id === undefined ? selectedAssetId('pointer_cursor') : next.pointer_cursor_id,
       p_audio_config: next.audio_config || audioConfigPayload()
     });
+    const { data, error: rpcError } = await rpc;
+    if (action) assertCurrent(action);
     if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The rich media selection could not be saved.');
     richConfig = normalizeRichMediaConfig(data);
     incomingKey = `${profileId || ''}:${JSON.stringify(richConfig)}`;
@@ -190,56 +298,78 @@
     return data;
   }
 
-  async function selectAsset(kind, asset, force = false) {
+  async function selectAsset(kind, asset, force = false, authorization = null, currentAction = null) {
     if (!asset || (busy && !force)) return;
     if (!isR2MediaAsset(asset) || !asset.r2_public_key) {
       setFeedback('', 'This saved media is unavailable. Re-upload it to R2 to use it.');
       return;
     }
+    const action = currentAction || beginMediaAction();
+    if (!action.isCurrent()) return false;
+    const previousRichConfig = richConfig;
+    const previousAudioTracks = audioTracks;
     busy = true;
     setFeedback('', `Applying ${asset.label || kind.replace('_', ' ')}…`);
     try {
+      authorization ||= await getProfileMediaAuthorization(action.ownerId);
+      assertCurrent(action);
       if (!asset.ever_public) {
-        await promoteProfileMediaR2(asset.id);
+        await promoteProfileMediaR2(asset.id, authorization);
+        assertCurrent(action);
         asset = { ...asset, ever_public: true };
       }
       if (kind === 'audio') {
         if (audioTracks.some(track => track.asset_id === asset.id)) return;
         if (audioTracks.length >= 5) throw new Error('You can select up to five audio tracks.');
         audioTracks = [...audioTracks, { asset_id: asset.id, path: null, media_reference: { storage_provider: 'r2', r2_public_key: asset.r2_public_key }, label: asset.label || `Track ${audioTracks.length + 1}`, duration_ms: asset.duration_ms || 0, trim_start_ms: 0, trim_end_ms: asset.duration_ms || 0 }];
-        await saveSelection({ audio_config: audioConfigPayload() });
+        await saveSelection({ audio_config: audioConfigPayload() }, authorization, action);
       } else if (kind === 'animated_avatar') {
         const fallbackAssetId = asset.metadata?.fallback_asset_id;
         if (!fallbackAssetId) throw new Error('That animated avatar is missing its static fallback.');
-        await saveSelection({ animated_avatar_id: asset.id, avatar_fallback_id: fallbackAssetId });
+        await saveSelection({ animated_avatar_id: asset.id, avatar_fallback_id: fallbackAssetId }, authorization, action);
       } else {
         const field = kind === 'background_video' ? 'background_video_path' : `${kind}_path`;
         const idField = kind === 'background_video' ? 'background_video_id' : `${kind}_id`;
         richConfig = { ...richConfig, [field]: null, [`${kind}_asset_id`]: asset.id };
-        await saveSelection({ [field]: null, [idField]: asset.id });
+        await saveSelection({ [field]: null, [idField]: asset.id }, authorization, action);
       }
+      assertCurrent(action);
       setFeedback('', `${kind === 'audio' ? 'Track' : kind.replace('_', ' ')} applied.`);
+      return true;
     } catch (selectionError) {
-      setFeedback(selectionError instanceof Error ? selectionError.message : 'The media selection could not be saved.');
+      if (action.isCurrent()) {
+        richConfig = previousRichConfig;
+        audioTracks = previousAudioTracks;
+        setFeedback(selectionError instanceof Error ? selectionError.message : 'The media selection could not be saved.');
+      }
+      if (force) throw selectionError;
+      return false;
     } finally {
-      busy = false;
+      if (action.isCurrent()) busy = false;
     }
   }
 
   async function removeAsset(asset) {
     if (!asset?.id || busy) return;
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
     busy = true;
     setFeedback('', 'Removing rich media…');
     try {
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      assertCurrent(action);
       // Permanent deletion is provider-owned by the control plane. Historical
       // storage_path values are inert and never enter a provider delete path.
-      const data = await deleteProfileMediaAsset(asset.id);
+      const data = await deleteProfileMediaAsset(asset.id, authorization);
+      assertCurrent(action);
       if (!data?.success) throw new Error(data?.error || 'The media asset could not be removed.');
       if (asset.kind === 'animated_avatar' && asset.metadata?.fallback_asset_id) {
-        await deleteProfileMediaAsset(asset.metadata.fallback_asset_id).catch(() => {});
+        await deleteProfileMediaAsset(asset.metadata.fallback_asset_id, authorization).catch(() => {});
+        assertCurrent(action);
       }
       audioTracks = audioTracks.filter(track => track.asset_id !== asset.id);
       await loadAssets();
+      assertCurrent(action);
       const field = asset.kind === 'background_video' ? 'background_video_path' : `${asset.kind}_path`;
       if (richConfig[field] === asset.storage_path || richConfig[`${asset.kind}_asset_id`] === asset.id) {
         richConfig = { ...richConfig, [field]: null, [`${asset.kind}_asset_id`]: null };
@@ -247,9 +377,9 @@
       dispatch('expressionchange', { ...richConfig, updatedAt: data.updated_at || null });
       setFeedback('', 'Rich media deleted from your library.');
     } catch (removeError) {
-      setFeedback(removeError instanceof Error ? removeError.message : 'The media asset could not be removed.');
+      if (action.isCurrent()) setFeedback(removeError instanceof Error ? removeError.message : 'The media asset could not be removed.');
     } finally {
-      busy = false;
+      if (action.isCurrent()) busy = false;
     }
   }
 
@@ -263,12 +393,17 @@
     }
     const inputError = validateRichMediaFile(file, kind);
     if (inputError) { setFeedback(inputError); return; }
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
     busy = true;
     setFeedback('', `Preparing ${kind.replace('_', ' ')}…`);
     let stagedAssetId = null;
     let fallbackAssetId = null;
     let replacementCommitted = false;
+    let authorization = null;
     try {
+      authorization = await getProfileMediaAuthorization(action.ownerId);
+      assertCurrent(action);
       let blob = file;
       let extension = extensionForRichMedia(kind, file);
       const metadata = {};
@@ -282,33 +417,46 @@
         metadata.height = 128;
       } else if (kind === 'animated_avatar') {
         const fallbackBlob = await processAnimatedAvatarPoster(file);
+        assertCurrent(action);
         const fallbackUpload = await uploadProfileMediaToR2({
           kind: 'avatar',
           blob: fallbackBlob,
           extension: 'webp',
           mimeType: 'image/webp',
           label: `${file.name.replace(/\.[^.]+$/, '').slice(0, 64)} fallback`,
-          metadata: { generated_from: 'animated_avatar' }
+          metadata: { generated_from: 'animated_avatar' },
+          authorization
         });
         fallbackAssetId = fallbackUpload.asset_id || fallbackUpload.asset?.id;
         if (!fallbackAssetId) throw new Error('The static avatar fallback could not be created.');
-        await promoteProfileMediaR2(fallbackAssetId);
+        assertCurrent(action);
+        await promoteProfileMediaR2(fallbackAssetId, authorization);
+        assertCurrent(action);
         metadata.fallback_asset_id = fallbackAssetId;
       } else if (kind === 'share_image') {
         blob = await processProfileShareImage(file);
+        assertCurrent(action);
         extension = 'jpg';
         metadata.width = 1200;
         metadata.height = 630;
       } else if (['cursor', 'pointer_cursor'].includes(kind)) {
         blob = await processProfileRichImage(file, kind);
+        assertCurrent(action);
         extension = 'webp';
         metadata.width = 128;
         metadata.height = 128;
       } else if (kind === 'audio') {
         blob = await prepareProfileAudioFile(file);
+        assertCurrent(action);
         extension = 'mp3';
       }
-      if (['audio', 'background_video'].includes(kind)) metadata.duration_ms = await readMediaDuration(file, kind);
+      if (['audio', 'background_video'].includes(kind)) {
+        metadata.duration_ms = await readMediaDuration(file, kind);
+        assertCurrent(action);
+        if (kind === 'background_video' && (!metadata.duration_ms || metadata.duration_ms > PROFILE_VIDEO_LIMITS.maxDurationMs)) {
+          throw new Error('Background videos must have a readable duration of 30 seconds or less.');
+        }
+      }
       if (!extension) throw new Error('That file type is not supported.');
 
       const uploaded = await uploadProfileMediaToR2({
@@ -318,12 +466,16 @@
         mimeType: blob.type || file.type || (extension === 'ani' ? PROFILE_ANIMATED_CURSOR_MIME : ''),
         label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
         metadata,
-        replaceAssetId: null
+        replaceAssetId: null,
+        authorization
       });
       stagedAssetId = uploaded.asset_id || uploaded.asset?.id;
       if (!stagedAssetId) throw new Error('The R2 upload did not return a media asset.');
-      const promoted = await promoteProfileMediaR2(stagedAssetId);
+      assertCurrent(action);
+      const promoted = await promoteProfileMediaR2(stagedAssetId, authorization);
+      assertCurrent(action);
       await loadAssets();
+      assertCurrent(action);
       const created = {
         id: stagedAssetId,
         kind,
@@ -341,22 +493,24 @@
         setFeedback('', 'Audio uploaded to your library. Remove an active track to add it to the playlist.');
         return;
       } else if (kind === 'animated_avatar') {
-        await saveSelection({ animated_avatar_id: stagedAssetId, avatar_fallback_id: fallbackAssetId });
+        await saveSelection({ animated_avatar_id: stagedAssetId, avatar_fallback_id: fallbackAssetId }, authorization, action);
       } else {
-        await selectAsset(kind, created, true);
+        const selected = await selectAsset(kind, created, true, authorization, action);
+        if (!selected) throw new Error('The uploaded media could not be selected.');
       }
+      assertCurrent(action);
       replacementCommitted = true;
       setFeedback('', `${kind.replace('_', ' ')} uploaded and selected.`);
     } catch (uploadError) {
       if (stagedAssetId && !replacementCommitted) {
-        await deleteProfileMediaAsset(stagedAssetId).catch(() => {});
+        await deleteProfileMediaAsset(stagedAssetId, authorization).catch(() => {});
       }
       if (fallbackAssetId && !replacementCommitted) {
-        await deleteProfileMediaAsset(fallbackAssetId).catch(() => {});
+        await deleteProfileMediaAsset(fallbackAssetId, authorization).catch(() => {});
       }
-      setFeedback(uploadError instanceof Error ? uploadError.message : 'The rich media upload failed.');
+      if (action.isCurrent()) setFeedback(uploadError instanceof Error ? uploadError.message : 'The rich media upload failed.');
     } finally {
-      busy = false;
+      if (action.isCurrent()) busy = false;
     }
   }
 
@@ -374,15 +528,19 @@
 
   async function saveAudioSettings() {
     if (busy) return;
+    const action = beginMediaAction();
+    if (!action.isCurrent()) return;
     busy = true;
     setFeedback('', 'Saving audio settings…');
     try {
-      await saveSelection({ audio_config: audioConfigPayload() });
-      setFeedback('', 'Audio playlist settings saved.');
+      const authorization = await getProfileMediaAuthorization(action.ownerId);
+      assertCurrent(action);
+      await saveSelection({ audio_config: audioConfigPayload() }, authorization, action);
+      if (action.isCurrent()) setFeedback('', 'Audio playlist settings saved.');
     } catch (saveError) {
-      setFeedback(saveError instanceof Error ? saveError.message : 'Audio settings could not be saved.');
+      if (action.isCurrent()) setFeedback(saveError instanceof Error ? saveError.message : 'Audio settings could not be saved.');
     } finally {
-      busy = false;
+      if (action.isCurrent()) busy = false;
     }
   }
 
@@ -437,6 +595,24 @@
     {#if !compact}
     <details class="rich-media-editor__advanced" open>
     {#if loading}<p class="rich-media-editor__status" role="status">Loading your rich media library…</p>{/if}
+    {#if assetLibraryError}<p class="rich-media-editor__message rich-media-editor__message--error" role="alert">{assetLibraryError} <button type="button" style={quietButtonStyle} on:click={retryLoadAssets}>Retry</button></p>{/if}
+    {#if unverifiedAssets.length > 0}
+      <section class="rich-media-editor__library" aria-label="Saved media needing a safety check">
+        <h3>Saved media check</h3>
+        <p>Some saved media needs a one-time check before it can appear on your profile.</p>
+        {#each unverifiedAssets as asset (asset.id)}
+          <div class="rich-media-editor__message" style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
+            <span>{asset.label || asset.kind.replace('_', ' ')}</span>
+            {#if hasProfileMediaRevalidationHash(asset)}
+              <button type="button" style={quietButtonStyle} disabled={busy} on:click={() => revalidateAsset(asset)}>Check saved media</button>
+            {:else}
+              <span>Re-upload required</span>
+            {/if}
+            <button type="button" style={quietButtonStyle} disabled={busy} on:click={() => removeAsset(asset)}>Delete from library</button>
+          </div>
+        {/each}
+      </section>
+    {/if}
     <p class="rich-media-editor__hint">Upload background video, an animated avatar, profile audio, custom cursors, and a share preview. Plus includes 1 GB of media storage; up to five audio tracks can be active at once.</p>
 
     <div class="rich-media-editor__upload-grid">
@@ -444,7 +620,7 @@
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--wide">
           {#if activeBackgroundVideo}<video src={assetMediaUrl(activeBackgroundVideo)} muted loop autoplay playsinline preload="metadata" aria-label="Active background video"></video>{:else}<span aria-hidden="true">▧</span><small>No video selected</small>{/if}
         </div>
-        <strong>Background video</strong><small>Up to 25 MB each · autoplay is muted</small>
+        <strong>Background video</strong><small>Up to 25 MB · 720p · 30 seconds · autoplay is muted</small>
         <input bind:this={videoInput} type="file" accept="video/mp4,video/webm,.mp4,.webm" on:change={(event) => uploadFile(event, 'background_video')} />
         <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => videoInput?.click()}>{activeBackgroundVideo ? 'Replace video' : 'Upload video'}</button>
       </div>

@@ -10,7 +10,7 @@
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
   import { getProfileStoryUnlocks, normalizeProfileProgressionProof } from './profileStory.js';
-  import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
+  import { normalizeProfileConfig } from './profileConfig.js';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
   import ProfilePortfolioLayout from './profile-layout/ProfilePortfolioLayout.svelte';
@@ -27,6 +27,7 @@
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { isProfileFeatureEnabled, resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { buildProfileRenderSnapshot } from './profileRenderModel.js';
+  import { createProfileShellPreviewState, resolveProfileShellPreviewContext } from './profileShellPreview.js';
   import { getProfileLayoutMotionTarget } from './profile-layout/profileLayouts.js';
   import { requestNameFontLoad } from './name/nameFonts.js';
 
@@ -79,6 +80,9 @@
   let profileSocialComponent = null;
   let profileSocialRequest = null;
   let indexingMetadataKey = '';
+  let portfolioScrollControllerCleanup = null;
+  let portfolioScrollControllerPromise = null;
+  let profileShellDestroyed = false;
   function ensureProfileReferenceCard() {
     if (profileReferenceCardComponent || profileReferenceCardRequest) return profileReferenceCardRequest;
     profileReferenceCardRequest = import('./ProfileReferenceCard.svelte')
@@ -106,6 +110,27 @@
     return profileSocialRequest;
   }
 
+  function ensurePortfolioScrollController() {
+    if (portfolioScrollControllerCleanup || portfolioScrollControllerPromise) return portfolioScrollControllerPromise;
+    portfolioScrollControllerPromise = import('./profile-layout/portfolioScrollController.js')
+      .then(module => {
+        if (profileShellDestroyed || !profilePageElement) return;
+        portfolioScrollControllerCleanup = module.attachProfilePortfolioScrollController({
+          container: profilePageElement,
+          getMoreElement: () => document.getElementById('profile-more'),
+          isPortfolioLayout: () => profilePresentationLayoutVariant === 'portfolio',
+          getReducedMotion: () => prefersReducedMotion,
+          getActivePortfolioPage: () => activePortfolioPage,
+          onActivePortfolioPageChange: index => { activePortfolioPage = index; },
+          onMoreActiveChange: active => { profileMoreActive = active; },
+          scrollToPortfolioPage
+        });
+      })
+      .catch(() => {})
+      .finally(() => { portfolioScrollControllerPromise = null; });
+    return portfolioScrollControllerPromise;
+  }
+
   function resetShellState(nextLoading = false) {
     targetProfile = null;
     targetScores = [];
@@ -127,57 +152,45 @@
       // preview shell mounted so sliders, media and cosmetics do not reset
       // roll/social state or timers on every keystroke. Only a change to the
       // preview's identity/data context warrants a full reconstruction.
-      const nextPreviewKey = 'profile-preview:' + JSON.stringify({
-        profile: previewProfile,
-        scores: previewScores,
-        timeline: previewTimelineEvents,
-        collection: previewCollectionItems,
-        achievements: previewAllAchievements
+      const previewContext = resolveProfileShellPreviewContext({
+        previewProfile,
+        previewProfileConfig,
+        profileRenderSnapshot,
+        previewScores,
+        previewTimelineEvents,
+        previewCollectionItems,
+        previewAllAchievements
       });
-      const resolvedPreviewProfile = previewProfile || profileRenderSnapshot?.profile || null;
-      if (!resolvedPreviewProfile) {
-        if (nextPreviewKey !== activeProfileKey) {
-          activeProfileKey = nextPreviewKey;
+      if (!previewContext.sourceProfile) {
+        if (previewContext.key !== activeProfileKey) {
+          activeProfileKey = previewContext.key;
           loadRequestId += 1;
           resetShellState(true);
         }
         return;
       }
-      if (nextPreviewKey !== activeProfileKey) {
-        activeProfileKey = nextPreviewKey;
+      if (previewContext.key !== activeProfileKey) {
+        activeProfileKey = previewContext.key;
         loadRequestId += 1;
         resetShellState(false);
-        targetProfile = {
-          ...resolvedPreviewProfile,
-          id: resolvedPreviewProfile.id || 'profile-studio-preview',
-          username: resolvedPreviewProfile.username || 'Chromanaut',
-          display_name: resolvedPreviewProfile.display_name ?? null,
-          bio: resolvedPreviewProfile.bio ?? null,
-          current_streak: Number(resolvedPreviewProfile.current_streak) || 0,
-          longest_streak: Number(resolvedPreviewProfile.longest_streak) || 0,
-          lifetime_ep: Number(resolvedPreviewProfile.lifetime_ep) || 0,
-          total_rolls: Number(resolvedPreviewProfile.total_rolls) || 0,
-          is_staff: Boolean(resolvedPreviewProfile.is_staff),
-          equipped_cosmetics: resolvedPreviewProfile.equipped_cosmetics || {},
-          equipped_badges: Array.isArray(resolvedPreviewProfile.equipped_badges) ? resolvedPreviewProfile.equipped_badges : [],
-          mood_color: resolvedPreviewProfile.mood_color || '#CDD2FF',
-          best_roll_score: resolvedPreviewProfile.best_roll_score ?? null,
-          best_roll_hex: resolvedPreviewProfile.best_roll_hex ?? null,
-          best_roll_rarity: resolvedPreviewProfile.best_roll_rarity ?? null
-        };
-        const config = normalizeProfileConfig(
-          previewProfileConfig || profileRenderSnapshot?.configuration || createDefaultProfileConfig(),
-          resolvedPreviewProfile.mood_color || '#CDD2FF'
-        );
-        profileConfig = { draft: null, published: config };
-        social = createEmptyProfileSocial();
-        socialSettings = createDefaultProfileSocialSettings();
-        targetScores = Array.isArray(previewScores) ? previewScores : [];
-        timelineEvents = Array.isArray(previewTimelineEvents) ? previewTimelineEvents : [];
-        collectionItems = Array.isArray(previewCollectionItems) ? previewCollectionItems : [];
-        progressionProof = { completedCount: 0, recentUnlocks: [] };
-        allAchievements = Array.isArray(previewAllAchievements) ? previewAllAchievements : [];
-        loading = false;
+        const previewState = createProfileShellPreviewState({
+          sourceProfile: previewContext.sourceProfile,
+          configuration: previewContext.configuration,
+          previewScores,
+          previewTimelineEvents,
+          previewCollectionItems,
+          previewAllAchievements
+        });
+        targetProfile = previewState.targetProfile;
+        targetScores = previewState.targetScores;
+        timelineEvents = previewState.timelineEvents;
+        collectionItems = previewState.collectionItems;
+        progressionProof = previewState.progressionProof;
+        profileConfig = previewState.profileConfig;
+        social = previewState.social;
+        socialSettings = previewState.socialSettings;
+        allAchievements = previewState.allAchievements;
+        loading = previewState.loading;
       }
       return;
     }
@@ -208,31 +221,6 @@
 
   afterUpdate(syncProfileData);
 
-  function updatePortfolioPageState() {
-    if (!profilePageElement || profilePresentationLayoutVariant !== 'portfolio') {
-      activePortfolioPage = 0;
-      return;
-    }
-    const pages = [...profilePageElement.querySelectorAll('[data-profile-portfolio-page]')];
-    if (!pages.length) {
-      activePortfolioPage = 0;
-      return;
-    }
-    const viewport = profilePageElement.getBoundingClientRect();
-    const focusLine = viewport.top + viewport.height * 0.45;
-    let closestIndex = 0;
-    let closestDistance = Number.POSITIVE_INFINITY;
-    for (const [index, page] of pages.entries()) {
-      const box = page.getBoundingClientRect();
-      const distance = focusLine < box.top ? box.top - focusLine : focusLine > box.bottom ? focusLine - box.bottom : 0;
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestIndex = index;
-      }
-    }
-    activePortfolioPage = closestIndex;
-  }
-
   onMount(() => {
     void ensureProfileReferenceCard();
     const motionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -248,54 +236,12 @@
     };
     document.addEventListener('visibilitychange', refreshOnReturn);
     window.addEventListener('pageshow', refreshOnReturn);
-    const getProfileOffsetTop = element => {
-      if (!profilePageElement || !element) return 0;
-      return element.getBoundingClientRect().top
-        - profilePageElement.getBoundingClientRect().top
-        + profilePageElement.scrollTop;
-    };
-    const updateProfileScrollState = () => {
-      const more = document.getElementById('profile-more');
-      if (!profilePageElement || !more) {
-        profileMoreActive = false;
-        updatePortfolioPageState();
-        return;
-      }
-      const moreTop = getProfileOffsetTop(more);
-      profileMoreActive = profilePageElement.scrollTop >= moreTop - profilePageElement.clientHeight * 0.45;
-      updatePortfolioPageState();
-    };
-    let wheelLockedUntil = 0;
-    let lastWheelAt = 0;
-    const handlePageWheel = event => {
-      if (profilePresentationLayoutVariant !== 'portfolio' || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-      const now = performance.now();
-      const continuedGesture = now - lastWheelAt < 180;
-      lastWheelAt = now;
-      event.preventDefault();
-      if (now < wheelLockedUntil || continuedGesture) return;
-      const pages = [...profilePageElement.querySelectorAll('[data-profile-portfolio-page]')];
-      const direction = Math.sign(event.deltaY);
-      const current = pages[activePortfolioPage];
-      if (!current) return;
-      const box = current.getBoundingClientRect();
-      const viewport = profilePageElement.getBoundingClientRect();
-      if ((direction > 0 && box.bottom > viewport.bottom + 2) || (direction < 0 && box.top < viewport.top - 2)) {
-        profilePageElement.scrollBy({top:direction * profilePageElement.clientHeight * .8, behavior:prefersReducedMotion ? 'auto' : 'smooth'});
-      } else {
-        scrollToPortfolioPage(Math.max(0, Math.min(pages.length - 1, activePortfolioPage + direction)));
-      }
-      wheelLockedUntil = now + 650;
-    };
-    profilePageElement?.addEventListener('wheel', handlePageWheel, { passive:false });
-    profilePageElement?.addEventListener('scroll', updateProfileScrollState, { passive: true });
-    requestAnimationFrame(updateProfileScrollState);
     return () => {
+      profileShellDestroyed = true;
       loadRequestId += 1;
       document.removeEventListener('visibilitychange', refreshOnReturn);
       window.removeEventListener('pageshow', refreshOnReturn);
-      profilePageElement?.removeEventListener('scroll', updateProfileScrollState);
-      profilePageElement?.removeEventListener('wheel', handlePageWheel);
+      portfolioScrollControllerCleanup?.();
       motionQuery?.removeEventListener?.('change', syncMotionPreference);
     };
   });
@@ -407,8 +353,11 @@
   async function handleFollow() {
     if (previewMode || !targetProfile?.id || followLoading) return;
     followLoading = true;
-    await toggleFollow(targetProfile.id);
-    followLoading = false;
+    try {
+      await toggleFollow(targetProfile.id);
+    } finally {
+      followLoading = false;
+    }
   }
 
   async function handleSocialChange() {
@@ -530,6 +479,7 @@
   // Layout is structure only. Keep the default class off the renderer so a
   // new Compact profile never receives a baked-in starfield or color theme.
   $: profilePresentationLayoutVariant = layoutVariant;
+  $: if (profilePresentationLayoutVariant === 'portfolio' && profilePageElement) void ensurePortfolioScrollController();
   // The roll is a profile widget in every layout. The full interactive game
   // stays on the authenticated game surface; public profiles only expose the
   // compact, shareable result summary.
@@ -763,7 +713,7 @@
                 <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
               {/if}
               {#if profileWidgets.length}
-                <ProfileWidgets widgets={profileWidgets} deferMedia={previewMode} onEntryClick={recordProfileClick} />
+                <ProfileWidgets widgets={profileWidgets} onEntryClick={recordProfileClick} />
               {/if}
             </div>
           </div>

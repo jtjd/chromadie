@@ -43,16 +43,18 @@ test('a failed configuration refresh preserves the visible snapshot but closes a
 });
 
 test('Profile Studio keeps every configuration write path behind the authoritative-read gate', async () => {
-  const [settings, shell, workspace] = await Promise.all([
+  const [settings, shell, workspace, configurationWrites] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioShell.svelte'),
-    read('src/lib/ProfileStudioWorkspace.svelte')
+    read('src/lib/ProfileStudioWorkspace.svelte'),
+    read('src/lib/profile-studio/configurationWrites.js')
   ]);
 
   assert.match(settings, /configurationWriteAvailable = isProfileConfigurationWritable\(context\)/);
   assert.match(settings, /if \(!configurationWriteAvailable\) \{/);
-  assert.match(settings, /publish_profile_studio_v2/);
-  assert.match(settings, /p_expected_updated_at: context\.profileConfig\?\.updatedAt \|\| null/);
+  assert.match(settings, /await loadConfigurationWriteService\(\)/);
+  assert.match(configurationWrites, /publish_profile_studio_v2/);
+  assert.match(configurationWrites, /p_expected_updated_at: expectedUpdatedAt \|\| null/);
   assert.match(shell, /disabled=\{!dirty \|\| mobileSaving \|\| !configurationReady\}/);
   assert.match(shell, /disabled=\{mobileSaving \|\| !configurationReady\}/);
   assert.match(workspace, /configurationBlocked/);

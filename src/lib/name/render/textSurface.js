@@ -17,7 +17,8 @@ export function getPaintedTextSurface(ctx, model, paint) {
   const key = JSON.stringify([
     model.displayText, model.font.key, model.font.family, model.font.weight, model.font.style,
     fontReady, getNameFontRevision(model.font.key), model.metrics, model.material.key, model.material.colors,
-    model.baseColor, model.todayColor, model.width, model.height, ratio
+    model.baseColor, model.todayColor, model.width, model.height, ratio,
+    model.material.animated ? model.materialProgress : null
   ]);
   let state = surfaces.get(ctx);
   if (state?.key === key && state.paint === paint) return state;

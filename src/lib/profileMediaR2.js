@@ -12,9 +12,20 @@ async function accessToken() {
   return result?.data?.session?.access_token || '';
 }
 
-async function requestControlPlane(path, options = {}) {
+export async function getProfileMediaAuthorization(expectedUserId = '') {
+  const result = await supabase?.auth?.getSession?.();
+  const currentSession = result?.data?.session;
+  const userId = currentSession?.user?.id || '';
+  const accessToken = currentSession?.access_token || '';
+  if (!userId || !accessToken || !expectedUserId || userId !== expectedUserId) {
+    throw new Error('Your session could not authorize this media action.');
+  }
+  return { userId, accessToken };
+}
+
+async function requestControlPlane(path, options = {}, authorization = null) {
   const origin = controlPlaneOrigin();
-  const token = await accessToken();
+  const token = authorization?.accessToken || await accessToken();
   if (!origin || !token) throw new Error('Your session could not authorize this media action.');
   const response = await fetch(`${origin}${path}`, {
     ...options,
@@ -42,9 +53,9 @@ export async function sha256Blob(blob) {
 /**
  * Upload bytes directly to the private R2 bucket. The browser receives only
  * a short-lived, object-scoped PUT URL; R2 credentials never enter the client.
- * @param {{kind?: string, blob?: Blob, extension?: string, mimeType?: string, label?: string, metadata?: any, replaceAssetId?: string|null}} options
+ * @param {{kind?: string, blob?: Blob, extension?: string, mimeType?: string, label?: string, metadata?: any, replaceAssetId?: string|null, authorization?: {userId?: string, accessToken?: string}|null}} options
  */
-export async function uploadProfileMediaToR2({ kind, blob, extension, mimeType, label = '', metadata = {}, replaceAssetId = null } = {}) {
+export async function uploadProfileMediaToR2({ kind, blob, extension, mimeType, label = '', metadata = {}, replaceAssetId = null, authorization = null } = {}) {
   if (!blob || !kind || !extension || !mimeType) throw new Error('The media upload is incomplete.');
   const contentHash = await sha256Blob(blob);
   const intent = await requestControlPlane('/api/profile-media/upload-intent', {
@@ -59,7 +70,7 @@ export async function uploadProfileMediaToR2({ kind, blob, extension, mimeType, 
       metadata,
       ...(replaceAssetId ? { replace_asset_id: replaceAssetId } : {})
     })
-  });
+  }, authorization);
 
   const uploadResponse = await fetch(intent.upload_url, {
     method: 'PUT',
@@ -78,28 +89,35 @@ export async function uploadProfileMediaToR2({ kind, blob, extension, mimeType, 
   return requestControlPlane('/api/profile-media/complete', {
     method: 'POST',
     body: JSON.stringify({ asset_id: intent.asset_id, content_hash_sha256: contentHash })
-  });
+  }, authorization);
 }
 
-export function promoteProfileMediaR2(assetId) {
+export function promoteProfileMediaR2(assetId, authorization = null) {
   return requestControlPlane('/api/profile-media/promote', {
     method: 'POST',
     body: JSON.stringify({ asset_id: assetId })
-  });
+  }, authorization);
 }
 
-export function deleteProfileMediaAsset(assetId) {
+export function deleteProfileMediaAsset(assetId, authorization = null) {
   return requestControlPlane('/api/profile-media/delete', {
     method: 'POST',
     body: JSON.stringify({ asset_id: assetId })
-  });
+  }, authorization);
 }
 
-export function deleteLegacyProfileAudio(storagePath) {
+export function deleteLegacyProfileAudio(storagePath, authorization = null) {
   return requestControlPlane('/api/profile-media/delete-legacy-audio', {
     method: 'POST',
     body: JSON.stringify({ storage_path: storagePath })
-  });
+  }, authorization);
+}
+
+export function revalidateProfileMediaR2(assetId, contentHash, authorization = null) {
+  return requestControlPlane('/api/profile-media/complete', {
+    method: 'POST',
+    body: JSON.stringify({ asset_id: assetId, content_hash_sha256: contentHash })
+  }, authorization);
 }
 
 // Kept as a compatibility alias for existing callers while the endpoint now

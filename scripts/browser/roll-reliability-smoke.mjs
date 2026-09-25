@@ -30,7 +30,7 @@ try {
   await page.evaluate('document.querySelector(".roll-btn").click();document.querySelector(".roll-btn")?.click()');
   await page.waitFor('localStorage.getItem("chromadie-roll") && document.querySelector(".roll-stage--rolling")','persist before reveal');
   assert.equal(await page.evaluate('window.rollAudit.calls'),1);
-  await page.navigate(appUrl+'/roll','interrupt guest reveal');
+  await page.navigate(appUrl+'/','reload guest result during reveal');
   await page.waitFor('document.querySelector(".roll-stage--results")','restored guest result');
   assert.ok(await page.evaluate('document.querySelector(".roll-stage--results").textContent.includes("#123456")'));
   checks.push('one RPC for double click; guest survives navigation during reveal');

@@ -1,3 +1,5 @@
+import { createHtmlHeaders } from './_publicPage.js';
+
 const COOKIE_NAME = "__Host-chromadie-preview";
 const LOGIN_PATH = "/__preview-login";
 const LOGOUT_PATH = "/__preview-logout";
@@ -245,12 +247,12 @@ function loginResponse(returnTo, error = "", status = 401) {
   return htmlResponse(html, status);
 }
 
-function htmlResponse(html, status, extraHeaders = {}) {
+async function htmlResponse(html, status, extraHeaders = {}) {
+  const securityHeaders = await createHtmlHeaders(html, 'no-store, no-cache, must-revalidate');
   return new Response(html, {
     status,
     headers: {
-      "cache-control": "no-store, no-cache, must-revalidate",
-      "content-type": "text/html; charset=UTF-8",
+      ...securityHeaders,
       "x-robots-tag": "noindex, nofollow",
       ...extraHeaders
     }

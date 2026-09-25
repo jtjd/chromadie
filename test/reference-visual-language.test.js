@@ -25,8 +25,7 @@ test('the approved homepage typography is bundled and authoritative', async () =
   assert.match(homepage, /--homepage-display: 'Manrope Variable'/);
   assert.match(homepage, /--homepage-secondary: rgba\(248, 248, 248, 0\.88\)/);
   assert.match(homepage, /--homepage-secondary-shadow: none/);
-  assert.match(homepage, /\.app-main--site \.homepage-reference :is\(\.homepage-section-heading, \.homepage-step h3\)/);
-  assert.match(homepage, /font-family: var\(--homepage-display\) !important/);
+  assert.doesNotMatch(homepage, /homepage-section-heading|homepage-step/);
   assert.match(header, /SiteModeHeader/);
   assert.match(sharedHeader, /--site-header-display: 'Manrope Variable'/);
   assert.doesNotMatch(`${homepage}${header}${claim}`, /'Clash Display'/);
@@ -47,9 +46,9 @@ test('the homepage shell uses the Roll and Progression visual language without p
 
   assert.match(styles, /--homepage-bg: #0e0e10/);
   assert.match(styles, /--homepage-border: rgba\(255, 255, 255, 0\.08\)/);
-  assert.match(styles, /\.homepage-section \{ width: min\(1380px, calc\(100% - 64px\)\)/);
   assert.match(styles, /--homepage-radius: 18px/);
   assert.match(styles, /\.homepage-content \{/);
+  assert.doesNotMatch(styles, /\.homepage-section|\.homepage-final|\.homepage-button/);
   assert.doesNotMatch(styles, /--homepage-background-image|\.homepage-background|\.homepage-atmosphere/);
   assert.match(rollPage, /grid-template-columns: minmax\(280px, 400px\) minmax\(360px, 420px\)/);
   assert.match(rollPage, /min-height: calc\(100dvh - 88px\)/);

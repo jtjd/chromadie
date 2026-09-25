@@ -59,11 +59,11 @@ test('active routes do not reference retired presentation components', async () 
 });
 
 test('the legacy profile renderer remains an explicit compatibility boundary', async () => {
-  const [app, loaders] = await Promise.all([
-    read('src/App.svelte'),
+  const [routeTarget, loaders] = await Promise.all([
+    read('src/lib/routeTarget.js'),
     read('src/lib/routeLoaders.js')
   ]);
 
-  assert.match(app, /currentLegacyProfile \? 'profileLegacy' : 'profileShell'/);
+  assert.match(routeTarget, /legacyProfile \? 'profileLegacy' : 'profileShell'/);
   assert.match(loaders, /profileLegacy: \(\) => import\('\.\/Profile\.svelte'\)/);
 });

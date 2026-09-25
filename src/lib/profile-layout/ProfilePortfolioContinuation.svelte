@@ -96,7 +96,7 @@
             />
           {/if}
           {#if visibleWidgets.length}
-            <ProfileWidgets widgets={visibleWidgets} deferMedia={previewMode} onEntryClick={onEntryClick} />
+            <ProfileWidgets widgets={visibleWidgets} onEntryClick={onEntryClick} />
           {/if}
         </div>
       </div>

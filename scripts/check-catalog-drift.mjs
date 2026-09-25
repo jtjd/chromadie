@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createSupabaseHeaders, getSupabaseCredentials } from '../functions/_supabaseApi.js';
 import { progressionRewardKeys, readProgressionManifest } from './progression-manifest.mjs';
 import { PROFILE_BORDER_KEYS, PROFILE_BORDER_DEFINITIONS } from '../src/lib/profile-border/profileBorders.js';
+import { NAME_MATERIALS, NAME_PAID_MATERIAL_KEYS } from '../src/lib/name/nameMaterials.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -24,6 +25,7 @@ const silkscreenFontMigrationPath = path.join(repoRoot, 'supabase/migrations/202
 const approvedEffectsMigrationPath = path.join(repoRoot, 'supabase/migrations/20260821090000_approved_cosmetic_effects.sql');
 const sourceBackedProfileExpansionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260901140000_source_backed_profile_expression_expansion.sql');
 const cuteNameFontsMigrationPath = path.join(repoRoot, 'supabase/migrations/20260912100000_add_cute_name_fonts.sql');
+const authoredNameMaterialCollectionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260923233000_authored_name_material_collection.sql');
 
 function fail(message) {
   console.error(`Catalog drift detected: ${message}`);
@@ -340,6 +342,29 @@ for (const [key, row] of collection.catalog) {
   const definition = NAME_MOTIONS[row.css_value];
   if (!definition || definition.label !== row.name || definition.description !== row.description) fail(`motion registry differs from catalog: ${key}`);
 }
+const materialCollection = await readLocalCatalog(authoredNameMaterialCollectionMigrationPath);
+const materialCollectionSource = await readFile(authoredNameMaterialCollectionMigrationPath, 'utf8');
+if (materialCollection.catalog.size !== 12) fail('expected twelve new authored Name Materials');
+for (const [key, row] of materialCollection.catalog) {
+  const seeded = seed.catalog.get(key);
+  if (!seeded || Object.keys(row).some(column => row[column] !== seeded[column])) fail(`Name Material collection differs from seed: ${key}`);
+  const definition = NAME_MATERIALS[row.css_value];
+  if (!definition || definition.label !== row.name) fail(`Name Material registry differs from catalog: ${key}`);
+  if (definition.animated !== true || definition.durationMs !== 12000) fail(`${row.css_value} must use the 12-second animated material contract`);
+  if (row.access_tier !== 'free' || Number(row.cost) !== 0 || row.entitlement_key !== null) fail(`${key} must be free and zero-cost`);
+}
+const staticMaterialKeys = new Set(['halo-edge', 'crt-phosphor']);
+for (const key of NAME_PAID_MATERIAL_KEYS) {
+  const definition = NAME_MATERIALS[key];
+  const row = [...seed.catalog.values()].find(item => item.slot === 'name_material' && item.css_value === key && (item.catalog_status || 'active') === 'active');
+  if (!row) fail(`missing active Name Material catalog row for ${key}`);
+  if (row.name !== definition.label) fail(`Name Material label differs from registry for ${key}`);
+  if (staticMaterialKeys.has(key)) {
+    if (definition.animated === true || definition.durationMs !== 0) fail(`${key} must remain a static approved material`);
+  } else if (definition.animated !== true || definition.durationMs !== 12000) {
+    fail(`${key} must use the 12-second animated material contract`);
+  }
+}
 const validSlots = new Set([
   'consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border',
   'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'
@@ -351,7 +376,7 @@ const validCatalogStatuses = new Set(['active', 'legacy', 'retired']);
 const retiredExpressionKeys = new Set(['name_prism_atelier', 'bg_prism_atmosphere', 'avatar_effect_bat_orbit']);
 const rendererKeys = Object.freeze({
   name_font: new Set(['industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins', 'jetbrains-mono', 'array', 'silkscreen', 'velocity', 'outfit', 'kode-mono', 'soft-orbit', 'fredoka', 'baloo-2', 'bubblegum-sans', 'comic-neue', 'lilita-one']),
-  name_material: new Set(['glass-emboss', 'carbon-cut', 'neon-tube', 'velvet-ink', 'engraved-stone', 'crt-phosphor', 'blueprint-ink', 'halo-edge']),
+  name_material: new Set(NAME_PAID_MATERIAL_KEYS),
   name_motion: new Set(Object.keys(NAME_MOTIONS).filter(key => key !== 'none')),
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing', 'plasma-swarm', 'bubble-wake', 'character-bloom', 'emoji-bloom', 'following-dot', 'text-flag', 'springy-emoji']),
   avatar_effect: new Set(['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'fireflies', 'moonlit-clouds', 'enchanted-garden', 'prismatic-fracture', 'sakura-neko', 'cloud-bunny', 'crimson-ronin', 'midnight-oni', 'koi-current', 'sakura-petals', 'bat-orbit']),
@@ -359,7 +384,7 @@ const rendererKeys = Object.freeze({
   profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'sakura-afterglow', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare', 'prism-dust']),
   profile_motion: new Set(['perspective-tilt', 'halo-offset', 'wavefront'])
 });
-const expectedCounts = Object.freeze({ name_font: 17, name_material: 8, name_motion: 35, profile_border: 12, cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 14, profile_motion: 3 });
+const expectedCounts = Object.freeze({ name_font: 17, name_material: 20, name_motion: 35, profile_border: 12, cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 14, profile_motion: 3 });
 const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0, profile_motion: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
@@ -389,8 +414,8 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 134) {
-  fail(`expected 134 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 146) {
+  fail(`expected 146 active catalog rows, found ${seed.catalog.size}`);
 }
 for (const definition of Object.values(PROFILE_BORDER_DEFINITIONS)) {
   const row = seed.catalog.get(definition.itemKey);
@@ -491,6 +516,19 @@ for (const requiredValue of [
 ]) {
   if (!sourceBackedProfileExpansionMigration.includes(requiredValue)) {
     fail(`the source-backed profile expansion migration is missing ${requiredValue}`);
+  }
+}
+
+for (const requiredValue of [
+  "'name_material_mercury_polish'", "'name_material_gilded_leaf'", "'name_material_opal_lustre'",
+  "'name_material_prism_dispersion'", "'name_material_aurora_weave'", "'name_material_ember_enamel'",
+  "'name_material_ocean_caustic'", "'name_material_glacier_cut'", "'name_material_rose_satin'",
+  "'name_material_stardust_ink'", "'name_material_porcelain_lacquer'", "'name_material_candy_shell'",
+  "'Rose Dust'", "'Sunlit'", "'halo-edge'", "'shop_version', '2026-09-23T23:30:00Z'",
+  'Expected 20 active Name Material rows'
+]) {
+  if (!materialCollectionSource.includes(requiredValue)) {
+    fail(`the authored Name Material collection migration is missing ${requiredValue}`);
   }
 }
 

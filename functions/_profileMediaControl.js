@@ -1,4 +1,8 @@
 import { createSupabaseHeaders, getSupabaseCredentials } from './_supabaseApi.js';
+import { inspectAnimatedImageBounds } from '../src/lib/animatedImageBounds.js';
+import { inspectStaticWebpBounds, inspectJpegBounds } from '../src/lib/profileImageBounds.js';
+import { inspectAnimatedCursorBounds } from '../src/lib/animatedCursorBounds.js';
+import { inspectProfileVideoBounds } from '../src/lib/videoContainerBounds.js';
 
 const encoder = new TextEncoder();
 
@@ -155,7 +159,7 @@ export async function getSupabaseAsset(env, userId, assetId) {
   const config = getSupabaseConfig(env);
   if (!config?.secretKey) throw new Error('Supabase service configuration is missing.');
   const query = new URLSearchParams({
-    select: 'id,user_id,kind,status,storage_provider,storage_path,r2_private_key,r2_public_key,content_hash_sha256,delivery_status,ever_public,mime_type,byte_size,label,metadata,upload_expires_at,cleanup_at',
+    select: 'id,user_id,kind,status,storage_provider,storage_path,r2_private_key,r2_public_key,content_hash_sha256,content_validation_version,delivery_status,ever_public,mime_type,byte_size,label,metadata,upload_expires_at,cleanup_at,verified_at',
     id: `eq.${assetId}`,
     user_id: `eq.${userId}`,
     limit: '1'
@@ -172,7 +176,7 @@ export async function getSupabaseAssets(env, userId, { statuses = [], kinds = []
   const config = getSupabaseConfig(env);
   if (!config?.secretKey) throw new Error('Supabase service configuration is missing.');
   const query = new URLSearchParams({
-    select: 'id,user_id,kind,status,storage_provider,storage_path,r2_private_key,r2_public_key,content_hash_sha256,delivery_status,ever_public,mime_type,byte_size,label,metadata,upload_expires_at,cleanup_at',
+    select: 'id,user_id,kind,status,storage_provider,storage_path,r2_private_key,r2_public_key,content_hash_sha256,content_validation_version,delivery_status,ever_public,mime_type,byte_size,label,metadata,upload_expires_at,cleanup_at,verified_at',
     user_id: `eq.${userId}`,
     order: 'created_at.asc'
   });
@@ -276,6 +280,83 @@ export async function requestR2Object(env, { method, bucket, key, headers = {}, 
     },
     body
   });
+}
+
+const MAX_PROFILE_MEDIA_OBJECT_BYTES = 25 * 1024 * 1024;
+
+function expectedMediaSizeLimit(kind) {
+  return ({
+    avatar: 262_144,
+    background: 4 * 1024 * 1024,
+    background_video: MAX_PROFILE_MEDIA_OBJECT_BYTES,
+    banner: 2 * 1024 * 1024,
+    audio: 10 * 1024 * 1024,
+    animated_avatar: 5 * 1024 * 1024,
+    share_image: 1024 * 1024,
+    cursor: 131_072,
+    pointer_cursor: 131_072
+  })[String(kind || '').toLowerCase()] || 0;
+}
+
+async function readResponseBytesBounded(response, expectedSize) {
+  if (!response.body?.getReader) {
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    return bytes.byteLength === expectedSize ? bytes : null;
+  }
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value || total + value.byteLength > expectedSize) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
+    total += value.byteLength;
+  }
+  if (total !== expectedSize) return null;
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
+
+/** Fetch, hash, and validate the bounded bytes stored for one media row. */
+export async function verifyStoredProfileMediaObject(env, { bucket, key, asset } = {}) {
+  const expectedSize = Number(asset?.byte_size);
+  const expectedHash = String(asset?.content_hash_sha256 || '').toLowerCase();
+  const expectedMime = String(asset?.mime_type || '').toLowerCase().split(';')[0].trim();
+  const maximumSize = expectedMediaSizeLimit(asset?.kind);
+  if (!bucket || !key || !maximumSize || !Number.isSafeInteger(expectedSize)
+    || expectedSize <= 0 || expectedSize > maximumSize || !/^[0-9a-f]{64}$/.test(expectedHash)) {
+    return { success: false, error: 'The stored media metadata is invalid.' };
+  }
+
+  const head = await requestR2Object(env, { method: 'HEAD', bucket, key });
+  const headSize = Number(head.headers?.get('content-length'));
+  const headMime = String(head.headers?.get('content-type') || '').toLowerCase().split(';')[0].trim();
+  if (!head.ok || headSize !== expectedSize || headMime !== expectedMime) {
+    return { success: false, error: 'The stored object metadata does not match the media record.' };
+  }
+
+  const response = await requestR2Object(env, { method: 'GET', bucket, key });
+  if (!response.ok) return { success: false, error: 'The stored media object could not be read.' };
+  const actualMime = String(response.headers?.get('content-type') || '').toLowerCase().split(';')[0].trim();
+  if (actualMime !== expectedMime) return { success: false, error: 'The stored media MIME type did not match its record.' };
+  const bytes = await readResponseBytesBounded(response, expectedSize);
+  if (!bytes) return { success: false, error: 'The stored media size did not match its record.' };
+  const actualHash = await sha256Hex(bytes);
+  if (actualHash !== expectedHash) return { success: false, error: 'The stored media hash did not match its record.' };
+  const extension = String(key).match(/\.([a-z0-9]+)$/i)?.[1] || '';
+  if (!validateProfileMediaSignature({ bytes, kind: asset.kind, extension, mimeType: actualMime })) {
+    return { success: false, error: 'The stored object failed media validation.' };
+  }
+  return { success: true, bytes, byteSize: expectedSize, contentHash: actualHash, mimeType: actualMime };
 }
 
 export async function copyR2Object(env, { sourceBucket, sourceKey, destinationBucket, destinationKey, contentType = '', metadataHash = '' } = {}) {
@@ -420,21 +501,6 @@ function hasMpegFrame(bytes) {
   return false;
 }
 
-function containsAscii(bytes, value) {
-  const limit = bytes.length - value.length;
-  for (let offset = 0; offset <= limit; offset += 1) {
-    if (hasAscii(bytes, value, offset)) return true;
-  }
-  return false;
-}
-
-function isAnimatedGif(bytes) {
-  if (!(hasAscii(bytes, 'GIF87a') || hasAscii(bytes, 'GIF89a'))) return false;
-  let frames = 0;
-  for (const byte of bytes) if (byte === 0x2c && ++frames > 1) return true;
-  return false;
-}
-
 /**
  * Validate the small container signatures that correspond to the allowlisted
  * upload contract. This runs after the actual R2 bytes have been hashed; it
@@ -459,13 +525,16 @@ export function validateProfileMediaSignature({ bytes, kind, extension, mimeType
   if (!expected || !new RegExp(`^(?:${expected[0]})$`).test(normalizedExtension)
     || !new RegExp(`^(?:${expected[1]})$`).test(normalizedMime)) return false;
 
-  if (normalizedKind === 'animated_avatar' && normalizedExtension === 'gif') return isAnimatedGif(data);
-  if (normalizedKind === 'animated_avatar' && normalizedExtension === 'webp') {
-    return hasAscii(data, 'RIFF') && hasAscii(data, 'WEBP', 8) && (containsAscii(data, 'ANIM') || containsAscii(data, 'ANMF'));
+  if (normalizedKind === 'animated_avatar') return inspectAnimatedImageBounds(data, normalizedMime).valid;
+  if (normalizedKind === 'background_video') return inspectProfileVideoBounds(data, normalizedMime).valid;
+  if (normalizedExtension === 'webp') return inspectStaticWebpBounds(data, normalizedKind).valid;
+  if (normalizedExtension === 'jpg') {
+    return data.length >= 4
+      && data[0] === 0xff && data[1] === 0xd8
+      && data[data.length - 2] === 0xff && data[data.length - 1] === 0xd9
+      && inspectJpegBounds(data, 'share_image').valid;
   }
-  if (normalizedExtension === 'webp') return hasAscii(data, 'RIFF') && hasAscii(data, 'WEBP', 8);
-  if (normalizedExtension === 'jpg') return data.length >= 4 && data[0] === 0xff && data[1] === 0xd8 && data[data.length - 2] === 0xff && data[data.length - 1] === 0xd9;
-  if (normalizedExtension === 'ani') return hasAscii(data, 'RIFF') && hasAscii(data, 'ACON', 8);
+  if (normalizedExtension === 'ani') return inspectAnimatedCursorBounds(data).valid;
   if (normalizedExtension === 'mp4') return data.length >= 12 && hasAscii(data, 'ftyp', 4);
   if (normalizedExtension === 'webm') {
     const header = data.subarray(0, Math.min(data.length, 512));

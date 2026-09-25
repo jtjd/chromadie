@@ -29,6 +29,7 @@
     <h2 class="homepage-section-heading" id="homepage-start-title">
       Make your own profile.
     </h2>
+    <p class="homepage-start__invitation">Start with a name. See where your colors take you.</p>
 
     {#if accountState === ACCOUNT_STATES.SIGNED_OUT && !isAuthenticated}
       <form class="homepage-start__claim" on:submit={handleSubmit} novalidate>
@@ -48,13 +49,14 @@
             placeholder="yourname"
             aria-label="Choose your profile name"
             aria-invalid={!usernameIsValid}
+            aria-describedby={!usernameIsValid ? 'homepage-username-error' : undefined}
           />
         </label>
         <button class="homepage-button homepage-start__claim-button" type="submit">Claim your profile</button>
       </form>
 
       {#if !usernameIsValid}
-        <p class="homepage-start__error" role="alert">Use 1–20 letters, numbers, or underscores.</p>
+        <p id="homepage-username-error" class="homepage-start__error" role="alert">Use 1–20 letters, numbers, or underscores.</p>
       {/if}
 
       <a class="homepage-start__signin" href="/login?next=%2Fprofile%2Fsettings">Already have an account? Sign in</a>
@@ -75,12 +77,16 @@
   }
 
   .homepage-start__content {
+    position: relative;
+    isolation: isolate;
     display: grid;
     width: min(100%, 920px);
     margin-inline: auto;
     justify-items: center;
     text-align: center;
   }
+
+  .homepage-start__invitation { margin: 0 0 36px; color: var(--homepage-secondary-muted); font-size: 1rem; line-height: 1.7; }
 
   .homepage-start__content :global(.homepage-section-heading) {
     max-width: 720px;
@@ -90,7 +96,7 @@
   .homepage-start__claim {
     display: grid;
     grid-template-columns: minmax(300px, 1fr) auto;
-    width: min(100%, 720px);
+    width: min(100%, 640px);
     gap: 12px;
     margin: 0;
   }
@@ -101,9 +107,9 @@
     min-height: 58px;
     align-items: center;
     padding: 0 18px;
-    border: 1px solid rgba(255,255,255,.14);
+    border: 1px solid var(--homepage-border-strong);
     border-radius: 9px;
-    background: #f5f5f7;
+    background: var(--homepage-panel);
     cursor: text;
   }
 
@@ -118,7 +124,7 @@
 
   .homepage-start__field span {
     flex: 0 0 auto;
-    color: #75757e;
+    color: var(--homepage-muted);
     font: 600 1rem / 1 var(--homepage-display);
   }
 
@@ -130,8 +136,8 @@
     border: 0;
     outline: 0;
     background: transparent;
-    color: #101014;
-    caret-color: #101014;
+    color: var(--homepage-text);
+    caret-color: var(--homepage-text);
     font: 600 1rem / 1 var(--homepage-display);
   }
 
@@ -156,7 +162,7 @@
 
   .homepage-start__signin {
     display: inline-flex;
-    min-height: 38px;
+    min-height: 44px;
     align-items: center;
     margin-top: 12px;
     color: var(--homepage-secondary-muted);

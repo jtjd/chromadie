@@ -422,7 +422,7 @@ test('public viewport and Compact roll contracts do not inherit legacy offsets',
   assert.match(card, /profile-reference-card__avatar/);
   assert.doesNotMatch(card, /identity-card--layout-(?:sleek|minimal|modern|portfolio)/);
   assert.match(music, /profile-music--compact profile-music--spotify-compact/);
-  const compactMusicBranch = music.split('{:else if spotifyEmbedSrc && compact}')[1]?.split('{:else if spotifyEmbedSrc && (!deferMedia')[0] || '';
+  const compactMusicBranch = music.split('{:else if spotifyEmbedSrc && compact}')[1]?.split('{:else if spotifyEmbedSrc && spotifyActive}')[0] || '';
   assert.doesNotMatch(compactMusicBranch, /<iframe/);
 });
 

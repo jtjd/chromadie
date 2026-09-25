@@ -8,7 +8,6 @@
   } from './profileWidgetsLegacy.js';
 
   export let widgets = [];
-  export let deferMedia = false;
   export let compact = false;
   /** @type {(entryKey: string) => void} */
   export let onEntryClick = () => {};
@@ -24,7 +23,7 @@
   }
 
   function isLoaded(widget) {
-    return !deferMedia || loaded.includes(widget.order);
+    return loaded.includes(widget.order);
   }
 
   function isFailed(widget) {

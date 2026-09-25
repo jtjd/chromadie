@@ -419,6 +419,7 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   const editor = await readFile(new URL('../src/lib/ProfileLinksEditor.svelte', import.meta.url), 'utf8');
   const profileData = await readFile(new URL('../src/lib/profileData.js', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+  const configurationWrites = await readFile(new URL('../src/lib/profile-studio/configurationWrites.js', import.meta.url), 'utf8');
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
   const renderModel = await readFile(new URL('../src/lib/profileRenderModel.js', import.meta.url), 'utf8');
 
@@ -433,8 +434,8 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   assert.match(profileData, /get_my_profile_configuration/);
   assert.match(profileData, /get_public_profile_configuration/);
   assert.doesNotMatch(profileData, /from\(['"]profiles['"]\)/);
-  assert.match(settings, /save_profile_configuration_v2/);
-  assert.match(settings, /publish_profile_studio_v2/);
+  assert.match(configurationWrites, /save_profile_configuration_v2/);
+  assert.match(configurationWrites, /publish_profile_studio_v2/);
   assert.match(settings, /loadProfileStudioContext/);
   assert.match(renderModel, /getProfileComposition/);
   assert.match(renderModel, /getVisibleProfileLinks/);

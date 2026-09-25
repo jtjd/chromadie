@@ -34,8 +34,10 @@ test('Profile Studio publishes identity and the complete expression-aware config
     read('.github/workflows/ci.yml'),
     read('.github/workflows/database-ci.yml')
   ]);
+  const configurationWrites = await read('src/lib/profile-studio/configurationWrites.js');
 
-  assert.match(settings, /publish_profile_studio_v2/);
+  assert.match(settings, /await loadConfigurationWriteService\(\)/);
+  assert.match(configurationWrites, /publish_profile_studio_v2/);
   assert.doesNotMatch(settings, /update_my_profile_identity/);
   assert.match(settings, /profile\.update\(/);
   assert.match(settings, /const editorIdentity = getDashboardEditor\(\)\?\.getDraftIdentity\?\.\(\);/);

@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import {
   PRODUCT_ANALYTICS_CONSENT_KEY,
+  PROFILE_INSIGHT_RECENCY_KEY,
   createAggregateProductAnalyticsAdapter,
   createMemoryProductAnalyticsAdapter,
   getProductAnalyticsConsent,
@@ -14,7 +15,10 @@ import {
 
 function installStorage(initial = null) {
   const previous = globalThis.localStorage;
-  const values = new Map(initial ? [[PRODUCT_ANALYTICS_CONSENT_KEY, initial]] : []);
+  const initialValues = typeof initial === 'string'
+    ? [[PRODUCT_ANALYTICS_CONSENT_KEY, initial]]
+    : Object.entries(initial || {});
+  const values = new Map(initialValues);
   const storage = {
     getItem(key) {
       return values.has(key) ? values.get(key) : null;
@@ -112,6 +116,20 @@ test('denied consent blocks events and the memory adapter remains bounded', () =
     trackProductEvent('route_view', { route: 'profile-settings' });
     trackProductEvent('route_view', { route: 'privacy' });
     assert.deepEqual(adapter.getEvents().map(event => event.properties.route), ['profile-settings', 'privacy']);
+  } finally {
+    restore();
+  }
+});
+
+test('withdrawing analytics consent clears previously collected profile-insight recency keys', () => {
+  const restore = installStorage({
+    [PRODUCT_ANALYTICS_CONSENT_KEY]: 'granted',
+    [PROFILE_INSIGHT_RECENCY_KEY]: JSON.stringify(['2026-09-24:view:ada:'])
+  });
+
+  try {
+    assert.equal(setProductAnalyticsConsent('denied'), 'denied');
+    assert.equal(globalThis.localStorage.getItem(PROFILE_INSIGHT_RECENCY_KEY), null);
   } finally {
     restore();
   }

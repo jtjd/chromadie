@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import { loadProfileContext } from '../src/lib/profileData.js';
 import {
+  invokeProfileSocialRpc,
   normalizeProfileSocial,
   normalizeProfileSocialSettings
 } from '../src/lib/profileSocial.js';
@@ -56,6 +57,22 @@ function createSocialSupabase({ profile, social, settings = null }) {
 }
 
 const validEntryKey = '11111111-1111-4111-8111-111111111111';
+
+test('a rejected social RPC becomes a resolved result so callers can release UI locks', async () => {
+  const transportError = new Error('Network unavailable.');
+  const client = { rpc: async () => { throw transportError; } };
+
+  const result = await invokeProfileSocialRpc(client, 'toggle_profile_favorite', { p_profile_id: 'target' });
+
+  assert.deepEqual(result, { data: null, error: transportError });
+});
+
+test('social RPC responses retain their resolved data and error shape', async () => {
+  const response = { data: { success: false }, error: null };
+  const client = { rpc: async () => response };
+
+  assert.equal(await invokeProfileSocialRpc(client, 'toggle_profile_reaction'), response);
+});
 
 test('social normalization keeps public signals bounded and drops private fields', () => {
   const social = normalizeProfileSocial({

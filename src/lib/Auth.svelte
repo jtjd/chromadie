@@ -3,6 +3,7 @@
   import { supabase } from './supabase';
   import { getAuthCallbackUrl, getResetPasswordUrl } from './authUrls';
   import { isProtectedUsername, isUsernameShapeValid, normalizeUsernameKey } from './usernamePolicy.js';
+  import { createTurnstileLifecycle } from './auth/turnstileLifecycle.js';
 
   export let onClose = () => {};
   export let standalone = false;
@@ -28,10 +29,8 @@
   let usernameCheckRequestId = 0;
   let usernameCheckTimer = null;
 
-  let turnstileWidgetId = null;
-  let captchaToken = '';
+  let turnstileLifecycle = null;
   let turnstileState = 'loading';
-  let turnstilePoll = null;
   const siteKey = import.meta.env.VITE_CLOUDFLARE_SITE_KEY;
 
   function isLocalDevelopment() {
@@ -66,26 +65,6 @@
     }
     const query = params.join('&');
     return `/${nextTab}${query ? `?${query}` : ''}`;
-  }
-
-  function getFriendlyAuthError(authError, fallback) {
-    const message = typeof authError === 'string'
-      ? authError
-      : authError?.message || authError?.error_description || authError?.error || '';
-    const lowerMessage = message.toLowerCase();
-
-    if (!message || message === '{}') return fallback;
-    if (lowerMessage.includes('username') && (lowerMessage.includes('available') || lowerMessage.includes('moderation'))) {
-      return 'That username is not available. Please choose another one.';
-    }
-    if (lowerMessage.includes('captcha')) return 'Please complete the security check.';
-    if (lowerMessage.includes('already registered')) return 'That email is already registered. Try signing in instead.';
-    if (lowerMessage.includes('email not confirmed')) return 'Check your inbox to confirm your account before signing in.';
-    if (lowerMessage.includes('invalid login credentials')) return 'Invalid email or password. Double-check both and try again.';
-    if (lowerMessage.includes('rate limit')) return 'Too many attempts. Please wait a moment and try again.';
-    if (lowerMessage.includes('password')) return message || fallback;
-    if (message) return message;
-    return fallback;
   }
 
   function clearMessages() {
@@ -235,59 +214,24 @@
   }
 
   function getCaptchaToken() {
-    return captchaToken || null;
+    return turnstileLifecycle?.getToken() || null;
   }
 
   function resetCaptcha() {
-    if (turnstileWidgetId !== null && window.turnstile) {
-      window.turnstile.reset(turnstileWidgetId);
-    }
-    captchaToken = '';
+    turnstileLifecycle?.reset();
   }
 
   function removeTurnstile() {
-    if (turnstileWidgetId !== null && typeof window !== 'undefined' && window.turnstile) {
-      window.turnstile.remove(turnstileWidgetId);
-    }
-    turnstileWidgetId = null;
-    captchaToken = '';
+    turnstileLifecycle?.remove();
   }
 
   function renderTurnstile() {
-    if (turnstileWidgetId !== null) return;
-    if (window.turnstile && document.getElementById('turnstile-container') && siteKey) {
-      captchaToken = '';
-      turnstileWidgetId = window.turnstile.render('#turnstile-container', {
-        sitekey: siteKey,
-        callback(token) {
-          captchaToken = token || '';
-          turnstileState = 'ready';
-        },
-        'expired-callback'() {
-          captchaToken = '';
-        },
-        'error-callback'() {
-          captchaToken = '';
-          turnstileState = 'error';
-          error = 'The security check failed to load. Please retry.';
-        }
-      });
-      turnstileState = 'ready';
-    }
+    turnstileLifecycle?.render();
   }
 
   function retryTurnstile() {
     error = '';
-    turnstileState = 'loading';
-    if (!window.turnstile) {
-      window.location.reload();
-      return;
-    }
-    if (turnstileWidgetId !== null) {
-      window.turnstile.remove(turnstileWidgetId);
-      turnstileWidgetId = null;
-    }
-    renderTurnstile();
+    turnstileLifecycle?.retry();
   }
 
   async function handleProvider(provider) {
@@ -307,7 +251,10 @@
     });
 
     if (providerError) {
-      error = getFriendlyAuthError(providerError, `Could not continue with ${provider}.`);
+      const messages = await import('./authMessages.js').catch(() => null);
+      error = messages
+        ? messages.getFriendlyAuthError(providerError, `Could not continue with ${provider}.`)
+        : 'Authentication is temporarily unavailable. Try again.';
       loading = false;
       return;
     }
@@ -392,6 +339,13 @@
       return;
     }
 
+    const messages = await import('./authMessages.js').catch(() => null);
+    if (!messages) {
+      error = 'Authentication is temporarily unavailable. Try again.';
+      resetCaptcha();
+      loading = false;
+      return;
+    }
     if (tab === 'signup') {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -407,11 +361,12 @@
         }
       });
 
-      if (signUpError) {
-        error = getFriendlyAuthError(signUpError, 'Could not create your account.');
+      const signupFeedback = messages.getSignupFeedback({ data, error: signUpError });
+      if (signupFeedback.kind === 'error') {
+        error = signupFeedback.message;
         resetCaptcha();
-      } else if (!data.session) {
-        notice = 'Check your email for a confirmation link, then come back to sign in.';
+      } else if (signupFeedback.kind === 'notice') {
+        notice = signupFeedback.message;
       }
     } else if (tab === 'forgot') {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
@@ -419,11 +374,12 @@
         ...(token ? { captchaToken: token } : {})
       });
 
-      if (resetError) {
-        error = getFriendlyAuthError(resetError, 'Could not send the reset email.');
+      const resetFeedback = messages.getPasswordResetFeedback(resetError);
+      if (resetFeedback.kind === 'error') {
+        error = resetFeedback.message;
         resetCaptcha();
       } else {
-        notice = 'If that account exists, we sent a reset link to your inbox.';
+        notice = resetFeedback.message;
       }
     } else {
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -433,7 +389,7 @@
       });
 
       if (signInError) {
-        error = getFriendlyAuthError(signInError, 'Could not sign you in.');
+        error = messages.getSignInErrorMessage(signInError);
         resetCaptcha();
       }
       // A successful sign-in is redirected by the route shell's auth event.
@@ -465,38 +421,27 @@
 
     if (isLocalDevelopment()) {
       turnstileState = 'ready';
-      return () => {
-        if (usernameCheckTimer !== null) clearTimeout(usernameCheckTimer);
-      };
+    } else {
+      const lifecycle = createTurnstileLifecycle({
+        windowRef: window,
+        documentRef: document,
+        siteKey,
+        onState(nextState) {
+          turnstileState = nextState;
+        },
+        onError(message) {
+          error = message;
+        }
+      });
+      turnstileLifecycle = lifecycle;
+      lifecycle.start();
     }
-
-    if (!siteKey) {
-      turnstileState = 'error';
-      return () => {
-        if (usernameCheckTimer !== null) clearTimeout(usernameCheckTimer);
-      };
-    }
-
-    let attempts = 0;
-    turnstilePoll = setInterval(() => {
-      attempts += 1;
-      if (window.turnstile) {
-        clearInterval(turnstilePoll);
-        turnstilePoll = null;
-        turnstileState = 'ready';
-        renderTurnstile();
-      } else if (attempts >= 50) {
-        clearInterval(turnstilePoll);
-        turnstilePoll = null;
-        turnstileState = 'error';
-        error = 'The security check could not load. Check your connection or content blocker, then retry.';
-      }
-    }, 200);
 
     return () => {
-      if (turnstilePoll !== null) clearInterval(turnstilePoll);
+      const lifecycle = turnstileLifecycle;
+      turnstileLifecycle = null;
+      lifecycle?.stop();
       if (usernameCheckTimer !== null) clearTimeout(usernameCheckTimer);
-      if (turnstileWidgetId !== null && window.turnstile) window.turnstile.remove(turnstileWidgetId);
     };
   });
 

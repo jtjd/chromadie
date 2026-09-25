@@ -1,9 +1,10 @@
 <script>
   import { loadOwnerAchievementRecord } from './achievementData.js';
+  import { saveAchievementPins } from './achievementBadgeMutation.js';
   import { isPinnableAchievement, resolveAchievementProgress } from './achievementProgress.js';
-  import { addToast, equippedBadges, profile } from './stores.js';
+  import { addToast, equippedBadges, profile, session } from './stores.js';
   import { supabase } from './supabase.js';
-  import { onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
 
   export let userId = '';
   export let progression = {};
@@ -16,6 +17,7 @@
   let filter = 'all';
   let saving = false;
   let requestId = 0;
+  let activeOwnerId = '';
 
   $: pinnedIds = ($profile?.equipped_badges || accountProfile?.equipped_badges || [])
     .filter(isPinnableAchievement);
@@ -27,22 +29,53 @@
     return true;
   });
   $: unlockedCount = definitions.filter(achievement => unlocked[achievement.id]).length;
-  onMount(() => loadRecord());
+  $: syncOwner(userId || '');
 
-  async function loadRecord() {
+  function syncOwner(nextOwnerId) {
+    if (nextOwnerId === activeOwnerId) return;
+    activeOwnerId = nextOwnerId;
+    requestId += 1;
+    definitions = [];
+    unlocked = {};
+    error = '';
+    filter = 'all';
+    saving = false;
+    loading = Boolean(nextOwnerId);
+    if (nextOwnerId) void loadRecord(nextOwnerId);
+  }
+
+  onDestroy(() => { requestId += 1; });
+
+  async function loadRecord(ownerId = activeOwnerId) {
+    if (!ownerId) return;
     const currentRequest = ++requestId;
     loading = true;
     error = '';
-    const result = await loadOwnerAchievementRecord(supabase, userId);
-    if (currentRequest !== requestId) return;
+    let result;
+    try {
+      result = await loadOwnerAchievementRecord(supabase, ownerId);
+    } catch {
+      if (currentRequest === requestId && ownerId === activeOwnerId && ownerId === $session?.user?.id) {
+        error = 'Your achievement library could not be loaded.';
+        loading = false;
+      }
+      return;
+    }
+    if (currentRequest !== requestId || ownerId !== activeOwnerId || ownerId !== $session?.user?.id) return;
     definitions = result.definitions;
     unlocked = result.unlocked;
     error = result.error ? 'Your achievement library could not be loaded.' : '';
     loading = false;
   }
 
+  function retryLoadRecord() {
+    void loadRecord(activeOwnerId);
+  }
+
   async function togglePinned(id) {
-    if (saving || !unlocked[id] || !isPinnableAchievement(id)) return;
+    const ownerId = activeOwnerId;
+    const ownerRequest = requestId;
+    if (saving || !ownerId || ownerId !== $session?.user?.id || !unlocked[id] || !isPinnableAchievement(id)) return;
     const next = pinnedIds.includes(id)
       ? pinnedIds.filter(value => value !== id)
       : [...pinnedIds, id];
@@ -52,16 +85,28 @@
     }
 
     saving = true;
-    const { data, error: saveError } = await supabase.rpc('equip_badges', { p_badge_ids: next });
-    saving = false;
-    if (saveError || data?.success === false) {
-      addToast(data?.error || 'Pinned achievements could not be updated.', 'error');
-      return;
+    const isCurrent = () => ownerId === activeOwnerId
+      && ownerRequest === requestId
+      && ownerId === userId
+      && ownerId === $session?.user?.id;
+    try {
+      const authResult = await supabase.auth.getSession();
+      const accessToken = authResult?.data?.session?.access_token || '';
+      if (!accessToken || authResult?.data?.session?.user?.id !== ownerId || !isCurrent()) return;
+      const result = await saveAchievementPins({ supabaseClient: supabase, badgeIds: next, accessToken, isCurrent });
+      if (result.stale || !isCurrent()) return;
+      if (!result.success) {
+        addToast(result.error, 'error');
+        return;
+      }
+      equippedBadges.set(result.badges);
+      profile.update(value => value?.id === ownerId ? { ...value, equipped_badges: result.badges } : value);
+      addToast('Pinned achievements updated.', 'success');
+    } catch {
+      if (isCurrent()) addToast('Pinned achievements could not be updated.', 'error');
+    } finally {
+      if (isCurrent()) saving = false;
     }
-    const badges = Array.isArray(data?.badges) ? data.badges : next;
-    equippedBadges.set(badges);
-    profile.update(value => value ? { ...value, equipped_badges: badges } : value);
-    addToast('Pinned achievements updated.', 'success');
   }
 
   function progressFor(id) {
@@ -90,7 +135,7 @@
   {#if loading}
     <div class="record-state" role="status">Loading your achievement library…</div>
   {:else if error}
-    <div class="record-state" role="alert">{error} <button type="button" on:click={loadRecord}>Retry</button></div>
+    <div class="record-state" role="alert">{error} <button type="button" on:click={retryLoadRecord}>Retry</button></div>
   {:else if visibleDefinitions.length === 0}
     <div class="record-state">No achievements match this filter.</div>
   {:else}

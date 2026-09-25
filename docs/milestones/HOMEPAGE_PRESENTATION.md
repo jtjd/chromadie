@@ -6,6 +6,24 @@ Support the playable roll hero with concrete reasons to create and customize
 a profile. The user approved the section restructure and requested plain
 language without forced branding such as “your story” or “journey.”
 
+## 2026-09-22 composition refinement
+
+The user authorized broader design liberties below the unchanged Hero Roll.
+The audit found competing lower-page artwork, inconsistent controls, and a
+viewport-sized minimum height on every supporting section. Refine the existing
+components without changing data or gameplay interfaces:
+
+1. Use a flat canvas, shared alignment, natural section heights, and stronger type.
+2. Recompose profile selection and its preview, discoveries, public profiles,
+   plan comparison, FAQ, signup, and footer around a clear reading order.
+3. Keep motion brief, make preview playback opt-in, and fit mobile specimens.
+4. Review desktop/mobile interactions, run existing checks, and update the logs.
+
+The current supporting order is profile example, collection/name styles,
+community, pricing, FAQ, and guest signup. This supersedes the older order below.
+No migrations or compatibility changes are needed. Existing source profile
+renderers, canonical pricing features, account states, and lazy boundaries remain.
+
 ## Plan and scope
 
 1. Keep the authoritative playable hero and its account behavior.

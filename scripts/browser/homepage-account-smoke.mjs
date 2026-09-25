@@ -5,14 +5,15 @@ import { startVite, startChromium, findAvailablePort, terminateProcess, loadLoca
 
 assertLocalSupabaseUrl((await loadLocalEnvironment()).url);
 const evidenceDir = join(process.cwd(), 'artifacts', 'homepage-account-refinement');
+const externalAppUrl = String(process.env.HOMEPAGE_SMOKE_URL || '').trim();
 await mkdir(evidenceDir, { recursive: true });
 let server;
 let chromium;
 try {
-  const appPort = await findAvailablePort(5193);
   const debugPort = await findAvailablePort(9250);
-  const appUrl = `http://127.0.0.1:${appPort}`;
-  server = await startVite({ appPort, evidenceDir });
+  const appPort = externalAppUrl ? null : await findAvailablePort(5193);
+  const appUrl = externalAppUrl || `http://127.0.0.1:${appPort}`;
+  if (!externalAppUrl) server = await startVite({ appPort, evidenceDir });
   chromium = await startChromium({ appUrl, debugPort, evidenceDir, width: 1440, height: 900 });
   const page = chromium.page;
   await page.waitFor('document.querySelector(".homepage-reference .roll-page")', 'homepage mount');
@@ -44,6 +45,8 @@ try {
   await page.waitFor('document.querySelector(".roll-page__streak")?.textContent.includes("2-day streak")', 'account details update without another roll');
   assert.equal(await page.evaluate('Boolean(document.querySelector(".roll-page__guest-cta"))'), false);
   assert.equal(await page.evaluate('document.querySelector(".roll-acquisition-actions .result-action--primary")?.textContent'), 'View your profile');
+  assert.equal(await page.evaluate('document.querySelector(".roll-acquisition-actions__next-steps")?.textContent.includes("Customize your profile")'), true);
+  assert.equal(await page.evaluate('document.querySelector(".roll-acquisition-actions__next-steps")?.textContent.includes("Explore leaderboard")'), true);
   const dedicatedActionLayout = await page.evaluate(`(() => {
     const summary = document.querySelector('.roll-result-summary')?.getBoundingClientRect();
     const actions = document.querySelector('.roll-acquisition-actions--dedicated');
@@ -74,7 +77,7 @@ try {
     const geometry = await page.evaluate(`({width:innerWidth,scroll:document.documentElement.scrollWidth, action:document.querySelector('.roll-acquisition-actions .result-action--primary')?.getBoundingClientRect().toJSON(), heading:document.querySelector('.roll-page__context h1')?.getBoundingClientRect().toJSON()})`);
     assert.ok(geometry.scroll <= width + 1, JSON.stringify(geometry));
     assert.ok(geometry.action.width > 0 && geometry.action.left >= 0 && geometry.action.right <= width, JSON.stringify(geometry));
-    if (width >= 1000) assert.ok(await page.evaluate('document.querySelector(".profile-example").getBoundingClientRect().top >= innerHeight - 1'), 'Next section must remain below the desktop hero');
+    assert.equal(await page.evaluate('document.querySelectorAll(".homepage-content .homepage-section").length'), 0, 'Removed homepage sections must stay unmounted');
     assert.ok(await page.evaluate('(() => { const r=document.querySelector(".roll-page__game").getBoundingClientRect();return Math.abs((r.left+r.right)/2-innerWidth/2)<=1;})()'), 'Result hero stays horizontally centered');
     await page.screenshot(join(evidenceDir, `result-${width}.png`));
   }
@@ -89,7 +92,7 @@ try {
   await page.evaluate(`window.homepageTest.stores.profileLoadFailed.set(false)`);
   await page.waitFor('document.querySelector(".roll-page__streak")', 'profile retry recovery');
 
-  await page.evaluate(`(() => {const t=window.homepageTest; t.delayed=true;t.stores.profile.set({id:'22222222-2222-4222-8222-222222222222',username:'SecondPlayer',current_streak:4,total_rolls:9,lifetime_ep:9000});t.stores.session.set({user:{id:'22222222-2222-4222-8222-222222222222'}});})()`);
+  await page.evaluate(`(() => {const t=window.homepageTest;t.boardError=true;t.delayed=true;t.stores.profile.set({id:'22222222-2222-4222-8222-222222222222',username:'SecondPlayer',current_streak:4,total_rolls:9,lifetime_ep:9000});t.stores.session.set({user:{id:'22222222-2222-4222-8222-222222222222'}});})()`);
   await page.waitFor('window.homepageTest.pending !== null', 'second-account read held');
   assert.equal(await page.evaluate('Boolean(document.querySelector(".roll-page__context--result"))'), false);
   await page.evaluate('window.homepageTest.pending()');
@@ -106,37 +109,32 @@ try {
   await page.waitFor('document.querySelector(".roll-page__guest-cta")', 'restored guest result');
   assert.ok(await page.evaluate('document.querySelector(".roll-page__description").textContent.includes("saved on this device")'));
   assert.equal(await page.evaluate('Boolean(document.querySelector(".roll-page__streak"))'),false);
+  assert.equal(await page.evaluate('document.querySelector(".roll-acquisition-actions__next-steps")?.textContent.includes("Browse the leaderboard")'), true);
   await page.screenshot(join(evidenceDir,'guest-result.png'));
   await page.evaluate(`(() => {localStorage.removeItem('chromadie-roll');window.dispatchEvent(new StorageEvent('storage',{key:'chromadie-roll'}));})()`);
   await page.waitFor('document.querySelector(".guest-prompt--preroll")', 'guest return to preroll');
   console.log('PASS restored guest copy never promises account persistence');
 
   // Feed errors and populated responses use the same bounded public RPC.
-  await page.evaluate(`(() => {const t=window.homepageTest;t.boardError=true;t.stores.session.set({user:{id:'33333333-3333-4333-8333-333333333333'}});t.stores.profile.set({id:'33333333-3333-4333-8333-333333333333',username:'BoardTest'});t.stores.profileReady.set(true);t.daily=false;})()`);
   await page.waitFor('document.querySelector(".homepage-best-roll [role=alert] button")', 'public board error retry');
-  await page.evaluate(`window.homepageTest.boardError=false`);
+  await page.evaluate(`(() => {const t=window.homepageTest;t.boardError=false;t.boardRows=[{username:'PublicPlayer',display_name:'Public Player',hex_code:'#5EBAE3',score:38697,rarity:'Uncommon',identity:'Balanced Vivid Azure',rank:1,contributors:[]}];})()`);
   await page.click('.homepage-best-roll [role=alert] button','retry public board');
-  await page.waitFor('!document.querySelector(".homepage-community") && !document.querySelector(".homepage-best-roll [role=alert]")', 'empty community remains absent after retry');
-  await page.evaluate(`window.homepageTest.boardRows=[{username:'PublicPlayer',display_name:'Public Player',hex_code:'#5EBAE3',score:38697,rarity:'Uncommon',identity:'Balanced Vivid Azure',rank:1,contributors:[]}]`);
-  await page.evaluate(`window.homepageTest.stores.session.set(null);window.homepageTest.stores.profile.set(null);window.homepageTest.stores.profileReady.set(false)`);
   await page.waitFor('document.querySelector(".homepage-best-roll__identity-name")?.textContent.includes("Public")', 'populated public spotlight');
   await page.screenshot(join(evidenceDir,'populated-preroll.png'));
-  await page.waitFor('document.querySelector(".homepage-community .homepage-player")', 'populated community player');
-  console.log('PASS public feed failure/retry, compact empty state, and populated spotlight');
-
-  await page.evaluate('document.querySelector(".profile-example").scrollIntoView({block:"center"})');
-  await page.waitFor('document.querySelector(".profile-example [data-profile-layout-content=sleek]")', 'lazy curated example');
-  await page.waitFor('document.querySelector(".profile-example .profile-full-bleed__avatar")?.naturalWidth > 0', 'public example avatar');
-  await page.evaluate('document.fonts.ready');
-  assert.ok(await page.evaluate(`(() => {const outer=document.querySelector('.profile-example__canvas').getBoundingClientRect();const inner=document.querySelector('.profile-example [data-profile-layout-content]').getBoundingClientRect();return inner.left>=outer.left && inner.right<=outer.right;})()`), 'Example card must fit inside its canvas');
-  await page.screenshot(join(evidenceDir,'profile-example-desktop.png'));
-  await page.setViewport(390,844);
-  await page.evaluate('document.querySelector(".profile-example__canvas").scrollIntoView({block:"center"})');
-  await page.screenshot(join(evidenceDir,'profile-example-mobile.png'));
-  assert.equal(await page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'),true);
-  await page.setViewport(720,450);
-  assert.equal(await page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'),true);
-  console.log('PASS profile example desktop/mobile and 200% equivalent layout');
+  console.log('PASS public feed failure/retry and populated spotlight');
+  const profileLink = await page.evaluate('document.querySelector(".homepage-best-roll__identity-link")?.getAttribute("href")');
+  assert.equal(profileLink, '/publicplayer', 'Top roller must link to the real public profile');
+  for (const [width, height] of [[1440, 900], [768, 1024], [390, 844], [320, 812]]) {
+    await page.setViewport(width, height);
+    await page.evaluate('document.fonts.ready');
+    const geometry = await page.evaluate(`(() => {
+      const card = document.querySelector('.homepage-best-roll').getBoundingClientRect();
+      return { scroll: document.documentElement.scrollWidth, left: card.left, right: card.right, viewport: innerWidth };
+    })()`);
+    assert.ok(geometry.scroll <= width + 1 && geometry.left >= -1 && geometry.right <= width + 1, JSON.stringify(geometry));
+    await page.screenshot(join(evidenceDir, `top-roll-${width}.png`));
+  }
+  console.log('PASS real top-roll profile link and responsive homepage');
 } catch (error) {
   if (chromium?.page) {
     await writeFile(join(evidenceDir, 'failure.json'), JSON.stringify({

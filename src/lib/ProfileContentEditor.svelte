@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { normalizeProfileConfig } from './profileConfig.js';
-  import { normalizeProfileContent, PROFILE_CONTENT_LIMITS } from './profileContent.js';
+  import { normalizeProfileContentDraft, updateProfileContentDraft } from './profile-studio/contentDraft.js';
+  import { PROFILE_CONTENT_LIMITS } from './profileContent.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
 
   export let profileId = null;
@@ -14,7 +14,7 @@
   const dispatch = createEventDispatcher();
   const EMPTY_PROJECT = Object.freeze({ title: '', description: '', url: '', visible: true });
 
-  let draft = normalizeDraft(draftConfig || publishedConfig);
+  let draft = normalizeProfileContentDraft(draftConfig || publishedConfig, draftConfig, publishedConfig);
   let baseline = draft;
   let emptyProject = { ...EMPTY_PROJECT };
   let status = '';
@@ -27,19 +27,14 @@
     return JSON.parse(JSON.stringify(value));
   }
 
-  function normalizeDraft(value) {
-    const config = normalizeProfileConfig(value || draftConfig || publishedConfig);
-    return { ...config, content: normalizeProfileContent(config.content) };
-  }
-
   $: isDirty = JSON.stringify(draft) !== JSON.stringify(baseline);
   $: incomingKey = JSON.stringify({ profileId, draft: draftConfig, published: publishedConfig, updatedAt });
   $: if (incomingKey !== lastIncomingKey && !isDirty) syncIncoming();
 
   function syncIncoming() {
     lastIncomingKey = incomingKey;
-    draft = normalizeDraft(draftConfig || publishedConfig);
-    baseline = normalizeDraft(draftConfig || publishedConfig);
+    draft = normalizeProfileContentDraft(draftConfig || publishedConfig, draftConfig, publishedConfig);
+    baseline = normalizeProfileContentDraft(draftConfig || publishedConfig, draftConfig, publishedConfig);
     emptyProject = { ...EMPTY_PROJECT };
     error = '';
     status = '';
@@ -50,16 +45,7 @@
   }
 
   function updateContent(next) {
-    const content = { ...draft.content, ...next };
-    draft = normalizeDraft({ ...draft, content });
-    // Keep text as typed while editing. Public projection still normalizes URLs
-    // and text; incomplete HTTPS input must not erase itself on each keystroke.
-    draft.content.projects = draft.content.projects.map((project, index) => ({
-      ...project,
-      title: String(content.projects[index]?.title || '').slice(0, PROFILE_CONTENT_LIMITS.projectTitle),
-      description: String(content.projects[index]?.description || '').slice(0, PROFILE_CONTENT_LIMITS.projectDescription),
-      url: String(content.projects[index]?.url || '').slice(0, PROFILE_CONTENT_LIMITS.projectUrl)
-    }));
+    draft = updateProfileContentDraft(draft, next, draftConfig, publishedConfig);
     if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     status = '';
     error = '';
@@ -115,7 +101,7 @@
   }
 
   export function acceptSaved(nextConfig = draft) {
-    draft = normalizeDraft(nextConfig);
+    draft = normalizeProfileContentDraft(nextConfig, draftConfig, publishedConfig);
     baseline = clone(draft);
     if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     status = '';
@@ -134,7 +120,7 @@
   }
 
   export function resetTo(nextConfig = publishedConfig) {
-    draft = normalizeDraft(nextConfig);
+    draft = normalizeProfileContentDraft(nextConfig, draftConfig, publishedConfig);
     baseline = clone(draft);
     if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     error = '';

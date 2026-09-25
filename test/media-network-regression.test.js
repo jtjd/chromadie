@@ -26,19 +26,17 @@ test('persistent Profile Studio preview owns no independent profile/media fetch 
 });
 
 test('playable homepage network budget is bounded and avoids profile hydration', async () => {
-  const [home, community, smoke] = await Promise.all([
+  const [home, topRollDiscovery, smoke] = await Promise.all([
     read('src/lib/HomePage.svelte'),
-    read('src/lib/homepage/HomepageCommunity.svelte'),
+    read('src/lib/homepage/topRollDiscovery.js'),
     read('scripts/browser/homepage-reference-smoke.mjs')
   ]);
   assert.match(home, /import RollPage from '.\/RollPage\.svelte'/);
   assert.match(home, /<RollPage/);
-  assert.doesNotMatch(home, /ProfileShell|loadProfileContext|setInterval|HomepageProfileDemo|HomepageShowcase|homepageFixtures/);
-  // One bounded owner lookup and one conditional community fallback, never full profiles.
-  assert.equal((community.match(/supabase\.rpc\('get_public_discovery',/g) || []).length, 2);
-  assert.match(community, /if \(todayRows.length\) \{[\s\S]*?return;[\s\S]*?const fallbackResult/);
-  assert.match(community, /p_limit: COMMUNITY_FALLBACK_LIMIT/);
-  assert.equal((community.match(/supabase\.rpc\('get_public_discovery_spotlight'/g) || []).length, 1);
+  assert.doesNotMatch(home, /ProfileShell|loadProfileContext|setInterval|HomepageProfileDemo|HomepageShowcase|HomepageCommunity|homepageFixtures/);
+  assert.equal((topRollDiscovery.match(/rpc\('get_public_discovery_spotlight'/g) || []).length, 1);
+  assert.match(topRollDiscovery, /p_limit: DAILY_TOP_ROLL_LIMIT/);
+  assert.doesNotMatch(topRollDiscovery, /get_public_profile_|storage\/v1\/object/);
   assert.match(smoke, /discoveryCount <= 1/);
   assert.match(smoke, /profileHydrationCount === 0/);
   assert.match(smoke, /storageCount === 0/);

@@ -71,10 +71,11 @@ Status: complete on the current branch; visual evidence is under
 The supporting application surfaces now share the approved atmospheric canvas,
 quiet surface treatment, and a minimal `chm.lol` application header. The
 Phase 12 originally made signed-out `/` open guest Roll and authenticated `/`
-resolve to the owner profile. The later landing-page refinement supersedes that
-entry contract: `/` now remains a minimal public homepage for every session,
-the signed-in homepage CTA opens the owner profile, and `/?view=game` remains
-the direct Roll compatibility route.
+resolve to the owner profile. The later homepage refinement superseded that
+entry contract: `/` now owns the daily Roll for every session, and the signed-in
+homepage CTA opens the owner profile. The September 2026 homepage-only Roll
+decision also removes `/roll` and `/?view=game`; `/c/:id` remains the challenge
+entry point.
 
 No profile fields, media, music provider, social feature, notification,
 messaging, discovery expansion, monetization, schema, auth/RLS, roll,

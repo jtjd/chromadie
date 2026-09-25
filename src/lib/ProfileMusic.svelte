@@ -211,7 +211,7 @@
     <div class="profile-music__copy"><span>Profile music</span><strong>Spotify {spotifyType}</strong></div>
     <a class="profile-music__open" href={spotifyEmbedSrc} target="_blank" rel="noopener noreferrer">Open</a>
   </div>
-{:else if spotifyEmbedSrc && (!deferMedia || spotifyActive)}
+{:else if spotifyEmbedSrc && spotifyActive}
   <div class="profile-music profile-music--spotify" data-music-state="spotify" aria-label="Spotify profile music">
     <iframe
       src={spotifyEmbedSrc}
@@ -221,7 +221,7 @@
       referrerpolicy="strict-origin-when-cross-origin"
     ></iframe>
   </div>
-{:else if spotifyEmbedSrc && deferMedia}
+{:else if spotifyEmbedSrc}
   <div class:profile-music--compact={compact} class="profile-music profile-music--spotify-deferred" data-music-state="spotify-deferred" aria-label="Spotify profile music">
     <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
     <div class="profile-music__copy"><span>Profile music</span><strong>Spotify {spotifyType}</strong></div>
