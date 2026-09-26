@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher, onDestroy } from 'svelte';
   import { hasChromadiePlus } from './premiumEntitlements.js';
+  import ProfileMediaLibrary from './ProfileMediaLibrary.svelte';
   import ProfileMediaIcon from './ProfileMediaIcon.svelte';
 import { supabase } from './supabase.js';
 import { rpcWithAccessToken } from './rpcWithAccessToken.js';
@@ -10,7 +11,6 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
     PROFILE_ANIMATED_CURSOR_MIME,
     PROFILE_RICH_MEDIA_KINDS,
     extensionForRichMedia,
-    formatRichMediaBytes,
     isAnimatedCursorFile,
     normalizeRichMediaConfig,
     validateRichMediaFile
@@ -74,11 +74,6 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
   $: nextIncomingKey = `${profileId || ''}:${JSON.stringify(incomingConfig)}`;
   $: if (!busy && nextIncomingKey !== incomingKey) syncIncoming(incomingConfig, nextIncomingKey);
   $: activeAssets = assets.filter(asset => asset.status === 'active');
-  $: videoAssets = activeAssets.filter(asset => asset.kind === 'background_video');
-  $: animatedAvatarAssets = activeAssets.filter(asset => asset.kind === 'animated_avatar');
-  $: shareImageAssets = activeAssets.filter(asset => asset.kind === 'share_image');
-  $: cursorAssets = activeAssets.filter(asset => asset.kind === 'cursor');
-  $: pointerCursorAssets = activeAssets.filter(asset => asset.kind === 'pointer_cursor');
   $: audioAssets = activeAssets.filter(asset => asset.kind === 'audio');
   $: activeBackgroundVideo = assetForPath(richConfig.background_video_path, richConfig.background_video_asset_id);
   $: activeAnimatedAvatar = assetForPath(richConfig.animated_avatar_path, richConfig.animated_avatar_asset_id);
@@ -157,6 +152,7 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
         .select('id, kind, storage_path, storage_provider, r2_public_key, content_validation_version, content_hash_sha256, label, status, delivery_status, ever_public, mime_type, byte_size, duration_ms, width, height, metadata, created_at')
         .eq('user_id', requestedProfileId)
         .in('kind', PROFILE_RICH_MEDIA_KINDS)
+        .eq('status', 'active')
         .order('created_at', { ascending: false }));
     } catch (queryError) {
       loadError = queryError;
@@ -594,25 +590,6 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
     {/if}
     {#if !compact}
     <details class="rich-media-editor__advanced" open>
-    {#if loading}<p class="rich-media-editor__status" role="status">Loading your rich media library…</p>{/if}
-    {#if assetLibraryError}<p class="rich-media-editor__message rich-media-editor__message--error" role="alert">{assetLibraryError} <button type="button" style={quietButtonStyle} on:click={retryLoadAssets}>Retry</button></p>{/if}
-    {#if unverifiedAssets.length > 0}
-      <section class="rich-media-editor__library" aria-label="Saved media needing a safety check">
-        <h3>Saved media check</h3>
-        <p>Some saved media needs a one-time check before it can appear on your profile.</p>
-        {#each unverifiedAssets as asset (asset.id)}
-          <div class="rich-media-editor__message" style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
-            <span>{asset.label || asset.kind.replace('_', ' ')}</span>
-            {#if hasProfileMediaRevalidationHash(asset)}
-              <button type="button" style={quietButtonStyle} disabled={busy} on:click={() => revalidateAsset(asset)}>Check saved media</button>
-            {:else}
-              <span>Re-upload required</span>
-            {/if}
-            <button type="button" style={quietButtonStyle} disabled={busy} on:click={() => removeAsset(asset)}>Delete from library</button>
-          </div>
-        {/each}
-      </section>
-    {/if}
     <p class="rich-media-editor__hint">Upload background video, an animated avatar, profile audio, custom cursors, and a share preview. Plus includes 1 GB of media storage; up to five audio tracks can be active at once.</p>
 
     <div class="rich-media-editor__upload-grid">
@@ -666,29 +643,6 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
       </div>
     </div>
 
-    {#each [
-      ['background_video', 'Background videos', videoAssets, 'background_video_path', 'background_video_asset_id'],
-      ['animated_avatar', 'Animated avatars', animatedAvatarAssets, 'animated_avatar_path', 'animated_avatar_asset_id'],
-      ['share_image', 'Share previews', shareImageAssets, 'share_image_path', 'share_image_asset_id'],
-      ['cursor', 'Cursors', cursorAssets, 'cursor_path', 'cursor_asset_id'],
-      ['pointer_cursor', 'Pointer cursors', pointerCursorAssets, 'pointer_cursor_path', 'pointer_cursor_asset_id']
-    ] as group (group[0])}
-      {#if group[2].length}
-        <section class="rich-media-editor__library" aria-label={String(group[1])}>
-          <h3>{group[1]} <span>{group[2].length}</span></h3>
-          <div class="rich-media-editor__asset-row">
-            {#each group[2] as asset (asset.id)}
-              <article class:rich-media-editor__asset--active={richConfig[group[4]] === asset.id || (group[3] && richConfig[group[3]] === asset.storage_path)} class="rich-media-editor__asset">
-                {#if group[0] === 'background_video'}<video src={assetMediaUrl(asset)} muted loop playsinline preload="metadata" aria-label={asset.label || 'Background video'}></video>{:else if animatedCursorAsset(asset)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={assetMediaUrl(asset)} alt={asset.label || group[1]} loading="lazy" />{/if}
-                <div><strong>{asset.label || 'Untitled asset'}</strong><small>{formatRichMediaBytes(asset.byte_size)}</small></div>
-                <div class="rich-media-editor__asset-actions"><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => selectAsset(group[0], asset)}>{richConfig[group[4]] === asset.id || (group[3] && richConfig[group[3]] === asset.storage_path) ? 'Active' : 'Use'}</button><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => removeAsset(asset)}>Remove</button></div>
-              </article>
-            {/each}
-          </div>
-        </section>
-      {/if}
-    {/each}
-
     {#if audioAssets.length || audioTracks.length}
       <section class="rich-media-editor__library" aria-label="Audio playlist">
         <h3>Audio playlist <span>{audioTracks.length}/5</span></h3>
@@ -710,16 +664,21 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
           <label>Default volume <input type="range" min="0" max="1" step="0.05" bind:value={audioVolume} /></label>
         </div>
         <button type="button" style={actionButtonStyle} disabled={busy} on:click={saveAudioSettings}>Save audio settings</button>
-        {#each audioAssets as asset (asset.id)}
-          {#if !audioTracks.some(track => track.asset_id === asset.id)}<button type="button" class="rich-media-editor__track-add" disabled={busy || audioTracks.length >= 5} on:click={() => selectAsset('audio', asset)}>Add {asset.label || 'track'}</button>{/if}
-        {/each}
+
       </section>
     {/if}
 
-    {#if error}<p class="rich-media-editor__message rich-media-editor__message--error" role="alert">{error}</p>{/if}
-    {#if status}<p class="rich-media-editor__message" role="status" aria-live="polite">{status}</p>{/if}
     </details>
     {/if}
+    {#if loading}<p class="rich-media-editor__status" role="status">Loading your rich media library…</p>{/if}
+    {#if assetLibraryError}<p class="rich-media-editor__message rich-media-editor__message--error" role="alert">{assetLibraryError} <button type="button" style={quietButtonStyle} on:click={retryLoadAssets}>Retry</button></p>{/if}
+    {#if error}<p class="rich-media-editor__message rich-media-editor__message--error" role="alert">{error}</p>{/if}
+    {#if status}<p class="rich-media-editor__message" role="status" aria-live="polite">{status}</p>{/if}
+    <ProfileMediaLibrary assets={[...assets, ...unverifiedAssets]}
+      selectedIds={[richConfig.background_video_asset_id, richConfig.animated_avatar_asset_id, richConfig.share_image_asset_id, richConfig.cursor_asset_id, richConfig.pointer_cursor_asset_id, ...audioTracks.map(track => track.asset_id)]}
+      {busy} title="Hosted media library"
+      description="Switch between saved files. Your audio playlist can include up to five tracks."
+      onSelect={asset => selectAsset(asset.kind, asset)} onCheck={revalidateAsset} onDelete={removeAsset} />
   </Module>
 {:else if compact}
   <article class="rich-media-editor__compact-card rich-media-editor__compact-card--audio rich-media-editor__compact-card--locked">
@@ -778,7 +737,7 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
   .rich-media-editor__compact-replace:disabled,
   .rich-media-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
   .rich-media-editor__advanced { grid-column: 1 / -1; margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
-  .rich-media-editor__hint, .rich-media-editor__status, .rich-media-editor__message { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
+  .rich-media-editor__hint, .rich-media-editor__status, .rich-media-editor__message { grid-column: 1 / -1; margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
   .rich-media-editor__message--error { color: var(--color-danger, #ff9eac); }
   .rich-media-editor__upload-grid { display: grid; grid-template-columns: repeat(5, minmax(10rem, 1fr)); gap: .75rem; margin-top: 1rem; }
   .rich-media-editor__upload-card { display: grid; align-content: start; gap: .45rem; min-width: 0; padding: .65rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 72%, transparent); }
@@ -794,21 +753,19 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
   .rich-media-editor__upload-preview > span { color: var(--color-accent-bright); font-size: 1.4rem; }
   .rich-media-editor__upload-preview small { padding: 0 .3rem; color: var(--color-ink-muted); font-size: var(--type-label); }
   .rich-media-editor__count { color: var(--color-ink-muted); font: 600 var(--type-label)/1 var(--font-mono-stack); }
-  .rich-media-editor__upload-grid small, .rich-media-editor__asset small { color: var(--color-ink-muted); font-size: var(--type-label); }
+  .rich-media-editor__upload-grid small { color: var(--color-ink-muted); font-size: var(--type-label); }
   .rich-media-editor__upload-grid input[type=file] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
   .rich-media-editor__library { display: grid; gap: .65rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--color-line-subtle); }
   .rich-media-editor__library h3 { display: flex; justify-content: space-between; margin: 0; color: var(--color-ink-strong); font-size: var(--type-small); }
   .rich-media-editor__library h3 span { color: var(--color-ink-muted); font: 600 var(--type-label)/1 var(--font-mono-stack); }
-  .rich-media-editor__asset-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .7rem; }
-  .rich-media-editor__asset { display: grid; gap: .45rem; min-width: 0; padding: .45rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); }
-  .rich-media-editor__asset--active { border-color: var(--color-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 24%, transparent); }
-  .rich-media-editor__asset img, .rich-media-editor__asset video { width: 100%; aspect-ratio: 16 / 7; object-fit: cover; border-radius: calc(var(--radius-sm) - .15rem); background: var(--surface-inset); }
-  .rich-media-editor__asset-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+
+
   .rich-media-editor__track { display: grid; grid-template-columns: minmax(8rem, 1fr) repeat(2, minmax(5rem, 7rem)) auto auto auto; align-items: end; gap: .45rem; padding: .55rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); }
   .rich-media-editor__track label { display: grid; gap: .25rem; color: var(--color-ink-muted); font-size: var(--type-label); }
   .rich-media-editor__settings { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; color: var(--color-ink-muted); font-size: var(--type-small); }
   .rich-media-editor__settings label { display: inline-flex; align-items: center; gap: .35rem; }
-  .rich-media-editor__track-add { margin-right: .4rem; border: 0; background: transparent; color: var(--color-ink-muted); cursor: pointer; text-decoration: underline; text-underline-offset: .16em; }
+
   @media (max-width: 78rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(3, minmax(10rem, 1fr)); } }
   @media (max-width: 42rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rich-media-editor__track { grid-template-columns: 1fr 1fr; } .rich-media-editor__track strong { grid-column: 1 / -1; } }
   @media (max-width: 28rem) { .rich-media-editor__upload-grid { grid-template-columns: minmax(0, 1fr); } }

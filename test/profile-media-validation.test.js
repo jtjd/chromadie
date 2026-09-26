@@ -29,7 +29,7 @@ test('both media libraries offer recheck and deletion for hidden legacy assets',
     readFile(new URL('../src/lib/ProfileRichMediaEditor.svelte', import.meta.url), 'utf8')
   ]);
   assert.match(expression, /revalidateProfileMediaR2\(asset\.id, asset\.content_hash_sha256, authorization\)/);
-  assert.match(expression, /on:click=\{\(\) => deleteAsset\(asset\)\}>Delete from library/);
+  assert.match(expression, /onCheck=\{revalidateAsset\} onDelete=\{deleteAsset\}/);
   assert.match(rich, /revalidateProfileMediaR2\(asset\.id, asset\.content_hash_sha256, authorization\)/);
-  assert.match(rich, /on:click=\{\(\) => removeAsset\(asset\)\}>Delete from library/);
+  assert.match(rich, /onCheck=\{revalidateAsset\} onDelete=\{removeAsset\}/);
 });

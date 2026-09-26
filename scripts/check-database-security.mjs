@@ -22,4 +22,7 @@ const isolatedSource = source
 
 const status = reportSupabaseSqlResult(runSupabaseSql(isolatedSource));
 if (status !== 0) process.exit(status);
+const slotTests = readFileSync(new URL('../supabase/tests/profile_media_single_slots.sql', import.meta.url), 'utf8');
+const slotStatus = reportSupabaseSqlResult(runSupabaseSql(slotTests));
+if (slotStatus !== 0) process.exit(slotStatus);
 console.log('Database security checks passed.');

@@ -3,6 +3,8 @@
   import { getAtmosphereDefinition } from './atmospheres.js';
   import AuthoredAtmosphereLayer from './AuthoredAtmosphereLayer.svelte';
   import { AUTHORED_ATMOSPHERES } from './authoredScenes.js';
+  import { ATMOSPHERE_STUDY_KEYS } from './atmosphereStudies.js';
+  import { drawAtmosphereStudy } from './studyScenes.js';
   import PrismDustLayer from './PrismDustLayer.svelte';
 
   export let atmosphereKey = '';
@@ -82,6 +84,7 @@
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: isAuthored = AUTHORED_ATMOSPHERES.includes(definition?.key);
+  $: isStudy = ATMOSPHERE_STUDY_KEYS.includes(definition?.key);
   $: media = definition && !isAuthored ? MEDIA[definition.key] : null;
   $: isProcedural = definition?.key === 'prism-dust';
   $: compact = mode === 'card' || mode === 'compact';
@@ -235,8 +238,10 @@
   });
 </script>
 
-{#if definition && (media || isProcedural || isAuthored)}
-  {#if isAuthored}
+{#if definition && (media || isProcedural || isAuthored || isStudy)}
+  {#if isStudy}
+    <AuthoredAtmosphereLayer atmosphereKey={definition.key} painter={drawAtmosphereStudy} {mode} {active} {animated} {className} />
+  {:else if isAuthored}
     <AuthoredAtmosphereLayer atmosphereKey={definition.key} {mode} {active} {animated} {className} />
   {:else if isProcedural}
     <PrismDustLayer {todayColor} {recentColors} {mode} {active} {animated} {className} />

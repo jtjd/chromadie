@@ -1,4 +1,6 @@
 import { NAME_MOTIONS } from '../src/lib/name/nameMotions.js';
+import { ATMOSPHERE_STUDIES, ATMOSPHERE_STUDY_KEYS } from '../src/lib/profile-atmosphere/atmosphereStudies.js';
+import { PROFILE_ATMOSPHERE_KEYS } from '../src/lib/profile-atmosphere/atmospheres.js';
 import { NAME_MOTION_COLLECTION, NEW_NAME_MOTION_KEYS } from '../src/lib/name/nameMotionCollection.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -316,6 +318,15 @@ async function readRemoteCatalog(columns, url, key, projectKeyIsLegacy = false) 
 const progressionManifest = await readProgressionManifest();
 const progressionKeys = progressionRewardKeys(progressionManifest);
 const seed = await readLocalCatalog(seedPath, progressionKeys);
+const atmosphereStudies = await readLocalCatalog(path.join(repoRoot, 'supabase/migrations/20260925230000_atmosphere_studies_collection.sql'));
+if (atmosphereStudies.catalog.size !== 10 || ATMOSPHERE_STUDY_KEYS.length !== 10) fail('expected ten new atmosphere studies');
+for (const definition of ATMOSPHERE_STUDIES) {
+  const key = `profile_atmosphere_${definition.key.replaceAll('-', '_')}`;
+  const row = atmosphereStudies.catalog.get(key), seeded = seed.catalog.get(key);
+  if (!row || !seeded || Object.keys(row).some(column => row[column] !== seeded[column])) fail(`atmosphere study migration differs from seed: ${key}`);
+  if (row.name !== definition.label || row.description !== definition.description || row.collection !== definition.collection || row.rarity !== definition.rarity) fail(`atmosphere study registry differs: ${key}`);
+  if (row.access_tier !== 'free' || Number(row.cost) !== 0 || row.entitlement_key !== null) fail(`${key} must be free and zero-cost`);
+}
 assertProgressionRewardContract(seed.catalog, progressionManifest, 'seed');
 const resetMigration = await readFile(resetMigrationPath, 'utf8');
 const nameMotionCurationMigration = await readFile(nameMotionCurationMigrationPath, 'utf8');
@@ -381,10 +392,10 @@ const rendererKeys = Object.freeze({
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing', 'plasma-swarm', 'bubble-wake', 'character-bloom', 'emoji-bloom', 'following-dot', 'text-flag', 'springy-emoji']),
   avatar_effect: new Set(['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud', 'butterfly-orbit', 'fireflies', 'moonlit-clouds', 'enchanted-garden', 'prismatic-fracture', 'sakura-neko', 'cloud-bunny', 'crimson-ronin', 'midnight-oni', 'koi-current', 'sakura-petals', 'bat-orbit']),
   profile_layout: new Set(['compact', 'full-bleed', 'sleek', 'framed', 'portfolio']),
-  profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'sakura-afterglow', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare', 'prism-dust']),
+  profile_atmosphere: new Set(PROFILE_ATMOSPHERE_KEYS),
   profile_motion: new Set(['perspective-tilt', 'halo-offset', 'wavefront'])
 });
-const expectedCounts = Object.freeze({ name_font: 17, name_material: 20, name_motion: 35, profile_border: 12, cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 14, profile_motion: 3 });
+const expectedCounts = Object.freeze({ name_font: 17, name_material: 20, name_motion: 35, profile_border: 12, cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 24, profile_motion: 3 });
 const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0, profile_motion: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
@@ -414,8 +425,8 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 146) {
-  fail(`expected 146 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 156) {
+  fail(`expected 156 active catalog rows, found ${[...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length}`);
 }
 for (const definition of Object.values(PROFILE_BORDER_DEFINITIONS)) {
   const row = seed.catalog.get(definition.itemKey);

@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { startVite, startChromium, terminateProcess, findAvailablePort } from './cdp-harness.mjs';
+const evidenceDir = join(process.cwd(), 'artifacts/profile-media-library');
+await mkdir(evidenceDir, {recursive:true});
+const appPort = await findAvailablePort(5286), debugPort = await findAvailablePort(9410);
+const server = await startVite({appPort,evidenceDir});
+let browser;
+try {
+  const url = `http://127.0.0.1:${appPort}/scripts/browser/profile-media-library.html`;
+  browser = await startChromium({appUrl:url,debugPort,evidenceDir,width:1280,height:900});
+  const {page} = browser;
+  await page.navigate(url);
+  await page.waitFor("document.querySelector('summary')", 'media library mounted');
+  assert.equal(await page.evaluate("document.querySelectorAll('.media-library article').length"), 0);
+  await page.screenshot(join(evidenceDir,'collapsed-desktop.png'));
+  await page.evaluate("document.querySelector('summary').focus()");
+  await page.pressKey('Enter');
+  await page.waitFor("document.querySelectorAll('.media-library article').length === 6", 'six files rendered');
+  await page.screenshot(join(evidenceDir,'expanded-desktop.png'));
+  await page.evaluate("document.querySelector('.media-library nav button:last-child').click()");
+  await page.waitFor("document.querySelector('.media-library nav span').textContent.includes('2 /')", 'next page');
+  await page.evaluate("const s=document.querySelector('select');s.value='background';s.dispatchEvent(new Event('change',{bubbles:true}))");
+  await page.waitFor("document.querySelector('.media-library nav span').textContent.includes('1 /')", 'filter resets page');
+  assert.equal(await page.evaluate("[...document.querySelectorAll('.media-library__copy span')].every(n=>n.textContent.startsWith('background'))"), true);
+  await page.evaluate("[...document.querySelectorAll('.media-library button')].find(b=>b.textContent==='Check file').click()");
+  await page.waitFor("document.querySelector('#feedback').textContent === 'File checked'", 'check action');
+  await page.evaluate("[...document.querySelectorAll('.media-library button')].find(b=>b.textContent==='Use').click()");
+  await page.waitFor("document.querySelector('#feedback').textContent === 'File selected'", 'select action');
+  await page.evaluate("document.querySelector('.media-library__delete').click()");
+  await page.waitFor("document.querySelector('#feedback').textContent === 'File deleted'", 'delete action');
+  await page.evaluate("document.querySelector('input').click()");
+  await page.waitFor("[...document.querySelectorAll('.media-library__actions button')].every(b=>b.disabled)", 'busy action protection');
+  await page.setViewport(390,844);
+  await page.setReducedMotion(true);
+  assert.equal(await page.evaluate('document.documentElement.scrollWidth <= innerWidth'), true);
+  await page.screenshot(join(evidenceDir,'expanded-mobile.png'));
+  await page.evaluate("document.querySelector('summary').click()");
+  await page.waitFor("document.querySelectorAll('.media-library article').length === 0", 'collapsed media unmounted');
+  await page.screenshot(join(evidenceDir,'collapsed-mobile.png'));
+  await writeFile(join(evidenceDir,'results.json'), JSON.stringify({files:200,pageSize:6,keyboard:true,filter:true,check:true,select:true,delete:true,busy:true,mobile:true,reducedMotion:true},null,2));
+  console.log('Media library browser checks passed.');
+} catch (error) {
+  console.error(JSON.stringify(browser?.page?.consoleLog));
+  throw error;
+} finally {
+  await terminateProcess(browser?.child, 'Chromium');
+  await terminateProcess(server?.child, 'Vite');
+}

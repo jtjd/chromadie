@@ -348,7 +348,9 @@ const launchRows = [...seed.matchAll(
   collection,
   accessTier
 }));
+const studyKeys = (await import('../src/lib/profile-atmosphere/atmosphereStudies.js')).ATMOSPHERE_STUDY_KEYS.map(key => `profile_atmosphere_${key.replaceAll('-', '_')}`);
 const launchExpectedCosts = Object.freeze({
+  ...Object.fromEntries(studyKeys.map(key => [key, 0])),
   cursor_trail_signal_trace: 160000, cursor_trail_pixel_wake: 180000, cursor_trail_chroma_ribbon: 340000,
   cursor_trail_glass_shards: 360000, cursor_trail_ember_ash: 210000, cursor_trail_comet_thread: 330000,
   cursor_trail_ink_drops: 220000, cursor_trail_orbit_dust: 350000, cursor_trail_static_echo: 320000,
@@ -376,6 +378,7 @@ const launchExpectedCosts = Object.freeze({
   profile_atmosphere_prism_dust: 0
 });
 const launchFreeKeys = new Set([
+  ...studyKeys,
   'cursor_trail_plasma_swarm',
   'cursor_trail_bubble_wake',
   'cursor_trail_character_bloom',
@@ -420,10 +423,10 @@ const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profi
   launchRows.filter(row => row.slot === slot).length
 ]));
 if (
-    launchRows.length !== 60
-    || new Set(launchRows.map(row => row.itemKey)).size !== 60
+    launchRows.length !== 70
+    || new Set(launchRows.map(row => row.itemKey)).size !== 70
     || launchInvalidRows.length > 0
-    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 14, profile_motion: 3 })
+    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 23, avatar_effect: 15, profile_layout: 5, profile_atmosphere: 24, profile_motion: 3 })
 ) {
   console.error('Launch cosmetic catalog balance/drift check failed.');
   console.error(JSON.stringify({

@@ -16,6 +16,7 @@ export async function loadProfileExpressionAssetLibrary(supabaseClient, profileI
     .from('profile_media_assets')
     .select(EXPRESSION_ASSET_LIBRARY_COLUMNS)
     .eq('user_id', profileId)
+    .eq('status', 'active')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message || 'The media library could not be loaded.');
   return data || [];
@@ -25,7 +26,8 @@ export async function selectProfileExpressionAsset(
   supabaseClient,
   kind,
   assetId,
-  { clear = false, avatarAssetId = null, backgroundAssetId = null, authorization = null } = {}
+  { clear = false, authorization = null } = {},
+  overrides
 ) {
   const rpc = authorization?.accessToken
     ? (name, args) => rpcWithAccessToken(supabaseClient, name, args, authorization.accessToken)
@@ -38,8 +40,8 @@ export async function selectProfileExpressionAsset(
     });
   } else if (kind === 'avatar' || kind === 'background') {
     response = await rpc('select_my_profile_expression_assets', {
-      p_avatar_id: kind === 'avatar' ? (clear ? null : assetId) : avatarAssetId,
-      p_background_id: kind === 'background' ? (clear ? null : assetId) : backgroundAssetId,
+      p_avatar_id: kind === 'avatar' ? (clear ? null : assetId) : null,
+      p_background_id: kind === 'background' ? (clear ? null : assetId) : null,
       p_clear_avatar: kind === 'avatar' && clear,
       p_clear_background: kind === 'background' && clear
     });
@@ -52,9 +54,17 @@ export async function selectProfileExpressionAsset(
     const fallback = kind === 'audio'
       ? 'The profile audio selection could not be saved.'
       : 'The profile media selection could not be saved.';
-    throw new Error(error?.message || data?.error || fallback);
+    const rejection = new Error(error?.message || data?.error || fallback);
+    // A transport error may arrive after the transaction committed. Only an
+    // explicit server refusal proves the uploaded asset is safe to discard.
+    throw Object.assign(rejection, { selectionRejected: data?.success === false || /^[0-9A-Z]{5}$/.test(error?.code || '') });
   }
-  return data;
+  // Selection has committed. A cleanup failure must never undo the new file;
+  // SQL has already queued each retired asset for the durable cleanup worker.
+  const retired = Array.isArray(data.retired_asset_ids) ? data.retired_asset_ids : [];
+  const services = resolveServices(overrides);
+  const cleanup = await Promise.allSettled(retired.slice(0, 6).map(id => services.deleteAsset(id, authorization)));
+  return { ...data, cleanup_pending: retired.length > 6 || cleanup.some(result => result.status === 'rejected' || result.value?.cleanup_pending) };
 }
 
 export async function deleteProfileExpressionAsset(
@@ -174,13 +184,19 @@ export async function uploadAndSelectProfileImageAsset({
   }
   const services = resolveServices(overrides);
   const uploaded = await uploadProfileImageAsset({ file, kind, onPrepared, authorization, isCurrent }, services);
+  let selectionStarted = false;
   try {
     assertCurrent(isCurrent);
+    selectionStarted = true;
     await selectUploadedAsset(uploaded, authorization);
     assertCurrent(isCurrent);
     return uploaded;
   } catch (error) {
-    await cleanFailedAsset(uploaded.assetId, services, authorization);
+    // If selection is uncertain, keep the candidate: the server will retain
+    // an equipped file and expire an unused free-slot candidate on retry.
+    if (!selectionStarted || error?.selectionRejected === true) {
+      await cleanFailedAsset(uploaded.assetId, services, authorization);
+    }
     throw error;
   }
 }

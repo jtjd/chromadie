@@ -7,7 +7,7 @@ import { isProfileBorderKey } from './profile-border/profileBorders.js';
 import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
 import { isAvatarEffectKey } from './avatar-effect/avatarEffects.js';
 import { isProfileLayoutKey } from './profile-layout/profileLayouts.js';
-import { isAtmosphereKey } from './profile-atmosphere/atmospheres.js';
+import { isAtmosphereKey } from './profile-atmosphere/atmosphereKeys.js';
 import { isProfileMotionKey } from './profile-motion/profileMotions.js';
 
 // Catalog projection is independent from account hydration. Keeping it in its

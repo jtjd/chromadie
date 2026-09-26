@@ -68,10 +68,11 @@ test('expression media library query stays owner-scoped and ordered by recency',
     ['from', 'profile_media_assets'],
     ['select', 'id, kind, storage_path, storage_provider, r2_public_key, content_validation_version, content_hash_sha256, label, created_at, status, delivery_status, ever_public'],
     ['eq', 'user_id', 'owner-1'],
+    ['eq', 'status', 'active'],
     ['order', 'created_at', { ascending: false }]
   ]);
   assert.deepEqual(await loadProfileExpressionAssetLibrary(client, null), []);
-  assert.equal(calls.length, 4);
+  assert.equal(calls.length, 5);
 
   const failedClient = {
     from: () => ({
@@ -99,10 +100,10 @@ test('expression selection actions preserve the existing avatar, background, and
 
   assert.deepEqual(calls, [
     ['select_my_profile_expression_assets', {
-      p_avatar_id: 'avatar-2', p_background_id: 'background-1', p_clear_avatar: false, p_clear_background: false
+      p_avatar_id: 'avatar-2', p_background_id: null, p_clear_avatar: false, p_clear_background: false
     }],
     ['select_my_profile_expression_assets', {
-      p_avatar_id: 'avatar-2', p_background_id: null, p_clear_avatar: false, p_clear_background: true
+      p_avatar_id: null, p_background_id: null, p_clear_avatar: false, p_clear_background: true
     }],
     ['select_my_profile_audio_asset', { p_audio_id: 'audio-1', p_clear_audio: false }]
   ]);
@@ -228,7 +229,7 @@ test('profile image lifecycle deletes the promoted asset when server selection f
   await assert.rejects(uploadAndSelectProfileImageAsset({
     file: { name: 'avatar.png' },
     kind: 'avatar',
-    selectUploadedAsset: async () => { throw new Error('Selection failed'); }
+    selectUploadedAsset: async () => { throw Object.assign(new Error('Selection failed'), { selectionRejected: true }); }
   }, {
     processImage: async () => ({ size: 256 }),
     upload: async () => ({ asset_id: 'avatar-staged' }),
@@ -311,4 +312,45 @@ test('profile audio validation failure does not prepare, select, or delete', asy
     upload: async () => assert.fail('invalid audio must not be uploaded'),
     deleteAsset: async () => assert.fail('invalid audio has no staged asset')
   }), /MP3 files only/);
+});
+
+
+test('committed replacement cleans only server-retired IDs and survives cleanup failure', async () => {
+  const calls = [];
+  const authorization = { userId: 'owner' };
+  const client = { rpc: async () => ({ data: { success: true, avatar_asset_id: 'new', retired_asset_ids: ['old', 'older'] } }) };
+  const result = await selectProfileExpressionAsset(client, 'avatar', 'new', { authorization }, {
+    deleteAsset: async (id, auth) => {
+      calls.push([id, auth]);
+      if (id === 'old') throw new Error('Offline; worker will retry');
+      return { success: true };
+    }
+  });
+  assert.equal(result.avatar_asset_id, 'new');
+  assert.equal(result.cleanup_pending, true);
+  assert.deepEqual(calls, [['old', authorization], ['older', authorization]]);
+});
+
+test('failed selection never starts retiring files', async () => {
+  const calls = [];
+  await assert.rejects(selectProfileExpressionAsset({rpc: async () => ({data: {success: false, error: 'Selection rejected', retired_asset_ids: ['old']}})}, 'avatar', 'new', {}, {
+    deleteAsset: async id => calls.push(id)
+  }), /Selection rejected/);
+  assert.deepEqual(calls, []);
+});
+
+
+test('an uncertain image-selection response never deletes the potentially equipped replacement', async () => {
+  const deleted = [];
+  await assert.rejects(uploadAndSelectProfileImageAsset({
+    file: { name: 'avatar.png' }, kind: 'avatar',
+    selectUploadedAsset: async () => { throw new Error('Connection lost after commit'); }
+  }, {
+    processImage: async () => ({ size: 256 }),
+    upload: async () => ({ asset_id: 'new-avatar' }),
+    promote: async () => ({ r2_public_key: 'profiles/new-avatar.webp' }),
+    getMediaUrl: () => 'https://media.test/avatar.webp',
+    deleteAsset: async id => deleted.push(id)
+  }), /Connection lost/);
+  assert.deepEqual(deleted, []);
 });

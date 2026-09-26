@@ -420,9 +420,9 @@ SELECT pg_temp.audit_assert(
   AND (SELECT count(*) = 23 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
   AND (SELECT count(*) = 15 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
   AND (SELECT count(*) = 5 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
-  AND (SELECT count(*) = 14 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
+  AND (SELECT count(*) = 24 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
   AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 146 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 156 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -441,6 +441,17 @@ SELECT pg_temp.audit_assert(
   'authored name motions must remain five free code-owned catalog entries'
 );
 SELECT pg_temp.audit_assert(
+  (SELECT count(*) = 10 FROM public.get_shop_catalog()
+   WHERE css_value IN ('aurora-veil', 'abyssal-bloom', 'astral-orbit', 'lantern-festival', 'firefly-grove', 'opal-tide', 'retro-horizon', 'lunar-moths', 'koi-reverie', 'kinetic-studio')
+   AND slot = 'profile_atmosphere' AND css_type = 'renderer'
+   AND access_tier = 'free' AND cost = 0 AND entitlement_key IS NULL),
+  'all ten atmosphere studies must be available as free code-owned expression'
+);
+SELECT pg_temp.audit_expect_check(
+  'UPDATE public.shop_items SET css_value = ''arbitrary-scene'' WHERE item_key = ''profile_atmosphere_aurora_veil''',
+  'atmosphere allowlist must continue rejecting unregistered renderers'
+);
+SELECT pg_temp.audit_assert(
   (SELECT count(*) = 15 FROM public.get_shop_catalog()
    WHERE css_value IN ('cherry-blossom', 'butterfly-kiss', 'bubble-bath', 'kitten-paws', 'dandelion-wish', 'rose-romance', 'raven-feather', 'falling-ace', 'crown-glint', 'meteor-skip', 'laurel-grow', 'paper-plane', 'tide-pool', 'firefly-dance', 'confetti-parade')
    AND slot = 'name_motion' AND css_type = 'renderer' AND catalog_status = 'active'
@@ -452,7 +463,7 @@ SELECT pg_temp.audit_assert(
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 144
+    AND (SELECT count(*) = 154
          FROM public.get_shop_catalog()
          WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),

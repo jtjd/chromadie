@@ -1,5 +1,69 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-26 — Live testing release
+
+Applied `20260925230000_atmosphere_studies_collection.sql` and
+`20260926120000_profile_media_single_slots.sql` to the linked Chromadie
+production database after verifying history, taking protected schema/public-data
+backups, and reviewing the dry run. Release includes the completed atmosphere
+collection and media-slot/library improvements. Local mandatory checks and
+892 tests pass. The existing GitHub public-release preflight lacks its three
+Cloudflare credentials; this is separate from the Pages deployment.
+
+## 2026-09-26 — Profile media replacement and library cleanup
+
+Implemented [single media slots](milestones/PROFILE_MEDIA_SINGLE_SLOTS.md): free
+avatar/background replacements atomically retire the old files after verified
+selection, while Plus/staff retain their libraries. Legacy files remain
+accessible until replacement. Removed the unbounded saved-file and safety-check
+lists in favor of a shared collapsed library with filters and six-file pages.
+
+Added SQL regressions for failed/unverified selection, slot isolation, cleanup
+queueing, concurrent candidates, expiry, paid retention and refund behavior.
+Client regressions cover cleanup failure after a committed replacement.
+Browser fixtures exercise 200 files, keyboard expansion, pagination, filtering,
+check/use/delete actions, busy protection, mobile overflow and reduced motion.
+Evidence: `artifacts/profile-media-library/`. Browser fixtures use synthetic
+library data; this run does not certify real R2 uploads or live CDN purges.
+
+All 892 unit tests pass. Build, Svelte check (zero errors/warnings), ESLint,
+links, CSP, enforced performance budgets, username/balance/catalog drift,
+5,000-sample scoring parity, DB security (including slot regressions), local
+DB reset and strict schema lint pass. Aggregate asset-catalog size targets
+remain advisory. Two DB checks initially overlapped the reset and were rerun
+successfully after it finished; the browser harness teardown was corrected
+and its full smoke rerun passed.
+
+Production rollout is tracked in the live-testing release entry above.
+
+## 2026-09-26 — Ten new profile atmosphere studies
+
+Completed Aurora Veil, Abyssal Bloom, Astral Orbit, Lantern Festival, Firefly
+Grove, Opal Tide, Retro Horizon, Lunar Moths, Koi Reverie, and Kinetic Studio as
+ten additional free Customize choices. Original geometry and motion cover
+natural, celestial, romantic, gothic, retro, abstract, and graphic tastes.
+Existing atmosphere IDs, prices, unlocks, and video assets are preserved.
+
+All 889 unit tests and the complete mandatory validation suite pass, including
+enforced route budgets, local database reset, strict schema lint, catalog and
+balance drift, scoring parity, and DB security. Aggregate asset catalog targets
+remain advisory. Every new scene passed real canvas frame progression, pause,
+reduced-motion, hide/show, hidden-tab, offscreen, compact still, keyboard,
+pixel-budget, and teardown checks. All five existing authored scenes and two
+retained video recovery paths also pass browser regression checks.
+
+The account browser test selected and saved each of the ten effects using the
+actual Customize UI, verified the persisted server loadout, and rendered each
+in a separate anonymous browser at 1440×900 and 390×844. One local network-change
+interruption required a bounded page reload; the test retries only confirmed
+`ERR_NETWORK_CHANGED` resource failures. Desktop/mobile screenshots and
+comparison-gallery evidence are in `artifacts/atmosphere-studies/`.
+
+Local account records and the auth sequence were restored after the required
+reset. The disposable browser-test accounts were removed. No production
+deployment or remote migration was performed. Review and comparison instructions:
+[`ATMOSPHERE_STUDIES_REVIEW.md`](ATMOSPHERE_STUDIES_REVIEW.md).
+
 ## 2026-09-24 — Security and reliability audit remediations
 
 Fixed account-switch races across profile mutations, retry failures for

@@ -17,6 +17,8 @@
   } from './profile-studio/expressionMediaActions.js';
   import { createPreviewPreparationHandler } from './profile-studio/previewPreparation.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
+  import { hasChromadiePlus } from './premiumEntitlements.js';
+  import ProfileMediaLibrary from './ProfileMediaLibrary.svelte';
   import ProfileMediaIcon from './ProfileMediaIcon.svelte';
   import ProfileRichMediaEditor from './ProfileRichMediaEditor.svelte';
   import Module from './foundation/Module.svelte';
@@ -117,6 +119,9 @@
   $: hasBackground = Boolean(expression.background_path || expression.background_asset_id || configuredMediaReferences.background || expressionMediaReferences.background);
   $: hasAudio = Boolean(expression.audio_path || expression.audio_asset_id || configuredMediaReferences.audio || expressionMediaReferences.audio);
   $: audioProgress = audioDuration > 0 ? Math.min(100, (audioCurrentTime / audioDuration) * 100) : 0;
+  $: keepsLibrary = staff || hasChromadiePlus(entitlements);
+  $: libraryAssets = [...avatarAssets, ...backgroundAssets, ...unverifiedAssets];
+  $: showLibrary = keepsLibrary || unverifiedAssets.length > 0 || libraryAssets.some(asset => ![expression.avatar_asset_id, expression.background_asset_id].includes(asset.id));
   $: richMediaEnabled = isProfileFeatureEnabled('richMedia', { userId: profileId, isStaff: staff });
   $: r2MediaEnabled = isProfileFeatureEnabled('profileMediaR2', { userId: profileId, isStaff: staff });
 
@@ -241,8 +246,6 @@
     if (!currentAction.isCurrent()) throw new Error('The media action was canceled because the active account changed.');
     const data = await selectProfileExpressionAsset(supabase, kind, assetId, {
       clear,
-      avatarAssetId: selectedR2AssetId('avatar'),
-      backgroundAssetId: selectedR2AssetId('background'),
       authorization
     });
     if (!currentAction.isCurrent()) throw new Error('The media action was canceled because the active account changed.');
@@ -291,6 +294,9 @@
       if (!asset.ever_public) await promoteProfileMediaR2(asset.id, authorization);
       if (!action.isCurrent()) return;
       await selectR2ExpressionAsset(kind, asset.id, { authorization, action });
+      if (!action.isCurrent()) return;
+      revokeImagePreview(kind);
+      await loadAssetLibrary();
       if (action.isCurrent()) setFeedback('', `${kind === 'avatar' ? 'Avatar' : 'Background'} applied to your profile.`);
     } catch (selectionError) {
       if (action.isCurrent()) setFeedback(selectionError instanceof Error ? selectionError.message : `The ${kind} could not be applied.`);
@@ -322,6 +328,7 @@
         syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
         const nextReferences = { ...configuredMediaReferences, ...expressionMediaReferences, [asset.kind]: null };
         expressionMediaReferences = nextReferences;
+        revokeImagePreview(asset.kind);
         dispatch('expressionchange', { ...expression, media_references: nextReferences, updatedAt: data.updated_at || null });
       }
       await loadAssetLibrary();
@@ -420,8 +427,8 @@
       setImagePreview(kind, uploaded.publicUrl);
       await loadAssetLibrary();
       setFeedback('', kind === 'avatar'
-        ? `Avatar saved to your R2 library and profile (${formatStoredSize(uploaded.blob.size)} stored).`
-        : `Background saved to your R2 library and public atmosphere (${formatStoredSize(uploaded.blob.size)} stored).`);
+        ? `Avatar updated (${formatStoredSize(uploaded.blob.size)}).`
+        : `Background updated (${formatStoredSize(uploaded.blob.size)}).`);
     } catch (uploadError) {
       if (isCurrent()) {
         setFeedback(uploadError instanceof Error ? uploadError.message : `The ${kind} could not be saved.`);
@@ -448,7 +455,7 @@
       const authorization = await getProfileMediaAuthorization(action.ownerId);
       if (!action.isCurrent()) return;
       let next;
-      if (selectedR2AssetId(kind)) {
+      if (expression[assetField]) {
         await selectR2ExpressionAsset(kind, null, { clear: true, authorization, action });
         next = normalizeProfileExpression({ ...expression, [pathField]: null, [assetField]: null });
       } else {
@@ -457,9 +464,8 @@
       if (!action.isCurrent()) return;
       expression = next;
       revokeImagePreview(kind);
-      setFeedback('', kind === 'avatar'
-        ? 'Avatar unequipped. Your initials fallback is active; the saved asset remains in your library.'
-        : 'Background unequipped. The generated color atmosphere is active; the saved asset remains in your library.');
+      await loadAssetLibrary();
+      setFeedback('', keepsLibrary ? 'Media removed from your profile and kept in your library.' : 'Media removed from your profile and deleted.');
     } catch (removeError) {
       if (action.isCurrent()) setFeedback(removeError instanceof Error ? removeError.message : `The ${kind} could not be removed.`);
     } finally {
@@ -610,6 +616,7 @@
 </script>
 
 <Module size="wide" tone="quiet" className="profile-expression-editor" title="Media" description="Upload an avatar or background, or connect Spotify.">
+  <p class="profile-expression-editor__message">{keepsLibrary ? 'Choose one file per slot. Your previous uploads stay in Saved media.' : 'One avatar and one background. Uploading a replacement deletes the previous file after the new one is saved.'}</p>
   {#if compact}
     <div id={compact ? 'profile-media-rich' : undefined} class="profile-expression-editor__compact-grid" aria-label="Profile media uploads">
       <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--avatar">
@@ -634,7 +641,7 @@
           <small>JPEG, PNG, or WebP · processed and stored as WebP</small>
           <div class="profile-expression-editor__compact-actions">
             <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => avatarInput?.click()}>{hasAvatar ? 'Replace' : 'Upload avatar'}</button>
-            {#if hasAvatar}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Unequip</button>{/if}
+            {#if hasAvatar}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>{keepsLibrary ? 'Unequip' : 'Remove'}</button>{/if}
           </div>
         </div>
       </article>
@@ -659,7 +666,7 @@
           <small>JPEG, PNG, or WebP · processed and stored as WebP</small>
           <div class="profile-expression-editor__compact-actions">
             <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => backgroundInput?.click()}>{hasBackground ? 'Replace' : 'Upload background'}</button>
-            {#if hasBackground}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Unequip</button>{/if}
+            {#if hasBackground}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>{keepsLibrary ? 'Unequip' : 'Remove'}</button>{/if}
           </div>
         </div>
       </article>
@@ -740,57 +747,6 @@
         </article>
       {/if}
 
-      {#if avatarAssets.length > 0 || backgroundAssets.length > 0}
-        <section class="profile-expression-editor__compact-library" aria-label="Saved media library">
-          <div class="profile-expression-editor__compact-library-heading">
-            <strong>Saved media</strong>
-            <span>Unequip only removes an asset from the profile. Delete from library is permanent.</span>
-          </div>
-          <div class="profile-expression-editor__compact-library-list">
-            {#each avatarAssets as asset (asset.id)}
-              <div class="profile-expression-editor__compact-library-item">
-                <Media
-                  src={getProfileMediaUrl(asset.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : null)}
-                  alt={asset.label || 'Saved avatar'}
-                  aspect="square"
-                  loading="lazy"
-                  className="profile-expression-editor__compact-library-media"
-                  fallbackLabel="Avatar unavailable"
-                />
-                <div class="profile-expression-editor__compact-library-copy">
-                  <strong>{asset.label || 'Saved avatar'}</strong>
-                  <span>{asset.id === expression.avatar_asset_id ? 'Active avatar' : 'Saved avatar'}</span>
-                  {#if asset.id !== expression.avatar_asset_id}
-                    <button type="button" class="profile-expression-editor__compact-library-select" disabled={busy} on:click={() => selectAsset('avatar', asset)}>Use avatar</button>
-                  {/if}
-                </div>
-                <button type="button" class="profile-expression-editor__compact-library-delete" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
-              </div>
-            {/each}
-            {#each backgroundAssets as asset (asset.id)}
-              <div class="profile-expression-editor__compact-library-item">
-                <Media
-                  src={getProfileMediaUrl(asset.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : null)}
-                  alt={asset.label || 'Saved background'}
-                  aspect="wide"
-                  loading="lazy"
-                  className="profile-expression-editor__compact-library-media profile-expression-editor__compact-library-media--wide"
-                  fallbackLabel="Background unavailable"
-                />
-                <div class="profile-expression-editor__compact-library-copy">
-                  <strong>{asset.label || 'Saved background'}</strong>
-                  <span>{asset.id === expression.background_asset_id ? 'Active background' : 'Saved background'}</span>
-                  {#if asset.id !== expression.background_asset_id}
-                    <button type="button" class="profile-expression-editor__compact-library-select" disabled={busy} on:click={() => selectAsset('background', asset)}>Use background</button>
-                  {/if}
-                </div>
-                <button type="button" class="profile-expression-editor__compact-library-delete" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
-              </div>
-            {/each}
-          </div>
-        </section>
-      {/if}
-
     </div>
   {/if}
 
@@ -815,21 +771,11 @@
       <button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={assetsLoading} on:click={loadAssetLibrary}>Retry loading media</button>
     </div>
   {/if}
-  {#if unverifiedAssets.length > 0}
-    <section class="profile-expression-editor__asset-error" aria-label="Saved media needing a safety check">
-      <p>Some saved media needs a one-time check before it can appear on your profile.</p>
-      {#each unverifiedAssets as asset (asset.id)}
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
-          <span>{asset.label || (asset.kind === 'avatar' ? 'Saved avatar' : 'Saved background')}</span>
-          {#if hasProfileMediaRevalidationHash(asset)}
-            <button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={() => revalidateAsset(asset)}>Check saved media</button>
-          {:else}
-            <span>Re-upload required</span>
-          {/if}
-          <button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
-        </div>
-      {/each}
-    </section>
+  {#if showLibrary}
+    <ProfileMediaLibrary assets={libraryAssets} selectedIds={[expression.avatar_asset_id, expression.background_asset_id]} {busy}
+      title={keepsLibrary ? 'Saved media' : 'Previous uploads'}
+      description={keepsLibrary ? 'Keep favorites here and choose one file for each profile slot.' : 'Replacing an avatar or background deletes previous files for that slot. You can review or delete older uploads here.'}
+      onSelect={asset => selectAsset(asset.kind, asset)} onCheck={revalidateAsset} onDelete={deleteAsset} />
   {/if}
   {#if !compact}
   <details class="profile-expression-editor__advanced" open>
@@ -847,32 +793,10 @@
       <div class="profile-expression-editor__actions">
         <input bind:this={avatarInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose avatar image" on:change={handleAvatarChange} />
         <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => avatarInput?.click()}>{hasAvatar ? 'Replace avatar' : 'Upload avatar'}</button>
-        {#if hasAvatar}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAvatar}>Unequip</button>{/if}
+        {#if hasAvatar}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAvatar}>{keepsLibrary ? 'Unequip' : 'Remove'}</button>{/if}
       </div>
     </div>
   </div>
-
-  {#if avatarAssets.length > 0}
-    <div class="profile-expression-editor__asset-library" aria-label="Saved avatar assets">
-      <div class="profile-expression-editor__asset-heading">
-        <strong>Saved avatars</strong>
-        <span>{avatarAssets.length} in your library</span>
-      </div>
-      <div class="profile-expression-editor__asset-grid">
-        {#each avatarAssets as asset (asset.id)}
-          <div class="profile-expression-editor__asset" class:profile-expression-editor__asset--active={asset.storage_path === expression.avatar_path || asset.id === expression.avatar_asset_id}>
-            <button type="button" class="profile-expression-editor__asset-select" aria-label={`Use ${asset.label || 'saved avatar'}`} disabled={busy} on:click={() => selectAsset('avatar', asset)}>
-              <Media src={getProfileMediaUrl(asset.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : null)} alt={asset.label || 'Saved avatar'} aspect="square" loading="lazy" className="profile-expression-editor__asset-media" fallbackLabel="Avatar unavailable" />
-            </button>
-            <div class="profile-expression-editor__asset-meta">
-              <span>{asset.storage_path === expression.avatar_path || asset.id === expression.avatar_asset_id ? 'Active' : (asset.label || 'Saved avatar')}</span>
-              <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
-            </div>
-          </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
 
   <div id="profile-media-background" class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
     <div>
@@ -893,31 +817,10 @@
         <div class="profile-expression-editor__actions">
           <input bind:this={backgroundInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose background image" on:change={handleBackgroundChange} />
           <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => backgroundInput?.click()}>{hasBackground ? 'Replace background' : 'Upload background'}</button>
-          {#if hasBackground}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeBackground}>Unequip</button>{/if}
+          {#if hasBackground}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeBackground}>{keepsLibrary ? 'Unequip' : 'Remove'}</button>{/if}
         </div>
       </div>
     </div>
-    {#if backgroundAssets.length > 0}
-      <div class="profile-expression-editor__asset-library" aria-label="Saved background assets">
-        <div class="profile-expression-editor__asset-heading">
-          <strong>Saved backgrounds</strong>
-          <span>{backgroundAssets.length} in your library</span>
-        </div>
-        <div class="profile-expression-editor__asset-grid profile-expression-editor__asset-grid--background">
-          {#each backgroundAssets as asset (asset.id)}
-            <div class="profile-expression-editor__asset" class:profile-expression-editor__asset--active={asset.storage_path === expression.background_path || asset.id === expression.background_asset_id}>
-              <button type="button" class="profile-expression-editor__asset-select" aria-label={`Use ${asset.label || 'saved background'}`} disabled={busy} on:click={() => selectAsset('background', asset)}>
-                <Media src={getProfileMediaUrl(asset.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : null)} alt={asset.label || 'Saved background'} aspect="wide" loading="lazy" className="profile-expression-editor__asset-media" fallbackLabel="Background unavailable" />
-              </button>
-              <div class="profile-expression-editor__asset-meta">
-                <span>{asset.storage_path === expression.background_path || asset.id === expression.background_asset_id ? 'Active' : (asset.label || 'Saved background')}</span>
-                <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
-              </div>
-            </div>
-          {/each}
-        </div>
-      </div>
-    {/if}
   </div>
 
   {#if staff}
@@ -1145,27 +1048,7 @@
   .profile-expression-editor__compact-remove:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
   .profile-expression-editor__compact-replace:disabled,
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
-  .profile-expression-editor__compact-library { grid-column: 1 / -1; display: grid; gap: .55rem; padding: .7rem; border: 1px solid var(--media-line); border-radius: var(--media-radius, .38rem); background: color-mix(in srgb, var(--media-surface-inset) 82%, transparent); }
-  .profile-expression-editor__compact-library-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; min-width: 0; color: var(--media-text-primary); }
-  .profile-expression-editor__compact-library-heading strong { font-size: .86rem; font-weight: 650; }
-  .profile-expression-editor__compact-library-heading span { color: var(--media-text-muted); font-size: .72rem; }
-  .profile-expression-editor__compact-library-list { display: grid; gap: .45rem; }
-  .profile-expression-editor__compact-library-item { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr) auto; align-items: center; gap: .6rem; min-width: 0; padding: .35rem; border: 1px solid var(--media-line); border-radius: .3rem; background: var(--media-surface-deep); }
-  :global(.profile-expression-editor__compact-library-media) { width: 3.25rem; height: 3.25rem; overflow: hidden; border-radius: .24rem; }
-  :global(.profile-expression-editor__compact-library-media--wide) { height: 2.2rem; }
-  .profile-expression-editor__compact-library-copy { display: grid; gap: .12rem; min-width: 0; }
-  .profile-expression-editor__compact-library-copy strong,
-  .profile-expression-editor__compact-library-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-expression-editor__compact-library-copy strong { color: var(--media-text-primary); font-size: .78rem; font-weight: 600; }
-  .profile-expression-editor__compact-library-copy span { color: var(--media-text-muted); font-size: .7rem; }
-  .profile-expression-editor__compact-library-select { justify-self: start; min-height: 32px; padding: .35rem .6rem; border: 1px solid var(--media-line); border-radius: .28rem; background: transparent; color: var(--media-text-primary); font: inherit; cursor: pointer; }
-  .profile-expression-editor__compact-library-select:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
-  .profile-expression-editor__compact-library-select:disabled { opacity: .55; cursor: wait; }
-  .profile-expression-editor__compact-library-delete { min-height: 1.8rem; padding: .28rem .6rem; border: 1px solid color-mix(in srgb, var(--media-red) 55%, var(--media-line)); border-radius: .28rem; background: transparent; color: color-mix(in srgb, var(--media-red) 84%, var(--media-text-secondary)); font: 600 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
-  .profile-expression-editor__compact-library-delete:hover:not(:disabled),
-  .profile-expression-editor__compact-library-delete:focus-visible { border-color: var(--media-red); background: color-mix(in srgb, var(--media-red) 10%, transparent); color: var(--media-red); }
-  .profile-expression-editor__compact-library-delete:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
-  .profile-expression-editor__compact-library-delete:disabled { cursor: wait; opacity: .55; }
+
   .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 5.7rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid var(--media-line); border-radius: .35rem; background: var(--media-surface-inset); }
   .profile-expression-editor__compact-audio-play { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--media-card-accent) 58%, var(--media-line-strong)); border-radius: 50%; background: color-mix(in srgb, var(--media-card-accent) 13%, transparent); color: var(--media-text-primary); font: 700 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
   .profile-expression-editor__compact-audio-play:hover { border-color: var(--media-card-accent); background: color-mix(in srgb, var(--media-card-accent) 24%, transparent); }
@@ -1184,21 +1067,6 @@
   .profile-expression-editor__advanced { margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
   .profile-expression-editor__rollout-notice { margin: 0; padding: .8rem 1rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.45; }
   .profile-expression-editor__asset-loading { margin: 0 0 0.8rem; color: var(--color-ink-muted); font-size: var(--type-small); }
-  .profile-expression-editor__asset-library { display: grid; gap: 0.65rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-line-subtle); }
-  .profile-expression-editor__asset-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; color: var(--color-ink-strong); font-size: var(--type-small); }
-  .profile-expression-editor__asset-heading span { color: var(--color-ink-muted); font-size: var(--type-label); }
-  .profile-expression-editor__asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: 0.65rem; max-width: 34rem; }
-  .profile-expression-editor__asset-grid--background { grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); max-width: 42rem; }
-  .profile-expression-editor__asset { min-width: 0; padding: 0.35rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 76%, transparent); }
-  .profile-expression-editor__asset--active { border-color: var(--color-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent); }
-  .profile-expression-editor__asset-select { display: block; width: 100%; padding: 0; border: 0; border-radius: calc(var(--radius-sm) - 0.15rem); background: transparent; cursor: pointer; }
-  .profile-expression-editor__asset-select:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
-  :global(.profile-expression-editor__asset-media) { width: 100%; overflow: hidden; border-radius: calc(var(--radius-sm) - 0.2rem); }
-  .profile-expression-editor__asset-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.45rem; min-width: 0; padding: 0.35rem 0.15rem 0.1rem; color: var(--color-ink-muted); font-size: var(--type-label); }
-  .profile-expression-editor__asset-meta > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-expression-editor__asset-remove { flex: 0 0 auto; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 0.15em; }
-  .profile-expression-editor__asset-remove:hover:not(:disabled), .profile-expression-editor__asset-remove:focus-visible { color: var(--color-ink-strong); }
-  .profile-expression-editor__asset-remove:disabled { cursor: wait; opacity: 0.55; }
 
   .profile-expression-editor__section--audio {
     display: grid;
@@ -1293,8 +1161,7 @@
 
   @media (max-width: 52rem) {
     .profile-expression-editor__compact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .profile-expression-editor__compact-library-item { grid-template-columns: 3rem minmax(0, 1fr); }
-    .profile-expression-editor__compact-library-delete { grid-column: 2; justify-self: start; }
+
   }
 
   @media (max-width: 24rem) {

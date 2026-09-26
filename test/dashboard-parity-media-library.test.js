@@ -52,8 +52,8 @@ test('media library migration keeps registration and deletion owner-scoped', asy
   assert.doesNotMatch(editor, /verifyPersistedImage|Date\.now\(\)/);
   assert.doesNotMatch(editor, /cleanupFailedImageUpload/);
   assert.doesNotMatch(editor, /supabase\.storage[\s\S]*\.upload/);
-  assert.match(editor, /Saved avatars/);
-  assert.match(editor, /Saved backgrounds/);
+  assert.match(editor, /ProfileMediaLibrary/);
+  assert.match(editor, /Previous uploads/);
 });
 
 test('compact avatar previews render inside a fixed circular frame', async () => {

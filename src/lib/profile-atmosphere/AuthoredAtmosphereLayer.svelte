@@ -7,20 +7,21 @@
   export let active = true;
   export let animated = true;
   export let className = '';
+  export let painter = drawAuthoredAtmosphere;
 
   let canvas;
   let running = false;
   let controller;
-  $: controller?.update({ atmosphereKey, mode, active, animated });
+  $: controller?.update({ atmosphereKey, mode, active, animated, painter });
 
   onMount(() => {
     const context = canvas.getContext('2d', { alpha: true });
     if (!context) return;
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let config = { atmosphereKey, mode, active, animated };
+    let config = { atmosphereKey, mode, active, animated, painter };
     let width = 0, height = 0, frame = 0, time = 0, last = 0;
     let intersects = true, destroyed = false;
-    function draw() { drawAuthoredAtmosphere(context, config.atmosphereKey, width, height, time); }
+    function draw() { config.painter(context, config.atmosphereKey, width, height, time); }
     function tick(now) {
       frame = 0;
       if (!running || destroyed) return;

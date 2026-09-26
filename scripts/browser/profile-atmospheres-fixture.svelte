@@ -2,7 +2,7 @@
   import AtmosphereLayer from '../../src/lib/profile-atmosphere/AtmosphereLayer.svelte';
   import ProfileEnvironmentLayer from '../../src/lib/ProfileEnvironmentLayer.svelte';
   import { PROFILE_ATMOSPHERE_DEFINITIONS } from '../../src/lib/profile-atmosphere/atmospheres.js';
-  let key = 'dust-light';
+  let key = new URLSearchParams(window.location.search).get('effect') || 'dust-light';
   let animated = true;
   let hidden = false;
   let clicks = 0;

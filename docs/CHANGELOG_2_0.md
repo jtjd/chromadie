@@ -1,5 +1,39 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-26 — Live testing release
+
+Applied `20260925230000_atmosphere_studies_collection.sql` and
+`20260926120000_profile_media_single_slots.sql` to the linked Chromadie
+production database after verifying history, taking protected schema/public-data
+backups, and reviewing the dry run. Release includes the completed atmosphere
+collection and media-slot/library improvements. Local mandatory checks and
+892 tests pass. The existing GitHub public-release preflight lacks its three
+Cloudflare credentials; this is separate from the Pages deployment.
+
+## 2026-09-26 — Cleaner profile media management
+
+- Free profiles now replace one avatar or background at a time; the previous
+  files are deleted only after the new selection succeeds.
+- Keep Plus/staff saved media in collapsed, filtered, paginated libraries.
+- Replace repeated safety-check lists with compact per-file review actions.
+- Preserve existing files during migration and use durable R2 cleanup retries.
+- Keep failed uploads from displacing equipped media and prevent concurrent
+  free uploads from accumulating extra saved files.
+
+## 2026-09-26 — Atmosphere studies collection
+
+- Add ten free atmospheres: Aurora Veil, Abyssal Bloom, Astral Orbit, Lantern
+  Festival, Firefly Grove, Opal Tide, Retro Horizon, Lunar Moths, Koi Reverie,
+  and Kinetic Studio. Keep all existing atmospheres available.
+- Author responsive canvas compositions with distinct materials and movement,
+  static reduced-motion/card states, and no added video downloads.
+- Extend the server catalog and finite renderer constraints additively; preserve
+  server equip authority, historical ownership, and progression rewards.
+- Add a development comparison gallery, deterministic painter tests, actual
+  Customize-to-public-profile browser coverage, and lifecycle regression checks.
+- Pass all 889 unit tests, mandatory checks, enforced performance budgets,
+  local database reset and strict lint. Production rollout remains unapplied.
+
 ## 2026-09-24 — Security and reliability audit
 
 - Bind asynchronous profile mutations to the account that started them, reset

@@ -15,7 +15,7 @@ import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js'
 import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
 import { isAvatarEffectKey } from './avatar-effect/avatarEffects.js';
 import { isProfileBorderKey } from './profile-border/profileBorders.js';
-import { isAtmosphereKey } from './profile-atmosphere/atmospheres.js';
+import { isAtmosphereKey } from './profile-atmosphere/atmosphereKeys.js';
 import { isProfileMotionKey } from './profile-motion/profileMotions.js';
 import { getNameRendererLoadout } from './name/nameLoadout.js';
 import { getNameFontCssFamily, isCustomNameFontKey, resolveNameFontKey } from './name/nameFonts.js';

@@ -235,7 +235,17 @@ INSERT INTO public.shop_items (
   ('profile_atmosphere_paper_shadow', 'Cyber Silk', 'profile_atmosphere', 300000, 'renderer', 'paper-shadow', NULL, NULL, 'Rare', 'Liquid chrome ribbons twist between lilac and cyan beneath old-web star glints.', 'Prism', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_smoke_spiral', 'Smoke Spiral', 'profile_atmosphere', 0, 'renderer', 'smoke-spiral', NULL, NULL, 'Anomaly', 'A slow, sculptural spiral of smoke turns the background into a living study of air and light.', 'Prism', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_lumen_flare', 'Lumen Flare', 'profile_atmosphere', 0, 'renderer', 'lumen-flare', NULL, NULL, 'Mythic', 'A distant lens flare blooms and recedes like a signal arriving through the dark.', 'Signal', false, 'earned', NULL, 'active'),
-  ('profile_atmosphere_prism_dust', 'Prism Dust', 'profile_atmosphere', 0, 'renderer', 'prism-dust', NULL, NULL, 'Epic', 'Refractive shards drift at varied depths, catching light in small clustered constellations.', 'Prism', false, 'free', NULL, 'active')
+  ('profile_atmosphere_prism_dust', 'Prism Dust', 'profile_atmosphere', 0, 'renderer', 'prism-dust', NULL, NULL, 'Epic', 'Refractive shards drift at varied depths, catching light in small clustered constellations.', 'Prism', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_aurora_veil', 'Aurora Veil', 'profile_atmosphere', 0, 'renderer', 'aurora-veil', NULL, NULL, 'Epic', 'Emerald and violet curtains fold across a star-strewn polar sky.', 'Nocturne', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_abyssal_bloom', 'Abyssal Bloom', 'profile_atmosphere', 0, 'renderer', 'abyssal-bloom', NULL, NULL, 'Epic', 'Luminous jellyfish breathe and trail delicate filaments through deep blue water.', 'Prism', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_astral_orbit', 'Astral Orbit', 'profile_atmosphere', 0, 'renderer', 'astral-orbit', NULL, NULL, 'Epic', 'A ringed sapphire world turns beneath fine orbital arcs and distant stars.', 'Nocturne', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_lantern_festival', 'Lantern Festival', 'profile_atmosphere', 0, 'renderer', 'lantern-festival', NULL, NULL, 'Rare', 'Warm paper lanterns rise at different depths, carrying little wishes into the night.', 'Ember', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_firefly_grove', 'Firefly Grove', 'profile_atmosphere', 0, 'renderer', 'firefly-grove', NULL, NULL, 'Rare', 'Fern fronds sway around a grove of wandering golden fireflies.', 'Archive', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_opal_tide', 'Opal Tide', 'profile_atmosphere', 0, 'renderer', 'opal-tide', NULL, NULL, 'Epic', 'Iridescent contour waves fold into a fluid sculpture of coral, turquoise, and pearl.', 'Prism', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_retro_horizon', 'Retro Horizon', 'profile_atmosphere', 0, 'renderer', 'retro-horizon', NULL, NULL, 'Rare', 'A striped neon sunset hangs above a drifting perspective grid and violet mountains.', 'Signal', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_lunar_moths', 'Lunar Moths', 'profile_atmosphere', 0, 'renderer', 'lunar-moths', NULL, NULL, 'Epic', 'Engraved moon phases and silvery luna moths trace a nocturnal reverie.', 'Nocturne', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_koi_reverie', 'Koi Reverie', 'profile_atmosphere', 0, 'renderer', 'koi-reverie', NULL, NULL, 'Epic', 'Vermilion and pearl koi circle lily pads beneath widening water rings.', 'Archive', false, 'free', NULL, 'active'),
+  ('profile_atmosphere_kinetic_studio', 'Kinetic Studio', 'profile_atmosphere', 0, 'renderer', 'kinetic-studio', NULL, NULL, 'Rare', 'Cobalt, tangerine, and citron mobiles balance in a playful geometric composition.', 'Signal', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,
@@ -274,7 +284,7 @@ ON CONFLICT (item_key) DO UPDATE SET
   catalog_status = EXCLUDED.catalog_status;
 
 INSERT INTO public.meta (key, value) VALUES
-('shop_version', '2026-09-23T23:30:00Z'),
+('shop_version', '2026-09-25T23:00:00Z'),
 ('cotw_target', '73,114,201'),
 ('official_launch_at', '2026-07-11T00:00:00Z'),
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')

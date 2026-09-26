@@ -1,5 +1,31 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-26 — Single free media slots, bounded paid libraries
+
+Free accounts keep one avatar and one background. Selection commits before old
+files in the changed slot are retired; failed uploads cannot remove the active
+file. Enforce this through existing server entitlement checks, including the
+legacy selection RPC. Keep one temporary candidate per free slot, with expiry
+and durable object/cache cleanup. Plus/staff retain their existing storage and
+playlist allowances. Migration does not bulk-delete historical files; free
+owners explicitly replace a slot before its old library is retired.
+
+Move saved-file management into collapsed, filtered six-file pages shared by
+both media editors. Keep safety checks as per-file actions inside that browser.
+Public validation gates and owner-only storage access remain unchanged.
+
+## 2026-09-26 — Add ten free atmosphere studies without replacing the old catalog
+
+Use original transparent Canvas compositions for ten distinct tastes: aurora,
+deep sea, orbital space, lanterns, ferns, iridescence, synthwave, lunar moths, koi,
+and graphic mobiles. Share the existing bounded animation lifecycle and retain
+all fourteen previous renderers and progression/economy contracts. Add only
+finite catalog keys through an additive migration; the study items are free so
+owners can compare them without a purchase. Keep the lightweight key allowlist
+separate from lazy descriptions and painting code to preserve route budgets.
+The existing video catalog remains intact, with no new media downloads. See
+[`ATMOSPHERE_STUDIES_REVIEW.md`](ATMOSPHERE_STUDIES_REVIEW.md).
+
 ## 2026-09-24 — Bind asynchronous profile mutations to their starting account
 
 Capture the authenticated access token and account generation when a profile
