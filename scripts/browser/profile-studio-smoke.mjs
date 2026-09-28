@@ -2532,7 +2532,7 @@ try {
       await page.setViewport(width, height);
       await page.navigate(`${appUrl}/progression`, `Progression at ${width}x${height}`);
       await page.waitFor(`location.pathname === '/progression' && document.querySelector('.progression-page')`, `Progression route at ${width}px`, 30000);
-      await page.waitFor('document.querySelector(".progression-page__account-bar, .progression-page__state")', `Progression content at ${width}px`, 30000);
+      await page.waitFor('document.querySelector(".profile-progression-surface--page, .progression-page__state[role=alert]")', `settled Progression content at ${width}px`, 30000);
       const state = await page.evaluate(`(() => {
         const pageElement = document.querySelector('.progression-page');
         const shell = document.querySelector('.progression-page__shell');

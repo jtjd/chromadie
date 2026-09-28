@@ -11,6 +11,8 @@ Browser purchase/wallet grants and client wallet hydration are retired.
 The old Streak Freeze catalog offer is retired while existing inventory remains usable. The local database reset, lint, SQL security and progression checks, 896 application tests, 5,000-case score/EP parity, all required drift/build checks, and desktop/mobile/reduced-motion progression browser smoke pass. Applied `20260928100000_roll_ep_rank_rebalance.sql` to the linked production database after protected schema/public-data dumps and a one-migration dry run. Remote migration history and catalog drift pass. Validation and the reward cadence are recorded in
 [`milestones/ROLL_EP_RANK_REBALANCE.md`](milestones/ROLL_EP_RANK_REBALANCE.md).
 
+The first pushed database CI run exposed a browser-smoke timing race: its Progression assertion ran when the account bar appeared, before the journey surface finished loading. The smoke now waits for the rendered journey or an explicit error state; the full production browser smoke passes locally.
+
 ## 2026-09-26 — Live testing release
 
 Applied `20260925230000_atmosphere_studies_collection.sql` and
