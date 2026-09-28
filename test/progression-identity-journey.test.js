@@ -7,7 +7,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('progression normalization preserves server-published journey lanes and weekly focus', () => {
   const progression = normalizeProgressionData({
-    current_ep: 23_950_000,
+    current_ep: 4_200_000,
     total_rolls: 10,
     current_streak: 7,
     milestones: [

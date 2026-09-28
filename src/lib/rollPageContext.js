@@ -30,6 +30,7 @@ export function createRollPageContext() {
     revealHex: '',
     rarity: '',
     score: 0,
+    epEarned: 0,
     currentStreak: 0,
     longestStreak: 0,
     totalRolls: 0,

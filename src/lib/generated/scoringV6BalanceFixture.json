@@ -21,6 +21,20 @@
       "p9999": 43250864
     }
   },
+  "rollEpSpread": {
+    "min": 15648,
+    "max": 1144662,
+    "mean": 68559.12866950035,
+    "median": 47461,
+    "percentiles": {
+      "p75": 75787,
+      "p90": 127990,
+      "p97": 248053,
+      "p99": 268034,
+      "p999": 554694,
+      "p9999": 583420
+    }
+  },
   "conditionTotals": {
     "average": 18.034408807754517,
     "families": {
@@ -1746,11 +1760,65 @@
   },
   "progression": {
     "rankThresholds": {
-      "Silver": 4790000,
-      "Gold": 23950000,
-      "Platinum": 71851000,
-      "Diamond": 143703000,
-      "Chroma": 287405000
+      "Silver": 1300000,
+      "Gold": 4200000,
+      "Platinum": 11200000,
+      "Diamond": 21700000,
+      "Chroma": 42200000
+    },
+    "rankDailyRolls": {
+      "Silver": {
+        "p10": 15,
+        "median": 20,
+        "p90": 24
+      },
+      "Gold": {
+        "p10": 54,
+        "median": 62,
+        "p90": 71
+      },
+      "Platinum": {
+        "p10": 151,
+        "median": 164,
+        "p90": 178
+      },
+      "Diamond": {
+        "p10": 298,
+        "median": 318,
+        "p90": 336
+      },
+      "Chroma": {
+        "p10": 590,
+        "median": 617,
+        "p90": 643
+      }
+    },
+    "rankDailyRollsWithBonuses": {
+      "Silver": {
+        "p10": 10,
+        "median": 14,
+        "p90": 16
+      },
+      "Gold": {
+        "p10": 36,
+        "median": 45,
+        "p90": 51
+      },
+      "Platinum": {
+        "p10": 104,
+        "median": 119,
+        "p90": 131
+      },
+      "Diamond": {
+        "p10": 232,
+        "median": 252,
+        "p90": 269
+      },
+      "Chroma": {
+        "p10": 476,
+        "median": 500,
+        "p90": 525
+      }
     },
     "scoreAchievementThresholds": {
       "score_50k": 479000,

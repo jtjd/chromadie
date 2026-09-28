@@ -104,7 +104,7 @@
     try {
       // Keep the canonical renderer and catalog out of the progression route's
       // initial payload. The catalog remains server-owned and the renderer
-      // receives the same normalized item used by Studio and the shop.
+      // receives the same normalized item used by Studio and catalog previews.
       const catalog = await import('./catalogState.js');
       await catalog.loadCosmeticCatalog();
       catalogItems = get(catalog.cosmeticCatalogItems) || {};

@@ -50,8 +50,6 @@ export const SHOP_CONTEXT_LABELS = Object.freeze({
 
 export const SHOP_SORTS = Object.freeze([
   { id: 'curated', label: 'Curated' },
-  { id: 'price_asc', label: 'Price: Low' },
-  { id: 'price_desc', label: 'Price: High' },
   { id: 'rarity', label: 'Rarity' }
 ]);
 
@@ -97,7 +95,7 @@ export function getShopAccessLabel(item) {
   const tier = getShopAccessTier(item);
   if (tier === 'free') return 'Free baseline';
   if (tier === 'premium') return 'Premium cosmetic';
-  return Number(item?.cost) > 0 ? 'Earned with EP' : 'Earned milestone';
+  return 'Earned through progression';
 }
 
 export function getCatalogStatus(item) {
@@ -130,10 +128,6 @@ export function hasShopEntitlement(item, fittingRoom = createFittingRoom()) {
   );
 }
 
-export function requiresPurchaseConfirmation(item) {
-  return Boolean(item && (item.slot === 'consumable' || Number(item.cost) >= 100000));
-}
-
 export function getShopContextForSlot(slot) {
   if (PROFILE_SLOTS.includes(slot)) return 'profile';
   return null;
@@ -149,7 +143,6 @@ export function inventoryToCounts(inventory = []) {
 }
 
 export function createFittingRoom({
-  walletBalance = 0,
   userInventory = [],
   equippedItems = {},
   rerollShards = 0,
@@ -160,7 +153,6 @@ export function createFittingRoom({
   if (shardCount > 0) inventoryCounts.reroll_shard = shardCount;
 
   return {
-    balance: Math.max(0, Math.floor(Number(walletBalance) || 0)),
     inventoryCounts,
     loadout: { ...(equippedItems || {}) },
     entitlements: [...new Set((Array.isArray(entitlements) ? entitlements : [])
@@ -182,7 +174,6 @@ export function clearShopSlot(loadout, slot) {
 export function getShopItemState(item, equippedItems = {}, fittingRoom = createFittingRoom()) {
   const ownedCount = fittingRoom.inventoryCounts?.[item?.item_key] || 0;
   const accessTier = getShopAccessTier(item);
-  const cost = Number(item?.cost) || 0;
 
   if (item && equippedItems[item.slot] === item.item_key) {
     return { label: 'Equipped', tone: 'equipped', ownedCount };
@@ -196,9 +187,7 @@ export function getShopItemState(item, equippedItems = {}, fittingRoom = createF
   if (ownedCount > 0) {
     return { label: item?.slot === 'consumable' ? `${ownedCount} owned` : 'Owned', tone: 'owned', ownedCount };
   }
-  if (cost <= 0) return { label: 'Earned milestone', tone: 'milestone', ownedCount };
-  if (fittingRoom.balance < cost) return { label: 'Not enough EP', tone: 'unaffordable', ownedCount };
-  return { label: 'Available', tone: 'available', ownedCount };
+  return { label: 'Progression reward', tone: 'milestone', ownedCount };
 }
 
 function matchesSection(item, section, subslot) {
@@ -223,7 +212,7 @@ function curatedScore(item) {
   const collectionScore = item.collection === 'Signal Garden'
     ? 12000000
     : item.collection === 'Voidwalker' ? 10000000 : 0;
-  return featuredScore + collectionScore + ((RARITY_RANK[item.rarity] || 0) * 1000000) + (Number(item.cost) || 0);
+  return featuredScore + collectionScore + ((RARITY_RANK[item.rarity] || 0) * 1000000);
 }
 
 export function filterShopItems(items, filters = {}, fittingRoom = createFittingRoom()) {
@@ -234,7 +223,6 @@ export function filterShopItems(items, filters = {}, fittingRoom = createFitting
     rarity = 'all',
     collection = 'all',
     ownership = 'all',
-    affordableOnly = false,
     sortMode = 'curated'
   } = filters;
   const normalizedQuery = String(query || '').trim().toLowerCase();
@@ -249,7 +237,6 @@ export function filterShopItems(items, filters = {}, fittingRoom = createFitting
     .filter(item => ownership === 'all'
       || (ownership === 'owned' && hasShopEntitlement(item, fittingRoom))
       || (ownership === 'unowned' && !hasShopEntitlement(item, fittingRoom)))
-    .filter(item => !affordableOnly || (item.cost > 0 && item.cost <= fittingRoom.balance))
     .filter(item => {
       if (!normalizedQuery) return true;
       return [item.name, item.description, item.collection, SHOP_SLOT_LABELS[item.slot]]
@@ -258,11 +245,8 @@ export function filterShopItems(items, filters = {}, fittingRoom = createFitting
     });
 
   return filtered.sort((a, b) => {
-    if (sortMode === 'price_asc') return a.cost - b.cost || a.name.localeCompare(b.name);
-    if (sortMode === 'price_desc') return b.cost - a.cost || a.name.localeCompare(b.name);
     if (sortMode === 'rarity') {
       return (RARITY_RANK[b.rarity] || 0) - (RARITY_RANK[a.rarity] || 0)
-        || b.cost - a.cost
         || a.name.localeCompare(b.name);
     }
     return curatedScore(b) - curatedScore(a) || a.name.localeCompare(b.name);
@@ -273,5 +257,5 @@ export function getCollectionItems(items, collection, excludeKey = null) {
   if (!collection) return [];
   return (Array.isArray(items) ? items : [])
     .filter(item => item.collection === collection && item.item_key !== excludeKey && isShopCosmetic(item))
-    .sort((a, b) => (RARITY_RANK[b.rarity] || 0) - (RARITY_RANK[a.rarity] || 0) || a.cost - b.cost);
+    .sort((a, b) => (RARITY_RANK[b.rarity] || 0) - (RARITY_RANK[a.rarity] || 0) || a.name.localeCompare(b.name));
 }

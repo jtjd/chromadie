@@ -85,6 +85,7 @@
           <span class="roll-page__description-rarity">{rollContext.rarity || 'Daily'} roll</span>
           ·
           <strong class="roll-page__description-score">{Number(rollContext.score).toLocaleString()} score</strong>.
+          {#if account.isAuthenticated}<span> +{Number(rollContext.epEarned || 0).toLocaleString()} EP earned.</span>{/if}
           {#if account.isAuthenticated}This color is now part of your profile history.
           {:else if account.signedOut}This roll is saved on this device. Create an account to start your profile history.{/if}
         </p>
@@ -100,7 +101,7 @@
             {#if rollContext.weeklyFocusComplete}
               <div class="roll-page__proof-block">
                 <span class="roll-page__proof-label">WEEKLY FOCUS COMPLETE</span>
-                <strong>+50,000 EP is in your wallet.</strong>
+                <strong>+50,000 bonus EP toward rank.</strong>
               </div>
             {/if}
           </div>

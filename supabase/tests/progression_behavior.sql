@@ -98,6 +98,14 @@ WHERE user_id IN (
   '20000000-0000-0000-0000-000000000002'
 );
 
+-- A prior purchase remains owned when its catalog item becomes a Ritual
+-- reward, including its original acquisition timestamp.
+INSERT INTO public.inventory (user_id, item_key, quantity, purchased_at)
+VALUES (
+  '20000000-0000-0000-0000-000000000002',
+  'border_gold', 1, now() - interval '3 years'
+);
+
 SELECT set_config(
   'request.jwt.claims',
   '{"sub":"20000000-0000-0000-0000-000000000001","role":"authenticated"}',
@@ -318,6 +326,21 @@ SELECT pg_temp.progression_assert(
       AND acknowledged_at IS NOT NULL
   ),
   'historical_backfill did not grant the 1,095-roll capstone'
+);
+SELECT pg_temp.progression_assert(
+  (SELECT count(*) = 3
+   FROM public.user_progression_milestones
+   WHERE user_id = '20000000-0000-0000-0000-000000000002'
+     AND milestone_id IN ('journey_roll_180', 'journey_roll_300', 'journey_roll_430')
+     AND unlock_source = 'historical_backfill'),
+  'new midgame Ritual rewards did not reconcile historically'
+);
+SELECT pg_temp.progression_assert(
+  (SELECT quantity = 1 AND purchased_at < now() - interval '2 years'
+   FROM public.inventory
+   WHERE user_id = '20000000-0000-0000-0000-000000000002'
+     AND item_key = 'border_gold'),
+  'existing purchased ownership or acquisition time changed during reconciliation'
 );
 SELECT pg_temp.progression_assert(
   EXISTS (

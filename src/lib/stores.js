@@ -53,7 +53,6 @@ export const isAuthenticated = derived(
 // --- Account inventory state ---
 export const userInventory = writable([])
 export const equippedItems = writable({})
-export const walletBalance = writable(0)
 export const profileEntitlements = writable([])
 
 // --- Progression State ---
@@ -64,7 +63,6 @@ export function clearUserState() {
     profile.set(null)
     userInventory.set([])
     equippedItems.set({})
-    walletBalance.set(0)
     profileEntitlements.set([])
     rerollShards.set(0)
     equippedBadges.set([])
@@ -105,14 +103,6 @@ function expandInventoryRows(rows) {
         }
     }
     return items
-}
-
-export async function fetchWalletBalance(expectedUserId = null) {
-    const { data, error } = await supabase.rpc('get_wallet_balance')
-    if (error) throw error
-    if (data != null && (!expectedUserId || get(session)?.user?.id === expectedUserId)) {
-        walletBalance.set(data)
-    }
 }
 
 function normalizeEntitlementKeys(payload) {
@@ -175,13 +165,12 @@ async function hydrateAuthenticatedUser(currentSession, expectedEventId) {
     try {
         if (expectedEventId !== authEventId) return
 
-        const [profileRes, inventoryRes, walletRes, followsRes, entitlementsRes] = await Promise.all([
+        const [profileRes, inventoryRes, followsRes, entitlementsRes] = await Promise.all([
             supabase.rpc('get_my_profile'),
             supabase
                 .from('inventory')
                 .select('item_key, quantity')
                 .eq('user_id', currentSession.user.id),
-            supabase.rpc('get_wallet_balance'),
             supabase
                 .from('user_follows')
                 .select('followee_id')
@@ -204,9 +193,6 @@ async function hydrateAuthenticatedUser(currentSession, expectedEventId) {
 
         if (!inventoryRes.error) {
             userInventory.set(expandInventoryRows(inventoryRes.data))
-        }
-        if (!walletRes.error && walletRes.data !== null) {
-            walletBalance.set(walletRes.data)
         }
         if (!followsRes.error) {
             followedUsers.set((followsRes.data || []).map(follow => follow.followee_id))

@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { isMainThread, parentPort, Worker, workerData } from 'node:worker_threads';
 
 import { ACTIVE_V6_CONDITIONS } from '../src/lib/conditionCatalogV6.js';
+import { RANKS } from '../src/lib/rankConfig.js';
+import { rollScoreToEp } from '../src/lib/rollEp.js';
 import { evaluateCatalogConditionIndexes } from '../src/lib/scoringV6Engine.js';
 import { GENERATED_V6_MANIFEST_BY_ID } from '../src/lib/generated/scoringV6.generated.js';
 import {
@@ -23,13 +25,6 @@ const repoRoot = path.resolve(__dirname, '..');
 const fixturePath = path.join(repoRoot, 'src/lib/generated/scoringV6BalanceFixture.json');
 const hasCheckFlag = process.argv.includes('--check');
 
-const V5_RANK_THRESHOLDS = Object.freeze({
-  Silver: 500_000,
-  Gold: 2_500_000,
-  Platinum: 7_500_000,
-  Diamond: 15_000_000,
-  Chroma: 30_000_000
-});
 const V5_SCORE_ACHIEVEMENT_THRESHOLDS = Object.freeze({
   score_50k: 50_000,
   score_100k: 100_000,
@@ -148,9 +143,11 @@ function percentile(sortedScores, fraction) {
 function buildFixture({ scores, conditionCounts }) {
   scores.sort();
   let totalScore = 0;
+  let totalRollEp = 0;
   const rarities = Object.fromEntries(ROLL_RARITY_THRESHOLDS.map(tier => [tier.name, 0]));
   for (const score of scores) {
     totalScore += score;
+    totalRollEp += rollScoreToEp(score);
     rarities[getRollRarityV6(score)] += 1;
   }
 
@@ -168,12 +165,82 @@ function buildFixture({ scores, conditionCounts }) {
   }));
 
   const mean = totalScore / RGB_COLOR_COUNT;
-  const rankThresholds = Object.fromEntries(
-    Object.entries(V5_RANK_THRESHOLDS).map(([name, threshold]) => [name, scaleV5Threshold(threshold, mean)])
-  );
   const scoreAchievementThresholds = Object.fromEntries(
     Object.entries(V5_SCORE_ACHIEVEMENT_THRESHOLDS).map(([id, threshold]) => [id, scaleV5Threshold(threshold, mean)])
   );
+  const rankThresholds = Object.fromEntries(RANKS.slice(1).map(({ name, min }) => [name, min]));
+  const rollEpMean = totalRollEp / RGB_COLOR_COUNT;
+  const epAt = fraction => rollScoreToEp(percentile(scores, fraction));
+  // Fixed-seed whole-journey samples retain the heavy tail that a mean-only
+  // pacing estimate hides. Sample roll-only and bonus-aware journeys separately.
+  let randomState = 0x6c6f6c;
+  const rankSamples = Object.fromEntries(RANKS.slice(1).map(rank => [rank.name, []]));
+  for (let journey = 0; journey < 10_000; journey += 1) {
+    let ep = 0;
+    let day = 0;
+    for (const rank of RANKS.slice(1)) {
+      while (ep < rank.min) {
+        randomState ^= randomState << 13;
+        randomState ^= randomState >>> 17;
+        randomState ^= randomState << 5;
+        ep += rollScoreToEp(scores[randomState >>> 8 & 0xffffff]);
+        day += 1;
+      }
+      rankSamples[rank.name].push(day);
+    }
+  }
+  const rankDailyRolls = Object.fromEntries(Object.entries(rankSamples).map(([name, days]) => {
+    days.sort((a, b) => a - b);
+    return [name, { p10: percentile(days, 0.1), median: percentile(days, 0.5), p90: percentile(days, 0.9) }];
+  }));
+  const bonusRankSamples = Object.fromEntries(RANKS.slice(1).map(rank => [rank.name, []]));
+  randomState = 0x626f6e75;
+  const nextRandom = () => {
+    randomState ^= randomState << 13;
+    randomState ^= randomState >>> 17;
+    randomState ^= randomState << 5;
+    return randomState >>> 0;
+  };
+  for (let journey = 0; journey < 10_000; journey += 1) {
+    let ep = 0;
+    let day = 0;
+    let best = 0;
+    const awarded = new Set();
+    for (const rank of RANKS.slice(1)) {
+      while (ep < rank.min) {
+        const score = scores[(nextRandom() >>> 8) & 0xffffff];
+        day += 1;
+        ep += rollScoreToEp(score);
+        if (score > best) { ep += 50_000; best = score; }
+        if (day % 7 === 0) ep += 50_000;
+        if (nextRandom() / 0x100000000 < 0.0312) ep += 50_000;
+        for (const [at, award] of [[1, 5_000], [10, 25_000], [50, 100_000], [100, 250_000], [365, 1_000_000]]) {
+          if (day === at) ep += award;
+        }
+        for (const [at, award] of [[7, 50_000], [14, 100_000], [30, 250_000], [100, 750_000]]) {
+          if (day === at) ep += award;
+        }
+        const rarity = getRollRarityV6(score);
+        for (const [name, award] of [['Rare', 25_000], ['Epic', 100_000], ['Legendary', 250_000], ['Anomaly', 500_000]]) {
+          if (rarity === name && !awarded.has(`rarity:${name}`)) {
+            ep += award;
+            awarded.add(`rarity:${name}`);
+          }
+        }
+        for (const [id, award] of [['score_50k', 25_000], ['score_100k', 100_000], ['score_200k', 250_000], ['score_1_5m', 500_000]]) {
+          if (score >= scoreAchievementThresholds[id] && !awarded.has(id)) {
+            ep += award;
+            awarded.add(id);
+          }
+        }
+      }
+      bonusRankSamples[rank.name].push(day);
+    }
+  }
+  const rankDailyRollsWithBonuses = Object.fromEntries(Object.entries(bonusRankSamples).map(([name, days]) => {
+    days.sort((a, b) => a - b);
+    return [name, { p10: percentile(days, 0.1), median: percentile(days, 0.5), p90: percentile(days, 0.9) }];
+  }));
 
   return {
     scoreModelVersion: SCORE_MODEL_V6_VERSION,
@@ -198,6 +265,16 @@ function buildFixture({ scores, conditionCounts }) {
         p9999: percentile(scores, 0.9999)
       }
     },
+    rollEpSpread: {
+      min: rollScoreToEp(scores[0]),
+      max: rollScoreToEp(scores.at(-1)),
+      mean: rollEpMean,
+      median: epAt(0.5),
+      percentiles: {
+        p75: epAt(0.75), p90: epAt(0.90), p97: epAt(0.97),
+        p99: epAt(0.99), p999: epAt(0.999), p9999: epAt(0.9999)
+      }
+    },
     conditionTotals: {
       average: Object.values(conditionCounts).reduce((total, count) => total + count, 0) / RGB_COLOR_COUNT,
       families: conditionFamilies
@@ -210,6 +287,8 @@ function buildFixture({ scores, conditionCounts }) {
     conditions,
     progression: {
       rankThresholds,
+      rankDailyRolls,
+      rankDailyRollsWithBonuses,
       scoreAchievementThresholds,
       discoveryExpectedRolls: Object.fromEntries(
         resolvedMetadata
@@ -250,11 +329,14 @@ function fixtureSummary(serialized) {
   const fixture = JSON.parse(serialized);
   return {
     mean: fixture.scoreSpread.mean,
+    rollEpSpread: fixture.rollEpSpread,
     min: fixture.scoreSpread.min,
     max: fixture.scoreSpread.max,
     percentiles: fixture.scoreSpread.percentiles,
     rarities: fixture.rarities,
     rankThresholds: fixture.progression.rankThresholds,
+    rankDailyRolls: fixture.progression.rankDailyRolls,
+    rankDailyRollsWithBonuses: fixture.progression.rankDailyRollsWithBonuses,
     scoreAchievementThresholds: fixture.progression.scoreAchievementThresholds
   };
 }

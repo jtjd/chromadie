@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-28 — Roll EP and rank rebalance
+
+Added server-authoritative normalized roll EP, per-roll reroll accounting,
+legacy-rank mapping, five retuned rank thresholds, three midgame Ritual
+rewards, and result/profile copy that separates score from EP. The exhaustive
+v6 fixture now includes EP percentiles and sampled rank timing. Historical
+scores, lifetime EP, milestone provenance, and purchased inventory remain.
+Browser purchase/wallet grants and client wallet hydration are retired.
+The old Streak Freeze catalog offer is retired while existing inventory remains usable. The local database reset, lint, SQL security and progression checks, 896 application tests, 5,000-case score/EP parity, all required drift/build checks, and desktop/mobile/reduced-motion progression browser smoke pass. Applied `20260928100000_roll_ep_rank_rebalance.sql` to the linked production database after protected schema/public-data dumps and a one-migration dry run. Remote migration history and catalog drift pass. Validation and the reward cadence are recorded in
+[`milestones/ROLL_EP_RANK_REBALANCE.md`](milestones/ROLL_EP_RANK_REBALANCE.md).
+
 ## 2026-09-26 — Live testing release
 
 Applied `20260925230000_atmosphere_studies_collection.sql` and

@@ -19,7 +19,7 @@ test('Roll rewards view uses canonical badge metadata and keeps the empty grid w
 test('Roll bonus and achievement sections preserve their labels, order, and row details', () => {
   assert.match(rewards, /aria-labelledby="roll-rewards-title"/);
   assert.match(rewards, /id="roll-rewards-title">EP bonuses & milestones/);
-  assert.match(rewards, /Wallet rewards · separate from score/);
+  assert.match(rewards, /Progression bonuses · separate from score/);
   assert.match(rewards, /aria-labelledby="roll-achievements-title"/);
   assert.match(rewards, /id="roll-achievements-title">Achievements unlocked/);
   assert.match(rewards, /New rewards from this roll/);

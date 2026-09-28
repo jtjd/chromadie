@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { scoreCandidateColorV6, ACTIVE_SCORE_MODEL_VERSION } from '../src/lib/scoringV6.js';
 import { V6_CULTURE_CONDITIONS } from '../src/lib/conditionCatalogV6.js';
+import { rollScoreToEp } from '../src/lib/rollEp.js';
 
 const container = process.env.SUPABASE_DB_CONTAINER || 'supabase_db_Chromadie';
 const sampleCount = Number.parseInt(process.env.SCORING_PARITY_SAMPLES || '5000', 10);
@@ -55,12 +56,16 @@ const values = samples
   .join(',');
 const sql = `
 COPY (
-  WITH samples(sample_index, red, green, blue) AS (VALUES ${values})
+  WITH samples(sample_index, red, green, blue) AS (VALUES ${values}),
+  evaluated AS MATERIALIZED (
+    SELECT sample_index, public.calculate_roll_v6(red, green, blue) AS roll
+    FROM samples
+  )
   SELECT sample_index::text || '|' || replace(encode(
-    convert_to(public.calculate_roll_v6(red, green, blue)::text, 'UTF8'),
+    convert_to(roll::text, 'UTF8'),
     'base64'
-  ), E'\\n', '')
-  FROM samples
+  ), E'\\n', '') || '|' || public.roll_score_to_ep((roll->>'score')::bigint)::text
+  FROM evaluated
   ORDER BY sample_index
 ) TO STDOUT;
 `;
@@ -83,8 +88,9 @@ const serverRows = new Map(
   result.stdout.trim().split('\n').filter(Boolean).map(line => {
     const separator = line.indexOf('|');
     const index = Number.parseInt(line.slice(0, separator), 10);
-    const payload = JSON.parse(Buffer.from(line.slice(separator + 1), 'base64').toString('utf8'));
-    return [index, payload];
+    const epSeparator = line.indexOf('|', separator + 1);
+    const payload = JSON.parse(Buffer.from(line.slice(separator + 1, epSeparator), 'base64').toString('utf8'));
+    return [index, { ...payload, rollEp: Number(line.slice(epSeparator + 1)) }];
   })
 );
 
@@ -106,6 +112,7 @@ for (let index = 0; index < samples.length; index += 1) {
   if (!server) differences.push('missing server result');
   else {
     if (Number(server.score) !== client.score) differences.push(`score ${server.score} != ${client.score}`);
+    if (server.rollEp !== rollScoreToEp(client.score)) differences.push(`EP ${server.rollEp} != ${rollScoreToEp(client.score)}`);
     if (server.rarity !== client.rarity) differences.push(`rarity ${server.rarity} != ${client.rarity}`);
     if (server.identity !== client.identity) differences.push(`identity ${server.identity} != ${client.identity}`);
     if (Number(server.scoreVersion) !== ACTIVE_SCORE_MODEL_VERSION) differences.push(`server score version ${server.scoreVersion} != ${ACTIVE_SCORE_MODEL_VERSION}`);
@@ -132,4 +139,4 @@ if (mismatches.length > 0) {
   process.exit(1);
 }
 
-console.log(`Scoring parity passed for ${samples.length} deterministic RGB samples.`);
+console.log(`Scoring and roll EP parity passed for ${samples.length} deterministic RGB samples.`);

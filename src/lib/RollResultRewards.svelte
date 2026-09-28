@@ -10,7 +10,7 @@
     <section class="roll-detail-section badges-container badges-container-tight" aria-labelledby="roll-rewards-title">
       <div class="roll-detail-section__heading">
         <div class="badges-title" id="roll-rewards-title">EP bonuses & milestones</div>
-        <div class="badges-subtitle">Wallet rewards · separate from score</div>
+        <div class="badges-subtitle">Progression bonuses · separate from score</div>
       </div>
       {#each systemBadges as badgeId (badgeId)}
         {@const badge = getBadgeMeta(badgeId)}

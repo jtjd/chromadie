@@ -1,5 +1,17 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-28 — Normalize roll EP and map legacy rank credit
+
+Keep raw v6 score for rarity, achievements, leaderboards, and history. Award
+roll EP from a server-owned linear-then-logarithmic conversion and store the
+award on each roll for reroll reversal. Preserve the original lifetime EP
+ledger and prior purchases; map historical lifetime EP into a private rank
+ledger that retains the same old rank and fraction of progress within it.
+Owner and public rank projections expose only this rank-facing EP. Retire the
+browser purchase and wallet RPC grants. Rank and Ritual grant through the
+existing immutable milestone and inventory ledger. See
+[`milestones/ROLL_EP_RANK_REBALANCE.md`](milestones/ROLL_EP_RANK_REBALANCE.md).
+
 ## 2026-09-26 — Single free media slots, bounded paid libraries
 
 Free accounts keep one avatar and one background. Selection commits before old

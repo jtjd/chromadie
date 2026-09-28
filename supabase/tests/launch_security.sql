@@ -422,7 +422,7 @@ SELECT pg_temp.audit_assert(
   AND (SELECT count(*) = 5 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
   AND (SELECT count(*) = 24 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
   AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 156 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 155 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -472,8 +472,34 @@ SELECT pg_temp.audit_assert(
 SELECT pg_temp.audit_assert(
   NOT has_function_privilege('anon', 'public.purchase_item_impl(text)', 'EXECUTE')
     AND NOT has_function_privilege('authenticated', 'public.purchase_item_impl(text)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.purchase_item(text)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.purchase_item(text)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.get_wallet_balance()', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.equip_item(text)', 'EXECUTE'),
-  'browser roles must use guarded purchase and equip wrappers'
+  'browser roles may equip owned cosmetics but cannot purchase with EP'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT catalog_status = 'retired' FROM public.shop_items WHERE item_key = 'streak_freeze')
+    AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE item_key = 'streak_freeze'),
+  'legacy freeze inventory must stay stored without an active shop offer'
+);
+SELECT pg_temp.audit_assert(
+  public.roll_score_to_ep(0) = 0
+    AND public.roll_score_to_ep(47461) = 47461
+    AND public.roll_score_to_ep(80000) = 80000
+    AND public.roll_score_to_ep(80001) = 80001
+    AND public.roll_score_to_ep(145751) = 127990
+    AND public.roll_score_to_ep(48172821304) = 1144662,
+  'database EP conversion drifted from the exhaustive v6 fixture'
+);
+SELECT pg_temp.audit_assert(
+  public.map_legacy_rank_ep(4790000) = 1300000
+    AND public.map_legacy_rank_ep(23950000) = 4200000
+    AND public.map_legacy_rank_ep(71851000) = 11200000
+    AND public.map_legacy_rank_ep(143703000) = 21700000
+    AND public.map_legacy_rank_ep(287405000) = 42200000
+    AND public.map_legacy_rank_ep(100000000) BETWEEN 11200000 AND 21699999,
+  'legacy EP remap must preserve prior rank and within-rank progress'
 );
 SELECT pg_temp.audit_assert(
   NOT has_table_privilege('anon', 'public.profile_events', 'SELECT')
@@ -1054,13 +1080,6 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'd2_unequip_material'),
   'unequipping one Name layer removed unrelated modern layers'
 );
-INSERT INTO audit_results VALUES ('lean_deleted_purchase', public.purchase_item('name_void'));
-SELECT pg_temp.audit_assert(
-  (SELECT payload->>'success' = 'false'
-      AND payload->>'error' = 'Invalid item'
-   FROM audit_results WHERE name = 'lean_deleted_purchase'),
-  'deleted Name rows remained purchasable through purchase_item'
-);
 INSERT INTO audit_results VALUES ('first_roll', public.roll_die(false));
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true' AND payload->>'is_anon' = 'false' FROM audit_results WHERE name = 'first_roll'),
@@ -1080,6 +1099,21 @@ SELECT pg_temp.audit_assert(
    JOIN audit_results r ON r.name = 'first_roll'
    WHERE s.user_id = '10000000-0000-0000-0000-000000000001'),
   'stored badges differ from the authoritative roll response'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT s.ep_earned = public.roll_score_to_ep(s.score)
+      AND s.ep_earned = (r.payload->>'ep_earned')::bigint
+   FROM public.scores s
+   JOIN audit_results r ON r.name = 'first_roll'
+   WHERE s.user_id = '10000000-0000-0000-0000-000000000001'),
+  'roll EP must be stored separately from raw score and match the response'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT p.progression_ep = (public.get_my_progression()->>'current_ep')::bigint
+      AND p.progression_ep = (public.get_my_profile()->>'lifetime_ep')::bigint
+   FROM public.profiles p
+   WHERE p.id = '10000000-0000-0000-0000-000000000001'),
+  'owner rank projections must use normalized progression EP'
 );
 INSERT INTO audit_results VALUES (
   'story_public',
@@ -1421,10 +1455,17 @@ SELECT pg_temp.audit_assert(
   'reroll left a ghost best score'
 );
 SELECT pg_temp.audit_assert(
-  (SELECT lifetime_ep >= ep_spent AND public.get_wallet_balance() >= 0
+  (SELECT lifetime_ep >= ep_spent
    FROM public.profiles
    WHERE id = '10000000-0000-0000-0000-000000000001'),
-  'reroll created a negative wallet balance'
+  'reroll breached the legacy lifetime EP floor'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT s.ep_earned = public.roll_score_to_ep(s.score)
+   FROM public.scores s
+   WHERE s.user_id = '10000000-0000-0000-0000-000000000001'
+     AND s.roll_date = public.game_utc_date()),
+  'reroll did not replace stored EP with the converted award'
 );
 
 UPDATE public.profiles

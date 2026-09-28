@@ -1,5 +1,8 @@
 import { readProgressionManifest, progressionRowValue } from './progression-manifest.mjs';
 import { simulateBalance } from './simulate-balance.mjs';
+import { RANKS } from '../src/lib/rankConfig.js';
+import { rollScoreToEp } from '../src/lib/rollEp.js';
+import v6Fixture from '../src/lib/generated/scoringV6BalanceFixture.json' with { type: 'json' };
 
 const LONG_TERM_GOALS = Object.freeze({
   journey_roll_730: 730,
@@ -70,6 +73,21 @@ function compareNumbers(left, right, tolerance = 0.25) {
 const manifest = await readProgressionManifest();
 const byId = new Map(manifest.map(row => [row.id, row]));
 const failures = [];
+
+const targetRankDays = { Silver: 14, Gold: 45, Platinum: 120, Diamond: 250, Chroma: 500 };
+for (const rank of RANKS.slice(1)) {
+  const measured = v6Fixture.progression.rankDailyRollsWithBonuses?.[rank.name]?.median;
+  if (v6Fixture.progression.rankThresholds?.[rank.name] !== rank.min
+    || !Number.isFinite(measured)
+    || Math.abs(measured - targetRankDays[rank.name]) > targetRankDays[rank.name] * 0.1) {
+    failures.push(`${rank.name} threshold or sampled bonus-aware daily-roll pace has drifted`);
+  }
+}
+if (v6Fixture.rollEpSpread?.median !== rollScoreToEp(v6Fixture.scoreSpread.median)
+  || v6Fixture.rollEpSpread?.max !== rollScoreToEp(v6Fixture.scoreSpread.max)
+  || v6Fixture.rollEpSpread.max >= RANKS[2].min - RANKS[1].min) {
+  failures.push('normalized roll EP distribution or extreme-roll guard has drifted');
+}
 
 for (const [id, target] of Object.entries(LONG_TERM_GOALS)) {
   const goal = byId.get(id);

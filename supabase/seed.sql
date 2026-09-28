@@ -16,10 +16,10 @@ INSERT INTO public.achievements (id, name, description, icon, ep_reward, rarity)
 ('rarity_epic', 'Epic Encounter', 'Roll an Epic rarity color.', '🟣', 100000, 'Rare'),
 ('rarity_anomaly', 'Legendary Detected', 'Roll a Legendary rarity color.', '🟠', 250000, 'Epic'),
 ('mythic_roll', 'Anomaly Touch', 'Roll the rarest active color tier.', '🌟', 500000, 'Mythic'),
-('score_50k', 'High Roller', 'Score at least 50,000 EP in a single roll.', '💰', 25000, 'Common'),
-('score_100k', 'Six Digits', 'Score at least 100,000 EP in a single roll.', '💰', 100000, 'Rare'),
-('score_200k', 'Anomaly Hunter', 'Score at least 200,000 EP in a single roll.', '💰', 250000, 'Epic'),
-('score_1_5m', 'Once in a Spectrum', 'Score at least 1,500,000 EP in a single roll.', '🌈', 500000, 'Mythic'),
+('score_50k', 'High Roller', 'Score at least 50,000 points in a single roll.', '💰', 25000, 'Common'),
+('score_100k', 'Six Digits', 'Score at least 100,000 points in a single roll.', '💰', 100000, 'Rare'),
+('score_200k', 'Anomaly Hunter', 'Score at least 200,000 points in a single roll.', '💰', 250000, 'Epic'),
+('score_1_5m', 'Once in a Spectrum', 'Score at least 1,500,000 points in a single roll.', '🌈', 500000, 'Mythic'),
 ('roll_prime', 'Prime Number', 'Roll a color with a prime R+G+B sum.', '🔢', 25000, 'Common'),
 ('high_contrast', 'Polarized Channels', 'Roll a color with an extreme RGB range.', '🌓', 25000, 'Common'),
 ('low_contrast', 'Close Harmony', 'Roll a color with very close RGB channels.', '🌫️', 15000, 'Common'),
@@ -52,7 +52,7 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('border_chroma', 'Rosette', 'profile_border', 0, 'renderer', 'chroma', NULL, NULL, 'Mythic', 'Satin pink bows, a fine pearl edge and tiny floating hearts.', 'Prism', false),
 ('border_crystal', 'Crystal Border', 'profile_border', 450000, 'renderer', 'crystal', NULL, NULL, 'Mythic', 'A cool faceted edge with a clean crystalline glint.', 'Prism', false),
 ('border_glitch', 'Love Letter', 'profile_border', 500000, 'renderer', 'glitch', NULL, NULL, 'Mythic', 'Lipstick-red wax hearts and a blush stitched stationery border.', 'Static Bloom', false),
-('border_gold', 'Sakura Diary', 'profile_border', 350000, 'renderer', 'gold', NULL, NULL, 'Mythic', 'Painted cherry blossoms on warm branches with drifting pink petals.', 'Archive', false),
+('border_gold', 'Sakura Diary', 'profile_border', 0, 'renderer', 'gold', NULL, NULL, 'Mythic', 'Painted cherry blossoms on warm branches with drifting pink petals.', 'Archive', false),
 ('border_neon', 'Manga Panel', 'profile_border', 180000, 'renderer', 'neon', NULL, NULL, 'Epic', 'Off-white ink panels, red impact marks and animated screentone details.', 'Signal', false),
 ('border_prism', 'Midnight Rose', 'profile_border', 300000, 'renderer', 'prism', NULL, NULL, 'Epic', 'Crimson roses and dark leaves entwine a tarnished silver edge.', 'Prism', false),
 ('border_void', 'Blackthorn', 'profile_border', 550000, 'renderer', 'void', NULL, NULL, 'Mythic', 'Sharp silver thorn vines wrap a dark rim with blood-red glints.', 'Nocturne', false),
@@ -161,7 +161,7 @@ INSERT INTO public.shop_items (
   ('cursor_trail_pixel_wake', 'Pixel Wake', 'cursor_trail', 180000, 'renderer', 'pixel-wake', NULL, NULL, 'Rare', 'Crisp square pixels shed from movement and dissolve without blur.', 'Static Bloom', false, 'earned', NULL, 'active'),
   ('cursor_trail_chroma_ribbon', 'Chroma Ribbon', 'cursor_trail', 340000, 'renderer', 'chroma-ribbon', NULL, NULL, 'Epic', 'A narrow three-band ribbon follows pointer curvature without covering links.', 'Prism', false, 'earned', NULL, 'active'),
   ('cursor_trail_glass_shards', 'Glass Shards', 'cursor_trail', 360000, 'renderer', 'glass-shards', NULL, NULL, 'Epic', 'Sparse translucent facets rotate with controlled refracted highlights.', 'Prism', false, 'earned', NULL, 'active'),
-  ('cursor_trail_ember_ash', 'Ember Ash', 'cursor_trail', 210000, 'renderer', 'ember-ash', NULL, NULL, 'Rare', 'Small warm embers drift upward from the pointer path and cool quickly.', 'Ember', false, 'earned', NULL, 'active'),
+  ('cursor_trail_ember_ash', 'Ember Ash', 'cursor_trail', 0, 'renderer', 'ember-ash', NULL, NULL, 'Rare', 'Small warm embers drift upward from the pointer path and cool quickly.', 'Ember', false, 'earned', NULL, 'active'),
   ('cursor_trail_comet_thread', 'Comet Thread', 'cursor_trail', 330000, 'renderer', 'comet-thread', NULL, NULL, 'Epic', 'A fine pale comet tail with a dark central thread and clean taper.', 'Nocturne', false, 'earned', NULL, 'active'),
   ('cursor_trail_ink_drops', 'Ink Drops', 'cursor_trail', 220000, 'renderer', 'ink-drops', NULL, NULL, 'Rare', 'Small ink impressions appear along the path with restrained paper-like spread.', 'Archive', false, 'earned', NULL, 'active'),
   ('cursor_trail_orbit_dust', 'Orbit Dust', 'cursor_trail', 350000, 'renderer', 'orbit-dust', NULL, NULL, 'Epic', 'A few particles orbit the recent path before collapsing inward.', 'Prism', false, 'earned', NULL, 'active'),
@@ -225,7 +225,7 @@ INSERT INTO public.shop_items (
   ('profile_atmosphere_rain_window', 'Rain Window', 'profile_atmosphere', 260000, 'renderer', 'rain-window', NULL, NULL, 'Rare', 'A seamless fall of fine rain turns the profile into a quiet weather signal.', 'Nocturne', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_droplets_glass', 'Droplets on Glass', 'profile_atmosphere', 240000, 'renderer', 'droplets-glass', NULL, NULL, 'Rare', 'Realistic beads and trails cling to a pane, catching the daily color without obscuring the profile.', 'Archive', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_dust_light', 'Loveglass', 'profile_atmosphere', 0, 'renderer', 'dust-light', NULL, NULL, 'Rare', 'Rose glass hearts rise through pearly pin lights, catching reflections as they turn.', 'Archive', false, 'earned', NULL, 'active'),
-  ('profile_atmosphere_ink_bloom', 'Crimson Ink', 'profile_atmosphere', 520000, 'renderer', 'ink-bloom', NULL, NULL, 'Epic', 'A broken crimson eclipse breathes with calligraphic ink currents and rising embers.', 'Prism', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_ink_bloom', 'Crimson Ink', 'profile_atmosphere', 0, 'renderer', 'ink-bloom', NULL, NULL, 'Epic', 'A broken crimson eclipse breathes with calligraphic ink currents and rising embers.', 'Prism', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_snowfall', 'Snowfall', 'profile_atmosphere', 0, 'renderer', 'snowfall', NULL, NULL, 'Rare', 'Layered flakes drift through a blue winter field, from soft foreground crystals to distant pinpricks.', 'Nocturne', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_sakura_afterglow', 'Sakura Afterglow', 'profile_atmosphere', 300000, 'renderer', 'sakura-afterglow', NULL, NULL, 'Rare', 'Painted cherry blossoms and wind-driven petals sweep across a soft anime dusk.', 'Prism', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_silk_folds', 'Silk Folds', 'profile_atmosphere', 320000, 'renderer', 'silk-folds', NULL, NULL, 'Rare', 'Moving folds of black silk carry a restrained sheen through the profile without adding a frame.', 'Prism', false, 'earned', NULL, 'active'),
@@ -293,6 +293,10 @@ ON CONFLICT (key) DO NOTHING;
 -- Customize is the active profile-expression surface for this phase. Keep a
 -- generous free baseline, while preserving historical Atelier rows and the
 -- acquisition contract for journey rewards when the database is reset.
+UPDATE public.shop_items
+SET catalog_status = 'retired'
+WHERE item_key IN ('streak_freeze');
+
 UPDATE public.shop_items
 SET access_tier = 'free',
     cost = 0,

@@ -287,11 +287,6 @@ if (
   process.exit(1);
 }
 
-const d2NameTotalCost = d2NameCatalogRows.reduce((total, row) => total + row.cost, 0);
-const d2NameBySlot = Object.fromEntries(Object.keys(expectedNameSlotCounts).map(slot => {
-  const rows = d2NameCatalogRows.filter(row => row.slot === slot);
-  return [slot, { count: rows.length, total: rows.reduce((total, row) => total + row.cost, 0) }];
-}));
 const borderRows = [...seed.matchAll(
   /^\s*\('(border_[a-z0-9_]+)',\s*'([^']+)',\s*'profile_border',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)'(?:,\s*(?:true|false))?(?:,\s*'(?:free|earned)',\s*NULL,\s*'active')?\),?$/gm
 )].map(([, itemKey, name, cost, rendererKey, rarity, description, collection]) => ({
@@ -303,25 +298,10 @@ const borderRows = [...seed.matchAll(
   description,
   collection
 }));
-const expectedBorderPrices = Object.freeze({
-  border_celestial: 600000,
-  border_chroma: 450000,
-  border_crystal: 450000,
-  border_glitch: 500000,
-  border_gold: 350000,
-  border_neon: 180000,
-  border_prism: 300000,
-  border_void: 550000,
-  border_signal: 160000,
-  border_elastic: 0,
-  border_shimmer_track: 0,
-  border_aurora: 0
-});
 const expectedBorderKeys = new Set(Object.values(profileBorders.PROFILE_BORDER_DEFINITIONS).map(definition => definition.itemKey));
 const borderKeySet = new Set(borderRows.map(row => row.itemKey));
 const borderInvalidRows = borderRows.filter(row => (
     !expectedBorderKeys.has(row.itemKey)
-    || (progressionRewardKeys.has(row.itemKey) ? row.cost !== 0 : expectedBorderPrices[row.itemKey] !== row.cost)
     || !profileBorders.isProfileBorderKey(row.rendererKey)
     || !expectedNameRarities.has(row.rarity)
     || !row.description.trim()
@@ -349,34 +329,6 @@ const launchRows = [...seed.matchAll(
   accessTier
 }));
 const studyKeys = (await import('../src/lib/profile-atmosphere/atmosphereStudies.js')).ATMOSPHERE_STUDY_KEYS.map(key => `profile_atmosphere_${key.replaceAll('-', '_')}`);
-const launchExpectedCosts = Object.freeze({
-  ...Object.fromEntries(studyKeys.map(key => [key, 0])),
-  cursor_trail_signal_trace: 160000, cursor_trail_pixel_wake: 180000, cursor_trail_chroma_ribbon: 340000,
-  cursor_trail_glass_shards: 360000, cursor_trail_ember_ash: 210000, cursor_trail_comet_thread: 330000,
-  cursor_trail_ink_drops: 220000, cursor_trail_orbit_dust: 350000, cursor_trail_static_echo: 320000,
-  cursor_trail_rain_trace: 230000, cursor_trail_gold_fleck: 370000, cursor_trail_ghost_tail: 320000,
-  cursor_trail_color_memory: 540000, cursor_trail_marker_stroke: 360000, cursor_trail_solar_sparks: 520000,
-  cursor_trail_void_lensing: 700000, cursor_trail_plasma_swarm: 0,
-  cursor_trail_bubble_wake: 0, cursor_trail_character_bloom: 0,
-  cursor_trail_emoji_bloom: 0, cursor_trail_following_dot: 0,
-  cursor_trail_text_flag: 0, cursor_trail_springy_emoji: 0,
-  avatar_effect_3d_parallax: 350000, avatar_effect_glitch_slicer: 340000,
-  avatar_effect_liquid_blob: 380000, avatar_effect_cyber_hud: 520000,
-  avatar_effect_fireflies: 0, avatar_effect_butterfly_orbit: 0, avatar_effect_bat_orbit: 0,
-  avatar_effect_moonlit_clouds: 0, avatar_effect_enchanted_garden: 0, avatar_effect_prismatic_fracture: 0,
-  avatar_effect_sakura_petals: 0,
-  avatar_effect_sakura_neko: 0, avatar_effect_cloud_bunny: 0, avatar_effect_crimson_ronin: 0, avatar_effect_midnight_oni: 0, avatar_effect_koi_current: 0,
-  profile_layout_compact: 0,
-  profile_layout_full_bleed: 0, profile_layout_sleek: 0, profile_layout_framed: 0, profile_layout_portfolio: 0,
-  profile_motion_perspective_tilt: 0, profile_motion_halo_offset: 0, profile_motion_wavefront: 0,
-  profile_atmosphere_rain_window: 260000, profile_atmosphere_droplets_glass: 240000,
-  profile_atmosphere_dust_light: 280000, profile_atmosphere_ink_bloom: 520000,
-  profile_atmosphere_snowfall: 300000, profile_atmosphere_sakura_afterglow: 300000, profile_atmosphere_silk_folds: 320000,
-  profile_atmosphere_glass_caustics: 460000, profile_atmosphere_cinder_drift: 430000,
-  profile_atmosphere_night_pollen: 340000, profile_atmosphere_paper_shadow: 300000,
-  profile_atmosphere_smoke_spiral: 580000, profile_atmosphere_lumen_flare: 640000,
-  profile_atmosphere_prism_dust: 0
-});
 const launchFreeKeys = new Set([
   ...studyKeys,
   'cursor_trail_plasma_swarm',
@@ -407,7 +359,6 @@ const launchExpectedRenderers = new Set([
 ]);
 const launchInvalidRows = launchRows.filter(row => (
   !launchExpectedRenderers.has(row.itemKey)
-  || (progressionRewardKeys.has(row.itemKey) ? row.cost !== 0 : launchExpectedCosts[row.itemKey] !== row.cost)
   || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.rendererKey)
   || !expectedNameRarities.has(row.rarity)
   || !row.description.trim()
@@ -437,26 +388,11 @@ if (
   }, null, 2));
   process.exit(1);
 }
-const launchTotalCost = launchRows.reduce((total, row) => total + row.cost, 0);
-const borderTotalCost = borderRows.reduce((total, row) => total + row.cost, 0);
-const cheapestBorder = borderRows.reduce((lowest, row) => row.cost < lowest.cost ? row : lowest);
-const mostExpensiveBorder = borderRows.reduce((highest, row) => row.cost > highest.cost ? row : highest);
-const documentedAverageDailyEp = 54182;
-const daysFor = cost => Math.ceil(cost / documentedAverageDailyEp);
 console.log(
   `Balance drift check passed: ${scoringEntries.length} v2 score conditions, ` +
     `${sqlRarities.length} rarity tiers, ${achievementChecks.size} achievement checks, ` +
     `${seededAchievementRewards.size} seeded achievements.\n` +
-    `D2 Name catalog: ${d2NameCatalogRows.length} rows / ${d2NameTotalCost.toLocaleString()} EP; ` +
-    `Font ${d2NameBySlot.name_font.total.toLocaleString()}, ` +
-    `Material ${d2NameBySlot.name_material.total.toLocaleString()}, ` +
-    `Motion ${d2NameBySlot.name_motion.total.toLocaleString()}; ` +
-    `average-roll pacing ${daysFor(d2NameTotalCost)} days for the full set.\n` +
-    `Lean Profile Borders: ${borderRows.length} rows / ${borderTotalCost.toLocaleString()} EP; ` +
-    `cheapest ${cheapestBorder.itemKey} ${daysFor(cheapestBorder.cost)} days, ` +
-    `highest ${mostExpensiveBorder.itemKey} ${daysFor(mostExpensiveBorder.cost)} days; ` +
-    `the complete border set is ${daysFor(borderTotalCost)} days.\n` +
-    `Launch cosmetics: ${launchRows.length} rows / ${launchTotalCost.toLocaleString()} EP; ` +
-    `Cursor ${launchCounts.cursor_trail}, Avatar ${launchCounts.avatar_effect}, ` +
-    `structural Layout ${launchCounts.profile_layout}, Atmosphere ${launchCounts.profile_atmosphere}.`
+    `D2 Name catalog: ${d2NameCatalogRows.length} rows; ` +
+    `Lean Profile Borders: ${borderRows.length} rows; ` +
+    `Launch cosmetics: ${launchRows.length} rows across ${Object.keys(launchCounts).length} renderer slots.`
 );

@@ -34,7 +34,7 @@
       {/if}
       <div class="roll-result-hero__score" aria-label={`${formattedScore} score`}>
         <strong>{formattedScore}</strong>
-        <span>pts</span>
+        <span>Score</span>
       </div>
     </div>
   </div>

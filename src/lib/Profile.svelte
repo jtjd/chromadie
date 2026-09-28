@@ -380,7 +380,7 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
                   {/if}
                 </p>
                 <p class="rank-help">
-                  Rank is based on lifetime EP earned, not EP spent in the shop.
+                  Rank is based on lifetime EP earned through rolls and milestones.
                 </p>
               </div>
             {/if}
@@ -480,7 +480,7 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
               <div class="best-color-display" style="background-color: {displayBestRoll.hex_code || '#222'};" title={displayBestRoll.hex_code || 'Color unavailable'}></div>
               <span class="best-roll-hex">{displayBestRoll.hex_code || 'Unknown color'}</span>
             </div>
-            <p class="best-roll-score" title={formatFullValue(displayBestRoll.score)}>{formatStat(displayBestRoll.score)} EP</p>
+            <p class="best-roll-score" title={formatFullValue(displayBestRoll.score)}>{formatStat(displayBestRoll.score)} score</p>
             <p class="best-roll-rarity">{displayBestRoll.rarity || 'Unranked'}</p>
           {:else}
             <p style="font-size: 0.8rem; color: var(--text-muted);">No rolls yet.</p>
@@ -500,8 +500,8 @@ import { rpcWithAccessToken } from './rpcWithAccessToken.js';
               <div
                 class="heatmap-cell intensity-{day.intensity} {day.hex ? 'has-roll' : ''}"
                 style={day.hex ? `background-color: ${day.hex};` : ''}
-                title={day.hex ? `${day.date}: ${day.hex} • ${formatFullValue(day.score)} EP` : `${day.date}: No roll`}
-                aria-label={day.hex ? `${day.date}, ${day.hex}, ${formatFullValue(day.score)} EP` : `${day.date}, no roll`}
+                title={day.hex ? `${day.date}: ${day.hex} • ${formatFullValue(day.score)} score` : `${day.date}: No roll`}
+                aria-label={day.hex ? `${day.date}, ${day.hex}, ${formatFullValue(day.score)} score` : `${day.date}, no roll`}
                 role="img"
               ></div>
             {/each}

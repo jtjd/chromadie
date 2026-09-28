@@ -425,8 +425,8 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 156) {
-  fail(`expected 156 active catalog rows, found ${[...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 155) {
+  fail(`expected 155 active catalog rows, found ${[...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length}`);
 }
 for (const definition of Object.values(PROFILE_BORDER_DEFINITIONS)) {
   const row = seed.catalog.get(definition.itemKey);

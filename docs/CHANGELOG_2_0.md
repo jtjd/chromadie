@@ -1,5 +1,15 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-28 — Roll EP and rank pacing
+
+- Kept raw roll score and made EP a separate, smoothly normalized progression award.
+- Retuned Silver through Chroma to roughly 14, 45, 120, 250, and 500 daily rolls.
+- Preserved old lifetime EP and rank position through an internal migration ledger; kept historical scores and purchases intact.
+- Added 180-, 300-, and 430-roll Ritual rewards and retired EP purchase/wallet access from the browser.
+- Retired the old EP-priced Streak Freeze offer while preserving held inventory.
+- Updated the roll result, progression copy, exhaustive fixture, drift checks, and SQL behavior tests.
+- Applied the forward migration to the linked production database after schema/public-data backups; verified the remote migration ledger and catalog.
+
 ## 2026-09-26 — Live testing release
 
 Applied `20260925230000_atmosphere_studies_collection.sql` and

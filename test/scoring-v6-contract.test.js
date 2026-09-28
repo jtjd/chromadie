@@ -298,11 +298,11 @@ test('the exhaustive fixture locks score spread, distributions, and progression 
   assert.equal(stableDigest(v6BalanceFixture.conditions), '1dd9bbd33ac304dd61a0bbb2934754260c750bcbe07090deb0306a68dbaddad2');
   assert.equal(stableDigest(v6BalanceFixture.progression.discoveryExpectedRolls), '6c6013e0cdbd6fb1fd3adc28586fb43309a53c620cab380155d75eb7bdde2852');
   assert.deepEqual(v6BalanceFixture.progression.rankThresholds, {
-    Silver: 4_790_000,
-    Gold: 23_950_000,
-    Platinum: 71_851_000,
-    Diamond: 143_703_000,
-    Chroma: 287_405_000
+    Silver: 1_300_000,
+    Gold: 4_200_000,
+    Platinum: 11_200_000,
+    Diamond: 21_700_000,
+    Chroma: 42_200_000
   });
   assert.deepEqual(v6BalanceFixture.progression.scoreAchievementThresholds, {
     score_50k: 479_000,
@@ -316,11 +316,11 @@ test('the exhaustive fixture locks score spread, distributions, and progression 
 test('runtime progression thresholds match the checked-in recalibration', () => {
   assert.deepEqual(RANKS.map(rank => [rank.name, rank.min]), [
     ['Bronze', 0],
-    ['Silver', 4_790_000],
-    ['Gold', 23_950_000],
-    ['Platinum', 71_851_000],
-    ['Diamond', 143_703_000],
-    ['Chroma', 287_405_000]
+    ['Silver', 1_300_000],
+    ['Gold', 4_200_000],
+    ['Platinum', 11_200_000],
+    ['Diamond', 21_700_000],
+    ['Chroma', 42_200_000]
   ]);
   assert.deepEqual(V6_SCORE_ACHIEVEMENT_THRESHOLDS, {
     score_50k: 479_000,

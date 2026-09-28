@@ -174,7 +174,7 @@
                       <div class="profile-portfolio-story__best-color" style={`background:${colorFor(displayBestRoll.hex_code)};`}></div>
                       <div>
                         <p>{colorFor(displayBestRoll.hex_code, '#000000')}</p>
-                        <strong>{formatStat(displayBestRoll.score)} EP</strong>
+                        <strong>{formatStat(displayBestRoll.score)} score</strong>
                         <small>{displayBestRoll.rarity || 'Unranked'}</small>
                       </div>
                     </div>

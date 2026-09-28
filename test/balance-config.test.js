@@ -22,10 +22,7 @@ import { ACHIEVEMENTS } from '../src/lib/badgeData.js';
 import { getConditionRarityV6, V6_CULTURE_CONDITIONS } from '../src/lib/conditionCatalogV6.js';
 import { simulateBalance } from '../scripts/simulate-balance.mjs';
 import {
-  CANDIDATE_RANKS,
-  PRESTIGE_ITEM_PRICE,
-  SHOP_PRICE_BANDS,
-  STREAK_FREEZE_PRICE
+  CANDIDATE_RANKS
 } from '../src/lib/balanceCandidate.js';
 import {
   CANDIDATE_ACHIEVEMENT_REWARDS,
@@ -70,16 +67,16 @@ test('active v6 rarity boundaries remain explicit', () => {
 test('active launch rank boundaries remain explicit', () => {
   const boundaries = [
     [0, 'Bronze'],
-    [4789999, 'Bronze'],
-    [4790000, 'Silver'],
-    [23949999, 'Silver'],
-    [23950000, 'Gold'],
-    [71850999, 'Gold'],
-    [71851000, 'Platinum'],
-    [143702999, 'Platinum'],
-    [143703000, 'Diamond'],
-    [287404999, 'Diamond'],
-    [287405000, 'Chroma']
+    [1299999, 'Bronze'],
+    [1300000, 'Silver'],
+    [4199999, 'Silver'],
+    [4200000, 'Gold'],
+    [11199999, 'Gold'],
+    [11200000, 'Platinum'],
+    [21699999, 'Platinum'],
+    [21700000, 'Diamond'],
+    [42199999, 'Diamond'],
+    [42200000, 'Chroma']
   ];
 
   for (const [ep, expected] of boundaries) {
@@ -87,19 +84,19 @@ test('active launch rank boundaries remain explicit', () => {
   }
   assert.deepEqual(RANKS.map(({ name, min }) => [name, min]), [
     ['Bronze', 0],
-    ['Silver', 4790000],
-    ['Gold', 23950000],
-    ['Platinum', 71851000],
-    ['Diamond', 143703000],
-    ['Chroma', 287405000]
+    ['Silver', 1300000],
+    ['Gold', 4200000],
+    ['Platinum', 11200000],
+    ['Diamond', 21700000],
+    ['Chroma', 42200000]
   ]);
 });
 
 test('rank progress is clamped and reaches one at Chroma', () => {
   assert.equal(getRankState(-100).lifetimeEp, 0);
-  assert.equal(getRankState(2395000).progress, 0.5);
-  assert.equal(getRankState(287405000).progress, 1);
-  assert.equal(getRankState(287405000).next, null);
+  assert.equal(getRankState(2750000).progress, 0.5);
+  assert.equal(getRankState(42200000).progress, 1);
+  assert.equal(getRankState(42200000).next, null);
 });
 
 test('deterministic score calculations preserve active condition stacking', () => {
@@ -272,14 +269,11 @@ test('known SQL numeric boundary colors retain authoritative classifications', (
   }
 });
 
-test('candidate economy pacing remains explicit', () => {
+test('rank and achievement definitions remain explicit', () => {
   assert.deepEqual(CANDIDATE_RANKS.map(({ name, min }) => [name, min]), [
-    ['Bronze', 0], ['Silver', 4790000], ['Gold', 23950000],
-    ['Platinum', 71851000], ['Diamond', 143703000], ['Chroma', 287405000]
+    ['Bronze', 0], ['Silver', 1300000], ['Gold', 4200000],
+    ['Platinum', 11200000], ['Diamond', 21700000], ['Chroma', 42200000]
   ]);
-  assert.deepEqual(SHOP_PRICE_BANDS.Mythic, { min: 175000, max: 1150000 });
-  assert.equal(STREAK_FREEZE_PRICE, 50000);
-  assert.equal(PRESTIGE_ITEM_PRICE, 1250000);
   assert.equal(Object.keys(CANDIDATE_ACHIEVEMENT_REWARDS).length, 42);
   assert.equal(CANDIDATE_ACHIEVEMENT_TOTAL, 8820000);
   assert.ok(RETIRED_ACHIEVEMENT_IDS.includes('launch_adopter'));

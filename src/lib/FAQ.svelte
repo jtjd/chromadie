@@ -26,7 +26,7 @@
     {
       number: '03',
       title: 'Keep your color story',
-      copy: 'Signed-in rolls become part of your profile history. Your score counts on the leaderboard and adds to spendable EP.'
+      copy: 'Signed-in rolls become part of your profile history. Score counts on the leaderboard; EP advances your rank and unlocks rewards.'
     },
     {
       number: '04',
@@ -129,8 +129,8 @@
       </article>
       <article>
         <span class="how-to-play__term-label">EP · account progress</span>
-        <h3>Something to spend and unlock</h3>
-        <p>A signed-in roll also adds its score to your spendable EP. Achievements and other bonuses can award extra EP, listed separately from score.</p>
+        <h3>Progress toward your next rank</h3>
+        <p>Signed-in rolls earn EP. Higher scores earn more EP with diminishing returns. Achievements and bonuses can add extra EP.</p>
       </article>
     </div>
     <p class="how-to-play__rarity-note">
@@ -174,7 +174,7 @@
       <article class="how-to-play__account-option">
         <span class="how-to-play__term-label">Keep playing</span>
         <h3>Signed in</h3>
-        <p>Your future rolls are saved to your profile. Your score counts on the leaderboard and adds to spendable EP.</p>
+        <p>Your future rolls are saved to your profile. Score counts on the leaderboard; EP advances your rank.</p>
         <a class="how-to-play__text-link" href="/signup">Create a free account</a>
       </article>
     </div>

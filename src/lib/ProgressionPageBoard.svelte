@@ -327,10 +327,10 @@
           <span id="profile-progression-rank-title" class="profile-progression-rank__badge-label">{rankState.current?.name || 'Unranked'} rank</span>
           <div class="profile-progression-rank__badge-mark"><ProgressionRankBadge rankName={rankState.current?.name || 'Unranked'} /></div>
         </div>
-        <div class="profile-progression-rank__page-value"><strong>{formatCompactNumber(lifetimeEp)}</strong><span>XP</span></div>
+        <div class="profile-progression-rank__page-value"><strong>{formatCompactNumber(lifetimeEp)}</strong><span>EP</span></div>
         {#if rankState.next}
           <div class="profile-progression-rank__page-bar profile-progression-bar" role="progressbar" aria-label={`${progressPercent}% toward ${rankState.next.name}`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={progressPercent}><span style={`width:${progressPercent}%`}></span></div>
-          <div class="profile-progression-rank__page-next"><span>{formatNumber(Math.max(0, rankState.next.min - lifetimeEp))} XP to <strong style={`--progression-target-rank-color:${rankState.next.color || '#FFD21C'}`}>{rankState.next.name}</strong></span></div>
+          <div class="profile-progression-rank__page-next"><span>{formatNumber(Math.max(0, rankState.next.min - lifetimeEp))} EP to <strong style={`--progression-target-rank-color:${rankState.next.color || '#FFD21C'}`}>{rankState.next.name}</strong></span></div>
         {:else}
           <div class="profile-progression-rank__page-bar profile-progression-bar" role="progressbar" aria-label="Highest rank reached" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span style="width:100%"></span></div>
           <div class="profile-progression-rank__page-next"><span>Highest rank reached</span></div>

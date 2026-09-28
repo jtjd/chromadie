@@ -19,7 +19,7 @@
   function descriptionFor(event) {
     if (event.eventType === 'profile_created') return 'The first page of this profile story.';
     const conditionCount = event.payload.conditionIds.length;
-    return `${event.payload.rarity} · ${formatCount(event.payload.score)} EP · ${conditionCount} condition${conditionCount === 1 ? '' : 's'}`;
+    return `${event.payload.rarity} · ${formatCount(event.payload.score)} score · ${conditionCount} condition${conditionCount === 1 ? '' : 's'}`;
   }
 </script>
 

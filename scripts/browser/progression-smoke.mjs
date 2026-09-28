@@ -223,6 +223,7 @@ async function seedEstablishedAccountFixture(userId) {
     headers: { Prefer: 'return=minimal' },
     body: {
       lifetime_ep: establishedSilverEp,
+      progression_ep: establishedSilverEp,
       total_rolls: 42,
       current_streak: 5,
       longest_streak: 9

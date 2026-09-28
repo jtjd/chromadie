@@ -76,7 +76,7 @@ test('the homepage Roll composition preserves the authoritative Game surface', (
   assert.match(game, /RollResultHero/);
   assert.match(game, /showScore=\{false\}/);
   assert.match(resultHero, /<span class="roll-result-hero__eyebrow">Daily Roll<\/span>/);
-  assert.match(resultHero, /roll-display[\s\S]*roll-color-name[\s\S]*roll-result-hero__score[\s\S]*<strong>\{formattedScore\}<\/strong>[\s\S]*<span>pts<\/span>/);
+  assert.match(resultHero, /roll-display[\s\S]*roll-color-name[\s\S]*roll-result-hero__score[\s\S]*<strong>\{formattedScore\}<\/strong>[\s\S]*<span>Score<\/span>/);
   assert.ok(resultHero.indexOf('roll-color-name') < resultHero.indexOf('roll-result-hero__score'), 'score is attached beneath the earned color identity');
   assert.match(resultHero, /<h2 id="roll-result-title" class="roll-color-name">/);
   assert.doesNotMatch(game, /roll-breakdown--preview|roll-breakdown--result|REFERENCE_PREVIEW_ROWS|15,013|28,798/);

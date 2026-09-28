@@ -6,7 +6,7 @@
   import RollResultRewards from './RollResultRewards.svelte';
   import RollResultActions from './RollResultActions.svelte';
   import { supabase } from './supabase';
-  import { session, profile, authUser, authInitialized, accountState, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
+  import { session, profile, authUser, authInitialized, accountState, guestProgressActive, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
   import { ACCOUNT_STATES } from './authState.js';
   import { createChallengeLink } from './challenges';
   import { getTodayString, normalizeHexColor } from './utils';
@@ -55,6 +55,7 @@ import { runRollTextShare } from './rollTextShare.js';
   $: rollActionInk = getReadableTextColor(displayColor);
 
   let score = 0;
+  let epEarned = 0;
   let rarity = '';
   let badges = [];
   let traits = [];
@@ -105,6 +106,7 @@ import { runRollTextShare } from './rollTextShare.js';
       revealHex: phase === 'rolling' ? displayHex : '',
       rarity,
       score: Number(score) || 0,
+      epEarned: Number(epEarned) || 0,
       newProgressionUnlocks: newMilestones,
       weeklyFocusComplete: cotwHit
     });
@@ -253,6 +255,7 @@ import { runRollTextShare } from './rollTextShare.js';
     displayHex = '#000000';
     displayColor = '#222';
     score = 0;
+    epEarned = 0;
     rarity = '';
     displayScore = 0;
     scanProgress = 0;
@@ -281,6 +284,7 @@ import { runRollTextShare } from './rollTextShare.js';
       }
       phase = 'results';
       score = roll.score;
+      epEarned = isGuest ? 0 : Number(roll.ep_earned ?? roll.score) || 0;
       displayScore = roll.score;
       rarity = roll.rarity;
       displayColor = isGuest ? roll.hex : roll.hex_code;
@@ -373,7 +377,7 @@ import { runRollTextShare } from './rollTextShare.js';
     }
 
     const previousResult = isReroll ? {
-      score, rarity, badges, traits, identity, rollContributors, displayHex,
+      score, epEarned, rarity, badges, traits, identity, rollContributors, displayHex,
       displayColor, displayScore, percentileDisplay, milestoneGranted, newMilestones, cotwHit
     } : null;
     loading = true;
@@ -385,6 +389,7 @@ import { runRollTextShare } from './rollTextShare.js';
     error = null;
     phase = 'rolling';
     badges = [];
+    epEarned = 0;
     displayHex = '#??????';
     displayColor = '#222';
     displayScore = 0;
@@ -428,7 +433,7 @@ import { runRollTextShare } from './rollTextShare.js';
       onFailure: rpcError => {
         error = rpcError?.message || "An error occurred while rolling. Please try again.";
         if (previousResult) {
-          ({ score, rarity, badges, traits, identity, rollContributors, displayHex,
+          ({ score, epEarned, rarity, badges, traits, identity, rollContributors, displayHex,
             displayColor, displayScore, percentileDisplay, milestoneGranted, newMilestones, cotwHit } = previousResult);
           phase = 'results';
         } else phase = 'preroll';
@@ -450,6 +455,7 @@ import { runRollTextShare } from './rollTextShare.js';
         }
 
         score = data.score;
+        epEarned = requestUserId ? Number(data.ep_earned ?? data.score) || 0 : 0;
         rarity = data.rarity;
         milestoneGranted = data.milestone_granted || '';
         // Prefer the additive field, while the legacy response remains a
@@ -496,8 +502,7 @@ import { runRollTextShare } from './rollTextShare.js';
         const hadLaunchBadge = $profile?.equipped_badges?.includes('launch_edition');
         const refreshResults = await Promise.allSettled([
           refreshProfileState(userId),
-          fetchInventoryState(userId),
-          fetchWalletBalance(userId)
+          fetchInventoryState(userId)
         ]);
         return {
           refreshFailed: refreshResults.some(result => result.status === 'rejected')
@@ -599,7 +604,7 @@ import { runRollTextShare } from './rollTextShare.js';
       <div class="card roll-stage roll-stage--preroll">
         <h1>{profileMode ? 'Today’s color' : 'Daily Roll'}</h1>
         {#if $isAuthenticated}
-          <p class="info-text">You can roll once a day. Your score counts on the leaderboard and adds to spendable EP; achievements and bonuses can add extra EP.</p>
+          <p class="info-text">You can roll once a day. Score measures the roll; EP advances your rank. Exceptional scores earn more EP with diminishing returns.</p>
         {:else}
           <p class="info-text">You can roll once a day in guest mode. Guest rolls stay on this device and do not earn account EP or enter leaderboards.</p>
         {/if}
@@ -610,7 +615,7 @@ import { runRollTextShare } from './rollTextShare.js';
     {/if}
 
     {#if cotwColor && !dedicated}
-      <div class="cotw-widget" aria-label={$isAuthenticated ? 'Color of the Week. Match this color for 50,000 spendable EP; it does not change your leaderboard score.' : 'Color of the Week. Sign in to earn 50,000 spendable EP for a close match.'}>
+      <div class="cotw-widget" aria-label={$isAuthenticated ? 'Color of the Week. Match this color for 50,000 EP; it does not change your leaderboard score.' : 'Color of the Week. Sign in to earn 50,000 EP for a close match.'}>
         <div class="cotw-info">
           <span class="cotw-title">Color of the Week</span>
           <span class="cotw-desc">
@@ -649,6 +654,7 @@ import { runRollTextShare } from './rollTextShare.js';
         traits={dedicated ? traits.slice(0, 2) : traits}
         totalScore={displayScore}
       />
+      {#if $isAuthenticated}<p class="roll-result-ep">EP earned <strong>+{epEarned.toLocaleString()}</strong></p>{/if}
 
       <RollResultBreakdown
         contributors={rollContributors}
@@ -666,7 +672,7 @@ import { runRollTextShare } from './rollTextShare.js';
           aria-label={`Today's roll claimed for ${displayScore.toLocaleString()} score`}
         >
           <span class="roll-button-glyph" aria-hidden="true">✓</span>
-          Claimed! +{displayScore.toLocaleString()}
+          Claimed
         </button>{:else}
           <p class="roll-countdown" role="timer" aria-live="off">Next roll in <strong>{countdownString}</strong></p>
         {/if}
@@ -698,7 +704,7 @@ import { runRollTextShare } from './rollTextShare.js';
 
       {#if cotwHit}
         <div class="cotw-success-banner">
-          Color of the Week hit — +50,000 EP added to your wallet. Your leaderboard score is unchanged.
+          Color of the Week hit — +50,000 bonus EP toward rank. Your leaderboard score is unchanged.
         </div>
       {/if}
 
@@ -764,6 +770,8 @@ import { runRollTextShare } from './rollTextShare.js';
 </div>
 
 <style>
+  .roll-result-ep { margin: .5rem 0 1rem; text-align: center; color: var(--text-muted); font-size: .9rem; }
+  .roll-result-ep strong { color: var(--color-accent-bright); font-variant-numeric: tabular-nums; }
   :global(.game-container .chroma-btn) { display: inline-flex; align-items: center; gap: 5px; min-height: 42px; padding: 0 18px; border: 1px solid var(--card-border); border-radius: 9px; background: transparent; color: #f8f8f8; cursor: pointer; font: 600 .88rem/1 var(--font-body-stack); transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease; }
   :global(.game-container .chroma-btn:hover) { transform: translateY(-1px); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 9%, transparent); }
   :global(.game-container .chroma-btn:active) { transform: translateY(1px); }

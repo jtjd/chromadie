@@ -273,7 +273,7 @@
         {#if rankState.next}
           <div class="profile-progression-rank__next-copy">
             <span><strong>{progressPercent}%</strong> toward {rankState.next.name}</span>
-            <span>{formatNumber(Math.max(0, rankState.next.min - lifetimeEp))} points left</span>
+            <span>{formatNumber(Math.max(0, rankState.next.min - lifetimeEp))} EP to {rankState.next.name}</span>
           </div>
           <div class="profile-progression-bar" aria-label={`${progressPercent}% toward ${rankState.next.name}`} role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={progressPercent}><span style={`width:${progressPercent}%`}></span></div>
         {:else}

@@ -777,7 +777,7 @@
                       <div class="profile-shell__best-color" style={'background: ' + colorFor(displayBestRoll.hex_code) + ';'} title={displayBestRoll.hex_code || 'Color unavailable'}></div>
                       <div>
                         <p class="profile-shell__hex">{colorFor(displayBestRoll.hex_code, '#000000')}</p>
-                        <p class="profile-shell__score">{formatFullValue(displayBestRoll.score)} EP</p>
+                        <p class="profile-shell__score">{formatFullValue(displayBestRoll.score)} score</p>
                         <p class="profile-shell__rarity">{displayBestRoll.rarity || 'Unranked'}</p>
                       </div>
                     </div>

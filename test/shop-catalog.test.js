@@ -5,7 +5,6 @@ import {
   createFittingRoom,
   filterShopItems,
   getShopContextForSlot,
-  requiresPurchaseConfirmation,
   tryOnShopItem
 } from '../src/lib/shopCatalog.js';
 
@@ -26,15 +25,8 @@ test('retained shop preview context follows the profile surface', () => {
   assert.equal(getShopContextForSlot('consumable'), null);
 });
 
-test('purchase confirmation protects expensive and consumable purchases', () => {
-  assert.equal(requiresPurchaseConfirmation(items[1]), true);
-  assert.equal(requiresPurchaseConfirmation(items[0]), true);
-  assert.equal(requiresPurchaseConfirmation(items[4]), true);
-});
-
 test('the fitting room changes only the selected retained slot', () => {
   const fittingRoom = createFittingRoom({
-    walletBalance: 400000,
     userInventory: ['border_signal'],
     equippedItems: { profile_border: 'border_signal', name_material: 'name_material_glass_emboss' }
   });
@@ -49,18 +41,14 @@ test('the fitting room changes only the selected retained slot', () => {
   });
 });
 
-test('catalog filtering combines retained sections, ownership, affordability, and sorting', () => {
-  const fittingRoom = createFittingRoom({ walletBalance: 170000, userInventory: ['border_signal'] });
+test('catalog filtering combines retained sections, ownership, and rarity', () => {
+  const fittingRoom = createFittingRoom({ userInventory: ['border_signal'] });
   assert.deepEqual(
-    filterShopItems(items, { section: 'names', subslot: 'name_motion', sortMode: 'price_asc' }, fittingRoom).map(item => item.item_key),
+    filterShopItems(items, { section: 'names', subslot: 'name_motion', sortMode: 'rarity' }, fittingRoom).map(item => item.item_key),
     ['name_motion_haunt_glow']
   );
   assert.deepEqual(
     filterShopItems(items, { section: 'owned' }, fittingRoom).map(item => item.item_key),
-    ['border_signal']
-  );
-  assert.deepEqual(
-    filterShopItems(items, { section: 'overview', affordableOnly: true, rarity: 'Rare' }, fittingRoom).map(item => item.item_key),
     ['border_signal']
   );
   assert.deepEqual(

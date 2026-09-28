@@ -54,7 +54,7 @@ test('guest roll is saved even when navigation cancels its reveal', async () => 
     rerollRequestInFlight:false,rollRequestId:0,supabase:{},shareImageDialog:null,executeRollAttempt,
     canInitiateRoll,hasActiveRerollLock:()=>false,getTodayString:()=> '2026-09-10',
     ROLL_REVEAL_STEPS:[{progress:0}],dispatchRollState:()=>{},
-    requestRoll:async()=>({data:{success:true,hex:'#123456',score:42,rarity:'Common'}}),
+    requestRoll:async()=>({data:{success:true,hex:'#123456',score:42,epEarned:42,rarity:'Common'}}),
     createCanonicalRollData:(data,date)=>({...data,date}),
     saveGuestRoll:data=>saved.push(data),guestProgressActive:{set:()=>{}},
     presentRollResult:()=>new Promise(resolve=>{finishReveal=resolve;signalReveal();})
@@ -67,7 +67,7 @@ test('guest roll is saved even when navigation cancels its reveal', async () => 
   assert.equal(saved[0].hex,'#123456');
   assert.equal(saved[0].date,'2026-09-10');
   state.rollRequestId++;
-  finishReveal({hex:'#123456',score:42,rarity:'Common',badges:[]});
+  finishReveal({hex:'#123456',score:42,epEarned:42,rarity:'Common',badges:[]});
   await pending;
   assert.equal(saved.length,1);
 });
@@ -79,7 +79,7 @@ test('a rejected reroll keeps the last confirmed result and releases its control
     hasActiveRerollLock:()=>false,setRerollLock:()=>{},clearRerollLock:()=>{},
     getTodayString:()=> '2026-09-10',ROLL_REVEAL_STEPS:[{progress:0}],dispatchRollState:()=>{},
     requestRoll:async()=>({data:null,error:{message:'Offline'}}),
-    score:42,rarity:'Rare',badges:['example'],traits:[],identity:'Saved color',rollContributors:[],
+    score:42,epEarned:42,rarity:'Rare',badges:['example'],traits:[],identity:'Saved color',rollContributors:[],
     displayHex:'#123456',displayColor:'#123456',displayScore:42,percentileDisplay:'Top 10%',
     milestoneGranted:'',newMilestones:[],cotwHit:true
   };
@@ -110,9 +110,9 @@ test('a confirmed reroll replaces the old result and releases its locks when rev
     presentRollResult:async()=>{throw new Error('Reveal unavailable');},
     sortRollBadgesDescending:value=>value,normalizeNewMilestones:()=>[],prefersReducedMotion:()=>false,
     getRollAccountMode:()=> 'authenticated',trackProductEvent:()=>{},getPercentileTier:()=>null,
-    refreshProfileState:async()=>true,fetchInventoryState:async()=>true,fetchWalletBalance:async()=>true,
+    refreshProfileState:async()=>true,fetchInventoryState:async()=>true,
     addToast:(message,type)=>toasts.push({message,type}),
-    score:42,rarity:'Rare',badges:['example'],traits:[],identity:'Saved color',rollContributors:[],
+    score:42,epEarned:42,rarity:'Rare',badges:['example'],traits:[],identity:'Saved color',rollContributors:[],
     displayHex:'#123456',displayColor:'#123456',displayScore:42,percentileDisplay:'Top 10%',
     milestoneGranted:'',newMilestones:[],cotwHit:true
   };
@@ -136,8 +136,8 @@ const initialSnapshotHandler = game.slice(
 
 test('a current guest snapshot is applied to the presentation and guest state', () => {
   const state={
-    snapshot:{isCurrent:true,roll:{date:'2026-09-10',hex:'#123456',score:42,rarity:'Common'},percentileData:null},
-    guestProgressRestored:false,phase:'preroll',score:0,displayScore:0,
+    snapshot:{isCurrent:true,roll:{date:'2026-09-10',hex:'#123456',score:42,epEarned:42,rarity:'Common'},percentileData:null},
+    guestProgressRestored:false,phase:'preroll',score:0,epEarned:0,displayScore:0,
     rarity:'',displayColor:'#222',setRollPresentationFromData:roll=>{state.presentedRoll=roll;},
     dispatchRollState:()=>{state.dispatched=true;},loading:true,
     guestProgressActive:{set:value=>{state.guestActive=value;}},
@@ -162,7 +162,7 @@ test('an authenticated snapshot keeps the server color, percentile, and focus ba
       roll: { score: 9876, hex_code: '#ABCDEF', rarity: 'Rare', badges: ['cotw_hit'] },
       percentileData: { percentile: 94, total_rollers: 100 }
     },
-    phase:'preroll',score:0,displayScore:0,rarity:'',displayColor:'#222',
+    phase:'preroll',score:0,epEarned:0,displayScore:0,rarity:'',displayColor:'#222',
     setRollPresentationFromData:roll=>{state.presentedRoll=roll;},
     getPercentileTier:(percentile,total)=>`${percentile}/${total}`,
     dispatchRollState:()=>{state.dispatched=true;},trackProductEvent:()=>assert.fail('a returned roll is not roll_ready'),
