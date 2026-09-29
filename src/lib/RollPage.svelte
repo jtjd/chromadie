@@ -15,6 +15,7 @@
   export let signupNext = '/';
   export let showAcquisitionActions = false;
   export let homepage = false;
+  export let challengeMode = false;
   export let bestRollRows = [];
   export let bestRollLoading = true;
   export let bestRollError = '';
@@ -70,6 +71,7 @@
   class:roll-page--homepage={homepage}
   class:roll-page--homepage-preroll={homepagePreroll}
   class:roll-page--homepage-rolling={homepageRolling}
+  class:roll-page--challenge={challengeMode}
   class:roll-page--result={contextHasResult}
 >
   <section
@@ -202,6 +204,15 @@
   :global(.app-main--site:has(.roll-page)) {
     background-color: var(--bg, #0e0e10);
     background-image: none;
+  }
+
+  /* Keep the challenge roll area on the same continuous hero image as the home roll. */
+  :global(.app-shell--site:has(.roll-page--challenge)::after) {
+    display: none;
+  }
+
+  :global(.app-shell--site:has(.roll-page--challenge) .app-main--site) {
+    background-color: transparent;
   }
 
   :global(.app-shell--site:has(.roll-page) .site-footer) {

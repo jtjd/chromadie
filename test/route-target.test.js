@@ -138,7 +138,12 @@ test('app views preserve lazy keys, route props, and challenge identity', () => 
   }
 
   assert.equal(target({ view: 'game' }).componentKey, 'not-found');
-  assert.equal(target({ view: 'game', challenge: { id: 'challenge-42' } }).componentKey, 'game:challenge-42');
+  assert.deepEqual(target({ view: 'game', challenge: { id: 'challenge-42' } }), {
+    loaderKey: 'game',
+    componentKey: 'game:challenge-42',
+    componentProps: { challengeMode: true },
+    loadingLabel: 'Opening challenge'
+  });
 });
 
 test('profile settings and profile routes respect owner and account states', () => {
