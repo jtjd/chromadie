@@ -42,6 +42,9 @@ payment authority, or historical data.
   `pull_request_target`; required environment access is limited to the actual
   Cloudflare Pages configuration check. Dependabot is grouped weekly and
   `SECURITY.md` documents reporting.
+- An hourly, read-only GitHub health workflow checks 11 public routes, both
+  deployed hero assets, and Supabase Auth reachability without project keys or
+  account/payment writes.
 
 ## Data and deployment
 
@@ -76,6 +79,9 @@ review of any rows created since deployment.
   local device state. Public profile rendering had no browser exceptions.
   Signup, reset completion, authenticated profile editing, and a real Stripe
   payment were not submitted against production.
+- The hourly health check passed against the live site: all 11 routes returned
+  HTML, both hero assets returned WebP, and the unauthenticated Supabase Auth
+  health endpoint returned its expected no-key response.
 
 ## Remaining release requirements
 
@@ -90,6 +96,8 @@ review of any rows created since deployment.
   deletes the owned R2 object, purges its public cache, and preserves an audit
   record. Keep broader user-uploaded media launch behind that work. Account
   suspension and a global interaction freeze are also unsupported.
-- Review production operational logs and add uptime/error/backlog alerts. The
-  repository contains no centralized exception collector or scheduled uptime
-  check; production provider-side alert configuration was not verifiable here.
+- Configure workflow-failure notifications for the hourly health check and
+  review provider logs. The check does not inspect authenticated database/RPC
+  state, Stripe webhook delivery, or media-cleanup backlog. The repository has
+  no centralized exception collector; production provider-side alert settings
+  were not verifiable here.

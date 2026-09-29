@@ -9,7 +9,8 @@ Stripe sessions and blocking deletion while payment confirmation is pending.
 Corrected stale privacy copy and reduced the shared site hero transfer with
 pixel-identical WebP assets. Added a base-SHA-only production release preflight,
 branch-protection bootstrap support, Dependabot grouping, and a security
-reporting policy.
+reporting policy. A read-only hourly GitHub health check now tests public
+routes, the deployed hero assets, and Supabase Auth reachability.
 
 Applied migrations `20260928140000`, `20260928150000`, and `20260928160000` to
 the linked Chromadie database after protected schema/data backups and a dry

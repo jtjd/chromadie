@@ -11,6 +11,7 @@
 - Compress shared homepage atmosphere assets to pixel-identical WebP files,
   reducing the measured throttled pricing transfer by 13%.
 - Add base-code-only production release verification and Dependabot grouping.
+- Add an hourly, read-only production route, media-asset, and Auth health check.
 - Apply three additive production migrations after a private backup and dry run.
 - Keep the release gate closed until the Pages Read token is configured; media
   takedown and account suspension remain unsupported moderation actions.
