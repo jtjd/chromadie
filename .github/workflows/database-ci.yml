@@ -98,7 +98,7 @@ jobs:
           done
       - name: Upload failed browser smoke evidence
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: browser-smoke-failure-${{ github.run_attempt }}
           path: /tmp/chromadie-ci-evidence
