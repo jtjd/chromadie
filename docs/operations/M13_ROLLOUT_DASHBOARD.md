@@ -64,6 +64,42 @@ function fails. Deleting an active
 asset must clear its selected configuration reference before removing the
 object; a dashboard alert must never trigger a destructive manual delete.
 
+### Refunded Plus media expiry and R2 tombstones
+
+Show aggregate expiry-queue and external-cleanup backlog only. Do not display
+the queue's account UUIDs or any R2 key.
+
+```sql
+select count(*) filter (
+         where status = 'pending' and created_at < now() - interval '30 minutes'
+       ) as overdue_expiry_jobs,
+       count(*) filter (
+         where status = 'tombstoned' and completed_at >= now() - interval '24 hours'
+       ) as expiry_jobs_processed_24h,
+       count(*) filter (
+         where status = 'skipped' and completed_at >= now() - interval '24 hours'
+       ) as reactivated_or_staff_jobs_skipped_24h
+from public.profile_media_plus_expiry_cleanup_jobs;
+
+select count(*) filter (
+         where cleanup_at <= now() - interval '30 minutes'
+       ) as overdue_r2_tombstones,
+       count(*) filter (
+         where cleanup_at <= now() - interval '30 minutes'
+           and cache_purge_status = 'retry'
+       ) as overdue_public_cache_purges
+from public.profile_media_assets
+where storage_provider = 'r2' and status = 'deleted';
+```
+
+The scheduled cleanup runs every 15 minutes, processes at most 10 expired
+recovery jobs and claims at most 25 tombstones per run. Alert when an expiry
+job or R2 tombstone remains overdue for 30 minutes, or when the cleanup Worker
+has no successful run for 30 minutes. Its structured run record reports
+`plusExpiryJobsClaimed` and includes failed delete/purge results in `retried`.
+The expiry queue RPC clears selected Plus references and tombstones assets;
+only the R2 control plane deletes object bytes and purges public cache.
+
 ### Provider-adapter failures
 
 Provider cards are allowlisted and lazy-loaded. Emit a bounded structured

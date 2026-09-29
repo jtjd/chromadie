@@ -32,6 +32,15 @@ export function resolveRouteTarget({
     return { componentKey: 'not-found', staticComponent: notFound, componentProps: {}, loadingLabel: 'Opening page' };
   }
 
+  if (routeMode === 'moderation') {
+    return {
+      loaderKey: 'moderation',
+      componentKey: 'moderation',
+      componentProps: {},
+      loadingLabel: 'Checking moderator access'
+    };
+  }
+
   if (routeMode === 'auth') {
     return {
       loaderKey: 'authPage',

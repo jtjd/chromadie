@@ -1,6 +1,6 @@
 # ChromaDie Social Moderation and Operations Boundary
 
-**Status:** Phase 9 operations documentation slice, 2026-07-25  
+**Status:** Minimal moderator workflow, 2026-09-28
 **Scope:** Current social protections and the missing operational surfaces.
 
 ## What exists today
@@ -51,37 +51,51 @@ The authoritative implementation is
 `supabase/migrations/20260725130000_social_layer.sql`; the browser must not
 reimplement these checks.
 
-## Current triage runbook
+## Current triage workflow
 
-There is no moderation dashboard, notification queue, appeal workflow, or
-automated moderator alert in the current product. Until an approved
-operations tool exists, the following is the safe boundary for authorized
-operators:
+The internal `/moderation` route provides pending and resolved queues. The
+route is marked `noindex,nofollow`; it has no public navigation entry. The
+browser calls only the fixed `moderation_list_reports` and
+`moderation_resolve_report` RPCs. Both functions verify the caller against
+`profile_moderation_staff` on every request. A public `profiles.is_staff`
+marker, username, or client-provided role is not moderator authorization.
 
-1. Review an `open` report through approved service-role tooling only. Never
-   grant the service role to a browser, support form, or analytics adapter.
-2. Confirm the target profile and, when present, the guestbook entry through
-   the protected tables. Treat report details as sensitive moderation data.
-3. For an urgent guestbook safety issue, change the entry to `hidden` as a
-   reversible containment action. Use `removed` only for a final content
-   decision. A global profile report can be recorded without exposing its
-   details publicly.
-4. Resolve the report as `reviewed`, `dismissed`, or `actioned`, and set
-   `resolved_at` when the operational tooling supports the update. Record the
-   operator, rationale, and evidence in the approved restricted audit system;
-   the current table does not contain a moderator identity field.
-5. If a profile needs immediate self-service containment, direct the owner to
-   disable interactions or the guestbook. There is currently no global
-   moderation freeze switch.
-6. If the issue is account compromise, privacy exposure, or an RLS/RPC
-   failure, pause the affected surface operationally, preserve the report
-   evidence, and escalate to the database/security owner before changing
-   schema or grants.
+Grant or revoke access through the restricted database operator channel only.
+The table has no browser-role grants; service-role access is limited to
+provisioning and inspection. Example provisioning SQL:
 
-These steps describe an operational boundary, not a claim that the product
-already has the tooling to execute every step. Direct production SQL should
-be limited to the approved service-role process, reviewed, auditable, and
-reversible where possible.
+```sql
+INSERT INTO public.profile_moderation_staff (user_id, granted_by)
+VALUES ('<moderator-auth-user-uuid>', '<granting-operator-uuid>');
+
+DELETE FROM public.profile_moderation_staff
+WHERE user_id = '<moderator-auth-user-uuid>';
+```
+
+The pending queue shows the reporter, target profile, report reason/details,
+and a snapshot of the reported profile/guestbook context. Decisions require a
+short reason. Moderators can review, dismiss, hide, or remove a reported
+guestbook note or reply. Hide is reversible; remove changes the content state
+to `removed` and preserves the row for protected review. Profile-only reports
+can be reviewed or dismissed. The UI and RPC reject profile/account actions:
+there is no safely supported account suspension, profile restriction, or
+global interaction-freeze control today.
+
+Every decision inserts a private audit row containing moderator id, report
+and target snapshots, decision, content action, reason, prior status, and
+timestamp. The audit table has no browser access; UPDATE and DELETE are
+rejected by a database trigger. Audit rows have no cascading profile/report
+foreign keys, so deleting an account or report later does not erase recorded
+decisions. Existing report rows still follow their established cascade when
+the reporter or target profile is deleted; an unresolved report can therefore
+disappear before a decision is recorded. Operators should prioritize urgent
+reports before processing such deletions when feasible.
+
+The queue is bounded to the latest/oldest 100 rows per tab and has no alert,
+appeal, SLA, or notification workflow. Operators must check it manually.
+For account compromise, privacy exposure, or an RLS/RPC failure, escalate to
+the database/security owner before changing schema or grants. Never grant a
+service-role secret to the browser, support form, or analytics adapter.
 
 ## QA and release checks
 
@@ -104,16 +118,19 @@ it is not a substitute for reviewing report triage or production access logs.
 
 ## Known operational gaps and migration hazards
 
-- No moderation UI or queue exists; adding one needs a service-role boundary,
-  moderator authentication, audit logging, and least-privilege queries.
+- No automated notification, appeal, or response-time tracking exists. The
+  internal queue requires manual review.
 - No notification or appeal system exists. Do not add email, push, or in-app
   alerts by coupling them to public profile reads or product analytics.
-- Reports have statuses and timestamps but no moderator identity, decision
-  reason, or immutable audit history in the current schema. Adding those is a
-  separate additive migration and privacy review.
+- Open reports still cascade when a reporter or target profile is deleted.
+  Completed decision history is retained independently in the immutable audit
+  table. Changing report retention requires a separate privacy review.
 - Block cleanup intentionally retains guestbook rows for protected review.
   Changing that retention choice affects evidence preservation, deletion, and
   public projection behavior.
+- Moderator allowlist provisioning is an external database-operator task; the
+  application does not expose a moderator-management screen. No emergency
+  global interaction switch exists.
 - Per-account rate limits mitigate burst abuse but do not detect coordinated
   abuse, evade compromised accounts, or replace human review.
 - Product-event measurement excludes moderation fields entirely. A future

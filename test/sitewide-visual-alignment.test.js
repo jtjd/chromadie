@@ -16,8 +16,8 @@ const [app, header, footer, homepage, siteStyles, atmosphereStyles, rollPage, pr
   read('src/styles/leaderboard-game.css')
 ]);
 const [heroAsset, heroMobileAsset, lowerAsset] = await Promise.all([
-  stat(new URL('../public/homepage/homepage-hero-atmosphere-anime-v1.png', import.meta.url)),
-  stat(new URL('../public/homepage/homepage-hero-atmosphere-anime-mobile-v1.png', import.meta.url)),
+  stat(new URL('../public/homepage/homepage-hero-atmosphere-anime-v1.webp', import.meta.url)),
+  stat(new URL('../public/homepage/homepage-hero-atmosphere-anime-mobile-v1.webp', import.meta.url)),
   stat(new URL('../public/homepage/homepage-lower-continuous-v4.webp', import.meta.url))
 ]);
 
@@ -54,8 +54,8 @@ test('normal site surfaces inherit the homepage type, canvas, and button contrac
   assert.match(siteStyles, /--text-muted: #8d8c92/);
   assert.match(siteStyles, /--text-faint: #59585e/);
   assert.match(siteStyles, /--white: #ffffff/);
-  assert.match(atmosphereStyles, /--site-homepage-hero-image: url\('\/homepage\/homepage-hero-atmosphere-anime-v1\.png'\)/);
-  assert.match(atmosphereStyles, /--site-homepage-hero-image-mobile: url\('\/homepage\/homepage-hero-atmosphere-anime-mobile-v1\.png'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-hero-image: url\('\/homepage\/homepage-hero-atmosphere-anime-v1\.webp'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-hero-image-mobile: url\('\/homepage\/homepage-hero-atmosphere-anime-mobile-v1\.webp'\)/);
   assert.match(atmosphereStyles, /--site-homepage-lower-image: url\('\/homepage\/homepage-lower-continuous-v4\.webp'\)/);
   assert.match(atmosphereStyles, /\.site-atmosphere-page::before,[\s\S]*\.app-shell--site::before[\s\S]*var\(--site-homepage-hero-image\)/);
   assert.match(atmosphereStyles, /\.site-atmosphere-page::after,[\s\S]*\.app-shell--site::after[\s\S]*var\(--site-homepage-lower-image\)/);

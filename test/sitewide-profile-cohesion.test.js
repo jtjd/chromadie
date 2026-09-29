@@ -100,8 +100,8 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /--font-display-stack: 'Manrope Variable'/);
   assert.match(siteStyles, /--font-body-stack: 'Inter'/);
   assert.match(siteStyles, /--site-accent: var\(--white\)/);
-  assert.match(atmosphereStyles, /--site-homepage-hero-image: url\('\/homepage\/homepage-hero-atmosphere-anime-v1\.png'\)/);
-  assert.match(atmosphereStyles, /--site-homepage-hero-image-mobile: url\('\/homepage\/homepage-hero-atmosphere-anime-mobile-v1\.png'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-hero-image: url\('\/homepage\/homepage-hero-atmosphere-anime-v1\.webp'\)/);
+  assert.match(atmosphereStyles, /--site-homepage-hero-image-mobile: url\('\/homepage\/homepage-hero-atmosphere-anime-mobile-v1\.webp'\)/);
   assert.match(atmosphereStyles, /--site-homepage-lower-image: url\('\/homepage\/homepage-lower-continuous-v4\.webp'\)/);
   assert.match(atmosphereStyles, /\.site-atmosphere-page::before,[\s\S]*background-image:[\s\S]*var\(--site-homepage-hero-image\)/);
   assert.match(atmosphereStyles, /\.site-atmosphere-page::after,[\s\S]*background: var\(--site-homepage-lower-image\)/);

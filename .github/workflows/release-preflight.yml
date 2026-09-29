@@ -3,26 +3,54 @@ name: Public release preflight
 on:
   push:
     branches: [main]
+  # Run the production check for PRs using this workflow's base-branch code.
+  # pull_request_target is safe here because the job explicitly checks out the
+  # base SHA and never executes code from the PR head.
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   verify-public-release:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: production
-    env:
-      # These credentials read the actual Pages project configuration. Do not
-      # replace them with a mirrored PREVIEW_PROTECTION variable: the check
-      # must fail when Cloudflare's runtime setting is not public.
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_PAGES_PROJECT: ${{ secrets.CLOUDFLARE_PAGES_PROJECT }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Never check out or execute untrusted pull request code while this
+          # job can access the production environment.
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: npm
-      - run: npm ci
       - name: Verify the live Cloudflare Pages release switch
-        run: npm run check:release-config:cloudflare
+        env:
+          # These values read the actual Pages project configuration. Do not
+          # replace them with mirrored PREVIEW_PROTECTION config.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ secrets.CLOUDFLARE_PAGES_PROJECT }}
+        run: |
+          missing=0
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error title=Missing production secret::Add CLOUDFLARE_API_TOKEN to the GitHub production environment. Use a Cloudflare API token scoped to read the intended Pages project configuration."
+            missing=1
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error title=Missing production secret::Add CLOUDFLARE_ACCOUNT_ID to the GitHub production environment for the production Pages project."
+            missing=1
+          fi
+          if [ -z "$CLOUDFLARE_PAGES_PROJECT" ]; then
+            echo "::error title=Missing production secret::Add CLOUDFLARE_PAGES_PROJECT to the GitHub production environment with the exact Cloudflare Pages project name."
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+          npm run check:release-config:cloudflare

@@ -1,5 +1,21 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-28 — Release safety and launch checks
+
+- Add an internal moderator queue with fixed, audited profile and guestbook
+  decisions, protected by a database-managed staff allowlist.
+- Expire selected Plus-only R2 media after refund recovery ends, retaining the
+  existing retryable object-delete and cache-purge path.
+- Preserve open or unconfirmed Stripe checkouts during account deletion and
+  serialize checkout creation against deletion.
+- Compress shared homepage atmosphere assets to pixel-identical WebP files,
+  reducing the measured throttled pricing transfer by 13%.
+- Add base-code-only production release verification and Dependabot grouping.
+- Apply three additive production migrations after a private backup and dry run.
+- Keep the release gate closed until the Pages Read token is configured; media
+  takedown and account suspension remain unsupported moderation actions.
+- See [`milestones/LAUNCH_READINESS_20260928.md`](milestones/LAUNCH_READINESS_20260928.md).
+
 ## 2026-09-28 — Roll EP and rank pacing
 
 - Kept raw roll score and made EP a separate, smoothly normalized progression award.

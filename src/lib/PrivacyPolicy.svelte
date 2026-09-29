@@ -23,7 +23,7 @@
       <li><strong>Profile information:</strong> your username, public profile details, links, and cosmetic selections. This information may be visible on your profile, in discovery, and on leaderboards when you permit discovery.</li>
       <li><strong>Uploaded profile content:</strong> the avatars, backgrounds, and supported media you choose to upload or publish. Public uploads are associated with your profile and may be resized, converted, cached, or transformed to serve them efficiently.</li>
       <li><strong>Gameplay information:</strong> rolls, scores, EP, inventory, achievements, pinned achievements, rivals, and other information associated with your progress.</li>
-      <li><strong>Guest data:</strong> game progress and shop data stored locally in your browser when you play without an account.</li>
+      <li><strong>Guest data:</strong> game progress and profile presentation preferences stored locally in your browser when you play without an account.</li>
       <li><strong>Billing and security information:</strong> limited checkout, payment-status, fraud, and operational records used to provide Plus, protect the service, meet legal obligations, and handle disputes. ChromaDie does not receive or store your full payment-card number.</li>
     </ul>
   </section>

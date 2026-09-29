@@ -19,6 +19,8 @@ test('the homepage is the daily-roll entry while challenge routes stay distinct'
   assert.equal(parseRouteLocation('/u/OtherUser').view, 'profile');
   assert.equal(parseRouteLocation('/profile/settings').view, 'profile-settings');
   assert.equal(parseRouteLocation('/progression').view, 'progression');
+  assert.equal(parseRouteLocation('/moderation').routeMode, 'moderation');
+  assert.equal(parseRouteLocation('/moderation').view, 'moderation');
 });
 
 test('site surfaces use one shared header and the quiet site shell', () => {

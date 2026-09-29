@@ -1166,6 +1166,76 @@ SELECT set_config(
   true
 );
 
+INSERT INTO public.billing_checkout_sessions (
+  stripe_checkout_session_id, user_id, status, payment_status
+) VALUES (
+  'cs_test_deleteguard1', '10000000-0000-0000-0000-000000000001', 'open', 'unpaid'
+);
+INSERT INTO public.billing_checkout_claims (
+  user_id, product_key, state, stripe_idempotency_key,
+  stripe_checkout_session_id, stripe_expires_at
+) VALUES (
+  '10000000-0000-0000-0000-000000000001', 'chromadie_plus_lifetime', 'open',
+  'delete-guard-checkout-claim-key', 'cs_test_deleteguard1', now() + interval '1 hour'
+);
+DO $$
+DECLARE
+  v_rejected boolean := false;
+BEGIN
+  BEGIN
+    PERFORM public.delete_account_data('10000000-0000-0000-0000-000000000001');
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'LAUNCH AUDIT ASSERTION FAILED: account deletion removed an open Stripe checkout';
+  END IF;
+END;
+$$;
+SELECT pg_temp.audit_assert(
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = '10000000-0000-0000-0000-000000000001')
+    AND EXISTS (
+      SELECT 1 FROM public.billing_checkout_sessions
+      WHERE stripe_checkout_session_id = 'cs_test_deleteguard1' AND status = 'open'
+    ),
+  'a rejected account deletion must preserve the profile and open checkout for retry'
+);
+UPDATE public.billing_checkout_sessions SET status = 'expired', updated_at = now()
+WHERE stripe_checkout_session_id = 'cs_test_deleteguard1';
+UPDATE public.billing_checkout_claims SET state = 'expired', lease_expires_at = NULL, updated_at = now()
+WHERE stripe_checkout_session_id = 'cs_test_deleteguard1';
+UPDATE public.billing_checkout_sessions
+SET status = 'complete', payment_status = 'paid', updated_at = now()
+WHERE stripe_checkout_session_id = 'cs_test_deleteguard1';
+UPDATE public.billing_checkout_claims SET state = 'complete', updated_at = now()
+WHERE stripe_checkout_session_id = 'cs_test_deleteguard1';
+DO $$
+DECLARE
+  v_rejected boolean := false;
+BEGIN
+  BEGIN
+    PERFORM public.delete_account_data('10000000-0000-0000-0000-000000000001');
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'LAUNCH AUDIT ASSERTION FAILED: account deletion removed an unconfirmed paid checkout';
+  END IF;
+END;
+$$;
+SELECT pg_temp.audit_assert(
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = '10000000-0000-0000-0000-000000000001')
+    AND EXISTS (
+      SELECT 1 FROM public.billing_checkout_sessions
+      WHERE stripe_checkout_session_id = 'cs_test_deleteguard1'
+        AND status = 'complete' AND completed_at IS NULL
+    ),
+  'a rejected deletion must preserve a paid session until the verified webhook settles'
+);
+UPDATE public.billing_checkout_sessions
+SET completed_at = now(), updated_at = now()
+WHERE stripe_checkout_session_id = 'cs_test_deleteguard1';
+
 INSERT INTO audit_results VALUES (
   'social_default',
   public.get_public_profile_social('10000000-0000-0000-0000-000000000002')

@@ -19,6 +19,7 @@ const loaders = Object.freeze({
   terms: () => import('./TermsOfService.svelte'),
   howToPlay: () => import('./FAQ.svelte'),
   pricing: () => import('./Pricing.svelte'),
+  moderation: () => import('./ModerationPage.svelte'),
   ...prototypeLoaders
 });
 

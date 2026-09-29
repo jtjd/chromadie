@@ -93,6 +93,15 @@ test('auth and information routes preserve their lazy loader contracts', () => {
   }
 });
 
+test('moderation is an isolated lazy route with no public route props', () => {
+  assert.deepEqual(target({ routeMode: 'moderation', view: 'moderation' }), {
+    loaderKey: 'moderation',
+    componentKey: 'moderation',
+    componentProps: {},
+    loadingLabel: 'Checking moderator access'
+  });
+});
+
 test('app views preserve lazy keys, route props, and challenge identity', () => {
   assert.deepEqual(target({
     view: 'home',

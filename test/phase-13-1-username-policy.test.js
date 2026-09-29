@@ -51,6 +51,7 @@ test('reservation is exact and does not overblock creative usernames', () => {
 
 test('route and username policies remain separate for the grandfathered Admin profile', () => {
   assert.equal(isReservedRouteSegment('leaderboard'), true);
+  assert.equal(isReservedRouteSegment('moderation'), true);
   assert.equal(normalizeUsernameSegment('leaderboard'), null);
   assert.equal(isReservedRouteSegment('admin'), false);
   assert.equal(normalizeUsernameSegment('Admin'), 'Admin');

@@ -35,6 +35,7 @@ export async function triggerProfileMediaCleanup(env, fetchImpl = fetch) {
     ok: response.ok && payload?.success === true,
     claimed: Number(payload?.claimed || 0),
     orphanAssetsClaimed: Number(payload?.orphan_assets_claimed || 0),
+    plusExpiryJobsClaimed: Number(payload?.plus_expiry_jobs_claimed || 0),
     deletedAssetsClaimed: Number(payload?.deleted_assets_claimed || 0),
     retried: allResults.filter(result => result?.success === false).length
   };

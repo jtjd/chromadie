@@ -34,3 +34,10 @@ test('private application surfaces and challenge routes stay noindex', () => {
   assert.equal(resolveRouteMetadata({ routeMode: 'app', view: 'pricing', pricingSuccess: true }).robots, 'noindex,follow');
   assert.equal(resolveRouteMetadata({ routeMode: 'app', view: 'profile', selectedProfileUsername: 'alex', profileIndexingAllowed: true, profileRouteKind: 'compatibility' }).robots, 'noindex,follow');
 });
+
+test('moderation operations metadata is never indexed or followed', () => {
+  const metadata = resolveRouteMetadata({ routeMode: 'moderation', view: 'moderation' });
+  assert.equal(metadata.title, 'Moderation Operations | ChromaDie');
+  assert.equal(metadata.canonicalPath, '/moderation');
+  assert.equal(metadata.robots, 'noindex,nofollow');
+});

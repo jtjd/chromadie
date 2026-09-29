@@ -1,5 +1,41 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-28 — Keep production preflight base-trusted and fail closed
+
+Run the public Cloudflare Pages release check on pushes, manual dispatch, and
+pull requests. For pull requests, use `pull_request_target` only with an
+explicit checkout of the trusted base SHA; do not install dependencies or run
+the pull request head while the job can read the production environment.
+Require the check on `main` and query Cloudflare's actual Pages project
+configuration with a least-privilege Pages Read token. Keep the release gate
+failed until that token is configured.
+
+## 2026-09-28 — Limit the first moderator surface to supported actions
+
+Use a separate database-managed moderator allowlist and fixed, authenticated
+queue/decision RPCs. Preserve immutable decision snapshots and keep report
+details out of public reads. Limit actions to review, dismiss, hide, or remove
+reported guestbook content. Do not imply that profile/account suspension,
+global interaction freezes, or user-media takedown exist; the media pipeline
+needs a separate owner-safe deletion and CDN-purge path before those actions
+can be offered.
+
+## 2026-09-28 — Serialize checkout creation against account deletion
+
+Share an account-scoped database lock between checkout reservation and
+account deletion. The edge handler expires unpaid open Stripe sessions before
+deletion, preserves paid sessions until the verified webhook settles, and
+fails closed when provider state is unknown. The database guard remains the
+race-safe authority and preserves active or unconfirmed checkout rows.
+
+## 2026-09-28 — Expire hosted Plus media after refund recovery
+
+Keep Plus media through the existing 30-day recovery window. After it ends,
+recheck locked billing and staff state, clear selected Plus-only media while
+preserving free selections and playback preferences, then tombstone exact R2
+keys for the existing deletion/cache-purge retry worker. Never delete bytes
+from the database-only scheduler.
+
 ## 2026-09-28 — Normalize roll EP and map legacy rank credit
 
 Keep raw v6 score for rarity, achievements, leaderboards, and history. Award

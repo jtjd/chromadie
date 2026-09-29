@@ -27,6 +27,7 @@ export const RESERVED_ROUTE_SEGMENTS = Object.freeze([
   'llms.txt',
   'logo-mark.svg',
   'login',
+  'moderation',
   'og',
   'privacy',
   'progression',

@@ -1,8 +1,8 @@
 /* Shared copy of the current homepage atmosphere. Selectors keep profile and
  * Customize boundaries outside this rendering layer. */
 :root {
-  --site-homepage-hero-image: url('/homepage/homepage-hero-atmosphere-anime-v1.png');
-  --site-homepage-hero-image-mobile: url('/homepage/homepage-hero-atmosphere-anime-mobile-v1.png');
+  --site-homepage-hero-image: url('/homepage/homepage-hero-atmosphere-anime-v1.webp');
+  --site-homepage-hero-image-mobile: url('/homepage/homepage-hero-atmosphere-anime-mobile-v1.webp');
   --site-homepage-lower-image: url('/homepage/homepage-lower-continuous-v4.webp');
 }
 

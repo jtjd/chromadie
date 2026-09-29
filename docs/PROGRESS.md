@@ -1,5 +1,32 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-28 — Launch-readiness tranche
+
+Added the bounded `/moderation` queue and immutable decisions for supported
+profile/guestbook reports, plus a service-only 30-day refunded-Plus media
+cleanup queue. Closed a checkout/account-deletion race by expiring unpaid
+Stripe sessions and blocking deletion while payment confirmation is pending.
+Corrected stale privacy copy and reduced the shared site hero transfer with
+pixel-identical WebP assets. Added a base-SHA-only production release preflight,
+branch-protection bootstrap support, Dependabot grouping, and a security
+reporting policy.
+
+Applied migrations `20260928140000`, `20260928150000`, and `20260928160000` to
+the linked Chromadie database after protected schema/data backups and a dry
+run. The local reset, local and linked schema lint, database security checks,
+production build, Svelte check, ESLint, 903 tests, links, CSP, enforced
+performance budgets, drift checks, scoring parity, and npm high-severity audit
+pass. Aggregate JS/CSS catalog size remains above its advisory target. Live
+signed-out routes and the guest roll were smoke-tested without submitting
+account or payment changes.
+
+Release is not fully cleared: the Cloudflare Pages Read token required by the
+public release preflight is not configured, and current moderation cannot
+remove reported user-uploaded media or suspend an account. Do not enable
+user-uploaded media for a broader launch until a safe report/takedown workflow
+exists. Full account recovery and a production Stripe purchase were not tested.
+See [`milestones/LAUNCH_READINESS_20260928.md`](milestones/LAUNCH_READINESS_20260928.md).
+
 ## 2026-09-28 — Roll EP and rank rebalance
 
 Added server-authoritative normalized roll EP, per-roll reroll accounting,

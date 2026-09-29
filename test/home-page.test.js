@@ -161,8 +161,8 @@ test('the homepage removes the lower marketing stack without losing the top roll
 test('the homepage hero has a restrained color atmosphere that fades into the page', async () => {
   const refinement = await read('src/lib/homepage/homepage-refinement.css');
   assert.match(refinement, /roll-page\.roll-page--homepage::after/);
-  assert.match(refinement, /homepage-hero-atmosphere-anime-v1\.png/);
-  assert.match(refinement, /homepage-hero-atmosphere-anime-mobile-v1\.png/);
+  assert.match(refinement, /homepage-hero-atmosphere-anime-v1\.webp/);
+  assert.match(refinement, /homepage-hero-atmosphere-anime-mobile-v1\.webp/);
   assert.match(refinement, /linear-gradient\(to bottom, transparent 0%/);
   assert.match(refinement, /prefers-reduced-motion: reduce[\s\S]*roll-page\.roll-page--homepage::after \{ animation: none; \}/);
 });

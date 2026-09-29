@@ -46,7 +46,8 @@ The blue disk, purple orbital motif, and orange helix are presented in that
 order above Max Byte, Nice Sum, and Meaning of Life. Labels remain HTML.
 
 Generated with the built-in imagegen tool using
-`homepage-hero-atmosphere-anime-v1.png` as a style reference. Transparent alpha
+`design/homepage-atmosphere/homepage-hero-atmosphere-anime-v1.png` as a style
+reference. Transparent alpha
 is preserved in the optimized 1200px WebP. Original output:
 `/home/alex/.codex/generated_images/01a097bb-4c4d-7b23-a75c-3cc18a1e8c26/exec-b03f780b-9576-4b31-85c7-af452d91206f.png`.
 

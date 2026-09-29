@@ -1,8 +1,9 @@
 # Bespoke lower background v3
 
 Asset: `homepage-lower-bespoke-v3.png`.
-Generated with built-in imagegen using `homepage-hero-atmosphere-anime-v1.png`
-as the style reference. Asset only; not wired into the homepage.
+Generated with built-in imagegen using
+`design/homepage-atmosphere/homepage-hero-atmosphere-anime-v1.png` as the style
+reference. Asset only; not wired into the homepage.
 
 Prompt:
 

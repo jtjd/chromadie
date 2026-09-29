@@ -199,6 +199,8 @@ export function parseRouteLocation(pathname = '/', search = '', {
   let routeMode = 'not-found'
   if (rawPath === '/auth/callback') {
     routeMode = 'auth-callback'
+  } else if (rawPath === '/moderation') {
+    routeMode = 'moderation'
   } else if (authTab) {
     routeMode = 'auth'
   } else if (rawPath === '/reset-password') {
@@ -218,7 +220,9 @@ export function parseRouteLocation(pathname = '/', search = '', {
   return {
     rawPath,
     routeMode,
-    view: authTab
+    view: rawPath === '/moderation'
+      ? 'moderation'
+      : authTab
       ? 'auth'
       : profileRouteKind
       ? 'profile'

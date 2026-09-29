@@ -226,6 +226,36 @@ control-plane request claims jobs, deletes only the recorded owned keys, and
 marks success or schedules exponential retry. A Cloudflare outage therefore
 cannot make a user unable to delete their account.
 
+## Refunded Plus media expiry
+
+Refunded or charged-back Plus accounts keep their hosted Plus media during the
+30-day `billing_premium_access.recovery_until` window. The existing
+`*/15 * * * *` cleanup Worker calls the authenticated account-cleanup endpoint;
+its `claim_profile_media_plus_expiry_cleanup(10)` RPC discovers due recovery
+rows and processes at most ten queued accounts per invocation. The queue is
+service-only and unique by account plus recovery timestamp. Before acting, the
+RPC locks and rechecks current billing and staff state: a reactivated Plus
+account, extended recovery, or staff account is skipped.
+
+For each due non-staff account, the RPC clears selected background video,
+animated avatar, share image, legacy banner, cursor, pointer cursor, standalone
+audio, and audio playlist track references and paths. It preserves free avatar
+and background selections and audio playback preferences. It then marks all
+owned R2 assets in those Plus media kinds as deleted tombstones with an
+immediate cleanup time. The same Worker invocation claims up to 25 eligible
+tombstones through `claim_profile_media_deleted_cleanup_v2`, sends idempotent
+DELETE requests for their recorded keys to both configured R2 buckets, and
+purges the exact public media URL when the asset has a public key. HTTP 404 on
+an object delete counts as already deleted.
+
+The completion RPC removes a tombstone only after object deletion and any
+required CDN purge both succeed. A delete or purge failure retains the exact
+keys, records the error, and makes the row claimable again after 15 minutes;
+the next scheduled run retries it. If more than 25 tombstones are ready, later
+scheduled invocations continue the backlog. This path never accesses
+Supabase Storage. The scheduler log includes the count of recovery jobs
+processed and counts failed object/purge results in its retry total.
+
 ## Immediate egress mitigation
 
 Public ProfileShell media no longer appends a per-render `Date.now()` query

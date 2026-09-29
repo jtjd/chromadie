@@ -39,12 +39,16 @@ export function resolveRouteMetadata({
                           ? challengeData.error ? 'Challenge Unavailable | ChromaDie' : 'Challenge | ChromaDie'
                           : routeMode === 'app' && view === 'game'
                             ? 'Page Not Found | ChromaDie'
-                            : routeMode === 'not-found'
+      : routeMode === 'moderation'
+        ? 'Moderation Operations | ChromaDie'
+      : routeMode === 'not-found'
                               ? 'Page Not Found | ChromaDie'
                               : 'ChromaDie';
 
   const description = routeMode === 'not-found'
     ? 'The ChromaDie page you requested could not be found.'
+    : routeMode === 'moderation'
+      ? 'Restricted internal report review and moderation operations.'
     : routeMode === 'privacy'
       ? 'Read the ChromaDie privacy policy and learn how account and gameplay data is handled.'
       : routeMode === 'terms'
@@ -73,6 +77,8 @@ export function resolveRouteMetadata({
 
   const canonicalPath = routeMode === 'not-found'
     ? '/'
+    : routeMode === 'moderation'
+      ? '/moderation'
     : routeMode === 'privacy'
       ? '/privacy'
       : routeMode === 'terms'
@@ -105,6 +111,8 @@ export function resolveRouteMetadata({
     || view === 'prototype';
   const robots = routeMode === 'not-found'
     ? 'noindex,follow'
+    : routeMode === 'moderation'
+      ? 'noindex,nofollow'
     : routeMode === 'app' && noindexAppRoute
       ? 'noindex,follow'
       : routeMode === 'auth' || routeMode === 'auth-callback' || routeMode === 'reset-password'

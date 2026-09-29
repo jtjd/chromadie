@@ -84,6 +84,15 @@ export async function onRequestPost({ request, env }) {
       }, { service: true });
       privateResults.push({ asset_id: asset.id, success, completion });
     }
+    // Expired refund/chargeback recovery first clears Plus selections and
+    // creates durable R2 tombstones. The deleted-assets claim below leases
+    // those same rows for object deletion and CDN purge in this invocation.
+    const plusExpiryJobs = await callSupabaseRpc(
+      env,
+      'claim_profile_media_plus_expiry_cleanup',
+      { p_limit: 10 },
+      { service: true, rows: true }
+    );
     const deletedAssets = await callSupabaseRpc(env, 'claim_profile_media_deleted_cleanup_v2', { p_limit: 25 }, { service: true, rows: true });
     const deletedResults = [];
     for (const asset of deletedAssets) {
@@ -126,6 +135,8 @@ export async function onRequestPost({ request, env }) {
       orphan_results: orphanResults,
       private_copies_claimed: privateCopies.length,
       private_results: privateResults,
+      plus_expiry_jobs_claimed: plusExpiryJobs.length,
+      plus_expiry_jobs: plusExpiryJobs,
       deleted_assets_claimed: deletedAssets.length,
       deleted_results: deletedResults
     }, 200, request);
