@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 5
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Never check out or execute untrusted pull request code while this
           # job can access the production environment.
