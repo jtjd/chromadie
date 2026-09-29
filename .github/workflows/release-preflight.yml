@@ -26,7 +26,7 @@ jobs:
           # job can access the production environment.
           ref: ${{ github.event.pull_request.base.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
       - name: Verify the live Cloudflare Pages release switch
