@@ -1,5 +1,11 @@
 # Chromadie 2.0 Changelog
 
+## 2026-09-29 — Profile page arrow controls
+
+- Replace the progress cue and return pill with centered, solid arrow controls.
+- Use a dark outline and dual-color shadow for visibility across custom backgrounds.
+- Verify desktop and phone centering, contrast, touch target size, and navigation.
+
 ## 2026-09-28 — Release safety and launch checks
 
 - Add an internal moderator queue with fixed, audited profile and guestbook

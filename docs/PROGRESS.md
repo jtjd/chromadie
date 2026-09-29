@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## 2026-09-29 — Center profile page arrows
+
+Replaced the progress cue and return pill with bold, centered arrow controls.
+Their light fill, dark edge, and dual-color shadow retain contrast over custom
+profile backgrounds. Added desktop and mobile browser checks for centering,
+contrast, touch target size, and arrow navigation.
+
 ## 2026-09-28 — Launch-readiness tranche
 
 Added the bounded `/moderation` queue and immutable decisions for supported

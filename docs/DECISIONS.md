@@ -1,5 +1,12 @@
 # Chromadie 2.0 Decisions
 
+## 2026-09-29 — Keep profile page arrows visible over custom backgrounds
+
+Use bold arrow-only controls with a light fill, dark outline, and opposing
+light/dark shadows so they remain visible over owner-selected colors, gradients,
+and media. Center both controls on their respective profile pages and preserve
+a large transparent hit area.
+
 ## 2026-09-28 — Keep production preflight base-trusted and fail closed
 
 Run the public Cloudflare Pages release check on pushes, manual dispatch, and

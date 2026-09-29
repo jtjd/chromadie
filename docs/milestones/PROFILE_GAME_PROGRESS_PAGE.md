@@ -18,6 +18,8 @@ owners enable page two from Customize → Layout.
   rank progress, personal best, and up to six recent colors.
 - Add full-page scrolling, wheel stepping, page indicators, a return control,
   keyboard page navigation, responsive layout, and reduced-motion handling.
+- Use centered arrow-only page controls with a dual-tone edge and shadow that
+  stays visible over owner-selected backgrounds.
 - Preserve legacy About, project, provider, and Spotify values in their stored
   configuration so this UI change does not erase existing data.
 
@@ -47,8 +49,9 @@ All required application checks passed, including build, Svelte check (0 errors
 and warnings), ESLint, 909 tests, links, CSP, enforced performance budgets,
 username policy, balance, local catalog, scoring parity, and database security.
 The focused local Profile Studio browser smoke passed at desktop and phone
-widths, including enabled and disabled public profile states. The performance
-check reports advisory JavaScript and CSS catalog size overages; enforced
-budgets passed. Remote catalog comparison was unavailable without remote
+widths, including enabled and disabled public profile states and centered,
+contrasting arrow navigation. Enforced performance budgets passed; advisory
+JavaScript and CSS catalog size targets remain over their thresholds. Remote
+catalog comparison was unavailable without remote
 Supabase credentials. No database schema changed, so database lint and reset
 were not applicable. See `docs/PROGRESS.md` for the full record.

@@ -64,8 +64,9 @@
 
 <section class="profile-game-progress" class:profile-game-progress--preview={previewMode} data-profile-page="progress" aria-labelledby="profile-game-progress-title" style={`--profile-game-progress-accent:${accent};`}>
   {#if !previewMode}<button type="button" class="profile-game-progress__back" on:click={onReturn} aria-label="Return to profile card">
-    <span aria-hidden="true">↑</span>
-    <span>Profile</span>
+    <svg class="profile-page-arrow profile-page-arrow--up" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <path d="M13 2h6v13.17l5.59-5.58 4.24 4.24L16 26.66 3.17 13.83l4.24-4.24 5.59 5.58V2z" />
+    </svg>
   </button>{/if}
 
   <div class="profile-game-progress__frame">
@@ -178,23 +179,24 @@
     position: absolute;
     z-index: 3;
     top: 1.25rem;
-    left: max(.25rem, calc((100% - 58rem) / 2));
-    display: inline-flex;
-    min-height: 2.5rem;
-    align-items: center;
-    gap: .55rem;
-    padding: .4rem .7rem;
-    border: 1px solid color-mix(in srgb, var(--profile-game-progress-accent) 34%, var(--color-line-subtle));
-    border-radius: var(--radius-pill, 999px);
-    background: color-mix(in srgb, var(--color-canvas-deep, #07080b) 60%, transparent);
-    color: var(--color-ink-muted, #aeb6c4);
-    font: 600 .7rem/1 var(--font-body-stack, Inter, sans-serif);
+    left: 50%;
+    display: grid;
+    width: 3.25rem;
+    height: 3.25rem;
+    place-items: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #fff;
     cursor: pointer;
+    transform: translateX(-50%);
+    transition: transform 160ms ease;
   }
 
-  .profile-game-progress__back:hover { color: var(--color-ink-strong, #f4f6fb); border-color: var(--profile-game-progress-accent); }
-  .profile-game-progress__back:focus-visible { outline: 2px solid var(--profile-game-progress-accent); outline-offset: 3px; }
-  .profile-game-progress__back span:first-child { font-size: 1rem; }
+  .profile-game-progress__back:hover { transform: translate(-50%, -.16rem); }
+  .profile-game-progress__back:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: .35rem; box-shadow: 0 0 0 1px #090a0d; }
   .profile-game-progress__frame { width: min(100%, 56rem); min-width: 0; }
   :global(.profile-game-progress__border) { width: 100%; }
 
@@ -251,7 +253,7 @@
 
   @media (max-width: 38rem) {
     .profile-game-progress { align-content: start; min-height: 100dvh; padding-top: 4.25rem; }
-    .profile-game-progress__back { top: .75rem; }
+    .profile-game-progress__back { top: .5rem; }
     .profile-game-progress__heading { flex-direction: column-reverse; gap: .75rem; }
     .profile-game-progress__rank { padding: .4rem .55rem; }
     .profile-game-progress__stats { grid-template-columns: 1fr 1fr; }
@@ -264,6 +266,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .profile-game-progress__bar span { transition: none; }
-    .profile-game-progress__back { scroll-behavior: auto; }
+    .profile-game-progress__back { transition: none; }
+    .profile-game-progress__back:hover { transform: translateX(-50%); }
   }
 </style>

@@ -594,9 +594,10 @@ import { normalizeProfileProgressionProof } from './profileStory.js';
         </div>
 
       {#if !previewMode && hasProfileProgressPage && activeProfilePage === 0}
-        <button type="button" class="profile-shell__more-cue profile-shell__more-cue--continuation" aria-controls="profile-more" on:click={scrollToProfileMore}>
-          <span class="profile-shell__more-cue-label">Scroll for progress</span>
-          <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
+        <button type="button" class="profile-shell__more-cue profile-shell__more-cue--continuation" aria-label="Scroll to game progress page" aria-controls="profile-more" on:click={scrollToProfileMore}>
+          <svg class="profile-page-arrow" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+            <path d="M13 2h6v13.17l5.59-5.58 4.24 4.24L16 26.66 3.17 13.83l4.24-4.24 5.59 5.58V2z" />
+          </svg>
         </button>
       {/if}
       </div>
@@ -689,6 +690,8 @@ import { normalizeProfileProgressionProof } from './profileStory.js';
   @media (prefers-reduced-motion: reduce) {
     .profile-shell__action { transition-duration: 0.001ms; }
     .profile-shell__action:hover:not(:disabled) { transform: none; }
+    .profile-shell__more-cue { transition: none; }
+    .profile-shell__more-cue:hover { transform: translateX(-50%); }
   }
   /* Profile composition: one color field, one identity surface. */
   .profile-shell-page {
@@ -790,51 +793,35 @@ import { normalizeProfileProgressionProof } from './profileStory.js';
     bottom: 1.25rem;
     display: grid;
     place-items: center;
-    width: 2.9rem;
-    height: 2.9rem;
+    width: 3.25rem;
+    height: 3.25rem;
     margin: 0;
     padding: 0;
-    border: 1px solid color-mix(in srgb, var(--profile-control-accent) 38%, var(--color-line-subtle));
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--color-canvas-deep) 72%, transparent);
-    color: color-mix(in srgb, var(--profile-control-accent) 68%, white);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-ink-strong, #fff);
     cursor: pointer;
-    box-shadow: 0 0 1.5rem color-mix(in srgb, var(--profile-control-accent) 14%, transparent);
     transform: translateX(-50%);
-    transition: transform 160ms ease, border-color 160ms ease, color 160ms ease;
+    transition: transform 160ms ease;
   }
 
-  .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-control-accent); transform: translate(-50%, 0.2rem); }
-  .profile-shell__more-cue:focus-visible { outline: 2px solid var(--profile-control-accent); outline-offset: 4px; border-radius: var(--radius-sm); }
-  .profile-shell__more-cue-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-  .profile-shell__more-cue-arrow { font-size: 1.35rem; line-height: 1; }
-  .profile-shell__more-cue--continuation {
-    width: auto;
-    height: auto;
-    min-height: 1.75rem;
-    gap: .3rem;
-    padding: .25rem .45rem;
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--color-canvas-deep) 42%, transparent);
-    box-shadow: none;
-    color: color-mix(in srgb, var(--profile-control-accent) 72%, var(--color-ink-muted));
-    font: 600 .62rem / 1 var(--font-mono-stack);
-    letter-spacing: .08em;
-    text-transform: lowercase;
+  .profile-shell__more-cue:hover { transform: translate(-50%, -.16rem); }
+  .profile-shell__more-cue:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: .35rem; box-shadow: 0 0 0 1px #090a0d; }
+  /* The light fill, dark edge, and opposite-color halo stay visible over
+     owner-selected solid colors, gradients, and background media. */
+  :global(.profile-page-arrow) {
+    display: block;
+    width: 2.55rem;
+    height: 2.55rem;
+    fill: #fff;
+    stroke: #090a0d;
+    stroke-width: 1.35;
+    stroke-linejoin: round;
+    paint-order: stroke fill;
+    filter: drop-shadow(0 0 2px #090a0d) drop-shadow(0 0 4px rgba(255, 255, 255, .72));
   }
-  .profile-shell__more-cue--continuation .profile-shell__more-cue-label {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    clip-path: none;
-    white-space: normal;
-  }
-  .profile-shell__more-cue--continuation .profile-shell__more-cue-arrow { font-size: .9rem; }
-  .profile-shell__more-cue--continuation:hover { background: color-mix(in srgb, var(--profile-control-accent) 9%, transparent); transform: translate(-50%, .15rem); }
+  :global(.profile-page-arrow--up) { transform: rotate(180deg); }
   .profile-shell__more {
     position: relative;
     display: flex;
