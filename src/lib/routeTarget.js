@@ -99,7 +99,7 @@ export function resolveRouteTarget({
     return {
       loaderKey: 'game',
       componentKey: `game:${challenge.id}`,
-      componentProps: { challengeMode: true },
+      componentProps: {},
       loadingLabel: 'Opening challenge'
     };
   }

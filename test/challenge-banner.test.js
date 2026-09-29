@@ -2,10 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 
-const [app, banner, rollPage] = await Promise.all([
+const [app, banner] = await Promise.all([
   readFile(new URL('../src/App.svelte', import.meta.url), 'utf8'),
-  readFile(new URL('../src/lib/ChallengeBanner.svelte', import.meta.url), 'utf8'),
-  readFile(new URL('../src/lib/RollPage.svelte', import.meta.url), 'utf8')
+  readFile(new URL('../src/lib/ChallengeBanner.svelte', import.meta.url), 'utf8')
 ]);
 
 test('App retains the challenge visibility gate and existing URL cleanup handler', () => {
@@ -43,11 +42,4 @@ test('challenge styles retain their desktop and mobile rules in the component', 
   assert.match(banner, /\.challenge-close:hover/);
   assert.match(banner, /@media \(max-width: 600px\)[\s\S]*?\.challenge-banner\s*\{[\s\S]*?flex-direction: column/);
   assert.match(banner, /\.challenge-stat-loading,[\s\S]*?\.challenge-stat-error/);
-});
-
-test('challenge pre-roll stage is transparent while normal result cards keep their surface', () => {
-  assert.match(rollPage, /export let challengeMode = false/);
-  assert.match(rollPage, /class:roll-page--challenge=\{challengeMode\}/);
-  assert.match(rollPage, /\.roll-page\.roll-page--challenge :global\(\.game-container--dedicated \.roll-stage--preroll\)\s*\{[^}]*background: transparent;[^}]*box-shadow: none;/);
-  assert.doesNotMatch(rollPage, /\.roll-page\.roll-page--challenge :global\(\.game-container--dedicated \.roll-stage--results\)/);
 });

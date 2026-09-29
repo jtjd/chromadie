@@ -15,7 +15,6 @@
   export let signupNext = '/';
   export let showAcquisitionActions = false;
   export let homepage = false;
-  export let challengeMode = false;
   export let bestRollRows = [];
   export let bestRollLoading = true;
   export let bestRollError = '';
@@ -71,7 +70,6 @@
   class:roll-page--homepage={homepage}
   class:roll-page--homepage-preroll={homepagePreroll}
   class:roll-page--homepage-rolling={homepageRolling}
-  class:roll-page--challenge={challengeMode}
   class:roll-page--result={contextHasResult}
 >
   <section
@@ -1156,16 +1154,6 @@
     background: transparent;
     box-shadow: none;
     text-align: center;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  .roll-page.roll-page--challenge :global(.game-container--dedicated .roll-stage--preroll) {
-    padding: 0;
-    border-color: transparent;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
