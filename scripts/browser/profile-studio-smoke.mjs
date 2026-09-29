@@ -819,8 +819,9 @@ async function capturePublishedLayouts() {
   await page.waitFor(`document.querySelector('[data-roll-widget-toggle] input')?.checked === false && document.querySelector('.profile-studio-preview')?.dataset.previewRollWidget === 'hidden' && !document.querySelector('.profile-studio-preview [data-profile-widget="roll"]')`, 'hidden daily-roll widget preview');
   await page.click('.profile-layout-editor__card[data-layout="sleek"]', 'change layout with hidden daily-roll widget');
   await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-layout-content="sleek"]') && document.querySelector('[data-roll-widget-toggle] input')?.checked === false && !document.querySelector('.profile-studio-preview [data-profile-widget="roll"]')`, 'hidden daily-roll widget after layout change');
+  await page.waitFor(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`, 'hidden daily-roll widget staged publish');
   await page.click('.profile-studio-shell__publish', 'publish hidden daily-roll widget');
-  await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === true`, 'publish hidden daily-roll widget');
+  await page.waitFor(`document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.' && document.querySelector('.profile-studio-shell__publish')?.disabled === true`, 'publish hidden daily-roll widget');
   await page.navigate(`${appUrl}/${canonicalUsername}`, 'public profile with hidden daily-roll widget');
   await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-layout-content="sleek"]')`, 'public Sleek profile with hidden daily-roll widget');
   const hiddenRoll = await page.evaluate(`(() => {
@@ -1373,7 +1374,7 @@ try {
     await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'Customize tab workspace and persistent preview');
     await page.waitFor(`document.querySelector('.profile-studio-shell__publish')`, 'Studio publish control');
     const customizeTabs = await page.evaluate(`[...document.querySelectorAll('[role="tablist"][aria-label="Customize profile"] [role="tab"]')].map(tab => tab.textContent.trim())`);
-    assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Content', 'Links', 'Layout']), `Customize tabs did not expose the integrated Content and Links tabs in order: ${JSON.stringify(customizeTabs)}.`);
+    assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Links', 'Layout']), `Customize tabs did not expose the supported Appearance, Media, Links, and Layout tabs in order: ${JSON.stringify(customizeTabs)}.`);
     await page.waitFor(`document.querySelector('#customize-effects')`, 'visual effects inside Appearance');
     await page.click('#profile-customize-tab-media', 'Media customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media')`, 'visible Media editor');
@@ -2172,7 +2173,7 @@ try {
       [1280, 720], [1366, 768], [1440, 900], [1920, 1080]
     ];
     const measurements = [];
-    const customizeTabs = ['appearance', 'media', 'content', 'links', 'layout'];
+    const customizeTabs = ['appearance', 'media', 'links', 'layout'];
 
     for (const [width, height] of viewports) {
       await page.setViewport(width, height);
@@ -2419,7 +2420,7 @@ try {
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 5 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
+    assert(mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 4 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
     assert(mobileEditor.pageContained && (mobileEditor.actions?.right || 0) <= 415, `Mobile editor or actions escape the 414px composition: ${JSON.stringify(mobileEditor)}.`);
     await capture('10-mobile-editor-414');
 
@@ -2433,7 +2434,7 @@ try {
         labels: tabs.map(tab => tab.textContent.trim())
       };
     })()`);
-    assert(['relative', 'sticky'].includes(stickyTabs.position) && stickyTabs.labels.join('|') === 'Appearance|Media|Content|Links|Layout', `Mobile customize tabs are missing or using invalid layout positioning: ${JSON.stringify(stickyTabs)}.`);
+    assert(['relative', 'sticky'].includes(stickyTabs.position) && stickyTabs.labels.join('|') === 'Appearance|Media|Links|Layout', `Mobile customize tabs are missing or using invalid layout positioning: ${JSON.stringify(stickyTabs)}.`);
 
     const destinationWidths = [320, 600, 768];
     const destinations = ['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'account'];
