@@ -446,8 +446,8 @@ async function inspectViewport(width, height, label, { navigate = true } = {}) {
 }
 
 try {
-  // Keep the local evidence deterministic: public progression proof is a
-  // rollout-gated surface, so this test-only server starts in the all bucket.
+  // Keep the local evidence deterministic: the dedicated progression journey
+  // is rollout-gated, so this test-only server starts in the all bucket.
   process.env.VITE_CHROMADIE_ROLLOUT_STAGE = 'all';
   process.env.VITE_CHROMADIE_FLAG_PROGRESSION_JOURNEY = 'true';
   server = await startVite({ appPort, environment, evidenceDir });
@@ -618,29 +618,17 @@ try {
       throw new Error(error.message + ': ' + JSON.stringify(diagnostic), { cause: error });
     }
     await chromium.page.waitFor("document.querySelector('.profile-shell-page[aria-busy=\"false\"]')", 'public profile shell hydration', 30000);
-    let publicStoryRpc;
-    try {
-      const story = await callAuthenticatedRpc('get_public_profile_story', { p_user_id: disposableUserId });
-      publicStoryRpc = {
-        completedCount: story?.progression_proof?.completed_count ?? story?.progressionProof?.completedCount ?? null,
-        recentUnlockCount: Array.isArray(story?.progression_proof?.recent_unlocks)
-          ? story.progression_proof.recent_unlocks.length
-          : Array.isArray(story?.progressionProof?.recentUnlocks) ? story.progressionProof.recentUnlocks.length : 0
-      };
-    } catch (error) {
-      publicStoryRpc = { error: error.message };
-    }
-    const publicProofReady = await chromium.page.evaluate("(() => { const shell = document.querySelector('.profile-shell-page'); return { proof: Boolean(document.querySelector('.profile-shell__progression-proof')), busy: shell?.getAttribute('aria-busy') || '', text: shell?.textContent?.trim().replace(/\\s+/g, ' ').slice(0, 500) || '' }; })()");
-    publicProofReady.storyRpc = publicStoryRpc;
-    assert(publicProofReady.proof, 'Public profile progression proof was not rendered after hydration: ' + JSON.stringify(publicProofReady) + '.');
+    await chromium.page.waitFor("document.querySelector('.profile-game-progress')", 'public game progress page', 30000);
     await chromium.page.waitFor("(() => { const result = [...document.querySelectorAll('[data-profile-widget]')].find(node => node.dataset.profileWidget === 'roll' && node.dataset.profileWidgetMode === 'summary'); const text = result?.textContent?.trim() || ''; const meta = result?.querySelector('.profile-roll-summary__meta')?.textContent?.trim() || ''; return Boolean(result && /#[0-9a-f]{6}/i.test(text) && meta && !result.querySelector('details')); })()", 'public daily-roll summary widget', 30000);
-    const publicState = await chromium.page.evaluate("(() => {\n      const root = document.documentElement;\n      const proofItems = document.querySelectorAll('.profile-shell__progression-proof-item').length;\n      const text = document.querySelector('.profile-shell-page')?.textContent?.trim().replace(/\\s+/g, ' ') || '';\n      return {\n        path: location.pathname,\n        proof: Boolean(document.querySelector('.profile-shell__progression-proof')),\n        proofItems,\n        proofStats: document.querySelector('.profile-shell__progression-proof-stats')?.textContent?.trim().replace(/\\s+/g, ' ') || '',\n        rollResult: Boolean(document.querySelector('.profile-daily-roll .profile-roll__result')),\n        rollIdentity: document.querySelector('.profile-daily-roll .profile-roll__identity-row')?.textContent?.trim() || '',\n        historicalStory: text.includes('42') && text.includes('Total rolls'),\n        horizontalOverflow: root.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1\n      };\n    })()");
-    const publicRoll = await chromium.page.evaluate("(() => { const result = document.querySelector('.profile-daily-roll .profile-roll__result'); return { hex: result?.querySelector('.profile-roll__hex')?.textContent?.trim() || '', rarity: result?.querySelector('.profile-roll__rarity')?.textContent?.trim() || '', score: result?.querySelector('.profile-roll__score-row')?.textContent?.trim().replace(/\\s+/g, ' ') || '' }; })()");
-    Object.assign(publicState, { rollHex: publicRoll.hex, rollRarity: publicRoll.rarity, rollScore: publicRoll.score });
-    Object.assign(publicState, await chromium.page.evaluate("(() => { const result = [...document.querySelectorAll('[data-profile-widget]')].find(node => node.dataset.profileWidget === 'roll' && node.dataset.profileWidgetMode === 'summary'); const meta = result?.querySelector('.profile-roll-summary__meta')?.textContent?.trim() || ''; const rarity = result?.querySelector('.profile-roll-summary__rarity'); return { rollResult: Boolean(result), rollIdentity: result?.querySelector('.profile-roll-summary__identity')?.textContent?.trim() || '', rollHex: meta, rollRarity: rarity?.textContent?.trim() || '', rollRarityColor: rarity ? getComputedStyle(rarity).color : '', rollDetails: Boolean(result?.querySelector('details')) }; })()"));
-    assert(publicState.proof && publicState.proofItems >= 1 && publicState.proofItems <= 2, 'Public profile progression proof is not bounded to recent unlocks: ' + JSON.stringify(publicState) + '.');
+    const publicState = await chromium.page.evaluate("(() => {\n      const root = document.documentElement;\n      const progressPage = document.querySelector('.profile-game-progress');\n      const stats = [...(progressPage?.querySelectorAll('.profile-game-progress__stat') || [])].map(stat => ({\n        value: stat.querySelector('strong')?.textContent?.trim() || '',\n        label: stat.querySelector('span')?.textContent?.trim() || ''\n      }));\n      const recentColors = [...(progressPage?.querySelectorAll('.profile-game-progress__recent-list li strong') || [])].map(node => node.textContent.trim());\n      const summary = [...document.querySelectorAll('[data-profile-widget]')].find(node => node.dataset.profileWidget === 'roll' && node.dataset.profileWidgetMode === 'summary');\n      const meta = summary?.querySelector('.profile-roll-summary__meta')?.textContent?.trim() || '';\n      const rarity = summary?.querySelector('.profile-roll-summary__rarity');\n      return {\n        path: location.pathname,\n        progressPage: Boolean(progressPage),\n        stats,\n        rank: progressPage?.querySelector('.profile-game-progress__rank')?.textContent?.trim().replace(/\\s+/g, ' ') || '',\n        rankProgress: progressPage?.querySelector('.profile-game-progress__rank-track')?.textContent?.trim().replace(/\\s+/g, ' ') || '',\n        personalBest: progressPage?.querySelector('.profile-game-progress__best')?.textContent?.trim().replace(/\\s+/g, ' ') || '',\n        recentColors,\n        rollResult: Boolean(summary),\n        rollIdentity: summary?.querySelector('.profile-roll-summary__identity')?.textContent?.trim() || '',\n        rollHex: meta,\n        rollRarity: rarity?.textContent?.trim() || '',\n        rollRarityColor: rarity ? getComputedStyle(rarity).color : '',\n        rollDetails: Boolean(summary?.querySelector('details')),\n        horizontalOverflow: root.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1\n      };\n    })()");
+    assert(publicState.progressPage && JSON.stringify(publicState.stats) === JSON.stringify([
+      { value: '42', label: 'lifetime rolls' },
+      { value: '5', label: 'current streak' },
+      { value: '9', label: 'longest streak' }
+    ]), 'Public profile did not render the server-owned roll and streak totals: ' + JSON.stringify(publicState) + '.');
+    assert(publicState.rank.includes('Silver') && publicState.rankProgress.includes('Gold at') && publicState.personalBest && /score/.test(publicState.personalBest), 'Public game progress page did not render rank progress and a personal best: ' + JSON.stringify(publicState) + '.');
+    assert(publicState.recentColors.length >= 1 && publicState.recentColors.length <= 6 && publicState.recentColors.every(hex => /^#[0-9a-f]{6}$/i.test(hex)), 'Public recent colors are missing or exceed the six-color limit: ' + JSON.stringify(publicState) + '.');
     assert(publicState.rollResult && publicState.rollHex && publicState.rollRarity && !publicState.rollDetails, 'Public profile did not render the canonical static daily-roll summary widget: ' + JSON.stringify(publicState) + '.');
-    assert(publicState.historicalStory, 'Public profile did not render established historical totals: ' + JSON.stringify(publicState) + '.');
     assert(!publicState.horizontalOverflow, 'Public profile overflows horizontally: ' + JSON.stringify(publicState) + '.');
     const screenshot = join(evidenceDir, 'established-public-profile.png');
     await chromium.page.screenshot(screenshot);
@@ -648,7 +636,7 @@ try {
     return { fixture, progression: state, rareDiscovery, premium: premiumState, publicProfile: publicState };
   });
 
-  await step('owner record, Content, and Rivals surfaces remain usable at desktop and mobile widths', async () => {
+  await step('owner record, progress-page customization, and Rivals remain usable at desktop and mobile widths', async () => {
     await chromium.page.setReducedMotion(false);
     const surfaces = [];
     const inspect = async ({ path, selector, label, ready = '' }) => {
@@ -672,9 +660,9 @@ try {
     const collectionState = await chromium.page.evaluate("(() => ({ cards: document.querySelectorAll('.collection .grid article').length, lockedNames: [...document.querySelectorAll('.collection .grid article.locked h3')].map(node => node.textContent.trim()).filter(Boolean).length }))()");
     assert(collectionState.cards > 0 && collectionState.lockedNames > 0, 'The collection did not expose named locked discoveries: ' + JSON.stringify(collectionState) + '.');
     await inspect({ path: '/progression?tab=history', selector: '.history', label: 'profile history' });
-    await inspect({ path: '/profile/settings#customize-content', selector: '.profile-content-editor', label: 'Studio Content editor', ready: " && document.querySelector('.profile-widget-editor')" });
-    const contentState = await chromium.page.evaluate("(() => { const heading = document.querySelector('.profile-content-editor input[maxlength=\"40\"]'); const markdown = document.querySelector('.profile-content-editor textarea[maxlength=\"1200\"]'); const active = [...document.querySelectorAll('[role=\"tab\"]')].find(tab => tab.getAttribute('aria-selected') === 'true'); return { headingLimit: heading?.maxLength || 0, markdownLimit: markdown?.maxLength || 0, activeTab: active?.textContent?.trim() || '', widgetEditor: Boolean(document.querySelector('.profile-widget-editor')) }; })()");
-    assert(contentState.headingLimit === 40 && contentState.markdownLimit === 1200 && contentState.activeTab === 'Content' && contentState.widgetEditor, 'Studio Content did not expose its bounded editors: ' + JSON.stringify(contentState) + '.');
+    await inspect({ path: '/profile/settings#customize-layout', selector: '[data-progress-page-toggle]', label: 'game progress page customization' });
+    const progressPageCustomization = await chromium.page.evaluate("(() => { const input = document.querySelector('[data-progress-page-toggle] input'); const active = [...document.querySelectorAll('[role=tab]')].find(tab => tab.getAttribute('aria-selected') === 'true'); return { enabled: input?.checked === true, activeTab: active?.textContent?.trim() || '', title: document.querySelector('#profile-progress-page-title')?.textContent?.trim() || '', toggleLabel: document.querySelector('[data-progress-page-toggle] strong')?.textContent?.trim() || '' }; })()");
+    assert(progressPageCustomization.enabled && progressPageCustomization.activeTab === 'Layout' && progressPageCustomization.title === 'Game progress page' && progressPageCustomization.toggleLabel === 'Shown', 'Profile Studio did not expose the enabled game progress page control: ' + JSON.stringify(progressPageCustomization) + '.');
     await inspect({ path: '/leaderboard?tab=rivals', selector: '.roll-leaderboard[data-leaderboard-tab="rivals"]', label: 'Rivals leaderboard' });
     const rivalsState = await chromium.page.evaluate("(() => ({ active: [...document.querySelectorAll('.roll-leaderboard__tabs [role=\"tab\"]')].some(tab => tab.textContent.trim() === 'Rivals' && tab.getAttribute('aria-selected') === 'true'), state: document.querySelector('.roll-leaderboard__state')?.textContent?.trim().replace(/\\s+/g, ' ') || '' }))()");
     assert(rivalsState.active && /No rivals yet|Open a public profile/i.test(rivalsState.state), 'The authenticated Rivals tab did not expose its empty state: ' + JSON.stringify(rivalsState) + '.');
@@ -682,7 +670,7 @@ try {
     const screenshot = join(evidenceDir, 'owner-surfaces-mobile.png');
     await chromium.page.screenshot(screenshot);
     results.screenshots.push(screenshot);
-    return { surfaces, collection: collectionState, content: contentState, rivals: rivalsState };
+    return { surfaces, collection: collectionState, progressPageCustomization, rivals: rivalsState };
   });
 
   await step('authenticated mobile and reduced-motion progression remain usable', async () => {
