@@ -53,10 +53,11 @@ test('draft normalization preserves explicit value, draft, then published fallba
   assert.equal(normalizeProfileContentDraft(explicitConfig, draftConfig, publishedConfig).content.projects[0].title, 'Explicit');
 });
 
-test('Profile Content editor wires the production draft helper and keeps editor effects local', async () => {
-  const source = await readFile(new URL('../src/lib/ProfileContentEditor.svelte', import.meta.url), 'utf8');
-  assert.match(source, /import \{ normalizeProfileContentDraft, updateProfileContentDraft \} from '\.\/profile-studio\/contentDraft\.js'/);
-  assert.match(source, /draft = updateProfileContentDraft\(draft, next, draftConfig, publishedConfig\)/);
-  assert.match(source, /emitDirty\(true\);[\s\S]*dispatch\('configpreview', \{ config: draft \}\)/);
-  assert.doesNotMatch(source, /function normalizeDraft|draft\.content\.projects = draft\.content\.projects\.map/);
+test('legacy content typing helpers remain available without a mounted editor', async () => {
+  const [customize, registry] = await Promise.all([
+    readFile(new URL('../src/lib/ProfileCustomizePage.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8')
+  ]);
+  assert.doesNotMatch(customize, /ProfileContentEditor|projectEditor|contentComponent/);
+  assert.doesNotMatch(registry, /ProfileContentEditor|ProfileWidgetEditor/);
 });

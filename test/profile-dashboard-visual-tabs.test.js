@@ -5,7 +5,7 @@ import { PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS } from '../src/lib/profile-studio/
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Customize tabs retain visited content drafts while exposing only the active editor group', async () => {
+test('Customize exposes the current editor groups and a progress page visibility control', async () => {
   const [customize, settings, contract] = await Promise.all([
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileSettings.svelte'),
@@ -13,30 +13,29 @@ test('Customize tabs retain visited content drafts while exposing only the activ
   ]);
 
   assert.match(customize, /export let activeTab = 'appearance'/);
-  assert.match(customize, /selectedTab = \['appearance', 'media', 'content', 'links', 'layout'\]/);
+  assert.match(customize, /selectedTab = \['appearance', 'media', 'links', 'layout'\]/);
   assert.match(customize, /\{#if selectedTab === 'appearance'\}/);
   assert.match(customize, /\{#if selectedTab === 'media'\}/);
-  assert.match(customize, /\{#if contentVisited\}/);
   assert.match(customize, /id="customize-appearance"/);
   assert.match(customize, /id="customize-media"/);
-  assert.match(customize, /id="customize-content"/);
   assert.match(customize, /id="customize-links"/);
   assert.match(customize, /id="customize-layout"/);
   assert.match(customize, /id="customize-identity"/);
   assert.match(customize, /id="customize-effects"/);
   assert.doesNotMatch(customize, /class:is-tab-hidden|data-editor-section=/);
-  assert.match(customize, /id="customize-content" hidden=\{selectedTab !== 'content'\}/);
   assert.match(customize, /id="customize-links" hidden=\{selectedTab !== 'links'\}/);
   assert.match(customize, /\{#if linksVisited\}/);
   assert.match(customize, /profile-collection/);
-  assert.match(customize, /contentComponent/);
-  assert.match(customize, /widgetComponent/);
+  assert.doesNotMatch(customize, /contentComponent|widgetComponent|ProfileContentEditor|ProfileWidgetEditor/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
   assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}/);
   const studio = [settings, contract].join('\n');
-  assert.match(studio, /content: 'content'/);
-  assert.match(studio, /widgets: 'content'/);
-  assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-content', 'profile-widgets', 'profile-collection', 'profile-layout', 'profile-aliases']);
+  assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-collection', 'profile-layout', 'profile-aliases']);
+  assert.match(studio, /content: 'layout'/);
+  assert.match(studio, /widgets: 'layout'/);
+  const layoutEditor = await read('src/lib/ProfileReferenceLayoutEditor.svelte');
+  assert.match(layoutEditor, /Game progress page/);
+  assert.match(layoutEditor, /data-progress-page-toggle/);
   assert.match(studio, /'customize-effects': 'appearance'/);
   assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
 });
@@ -183,7 +182,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(profileShell, /profileBorderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(expression, /profile-expression-editor__compact-spotify/);
+  assert.doesNotMatch(expression, /profile-expression-editor__compact-spotify|Spotify URL|Connect Spotify/);
   assert.match(expression, /JPEG, PNG, or WebP · processed and stored as WebP/);
   assert.match(mediaWorkspace, /data-media-workspace-layout="reference"/);
   assert.match(mediaWorkspace, /compact-card--background\) \{ grid-column: 1; grid-row: 1; order: 1; \}/);

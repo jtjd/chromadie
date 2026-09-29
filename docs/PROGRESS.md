@@ -126,6 +126,31 @@ available for retroactive verification. The `tjz` account owner subsequently
 confirmed the staff profile as the intended QA grant target. See
 [`milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md`](milestones/CODEBASE_SECURITY_RELIABILITY_AUDIT_20260924.md).
 
+## 2026-09-28 — Optional public game progress page
+
+Replaced the public profile More continuation with an owner-enabled full-page
+view of roll totals, streaks, rank progress, personal best, and recent colors.
+The existing profile card remains page one. Removed the public About, project,
+third-party widget, Spotify, and color archive surfaces. Legacy content and
+provider values remain stored for compatibility. The Layout editor owns the
+new toggle, and legacy Content/Widgets hashes resolve to Layout. Recent colors
+continue to follow activity privacy. No database migration was needed.
+
+Validation passed: `npm run build`, `npm run check` (0 errors and warnings),
+`npx eslint src/`, `npm test` (909 tests), links, CSP, enforced performance
+budgets, username policy, balance, local catalog, scoring parity (5,000 RGB
+samples), and database security. The focused local Profile Studio browser
+smoke passed at desktop and phone widths, including publishing the toggle,
+visiting the public progress page, and returning to the one-page profile. The
+performance check reports its existing advisory JavaScript and CSS catalog
+size overages; enforced budgets passed. Remote catalog comparison was not
+available without remote Supabase credentials. No schema change was made, so
+database lint and reset were not applicable. See
+[`milestones/PROFILE_GAME_PROGRESS_PAGE.md`](milestones/PROFILE_GAME_PROGRESS_PAGE.md).
+
+The phone smoke also verified progress-page navigation after adding a
+viewport-height scroller override for enabled compact profiles.
+
 ## 2026-09-25 — Main release CI follow-up
 
 Repaired the production-browser failures exposed by the main-branch release:

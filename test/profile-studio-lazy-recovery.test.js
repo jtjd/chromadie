@@ -69,7 +69,6 @@ test('Customize tabs load the existing editor groups', async () => {
   const groups = {
     appearance: ['customize', 'profile-identity', 'profile-collection'],
     media: ['customize', 'profile-media'],
-    content: ['customize', 'profile-content', 'profile-widgets'],
     links: ['customize', 'profile-layout', 'profile-aliases'],
     layout: ['customize']
   };

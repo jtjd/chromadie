@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the profile identity surface stays sparse and keeps the archive outside the card', async () => {
+test('the profile identity stays sparse and game progress stays on its optional second page', async () => {
   const identity = await read('src/lib/ProfileReferenceCard.svelte');
   const shell = await read('src/lib/ProfileShell.svelte');
   const renderModel = await read('src/lib/profileRenderModel.js');
@@ -16,11 +16,12 @@ test('the profile identity surface stays sparse and keeps the archive outside th
   assert.doesNotMatch(identity, /chm\.lol\/\{username\}/);
   assert.doesNotMatch(identity, /identity-card|collection/);
   assert.match(shell, /profile-shell__approved-main/);
-  assert.match(shell, /profile-shell__approved-featured/);
-  assert.match(shell, /pinnedAchievements/);
+  assert.match(shell, /data-profile-region="identity"/);
+  assert.match(shell, /<ProfileGameProgressPage/);
+  assert.match(renderModel, /badges: pinnedAchievements/);
   assert.match(renderModel, /profileDisplayName = profile\?\.display_name \|\| profileName/);
   assert.doesNotMatch(shell, /profileRollComponent|todayColorComponent|profile-shell__approved-game/);
-  assert.match(shell, /data-profile-region="featured"/);
+  assert.match(shell, /data-profile-page="hero"/);
   assert.doesNotMatch(shell, /slot="today"/);
   assert.doesNotMatch(shell, /slot="collection"/);
 });

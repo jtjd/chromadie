@@ -39,11 +39,9 @@
     ? ['customize', 'profile-identity', 'profile-collection']
     : activeCustomizeTab === 'media'
       ? ['customize', 'profile-media']
-      : activeCustomizeTab === 'content'
-        ? ['customize', 'profile-content', 'profile-widgets']
-        : activeCustomizeTab === 'links'
-          ? ['customize', 'profile-layout', 'profile-aliases']
-          : ['customize'];
+      : activeCustomizeTab === 'links'
+        ? ['customize', 'profile-layout', 'profile-aliases']
+        : ['customize'];
   $: activeSectionError = (isCustomize ? customizeSectionIds : [activeSection])
     .map(sectionId => sectionErrors?.[sectionId])
     .find(Boolean) || '';

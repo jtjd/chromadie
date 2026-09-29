@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { attachProfilePortfolioScrollController } from '../src/lib/profile-layout/portfolioScrollController.js';
+import { attachProfilePageScrollController } from '../src/lib/profile-layout/profilePageScrollController.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -53,51 +53,46 @@ test('the replacement homepage has explicit desktop, tablet, and phone containme
   assert.match(homepageSmoke, /scrollWidth <= width \+ 1/);
 });
 
-test('non-Portfolio profiles leave wheel scrolling to the browser', () => {
+test('the optional progress page enables scroll stepping independently of profile layout', () => {
   assert.match(profileShell, /scroll-snap-type: y proximity/);
   assert.match(profileShell, /scroll-snap-stop: normal/);
   assert.doesNotMatch(profileShell, /handleProfileWheel/);
-  assert.match(profileShell, /portfolioScrollController\.js/);
-  let layout = 'compact';
+  assert.match(profileShell, /profilePageScrollController\.js/);
+  assert.match(profileShell, /profile-shell-page--progress-enabled/);
+  let enabled = false;
+  let jumps = 0;
   const listeners = new Map();
   const page = { getBoundingClientRect: () => ({ top: 0, bottom: 800 }) };
+  const progressPage = { getBoundingClientRect: () => ({ top: 800, bottom: 1600 }) };
   const container = {
     clientHeight: 800,
     scrollTop: 0,
     addEventListener(type, handler) { listeners.set(type, handler); },
     removeEventListener(type) { listeners.delete(type); },
-    querySelectorAll: () => [page],
+    querySelectorAll: () => [page, progressPage],
     getBoundingClientRect: () => ({ top: 0, bottom: 800, height: 800 }),
     scrollBy() {}
   };
-  const cleanup = attachProfilePortfolioScrollController({
+  const cleanup = attachProfilePageScrollController({
     container,
-    getMoreElement: () => null,
-    isPortfolioLayout: () => layout === 'portfolio',
+    isPageScrollEnabled: () => enabled,
     getReducedMotion: () => false,
-    getActivePortfolioPage: () => 0,
-    onActivePortfolioPageChange: () => {},
-    onMoreActiveChange: () => {},
-    scrollToPortfolioPage: () => {},
+    getActiveProfilePage: () => 0,
+    onActiveProfilePageChange: () => {},
+    scrollToProfilePage: () => { jumps += 1; },
     now: () => 1000,
     requestFrame: () => null,
     cancelFrame: () => {}
   });
-  for (const nonPortfolioLayout of ['compact', 'sleek', 'modern', 'full-bleed']) {
-    layout = nonPortfolioLayout;
-    listeners.get('wheel')({
-      deltaY: 100,
-      deltaX: 0,
-      preventDefault() { assert.fail(nonPortfolioLayout + ' intercepted wheel scrolling'); }
-    });
-  }
-  layout = 'portfolio';
+  listeners.get('wheel')({ deltaY: 100, deltaX: 0, preventDefault() { assert.fail('hidden page intercepted wheel scrolling'); } });
+  enabled = true;
   for (const event of [{ ctrlKey: true, deltaY: 100, deltaX: 0 }, { deltaY: 1, deltaX: 100 }]) {
     listeners.get('wheel')({ ...event, preventDefault() { assert.fail('Portfolio intercepted zoom or horizontal scrolling'); } });
   }
   let prevented = false;
   listeners.get('wheel')({ deltaY: 100, deltaX: 0, preventDefault() { prevented = true; } });
   assert.equal(prevented, true, 'Portfolio retains its approved page gesture');
+  assert.equal(jumps, 1);
   cleanup();
 });
 

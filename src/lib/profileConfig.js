@@ -310,19 +310,26 @@ export function setProfileRollVisible(config, visible) {
 }
 
 /**
- * The current profile configuration RPC predates an explicit storyVisible
- * field. The approved composition does not render the `explore` module, so
- * its visibility is used as a backwards-compatible storage bit until the
- * linked database baseline can accept a new additive field.
+ * The configuration RPC predates a dedicated second-page field. The
+ * unsupported `explore` module remains the compatibility storage bit for
+ * this owner-selected game progress page.
  */
 export function getProfileStoryVisible(config) {
+  return getProfileProgressPageVisible(config);
+}
+
+export function getProfileProgressPageVisible(config) {
   const normalized = normalizeProfileConfig(config);
-  return typeof normalized.storyVisible === 'boolean'
-    ? normalized.storyVisible
-    : normalized.modules.find(module => module.id === 'explore')?.visible === false;
+  const exploreModule = normalized.modules.find(module => module.id === 'explore');
+  if (exploreModule) return exploreModule.visible === false;
+  return normalized.storyVisible === true;
 }
 
 export function setProfileStoryVisible(config, visible) {
+  return setProfileProgressPageVisible(config, visible);
+}
+
+export function setProfileProgressPageVisible(config, visible) {
   const normalized = normalizeProfileConfig(config);
   return {
     ...normalized,

@@ -58,9 +58,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(identity, /identity-editor__grid--meta \.identity-editor__field:first-child/);
   assert.match(identity, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
   assert.doesNotMatch(customize, /id="customize-other"/);
-  assert.match(customize, /id="customize-content"/);
-  assert.match(customize, /contentComponent/);
-  assert.match(customize, /widgetComponent/);
+  assert.doesNotMatch(customize, /id="customize-content"|contentComponent|widgetComponent|ProfileContentEditor|ProfileWidgetEditor/);
   for (const label of ['Profile text', 'Handle & metadata', 'Username', 'Bio text', 'Page background', 'Profile surface', 'Accent']) {
     assert.match(appearanceColors, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
@@ -74,7 +72,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(appearance, /Profile colors/);
   assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
   assert.match(studio, /ProfilePremiumPage\.svelte/);
-  for (const section of ['media', 'content', 'identity', 'appearance', 'effects', 'links', 'layout']) {
+  for (const section of ['media', 'identity', 'appearance', 'effects', 'links', 'layout']) {
     assert.match(customize, new RegExp(`id="customize-${section === 'identity' || section === 'effects' ? section : section}"`));
   }
   assert.doesNotMatch(customize, /data-editor-section=|class:is-tab-hidden/);
@@ -99,7 +97,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);
   assert.match(studio, /role="tablist" aria-label="Customize profile"/);
-  assert.match(studio, /Appearance[\s\S]*Media[\s\S]*Content[\s\S]*Links[\s\S]*Layout/);
+  assert.match(studio, /Appearance[\s\S]*Media[\s\S]*Links[\s\S]*Layout/);
   assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
   assert.match(studio, /'customize-effects': 'appearance'/);
   assert.match(customize, /export let activeTab = 'appearance'/);
@@ -150,7 +148,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(editor, /export function validateDraft/);
   assert.match(editor, /PROFILE_LINK_DEFINITIONS/);
   assert.doesNotMatch(editor, /showLayout|showLinks|ProfileTemplatePicker/);
-  for (const anchor of ['profile-media-avatar', 'profile-media-background', 'profile-media-audio', 'profile-media-music']) {
+  for (const anchor of ['profile-media-avatar', 'profile-media-background', 'profile-media-audio']) {
     assert.match(expression, new RegExp(`id="${anchor}"`));
   }
   assert.match(expression, /id=\{compact \? 'profile-media-rich' : undefined\}/);

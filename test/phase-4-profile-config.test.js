@@ -5,12 +5,14 @@ import { readFile } from 'node:fs/promises';
 import {
   createDefaultProfileConfig,
   getProfileStoryVisible,
+  getProfileProgressPageVisible,
   getVisibleProfileLinks,
   getVisibleProfileModules,
   getProfileRollVisible,
   setProfileRollVisible,
   normalizeProfileConfig,
-  setProfileStoryVisible
+  setProfileStoryVisible,
+  setProfileProgressPageVisible
 } from '../src/lib/profileConfig.js';
 import { loadProfileContext, loadProfileStudioContext } from '../src/lib/profileData.js';
 import { isProfileConfigurationWritable } from '../src/lib/profile-studio/authoringState.js';
@@ -102,6 +104,21 @@ test('color story visibility has an off-by-default compatibility path and an exp
   assert.equal(visible.storyVisible, true);
   assert.equal(visible.modules.find(module => module.id === 'explore').visible, false);
   assert.equal(getProfileStoryVisible(normalizeProfileConfig({ ...visible, storyVisible: undefined })), true);
+});
+
+test('progress page visibility shares the compatible setting and remains off by default', () => {
+  const config = createDefaultProfileConfig('#123456');
+  assert.equal(getProfileProgressPageVisible(config), false);
+
+  const visible = setProfileProgressPageVisible(config, true);
+  assert.equal(getProfileProgressPageVisible(visible), true);
+  assert.equal(visible.storyVisible, true);
+  assert.equal(visible.modules.find(module => module.id === 'explore').visible, false);
+  assert.equal(getProfileProgressPageVisible({ ...config, modules: visible.modules }), true);
+
+  const hidden = setProfileProgressPageVisible(visible, false);
+  assert.equal(getProfileProgressPageVisible(hidden), false);
+  assert.equal(hidden.modules.find(module => module.id === 'explore').visible, true);
 });
 
 test('profile configuration normalization rejects incomplete structure and drops unsafe links', () => {

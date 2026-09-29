@@ -134,7 +134,8 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(shell, /\{#if !previewMode && !isOwnProfile\}/);
   assert.match(shell, /deferMedia=\{previewMode\}/);
   assert.match(music, /autoplay=\{false\}/);
-  assert.match(music, /loading="lazy"/);
+  assert.match(music, /preload=\{entryRequired \? 'none' : \(deferMedia \? 'none' : 'metadata'\)\}/);
+  assert.doesNotMatch(music, /<iframe|open\.spotify\.com/i);
 });
 
 test('appearance controls are consumed by the identity card and Studio renderer', async () => {

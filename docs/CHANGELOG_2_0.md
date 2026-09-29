@@ -5635,3 +5635,13 @@ the authored Name Material collection, grants active non-consumable cosmetics
 to the confirmed staff-only `tjz` QA account, and activates the audited roll,
 insight quota, progression quota, and media-validation changes. Remote catalog
 drift and the full database/browser workflow pass.
+
+## 2026-09-28 — Profile game progress page
+
+Public profiles can now optionally continue from the profile card to a full-page
+game progress view with roll totals, streaks, rank progress, personal best, and
+recent colors. The setting lives in Customize → Layout. About, project,
+provider-widget, Spotify, and color archive content no longer appears on public
+profiles. Existing saved values remain intact, and no database migration was
+needed. The progress page follows the existing activity privacy setting for
+recent colors and keeps the public profile data boundary.

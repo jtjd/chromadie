@@ -178,7 +178,7 @@ test('dirty cross-section history navigation restores current URL then prompts',
   assert.deepEqual(harness.sectionCalls, []);
 });
 
-test('same-section Customize tab history changes apply immediately while dirty', () => {
+test('legacy Content tab history resolves to Layout immediately while dirty', () => {
   const harness = createHarness({ dirty: true });
   harness.controller.start();
   harness.sectionCalls.length = 0;
@@ -186,8 +186,8 @@ test('same-section Customize tab history changes apply immediately while dirty',
 
   harness.windowRef.emit('hashchange');
 
-  assert.equal(harness.activeCustomizeTab, 'content');
-  assert.deepEqual(harness.tabChanges, ['content']);
+  assert.equal(harness.activeCustomizeTab, 'layout');
+  assert.deepEqual(harness.tabChanges, ['layout']);
   assert.equal(harness.customizeLoads, 1);
   assert.deepEqual(harness.prompts, []);
   assert.deepEqual(harness.sectionCalls, []);

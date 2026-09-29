@@ -280,7 +280,7 @@ test('link size and glow settings reach every active profile link renderer', asy
 });
 
 test('layout renderer composes every published layout through bounded presentation regions', async () => {
-  const [card, fullBleed, portfolio, rollSummary, shell, preview, customize, settings, content, widgets, renderModel, layoutEditor] = await Promise.all([
+  const [card, fullBleed, portfolio, rollSummary, shell, preview, customize, settings, renderModel, layoutEditor, progressPage] = await Promise.all([
     read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/profile-layout/ProfileFullBleedLayout.svelte'),
     read('src/lib/profile-layout/ProfilePortfolioLayout.svelte'),
@@ -289,10 +289,9 @@ test('layout renderer composes every published layout through bounded presentati
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileSettings.svelte'),
-    read('src/lib/ProfileContent.svelte'),
-    read('src/lib/ProfileWidgets.svelte'),
     read('src/lib/profileRenderModel.js'),
-    read('src/lib/ProfileReferenceLayoutEditor.svelte')
+    read('src/lib/ProfileReferenceLayoutEditor.svelte'),
+    read('src/lib/profile-layout/ProfileGameProgressPage.svelte')
   ]);
   assert.match(shell, /ProfileReferenceCard/);
   assert.match(shell, /<ProfileFullBleedLayout/);
@@ -317,8 +316,10 @@ test('layout renderer composes every published layout through bounded presentati
   assert.match(renderModel, /continuationSocialLinks/);
   assert.match(renderModel, /continuationNavigationLinks/);
   assert.match(renderModel, /const hasBelowFoldRoll = false/);
-  assert.match(shell, /\{#if renderProfileMore\}[\s\S]*<div id="profile-more"/);
-  assert.match(renderModel, /hasLowerExpression = \(hasProfileMusic && !hasHostedAudio\)/);
+  assert.match(shell, /\{#if renderProfileProgressPage\}[\s\S]*<div id="profile-more"/);
+  assert.match(renderModel, /const hasLowerExpression = false/);
+  assert.match(progressPage, /Personal best/);
+  assert.match(progressPage, /Recent colors/);
   assert.match(renderModel, /hasHostedAudio,/);
   const mediaDeleteMigration = await read('supabase/migrations/20260812160000_profile_media_delete_token_guard.sql');
   assert.match(mediaDeleteMigration, /v_selected := v_selected OR EXISTS/);
@@ -336,12 +337,9 @@ test('layout renderer composes every published layout through bounded presentati
   assert.doesNotMatch(preview, /profile-studio-preview__footer|profile-studio-preview__devices|Desktop|Mobile/);
   assert.doesNotMatch(preview, /device-sample/);
   assert.match(shell, /profile-shell__continuation-column/);
-  assert.match(shell, /data-profile-continuation="content"[\s\S]*data-profile-continuation="media"/);
-  assert.doesNotMatch(shell, /data-profile-continuation="links"/);
+  assert.doesNotMatch(shell, /data-profile-continuation|ProfileContent|ProfileWidgets|ProfileTimeline|ProfileCollection/);
   assert.doesNotMatch(shell, /formatLinkDestination/);
-  assert.match(content, /About me/);
-  assert.doesNotMatch(content, /↗/);
-  assert.doesNotMatch(widgets, /↗/);
+  assert.doesNotMatch(customize, /ProfileContentEditor|ProfileWidgetEditor/);
   assert.match(preview, /profile-studio-preview__canvas/);
   assert.match(preview, /ProfileReferenceCard/);
   assert.doesNotMatch(preview, /liveRoll=/);
@@ -421,9 +419,7 @@ test('public viewport and Compact roll contracts do not inherit legacy offsets',
   assert.match(card, /profile-reference-card__links/);
   assert.match(card, /profile-reference-card__avatar/);
   assert.doesNotMatch(card, /identity-card--layout-(?:sleek|minimal|modern|portfolio)/);
-  assert.match(music, /profile-music--compact profile-music--spotify-compact/);
-  const compactMusicBranch = music.split('{:else if spotifyEmbedSrc && compact}')[1]?.split('{:else if spotifyEmbedSrc && spotifyActive}')[0] || '';
-  assert.doesNotMatch(compactMusicBranch, /<iframe/);
+  assert.doesNotMatch(music, /spotify|youtube-nocookie|<iframe/i);
 });
 
 test('surface and canvas ownership stay bounded at the renderer boundaries', async () => {

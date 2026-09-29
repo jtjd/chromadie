@@ -168,7 +168,8 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(settings, /Seek profile audio/);
   assert.match(identity, /failedAvatarSource/);
   assert.match(identity, /on:error/);
-  assert.match(music, /loading="lazy"/);
+  assert.match(music, /preload=/);
+  assert.doesNotMatch(music, /<iframe|open\.spotify\.com/i);
   assert.match(music, /autoplay/);
   assert.match(music, /loop/);
 });

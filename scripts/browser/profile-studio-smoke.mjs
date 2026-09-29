@@ -101,7 +101,7 @@ const auditSteps = new Set([
   'open local homepage',
   'create a unique account through the signup UI',
   'direct-refresh authenticated Profile Studio',
-  'Customize and More destination usability',
+  'Customize and progress page destination usability',
   'Customize Discard restores the persisted draft',
   'Customize cosmetic fitting-room state is guarded',
   'create an alias and resolve its direct-refresh path',
@@ -985,7 +985,7 @@ try {
     return state;
   });
 
-  await step('Customize and More destination usability', async () => {
+  await step('Customize and progress page destination usability', async () => {
     const destinations = [
       ['overview', '.profile-studio-overview'],
       ['premium', '.profile-premium-page'],
@@ -1012,7 +1012,6 @@ try {
       }
       for (const [tab, selector] of [
         ['media', '#customize-media .studio-section--media'],
-        ['content', '.profile-content-editor'],
         ['links', '.profile-links-editor__text-button'],
         ['layout', '.profile-layout-editor__card'],
         ['appearance', '#customize-identity input, #customize-identity textarea']
@@ -1037,44 +1036,30 @@ try {
     assert(await page.evaluate("document.activeElement?.classList.contains('profile-studio-shell__menu-trigger')"), 'Escape did not restore More focus');
     await page.click('.profile-studio-shell__menu-trigger', 'return to Customize');
     await page.click('[data-section="customize"]', 'Customize');
-    await page.waitFor("document.querySelector('#profile-customize-tab-content')", 'Customize tabs');
-    await page.click('#profile-customize-tab-content', 'Content');
-    await page.waitFor("document.querySelector('#profile-project-placeholder-title')", 'empty project');
-    await page.setInputValue('#profile-project-placeholder-title', 'Audit project', ['input']);
-    await page.waitFor("document.querySelector('.profile-content-editor__project input[inputmode=url]')", 'project URL');
-    await page.setInputValue('.profile-content-editor__project input[inputmode=url]', 'h', ['input']);
-    await page.click('#profile-customize-tab-layout', 'leave incomplete project');
-    await page.click('.profile-studio-shell__publish', 'validate incomplete project from Layout');
-    await page.waitFor("document.querySelector('#profile-customize-tab-content')?.getAttribute('aria-selected') === 'true' && document.querySelector('.profile-content-editor__message[role=alert]')", 'validation returns to Content');
-    assert(await page.evaluate("document.querySelector('.profile-content-editor__project input[inputmode=url]')?.value === 'h'"), 'Incomplete project URL was lost');
-    await page.setInputValue('.profile-content-editor__project input[inputmode=url]', 'https://example.com/audit', ['input']);
-    await page.click('#profile-customize-tab-layout', 'publish Content from Layout');
-    await page.click('.profile-studio-shell__publish', 'publish valid project');
-    await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent === 'Profile published.'", 'project published');
-    await page.navigate(`${appUrl}/profile/settings#customize-content`, 'refresh published content');
-    await page.waitFor("document.querySelector('.profile-content-editor__project input[inputmode=url]')?.value === 'https://example.com/audit'", 'published project survived refresh');
-    await page.setInputValue('.profile-content-editor__project input[inputmode=url]', 'https://example.com/discard', ['input']);
-    await page.click('.profile-studio-shell__menu-trigger', 'reset staged project');
-    await page.clickText('Reset changes', { description: 'reset changes' });
-    await page.waitFor("document.querySelector('#profile-studio-reset-prompt-title') && document.querySelector('.profile-studio-dirty-prompt__discard')", 'reset confirmation');
-    await page.click('.profile-studio-dirty-prompt__discard', 'confirm reset changes');
-    await page.waitFor("document.querySelector('.profile-content-editor__project input[inputmode=url]')?.value === 'https://example.com/audit'", 'reset restores published project');
-    await capture('audit-content-published-and-reset');
-    await page.click('.profile-widget-editor__add', 'add provider widget');
-    await page.waitFor("document.querySelector('.profile-widget-editor__panel select')", 'widget provider');
-    await page.evaluate(`(() => {
-      const select = document.querySelector('.profile-widget-editor__panel select');
-      select.value = 'youtube';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    })()`);
-    await page.setInputValue('.profile-widget-editor__panel input[inputmode=url]', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', ['input']);
-    await page.click('#profile-customize-tab-links', 'retain widget across tabs');
-    await page.click('#profile-customize-tab-content', 'return to widget');
-    assert(await page.evaluate("document.querySelector('.profile-widget-editor__panel input[inputmode=url]')?.value.includes('dQw4w9WgXcQ')"), 'Widget draft lost on tab change');
-    await page.click('.profile-studio-shell__publish', 'publish widget');
-    await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent === 'Profile published.'", 'widget published');
-    await page.navigate(`${appUrl}/profile/settings#customize-content`, 'refresh widget');
-    await page.waitFor("document.querySelector('.profile-widget-editor__panel input[inputmode=url]')?.value.includes('dQw4w9WgXcQ')", 'widget persisted');
+    await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'open progress page layout controls');
+    await page.waitFor("document.querySelector('[data-progress-page-toggle] input')", 'game progress page toggle');
+    assert(await page.evaluate("document.querySelector('[data-progress-page-toggle] input').checked === false"), 'New profile unexpectedly starts with the optional progress page enabled');
+    await page.click('[data-progress-page-toggle]', 'enable game progress page');
+    await page.waitFor("document.querySelector('[data-progress-page-toggle] input')?.checked === true && document.querySelector('.profile-studio-shell__publish')?.disabled === false", 'enabled progress page draft');
+    await page.clickText('Publish profile', { description: 'publish progress page preference' });
+    await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'", 'progress page preference published');
+    await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'refresh published progress page preference');
+    await page.waitFor("document.querySelector('[data-progress-page-toggle] input')?.checked === true", 'progress page preference persisted');
+    await page.navigate(`${appUrl}/${canonicalUsername}`, 'public profile with progress page');
+    await page.waitFor("document.querySelector('.profile-shell-page[aria-busy=\"false\"]')?.dataset.profilePageCount === '2' && document.querySelector('.profile-game-progress')", 'public game progress page');
+    assert(await page.evaluate("Boolean(document.querySelector('.profile-game-progress__stats') && document.querySelector('.profile-game-progress__rank-track') && document.querySelector('.profile-game-progress__best'))"), 'Public progress page is missing its roll and progression cards');
+    await page.click('.profile-shell__page-pagination button[aria-label="Go to Progress page"]', 'open public progress page');
+    await page.waitFor("document.querySelector('.profile-shell__page-pagination button[aria-current=\"page\"]')?.getAttribute('aria-label') === 'Go to Progress page' && Math.abs(document.querySelector('.profile-game-progress')?.getBoundingClientRect().top - document.querySelector('.profile-shell-page')?.getBoundingClientRect().top) < 16", 'public progress page navigation');
+    await capture('audit-public-game-progress-page');
+    await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'return to progress page setting');
+    await page.waitFor("document.querySelector('[data-progress-page-toggle] input')?.checked === true", 'progress page control before cleanup');
+    await page.click('[data-progress-page-toggle]', 'disable progress page after browser verification');
+    await page.clickText('Publish profile', { description: 'publish progress page cleanup' });
+    await page.waitFor("document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'", 'disabled progress page published');
+    await page.navigate(`${appUrl}/${canonicalUsername}`, 'public profile after progress page cleanup');
+    await page.waitFor("document.querySelector('.profile-shell-page[aria-busy=\"false\"]')?.dataset.profilePageCount === '1' && !document.querySelector('.profile-game-progress')", 'progress page disabled on public profile');
+    await page.navigate(`${appUrl}/profile/settings`, 'return to Profile Studio after public verification');
+    await waitForStudioDashboard('Profile Studio after progress page verification');
     for (const [section, input, save, notice] of [
       ['profile-insights', '.profile-insights__check input', '.profile-insights__preference button', '.profile-insights__notice'],
       ['profile-social', '.profile-social__check input', '.profile-social__settings-body button', '.profile-social__notice']
@@ -1485,12 +1470,6 @@ try {
       const mediaPublishConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
       assert(mediaPublishConfiguration?.updated_at && mediaPublishExpression.expression.avatar && mediaPublishExpression.expression.background, `Media mutation publish did not preserve the current token and expression: ${JSON.stringify({ mediaPublishExpression, mediaPublishConfiguration })}`);
       mediaPublishRegression = { upload: { background: backgroundUpload, avatar: avatarUpload }, expression: mediaPublishExpression.expression, updatedAt: mediaPublishConfiguration.updated_at };
-      const musicInputAvailable = await page.evaluate(`Boolean(document.querySelector('#profile-media-music input[type="url"]'))`);
-      if (musicInputAvailable) {
-        await page.setInputValue('#profile-media-music input[type="url"]', RICH_PROFILE_FIXTURE.musicUrl, ['input', 'change']);
-        await page.clickText('Save Spotify', { description: 'save rich profile music' });
-        await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Spotify saved'))`, 'persisted profile music');
-      }
     }
     const richFixture = await seedRichProfileFixture();
     // Rehydrate the editor after the fixture's authenticated V2 writes. This

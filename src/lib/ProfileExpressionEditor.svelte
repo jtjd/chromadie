@@ -2,7 +2,7 @@
   import { onDestroy, onMount, createEventDispatcher } from 'svelte';
   import { supabase } from './supabase.js';
   import { session } from './stores.js';
-  import { normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
+  import { normalizeProfileExpression, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { getProfileMediaAuthorization, isR2MediaAsset, promoteProfileMediaR2, revalidateProfileMediaR2 } from './profileMediaR2.js';
   import { hasProfileMediaRevalidationHash, partitionProfileMediaValidationAssets } from './profileMediaValidation.js';
@@ -46,7 +46,6 @@
   let audioPlaying = false;
   let audioCurrentTime = 0;
   let audioDuration = 0;
-  let spotifyUrl = '';
   let busy = false;
   let status = '';
   let error = '';
@@ -64,7 +63,6 @@
   const backgroundRules = PROFILE_IMAGE_RULES.background;
   const actionButtonStyle = 'display:inline-flex;align-items:center;justify-content:center;min-height:2.65rem;border:1px solid transparent;border-radius:var(--radius-sm);padding:0 1rem;background:var(--color-ink-strong);color:var(--color-canvas-deep);font:600 var(--type-small)/1 var(--font-body-stack);cursor:pointer';
   const quietButtonStyle = 'display:inline-flex;align-items:center;justify-content:center;min-height:2.65rem;border:1px solid var(--color-line-subtle);border-radius:var(--radius-sm);padding:0 1rem;background:transparent;color:var(--color-ink-muted);font:600 var(--type-small)/1 var(--font-body-stack);cursor:pointer';
-  const fieldStyle = 'width:100%;min-height:2.65rem;min-width:0;border:1px solid var(--color-line-subtle);border-radius:var(--radius-sm);padding:0 .75rem;background:var(--surface-inset);color:var(--color-ink-strong);font:500 var(--type-small)/1 var(--font-body-stack)';
 
   $: incomingExpression = normalizeProfileExpression(
     config?.draft || config?.published || {}
@@ -107,7 +105,6 @@
   function syncIncomingExpression(nextExpression, nextKey) {
     if (busy || nextKey === syncedKey) return;
     expression = nextExpression;
-    spotifyUrl = spotifyUrlFromParts(nextExpression.spotify_type, nextExpression.spotify_id);
     syncedKey = nextKey;
   }
   $: syncIncomingExpression(incomingExpression, incomingKey);
@@ -485,36 +482,6 @@
     await removeImage('background');
   }
 
-  async function saveSpotify() {
-    if (busy) return;
-    const parsed = parseSpotifyUrl(spotifyUrl);
-    if (spotifyUrl.trim() && !parsed) {
-      setFeedback('Use an HTTPS track, playlist, or album URL from open.spotify.com.', '');
-      return;
-    }
-
-    const action = beginMediaAction();
-    if (!action.isCurrent()) return;
-    busy = true;
-    setFeedback('', parsed ? 'Saving Spotify…' : 'Removing Spotify…');
-    try {
-      const authorization = await getProfileMediaAuthorization(action.ownerId);
-      if (!action.isCurrent()) return;
-      await saveExpression({
-        ...expression,
-        spotify_type: parsed?.type || null,
-        spotify_id: parsed?.id || null
-      }, authorization, action);
-      if (!action.isCurrent()) return;
-      spotifyUrl = parsed ? spotifyUrlFromParts(parsed.type, parsed.id) : '';
-      setFeedback('', parsed ? 'Spotify is visible on your public profile.' : 'Spotify removed from your profile.');
-    } catch (spotifyError) {
-      if (action.isCurrent()) setFeedback(spotifyError instanceof Error ? spotifyError.message : 'Spotify could not be saved.');
-    } finally {
-      if (action.isCurrent()) busy = false;
-    }
-  }
-
   async function handleAudioChange(event) {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = '';
@@ -615,7 +582,7 @@
   });
 </script>
 
-<Module size="wide" tone="quiet" className="profile-expression-editor" title="Media" description="Upload an avatar or background, or connect Spotify.">
+<Module size="wide" tone="quiet" className="profile-expression-editor" title="Media" description="Upload profile images, audio, and hosted media.">
   <p class="profile-expression-editor__message">{keepsLibrary ? 'Choose one file per slot. Your previous uploads stay in Saved media.' : 'One avatar and one background. Uploading a replacement deletes the previous file after the new one is saved.'}</p>
   {#if compact}
     <div id={compact ? 'profile-media-rich' : undefined} class="profile-expression-editor__compact-grid" aria-label="Profile media uploads">
@@ -750,20 +717,6 @@
     </div>
   {/if}
 
-  {#if compact}
-    <section class="profile-expression-editor__compact-spotify" aria-labelledby="profile-expression-editor__compact-spotify-title">
-      <div class="profile-expression-editor__compact-spotify-heading">
-        <h3 id="profile-expression-editor__compact-spotify-title">Spotify</h3>
-        <p>Track, playlist, or album URLs from open.spotify.com are supported.</p>
-      </div>
-      <div class="profile-expression-editor__compact-spotify-row">
-        <input bind:value={spotifyUrl} type="url" inputmode="url" autocomplete="off" placeholder="https://open.spotify.com/..." />
-        <button type="button" class="profile-expression-editor__compact-spotify-save" disabled={busy} on:click={saveSpotify}>{expression.spotify_id ? 'Update Spotify' : 'Save Spotify'}</button>
-        {#if expression.spotify_id}<button type="button" class="profile-expression-editor__compact-spotify-remove" disabled={busy} on:click={() => { spotifyUrl = ''; void saveSpotify(); }}>Remove</button>{/if}
-      </div>
-    </section>
-  {/if}
-
   {#if assetsLoading}<p class="profile-expression-editor__asset-loading" role="status">Loading your saved media…</p>{/if}
   {#if assetsError}
     <div class="profile-expression-editor__asset-error" role="alert">
@@ -867,23 +820,6 @@
       </div>
     </div>
   {/if}
-
-  <div id="profile-media-music" class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
-    <div>
-      <p class="profile-expression-editor__eyebrow">Music</p>
-      <h3>Connect a Spotify item</h3>
-      <p class="profile-expression-editor__section-copy">Paste a public Spotify track, playlist, or album URL. The public profile uses Spotify’s official lazy-loaded embed.</p>
-    </div>
-    <label class="profile-expression-editor__spotify-field" style="display:grid;gap:.5rem;max-width:42rem">
-      <span>Spotify URL</span>
-      <input bind:value={spotifyUrl} style={fieldStyle} type="url" inputmode="url" autocomplete="off" placeholder="https://open.spotify.com/track/..." aria-describedby="spotify-help" />
-      <small id="spotify-help">Only open.spotify.com HTTPS links are accepted.</small>
-    </label>
-    <div class="profile-expression-editor__actions">
-      <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={saveSpotify}>{expression.spotify_id ? 'Update Spotify' : 'Save Spotify'}</button>
-      {#if expression.spotify_id}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={() => { spotifyUrl = ''; void saveSpotify(); }}>Remove</button>{/if}
-    </div>
-  </div>
 
   <div id={!compact ? 'profile-media-rich' : undefined}>
     {#if !compact && richMediaEnabled}

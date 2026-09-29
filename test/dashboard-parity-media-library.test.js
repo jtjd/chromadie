@@ -104,7 +104,7 @@ test('media sections follow the approved reference hierarchy', async () => {
   assert.match(workspace, /rich-media-editor__compact-preview[\s\S]*height: 115px;[\s\S]*min-height: 115px/);
   assert.match(workspace, /profile-background-treatment\)[\s\S]*grid-column: 1 \/ -1/);
   assert.match(workspace, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(workspace, /compact-spotify\) \{ order: 5; \}[\s\S]*profile-background-treatment\) \{ order: 6; \}[\s\S]*compact-library\) \{ order: 7; \}/);
+  assert.match(workspace, /profile-background-treatment\) \{ order: 5; \}[\s\S]*compact-library\) \{ order: 6; \}/);
   assert.doesNotMatch(expression, /compact-grid :global\(\.rich-media-editor__compact-card\)/);
   assert.match(treatment, /<h3 id="profile-background-treatment-title">Background options<\/h3>/);
   assert.match(treatment, /The treatment controls currently applied to the uploaded background/);

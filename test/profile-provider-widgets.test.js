@@ -48,32 +48,24 @@ test('provider widgets are bounded, unique, visible-aware, and legacy compatible
   assert.deepEqual(normalizeProfileWidgets([{ provider: 'youtube', type: 'video', id: 'bad' }]), []);
 });
 
-test('provider widget renderer and storage contract remain allowlisted', async () => {
-  const [renderer, shell, registry, migration, headers, pageFunction] = await Promise.all([
-    read('src/lib/ProfileWidgets.svelte'),
+test('provider widgets remain a storage compatibility contract with no active profile integration', async () => {
+  const [shell, registry, migration, headers, pageFunction, music, expression] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
     read('supabase/migrations/20260808150000_profile_provider_widgets.sql'),
     read('public/_headers'),
-    read('functions/_publicPage.js')
+    read('functions/_publicPage.js'),
+    read('src/lib/ProfileMusic.svelte'),
+    read('src/lib/ProfileExpressionEditor.svelte')
   ]);
-  assert.match(renderer, /loading="lazy"/);
-  assert.match(renderer, /profileWidgetEmbedUrl/);
-  assert.match(renderer, /function isLoaded\(widget\) \{\s*return loaded\.includes\(widget\.order\);/);
-  assert.match(renderer, /External player deferred until you choose to load it/);
-  assert.match(renderer, /on:click=\{\(\) => loadWidget\(widget\.order\)\}/);
-  assert.doesNotMatch(renderer, /innerHTML|new Function|eval\s*\(/);
-  const music = await read('src/lib/ProfileMusic.svelte');
-  assert.match(music, /spotifyEmbedSrc && spotifyActive/);
-  assert.match(music, /spotifyEmbedSrc\}\s*\n\s*<div[^>]*spotify-deferred/);
-  assert.match(music, /on:click=\{\(\) => spotifyActive = true\}/);
-  assert.doesNotMatch(music, /spotifyEmbedSrc && \(!deferMedia \|\| spotifyActive\)/);
-  assert.match(shell, /<ProfileWidgets/);
-  assert.match(registry, /ProfileWidgetEditor\.svelte/);
+  assert.doesNotMatch(shell, /ProfileWidgets|spotify|youtube-nocookie|<iframe/i);
+  assert.doesNotMatch(registry, /ProfileWidgetEditor/);
+  assert.doesNotMatch(music, /spotify|youtube-nocookie|<iframe/i);
+  assert.doesNotMatch(expression, /profile-expression-editor__compact-spotify|Spotify URL|Connect Spotify/);
   assert.match(migration, /normalize_profile_widgets/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content', 'widgets'\)/);
   assert.match(migration, /SECURITY DEFINER/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.normalize_profile_widgets/);
-  assert.match(headers, /https:\/\/www\.youtube-nocookie\.com/);
-  assert.match(pageFunction, /https:\/\/www\.youtube-nocookie\.com/);
+  assert.doesNotMatch(headers, /open\.spotify\.com|youtube-nocookie\.com/);
+  assert.doesNotMatch(pageFunction, /open\.spotify\.com|youtube-nocookie\.com/);
 });

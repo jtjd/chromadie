@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildProfileRenderSnapshot } from '../src/lib/profileRenderModel.js';
-import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
+import { createDefaultProfileConfig, setProfileProgressPageVisible } from '../src/lib/profileConfig.js';
 import { applyProfileStudioDraftPatch } from '../src/lib/profile-studio/draftModel.js';
 
 const MEDIA = Object.freeze({
@@ -353,8 +353,12 @@ test('the same complete input produces a stable snapshot across lifecycle ticks'
   assert.equal(first.surface.style, first.styles.surface);
 });
 
-test('an empty default profile does not manufacture a continuation section', () => {
-  const configuration = createDefaultProfileConfig();
+test('legacy About, project, and provider records do not create a second public page', () => {
+  const configuration = {
+    ...createDefaultProfileConfig(),
+    content: { about: { visible: true, body: 'Legacy about text' }, projects: [{ title: 'Old project', url: 'https://example.test' }] },
+    widgets: [{ provider: 'spotify', type: 'track', id: '1234567890123456789012', visible: true }]
+  };
   const snapshot = buildProfileRenderSnapshot({
     profile: { id: 'profile-5', username: 'empty-profile' },
     profileConfig: { draft: configuration, published: configuration }
@@ -363,6 +367,47 @@ test('an empty default profile does not manufacture a continuation section', () 
   assert.equal(snapshot.modules.hasContent, false);
   assert.equal(snapshot.modules.showLowerExpression, false);
   assert.equal(snapshot.visibility.hasProfileMore, false);
+  assert.equal(snapshot.visibility.hasProgressPage, false);
+  assert.deepEqual(snapshot.modules.visibleContent, { about: null, projects: [] });
+});
+
+test('the opted-in progress page uses public profile totals and the caller-provided recent roll projection', () => {
+  const configuration = setProfileProgressPageVisible(createDefaultProfileConfig(), true);
+  const profile = {
+    id: 'profile-progress',
+    username: 'progress-player',
+    total_rolls: 87,
+    current_streak: 6,
+    longest_streak: 19,
+    lifetime_ep: 1250,
+    best_roll_score: 980000,
+    best_roll_hex: '#23AABB',
+    best_roll_rarity: 'Anomaly'
+  };
+  const scores = [{ roll_date: '2026-09-27', hex_code: '#23AABB', score: 980000, rarity: 'Anomaly' }];
+  const snapshot = buildProfileRenderSnapshot({
+    profile,
+    profileConfig: { published: configuration },
+    scores,
+    featureFlags: FLAGS,
+    mediaResolver
+  });
+
+  assert.equal(snapshot.visibility.hasProgressPage, true);
+  assert.equal(snapshot.visibility.renderProgressPage, true);
+  assert.equal(snapshot.profile.total_rolls, 87);
+  assert.equal(snapshot.profile.current_streak, 6);
+  assert.equal(snapshot.profile.longest_streak, 19);
+  assert.equal(snapshot.story.recentScores[0].hex_code, '#23AABB');
+
+  const activityHiddenSnapshot = buildProfileRenderSnapshot({
+    profile,
+    profileConfig: { published: configuration },
+    scores: [],
+    featureFlags: FLAGS,
+    mediaResolver
+  });
+  assert.deepEqual(activityHiddenSnapshot.story.recentScores, []);
 });
 
 test('hosted audio stays in the profile shell without manufacturing an empty continuation', () => {

@@ -1,7 +1,6 @@
 const CUSTOMIZE_SECTION_IDS_BY_TAB = Object.freeze({
   appearance: Object.freeze(['customize', 'profile-identity', 'profile-collection']),
   media: Object.freeze(['customize', 'profile-media']),
-  content: Object.freeze(['customize', 'profile-content', 'profile-widgets']),
   links: Object.freeze(['customize', 'profile-layout', 'profile-aliases']),
   layout: Object.freeze(['customize'])
 });

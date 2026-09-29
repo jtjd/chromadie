@@ -5,10 +5,10 @@ import { getProfileStoryUnlocks } from './profileStory.js';
 import { getProfileComposition } from './profileComposition.js';
 import {
   getProfileLayoutLinkPartitions,
+  getProfileProgressPageVisible,
   getProfileRollVisible,
   getProfileStoryVisible,
   getVisibleProfileLinks,
-  hasProfileMoreContent,
   normalizeProfileConfig
 } from './profileConfig.js';
 import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
@@ -20,10 +20,9 @@ import { isProfileMotionKey } from './profile-motion/profileMotions.js';
 import { getNameRendererLoadout } from './name/nameLoadout.js';
 import { getNameFontCssFamily, isCustomNameFontKey, resolveNameFontKey } from './name/nameFonts.js';
 import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
-import { getVisibleProfileContent } from './profileContentLegacy.js';
-import { getVisibleProfileWidgets } from './profileWidgetsLegacy.js';
+import { normalizeProfileContent } from './profileContent.js';
+import { normalizeProfileWidgets } from './profileWidgets.js';
 import { normalizeRichMediaConfig } from './profileRichMedia.js';
-import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
 import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
 import { isProfileSocialLink } from './profileLinkTypes.js';
 
@@ -282,10 +281,11 @@ export function buildProfileRenderSnapshot(input = {}) {
   const continuationSocialLinks = continuationLinks.filter(link => isProfileSocialLink(link.type));
   const continuationNavigationLinks = continuationLinks.filter(link => !isProfileSocialLink(link.type));
   const pinnedAchievements = resolveBadges(profile, input.allAchievements);
-  const profileContent = configuration.content;
-  const visibleContent = getVisibleProfileContent(profileContent);
-  const profileWidgets = getVisibleProfileWidgets(configuration.widgets, configuration);
-  const hasSpotifyWidget = profileWidgets.some(widget => widget.provider === 'spotify');
+  // Keep legacy structured data normalized in the snapshot for compatibility
+  // with saved drafts. The public profile shell no longer renders these
+  // sections or provider embeds.
+  const profileContent = normalizeProfileContent(configuration.content);
+  const profileWidgets = normalizeProfileWidgets(configuration.widgets, configuration);
   const media = {
     avatarPath: configuration.avatar_path,
     avatarUrl: resolveMediaUrl(configuration.avatar_path, { ...input, mediaReferences }, 'avatar'),
@@ -310,19 +310,9 @@ export function buildProfileRenderSnapshot(input = {}) {
   const hasHostedAudio = Boolean(media.audioUrl || media.audioPath)
     || media.playlist.tracks.length > 0;
   const hasProfileMusic = hasHostedAudio
-    || Boolean(configuration.spotify_type && configuration.spotify_id)
     || Boolean(input.dev && input.visualFixture === 'music');
-  // ProfileContent intentionally suppresses the default empty About heading.
-  // Mirror that rendered-content contract here so the snapshot cannot create
-  // a continuation section for a surface that will render no content.
-  const hasProfileContent = Boolean(
-    (visibleContent.about && (visibleContent.about.body || visibleContent.about.markdown || visibleContent.about.ast?.length))
-    || visibleContent.projects.length
-  );
-  const hasLowerExpression = (hasProfileMusic && !hasHostedAudio)
-    || PROFILE_MUSIC_ENABLED
-    || profileWidgets.length > 0
-    || hasProfileContent;
+  const hasProfileContent = false;
+  const hasLowerExpression = false;
   const composition = getProfileComposition(configuration, {
     isOwner,
     hasLinks: visibleLinks.length > 0,
@@ -342,12 +332,11 @@ export function buildProfileRenderSnapshot(input = {}) {
   const rankState = profile ? getRankState(profile.lifetime_ep || 0) : null;
   const hasProfileStory = getProfileStoryVisible(configuration)
     && Boolean((rank && rankState) || storyModules.length);
-  const hasProfileMore = hasProfileMoreContent({
-    continuationCount: continuationLinks.length,
-    hasBelowFoldRoll,
-    showLowerExpression,
-    hasProfileStory
-  });
+  // Only the owner's explicit page setting creates a second public page.
+  // Legacy About, provider, media, and story data stay stored but no longer
+  // control the public continuation surface.
+  const hasProgressPage = getProfileProgressPageVisible(configuration);
+  const hasProfileMore = hasProgressPage;
   const pageStyle = [
     getProfileCanvasStyle(configuration),
     profileWideNameFontFamily ? `--profile-font-family:${profileWideNameFontFamily}` : '',
@@ -459,12 +448,11 @@ export function buildProfileRenderSnapshot(input = {}) {
     },
     modules: {
       content: profileContent,
-      visibleContent,
+      visibleContent: { about: null, projects: [] },
       widgets: profileWidgets,
       hasContent: hasProfileContent,
       hasMusic: hasProfileMusic,
       hasHostedAudio,
-      hasSpotifyWidget,
       showLowerExpression,
       hasProfileStory,
       storyModules,
@@ -496,7 +484,9 @@ export function buildProfileRenderSnapshot(input = {}) {
     },
     visibility: {
       hasProfileMore,
-      renderProfileMore: hasProfileMore
+      hasProgressPage,
+      renderProfileMore: hasProfileMore,
+      renderProgressPage: hasProfileMore
     },
     colors: {
       signature: signatureColor,

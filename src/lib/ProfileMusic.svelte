@@ -1,7 +1,6 @@
 <script>
   import { onDestroy } from 'svelte';
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
-  import { getSpotifyEmbedUrl } from './profileExpression.js';
   import { normalizeHexColor } from './utils.js';
   import ProfileAudioControls from './ProfileAudioControls.svelte';
   import { getProfileMediaUrl } from './profileMedia.js';
@@ -11,8 +10,6 @@
   /** @type {Record<string, any> | null} */
   export let bestRoll = null;
   export let visualFixture = '';
-  export let spotifyType = '';
-  export let spotifyId = '';
   export let audioSrc = '';
   export let audioPlaylist = null;
   export let colorEffectsEnabled = false;
@@ -25,7 +22,6 @@
   let isPlaying = false;
   let volume = 0.75;
   let shuffleEnabled = false;
-  let spotifyActive = false;
   let entryActivated = false;
   let activeTrackIndex = 0;
   let duration = 0;
@@ -36,7 +32,6 @@
   $: safeColor = colorEffectsEnabled
     ? normalizeHexColor(bestRoll?.hex_code, accentColor)
     : normalizeHexColor(accentColor, '#8B7CF6');
-  $: spotifyEmbedSrc = getSpotifyEmbedUrl(spotifyType, spotifyId);
   $: playlist = normalizeRichAudioPlaylist(audioPlaylist || {});
   $: tracks = playlist.tracks;
   $: activeTrack = tracks[activeTrackIndex] || tracks[0] || null;
@@ -54,7 +49,7 @@
   $: trimEndSeconds = configuredTrimEndSeconds > trimStartSeconds
     ? configuredTrimEndSeconds
     : naturalDuration;
-  $: showVisualFixture = !hasAudio && !spotifyEmbedSrc && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
+  $: showVisualFixture = !hasAudio && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
   $: if (audioElement) audioElement.volume = Number(volume);
 
   function syncTrackState(nextKey) {
@@ -205,28 +200,6 @@
       ></audio>
     {/key}
   </div>
-{:else if spotifyEmbedSrc && compact}
-  <div class="profile-music profile-music--compact profile-music--spotify-compact" data-music-state="spotify-compact" aria-label="Spotify profile music">
-    <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
-    <div class="profile-music__copy"><span>Profile music</span><strong>Spotify {spotifyType}</strong></div>
-    <a class="profile-music__open" href={spotifyEmbedSrc} target="_blank" rel="noopener noreferrer">Open</a>
-  </div>
-{:else if spotifyEmbedSrc && spotifyActive}
-  <div class="profile-music profile-music--spotify" data-music-state="spotify" aria-label="Spotify profile music">
-    <iframe
-      src={spotifyEmbedSrc}
-      title="Spotify player"
-      loading="lazy"
-      allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-      referrerpolicy="strict-origin-when-cross-origin"
-    ></iframe>
-  </div>
-{:else if spotifyEmbedSrc}
-  <div class:profile-music--compact={compact} class="profile-music profile-music--spotify-deferred" data-music-state="spotify-deferred" aria-label="Spotify profile music">
-    <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
-    <div class="profile-music__copy"><span>Profile music</span><strong>Spotify {spotifyType}</strong></div>
-    <button type="button" class="profile-music__load" on:click={() => spotifyActive = true}>Load player</button>
-  </div>
 {:else if PROFILE_MUSIC_ENABLED}
   <div class:profile-music--compact={compact} class="profile-music profile-music--configured" data-music-state="configured" aria-label="Profile audio">
     <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
@@ -245,10 +218,6 @@
 <style>
   .profile-music { display: flex; align-items: center; gap: .75rem; min-height: 4.375rem; padding: .75rem 1rem; border: 1px solid rgba(230,238,255,.14); border-radius: 1rem; background: rgba(255,255,255,.055); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 1.5rem 3rem rgba(0,0,0,.18); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
   .profile-music:focus-visible { outline: 2px solid var(--music-accent, var(--color-accent-cyan)); outline-offset: 3px; }
-  .profile-music--spotify { display: block; min-height: 0; padding: 0; overflow: hidden; }
-  .profile-music--spotify iframe { display: block; width: 100%; height: 152px; border: 0; }
-  .profile-music__load { padding: .55rem .75rem; border: 1px solid rgba(230,238,255,.2); border-radius: 999px; background: transparent; color: rgba(241,246,255,.84); font: 600 .68rem/1 var(--font-mono-stack); cursor: pointer; }
-  .profile-music__load:hover { border-color: var(--music-accent, var(--color-accent-cyan)); color: var(--color-ink-strong); }
   .profile-music--audio { min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
   .profile-music--audio.profile-music--floating { position: fixed; z-index: 6; left: 14px; top: auto; bottom: max(14px, env(safe-area-inset-bottom)); pointer-events: none; }
   .profile-music--audio.profile-music--inline { display: block; width: 100%; }
@@ -270,7 +239,5 @@
   .profile-music--compact .profile-music__copy { gap: .1rem; }
   .profile-music--compact .profile-music__copy span { font-size: .52rem; }
   .profile-music--compact .profile-music__copy strong { font-size: .72rem; }
-  .profile-music__open { flex: 0 0 auto; padding: .38rem .55rem; border: 1px solid rgba(230,238,255,.2); border-radius: 999px; color: rgba(241,246,255,.84); font: 600 .58rem/1 var(--font-mono-stack); text-decoration: none; }
-  .profile-music__open:hover, .profile-music__open:focus-visible { border-color: var(--music-accent, var(--color-accent-cyan)); color: var(--color-ink-strong); }
   @media (max-width: 36rem) { .profile-music { min-height: 0; padding-inline: .35rem; } .profile-music--audio.profile-music--floating { left:14px; right:auto; } }
 </style>

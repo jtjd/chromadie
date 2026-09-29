@@ -89,14 +89,12 @@
   .profile-media-workspace :global(.rich-media-editor__compact-card--cursor) { grid-column: 2; grid-row: 2; order: 4; }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-library),
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify),
   .profile-media-workspace :global(.profile-background-treatment) {
     grid-column: 1 / -1;
   }
 
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify) { order: 5; }
-  .profile-media-workspace :global(.profile-background-treatment) { order: 6; }
-  .profile-media-workspace :global(.profile-expression-editor__compact-library) { order: 7; }
+  .profile-media-workspace :global(.profile-background-treatment) { order: 5; }
+  .profile-media-workspace :global(.profile-expression-editor__compact-library) { order: 6; }
   .profile-media-workspace :global(.profile-expression-editor__message) {
     grid-column: 1 / -1;
     order: 0;
@@ -214,8 +212,7 @@
 
   .profile-media-workspace :global(.profile-expression-editor__compact-actions button),
   .profile-media-workspace :global(.rich-media-editor__compact-actions button),
-  .profile-media-workspace :global(.profile-expression-editor__compact-library-delete),
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify button) {
+  .profile-media-workspace :global(.profile-expression-editor__compact-library-delete) {
     min-height: 31px;
     padding: 0 9px;
     border: 1px solid rgba(255, 255, 255, .20);
@@ -229,33 +226,28 @@
   .profile-media-workspace :global(.profile-expression-editor__compact-actions button:hover:not(:disabled)),
   .profile-media-workspace :global(.rich-media-editor__compact-actions button:hover:not(:disabled)),
   .profile-media-workspace :global(.profile-expression-editor__compact-actions button:focus-visible),
-  .profile-media-workspace :global(.rich-media-editor__compact-actions button:focus-visible),
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify button:hover:not(:disabled)),
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify button:focus-visible) {
+  .profile-media-workspace :global(.rich-media-editor__compact-actions button:focus-visible) {
     border-color: var(--studio-accent, var(--white, #ffffff));
     color: #f8f8f8;
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-remove),
   .profile-media-workspace :global(.rich-media-editor__compact-remove),
-  .profile-media-workspace :global(.profile-expression-editor__compact-library-delete),
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify-remove) {
+  .profile-media-workspace :global(.profile-expression-editor__compact-library-delete) {
     border-color: rgba(255, 85, 120, .55);
     color: #ff5578;
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-remove:hover:not(:disabled)),
   .profile-media-workspace :global(.rich-media-editor__compact-remove:hover:not(:disabled)),
-  .profile-media-workspace :global(.profile-expression-editor__compact-library-delete:hover:not(:disabled)),
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify-remove:hover:not(:disabled)) {
+  .profile-media-workspace :global(.profile-expression-editor__compact-library-delete:hover:not(:disabled)) {
     border-color: #ff5578;
     color: #ff5578;
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-actions button:focus-visible),
   .profile-media-workspace :global(.rich-media-editor__compact-actions button:focus-visible),
-  .profile-media-workspace :global(.profile-expression-editor__compact-library-delete:focus-visible),
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify button:focus-visible) {
+  .profile-media-workspace :global(.profile-expression-editor__compact-library-delete:focus-visible) {
     outline: 2px solid var(--studio-accent, var(--white, #ffffff));
     outline-offset: 2px;
   }
@@ -290,7 +282,6 @@
   .profile-media-workspace :global(.profile-expression-editor__compact-audio-meta time) { color: #6d6e76; font: 500 .62rem/1 'Inter', sans-serif; }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-library),
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify),
   .profile-media-workspace :global(.profile-background-treatment) {
     box-sizing: border-box;
     width: 100%;
@@ -304,13 +295,11 @@
     background: transparent;
   }
 
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify-heading),
   .profile-media-workspace :global(.profile-background-treatment__heading) {
     display: block;
     margin-bottom: 15px;
   }
 
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify-heading h3),
   .profile-media-workspace :global(.profile-background-treatment__heading h3),
   .profile-media-workspace :global(.profile-expression-editor__compact-library-heading strong) {
     display: block;
@@ -320,7 +309,6 @@
     letter-spacing: -.01em;
   }
 
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify-heading p),
   .profile-media-workspace :global(.profile-background-treatment__heading p),
   .profile-media-workspace :global(.profile-expression-editor__compact-library-heading span) {
     display: block;
@@ -328,30 +316,6 @@
     margin: 5px 0 0;
     color: #8f9099;
     font: 400 .68rem/1.45 'Inter', var(--font-body-stack, sans-serif);
-  }
-
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    gap: 8px;
-  }
-
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row input) {
-    width: 100%;
-    min-height: 40px;
-    box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, .10);
-    border-radius: 7px;
-    background: rgba(255, 255, 255, .035);
-    padding: 0 11px;
-    outline: 0;
-    color: #ededf0;
-    font: 400 .76rem/1 'Inter', sans-serif;
-  }
-
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row input:focus) {
-    border-color: var(--studio-accent, var(--white, #ffffff));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 8%, transparent);
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-library) {
@@ -425,8 +389,6 @@
     .profile-media-workspace { grid-template-columns: minmax(0, 1fr); }
     .profile-media-workspace :global(.profile-expression-editor__compact-card),
     .profile-media-workspace :global(.rich-media-editor__compact-card) { grid-column: 1; grid-row: auto; }
-    .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row) { grid-template-columns: minmax(0, 1fr); }
-    .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row button) { justify-self: start; }
     .profile-media-workspace :global(.profile-background-treatment__controls) { grid-template-columns: minmax(0, 1fr); }
   }
 
@@ -434,8 +396,6 @@
     .profile-media-workspace { grid-template-columns: minmax(0, 1fr); }
     .profile-media-workspace :global(.profile-expression-editor__compact-card),
     .profile-media-workspace :global(.rich-media-editor__compact-card) { grid-column: 1; grid-row: auto; }
-    .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row) { grid-template-columns: minmax(0, 1fr); }
-    .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row button) { justify-self: start; }
     .profile-media-workspace :global(.profile-background-treatment__controls) { grid-template-columns: minmax(0, 1fr); }
   }
 </style>

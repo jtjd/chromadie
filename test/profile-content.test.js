@@ -40,34 +40,31 @@ test('profile content is bounded, structured, and safe by default', () => {
   assert.deepEqual(getVisibleProfileContent(normalized).projects.map(project => project.title), ['Chromadie', 'Too many', 'Four', 'Dropped']);
 });
 
-test('content renderer and editor stay inside the structured public boundary', async () => {
-  const [content, shell, renderModel, settings, registry, lazyComponents, migration] = await Promise.all([
-    read('src/lib/ProfileContent.svelte'),
+test('legacy About and project data stays normalized but has no active public or Studio surface', async () => {
+  const [shell, renderModel, customize, registry, lazyComponents, migration] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/profileRenderModel.js'),
-    read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
     read('src/lib/profile-studio/lazyComponents.js'),
     read('supabase/migrations/20260808140000_profile_content_regions.sql')
   ]);
   const configurationWrites = await read('src/lib/profile-studio/configurationWrites.js');
-  assert.match(content, /getVisibleProfileContent/);
-  assert.match(content, /rel="noopener noreferrer"/);
-  assert.doesNotMatch(content, /innerHTML|iframe|new Function|eval\s*\(/);
-  assert.match(shell, /<ProfileContent/);
-  assert.match(renderModel, /getVisibleProfileContent/);
-  assert.match(registry, /ProfileContentEditor\.svelte/);
-  assert.match(lazyComponents, /content: Object\.freeze\(\['customize', 'profile-content', 'profile-widgets'\]\)/);
+  assert.doesNotMatch(shell, /ProfileContent|ProfileWidgets|About me|profile-content/);
+  assert.doesNotMatch(customize, /contentComponent|widgetComponent|ProfileContentEditor|ProfileWidgetEditor/);
+  assert.doesNotMatch(registry, /ProfileContentEditor|ProfileWidgetEditor/);
+  assert.doesNotMatch(lazyComponents, /profile-content|profile-widgets/);
+  assert.match(renderModel, /normalizeProfileContent/);
+  assert.match(renderModel, /visibleContent: \{ about: null, projects: \[\] \}/);
   assert.match(migration, /normalize_profile_content/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content'\)/);
   assert.match(migration, /profile_content_patch/);
-  assert.match(settings, /await loadConfigurationWriteService\(\)/);
   assert.match(configurationWrites, /publish_profile_studio_v2/);
 });
 
-test('content renderer omits the default empty About surface', async () => {
-  const content = await read('src/lib/ProfileContent.svelte');
-  assert.match(content, /hasAboutContent/);
-  assert.match(content, /visible\.about\.body \|\| visible\.about\.markdown \|\| visible\.about\.ast/);
-  assert.match(content, /About me/);
+test('legacy project records remain available to configuration migration without being rendered', async () => {
+  const renderModel = await read('src/lib/profileRenderModel.js');
+  const shell = await read('src/lib/ProfileShell.svelte');
+  assert.match(renderModel, /content: profileContent/);
+  assert.doesNotMatch(shell, /<ProfileContent/);
 });

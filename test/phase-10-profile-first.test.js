@@ -47,8 +47,8 @@ test('profile settings keeps secondary features available away from the public c
 
   assert.match(shell, /data-profile-region="identity"/);
   assert.match(shell, /ProfileReferenceCard/);
-  assert.match(shell, /data-profile-continuation="content"/);
-  assert.match(shell, /data-profile-region="featured"/);
+  assert.match(shell, /data-profile-page="hero"/);
+  assert.match(shell, /<ProfileGameProgressPage/);
   assert.match(renderModel, /getProfileStoryVisible/);
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
   assert.match(registry, /ProfileLinksEditor\.svelte/);
@@ -58,6 +58,7 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(shell, /profile-shell__social-section/);
   assert.match(shell, /Add to rivals/);
   assert.match(renderModel, /getProfileStoryVisible\(configuration\)/);
+  assert.match(renderModel, /getProfileProgressPageVisible\(configuration\)/);
   assert.match(renderModel, /showRoll = getProfileRollVisible/);
   assert.match(shell, /visibilitychange/);
   assert.match(settingsLoadState, /Profile settings are available only for your own profile/);

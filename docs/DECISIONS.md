@@ -8451,3 +8451,15 @@ public-data backup. Include the historical `tjz` inventory grant only after the
 account owner confirms that the current staff profile is the intended QA
 target. Verify exact local/remote migration parity, production catalog drift,
 database security and behavior checks, and browser smoke after application.
+
+## 2026-09-28 — Replace public More content with optional game progress
+
+Keep the existing profile card as page one and use the existing owner-controlled
+`modules.explore.visible` bit as the opt-in for a full-page game progress view;
+`storyVisible` remains a compatibility mirror. Public progress uses the safe
+profile projection and recent score rows already returned under the activity
+privacy setting. Do not call the owner-only progression RPC or expose wallet
+balances. Remove public About, project, provider-widget, and Spotify surfaces,
+but retain their saved configuration values so the presentation change does
+not erase existing data. Remove provider iframe origins from the public CSP.
+No database migration is required.

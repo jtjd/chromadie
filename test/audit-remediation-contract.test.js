@@ -108,7 +108,7 @@ test('profile insight edge handler sends only an opaque digest to the service re
 });
 
 test('audit remediations keep browser catalog/insight writes fail-closed', async () => {
-  const [stores, legacyView, edge, migration, capMigration, canonical, seed, releaseWorkflow, releaseScript, content, rolesMigration] = await Promise.all([
+  const [stores, legacyView, edge, migration, capMigration, canonical, seed, releaseWorkflow, releaseScript, progressPage, rolesMigration] = await Promise.all([
     read('src/lib/stores.js'),
     read('src/lib/profileViewAnalytics.js'),
     read('functions/analytics/profile.js'),
@@ -118,7 +118,7 @@ test('audit remediations keep browser catalog/insight writes fail-closed', async
     read('supabase/seed.sql'),
     read('.github/workflows/release-preflight.yml'),
     read('scripts/check-release-configuration.mjs'),
-    read('src/lib/ProfileContent.svelte'),
+    read('src/lib/profile-layout/ProfileGameProgressPage.svelte'),
     read('supabase/migrations/20260903100000_progression_discovery_roles.sql')
   ]);
 
@@ -151,7 +151,7 @@ test('audit remediations keep browser catalog/insight writes fail-closed', async
   assert.doesNotMatch(releaseWorkflow, /vars\.PREVIEW_PROTECTION/);
   assert.match(releaseScript, /deployment_configs/);
   assert.match(releaseScript, /Cloudflare Pages production PREVIEW_PROTECTION/);
-  assert.match(content, /project-\$\{project\.order\}/);
+  assert.match(progressPage, /data-profile-page="progress"/);
   assert.match(rolesMigration, /progression_milestones_discovery_role_check/);
   assert.match(rolesMigration, /track = 'discovery' AND presentation_role = 'objective'/);
 });

@@ -4,22 +4,15 @@
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData';
   import { isOwnProfileTarget } from './profileContract';
-  import { formatCount, normalizeHexColor } from './utils';
-  import Module from './foundation/Module.svelte';
+  import { normalizeHexColor } from './utils';
   import Surface from './foundation/Surface.svelte';
-  import ProfileTimeline from './ProfileTimeline.svelte';
-  import ProfileCollection from './ProfileCollection.svelte';
-  import { getProfileStoryUnlocks, normalizeProfileProgressionProof } from './profileStory.js';
   import { normalizeProfileConfig } from './profileConfig.js';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
   import ProfilePortfolioLayout from './profile-layout/ProfilePortfolioLayout.svelte';
-  import ProfilePortfolioContinuation from './profile-layout/ProfilePortfolioContinuation.svelte';
-  import { getProfilePortfolioPages } from './profile-layout/profilePortfolioPages.js';
+  import ProfileGameProgressPage from './profile-layout/ProfileGameProgressPage.svelte';
+  import { getProfilePages } from './profile-layout/profilePages.js';
   import ProfileMusic from './ProfileMusic.svelte';
-  import ProfileWidgets from './ProfileWidgets.svelte';
-  import ProfileContent from './ProfileContent.svelte';
-  import FeaturedCollection from './FeaturedCollection.svelte';
   import { trackProductEvent } from './productAnalytics.js';
   import { recordPublicProfileView } from './profileViewAnalytics.js';
   import { recordProfileInsightEvent } from './profileInsightAnalytics.js';
@@ -28,8 +21,9 @@
   import { isProfileFeatureEnabled, resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { buildProfileRenderSnapshot } from './profileRenderModel.js';
   import { createProfileShellPreviewState, resolveProfileShellPreviewContext } from './profileShellPreview.js';
-  import { getProfileLayoutMotionTarget } from './profile-layout/profileLayouts.js';
-  import { requestNameFontLoad } from './name/nameFonts.js';
+import { getProfileLayoutMotionTarget } from './profile-layout/profileLayouts.js';
+import { requestNameFontLoad } from './name/nameFonts.js';
+import { normalizeProfileProgressionProof } from './profileStory.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -67,11 +61,10 @@
   let loadError = '';
   let loadRequestId = 0;
   let activeProfileKey = null;
-  let activePortfolioPage = 0;
+  let activeProfilePage = 0;
   let trackedProfileViewKey = null;
   let followLoading = false;
   let refreshing = false;
-  let profileMoreActive = false;
   let profilePageElement;
   let prefersReducedMotion = false;
   let profileReferenceCardComponent = null;
@@ -80,8 +73,8 @@
   let profileSocialComponent = null;
   let profileSocialRequest = null;
   let indexingMetadataKey = '';
-  let portfolioScrollControllerCleanup = null;
-  let portfolioScrollControllerPromise = null;
+  let profilePageScrollControllerCleanup = null;
+  let profilePageScrollControllerPromise = null;
   let profileShellDestroyed = false;
   function ensureProfileReferenceCard() {
     if (profileReferenceCardComponent || profileReferenceCardRequest) return profileReferenceCardRequest;
@@ -110,25 +103,23 @@
     return profileSocialRequest;
   }
 
-  function ensurePortfolioScrollController() {
-    if (portfolioScrollControllerCleanup || portfolioScrollControllerPromise) return portfolioScrollControllerPromise;
-    portfolioScrollControllerPromise = import('./profile-layout/portfolioScrollController.js')
+  function ensureProfilePageScrollController() {
+    if (profilePageScrollControllerCleanup || profilePageScrollControllerPromise) return profilePageScrollControllerPromise;
+    profilePageScrollControllerPromise = import('./profile-layout/profilePageScrollController.js')
       .then(module => {
         if (profileShellDestroyed || !profilePageElement) return;
-        portfolioScrollControllerCleanup = module.attachProfilePortfolioScrollController({
+        profilePageScrollControllerCleanup = module.attachProfilePageScrollController({
           container: profilePageElement,
-          getMoreElement: () => document.getElementById('profile-more'),
-          isPortfolioLayout: () => profilePresentationLayoutVariant === 'portfolio',
+          isPageScrollEnabled: () => hasProfileProgressPage && !previewMode,
           getReducedMotion: () => prefersReducedMotion,
-          getActivePortfolioPage: () => activePortfolioPage,
-          onActivePortfolioPageChange: index => { activePortfolioPage = index; },
-          onMoreActiveChange: active => { profileMoreActive = active; },
-          scrollToPortfolioPage
+          getActiveProfilePage: () => activeProfilePage,
+          onActiveProfilePageChange: index => { activeProfilePage = index; },
+          scrollToProfilePage
         });
       })
       .catch(() => {})
-      .finally(() => { portfolioScrollControllerPromise = null; });
-    return portfolioScrollControllerPromise;
+      .finally(() => { profilePageScrollControllerPromise = null; });
+    return profilePageScrollControllerPromise;
   }
 
   function resetShellState(nextLoading = false) {
@@ -141,6 +132,8 @@
     social = createEmptyProfileSocial();
     socialSettings = createDefaultProfileSocialSettings();
     allAchievements = [];
+    activeProfilePage = 0;
+    profilePageElement?.scrollTo({ top: 0, behavior: 'auto' });
     loading = nextLoading;
     loadError = '';
     indexingMetadataKey = '';
@@ -241,7 +234,7 @@
       loadRequestId += 1;
       document.removeEventListener('visibilitychange', refreshOnReturn);
       window.removeEventListener('pageshow', refreshOnReturn);
-      portfolioScrollControllerCleanup?.();
+      profilePageScrollControllerCleanup?.();
       motionQuery?.removeEventListener?.('change', syncMotionPreference);
     };
   });
@@ -311,11 +304,11 @@
     });
   }
 
-  function scrollToPortfolioPage(index) {
-    if (!profilePageElement || profilePresentationLayoutVariant !== 'portfolio') return;
-    const page = profilePageElement.querySelectorAll('[data-profile-portfolio-page]')[index];
+  function scrollToProfilePage(index) {
+    if (!profilePageElement || !hasProfileProgressPage) return;
+    const page = profilePageElement.querySelectorAll('[data-profile-page]')[index];
     if (!page) return;
-    activePortfolioPage = index;
+    activeProfilePage = index;
     const top = page.getBoundingClientRect().top
       - profilePageElement.getBoundingClientRect().top
       + profilePageElement.scrollTop;
@@ -326,28 +319,22 @@
   }
 
   function scrollToProfileMore() {
-    if (profilePresentationLayoutVariant === 'portfolio') {
-      scrollToPortfolioPage(1);
-      return;
-    }
-    profileMoreActive = true;
-    const more = document.getElementById('profile-more');
-    if (!profilePageElement || !more) return;
-    profilePageElement.scrollTo({
-      top: more.getBoundingClientRect().top
-        - profilePageElement.getBoundingClientRect().top
-        + profilePageElement.scrollTop,
-      behavior: 'smooth'
-    });
+    scrollToProfilePage(1);
   }
 
   function scrollToProfileHero() {
-    if (profilePresentationLayoutVariant === 'portfolio') {
-      scrollToPortfolioPage(0);
-      return;
-    }
-    profileMoreActive = false;
-    profilePageElement?.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToProfilePage(0);
+  }
+
+  function handleProfilePageKeydown(event) {
+    if (!hasProfileProgressPage || previewMode || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.target?.closest?.('button, a, input, select, textarea, [contenteditable="true"]')) return;
+    let nextIndex = activeProfilePage;
+    if (['ArrowDown', 'PageDown', ' '].includes(event.key) && activeProfilePage < profilePages.length - 1) nextIndex += 1;
+    else if (['ArrowUp', 'PageUp'].includes(event.key) && activeProfilePage > 0) nextIndex -= 1;
+    else return;
+    event.preventDefault();
+    scrollToProfilePage(nextIndex);
   }
 
   async function handleFollow() {
@@ -366,14 +353,6 @@
 
   function colorFor(value, fallback = '#8B7CF6') {
     return normalizeHexColor(value, fallback);
-  }
-
-  function formatStat(value) {
-    return formatCount(Number(value) || 0);
-  }
-
-  function formatFullValue(value) {
-    return (Number(value) || 0).toLocaleString();
   }
 
   $: profileOwnerContext = previewMode
@@ -422,10 +401,6 @@
   $: displayBestRoll = bestRoll;
   $: effectiveProfileConfig = profileRenderSnapshot?.configuration || normalizeProfileConfig(null, '#CDD2FF');
   $: appearance = profileRenderSnapshot?.appearance || effectiveProfileConfig.appearance;
-  $: storyUnlocks = profileRenderSnapshot?.story?.unlocks || getProfileStoryUnlocks(targetProfile);
-  $: progressionProofSnapshot = profileRenderSnapshot?.story?.progressionProof || { completedCount: 0, recentUnlocks: [] };
-  $: progressionProofCount = Math.min(1000000, Math.max(0, Number(progressionProofSnapshot?.completedCount ?? progressionProofSnapshot?.completed_count) || 0));
-  $: progressionProofRolls = Math.max(0, Number(progressionProofSnapshot?.totalRolls ?? progressionProofSnapshot?.total_rolls ?? renderProfile?.total_rolls) || 0);
   $: latestRoll = profileRenderSnapshot?.roll?.latest || null;
   $: profileBio = profileRenderSnapshot?.identity?.bio || '';
   $: identityPresentation = profileRenderSnapshot?.identity?.presentation || {};
@@ -451,35 +426,19 @@
   $: pointerCursorSrc = profileRenderSnapshot?.environment?.pointerCursorUrl || '';
   $: richAudioPlaylist = profileRenderSnapshot?.media?.playlist || { tracks: [] };
   $: hasHostedAudio = Boolean(audioSrc || richAudioPlaylist.tracks?.length);
-  $: profileContent = profileRenderSnapshot?.modules?.content || effectiveProfileConfig.content;
-  $: hasProfileContent = profileRenderSnapshot?.modules?.hasContent === true;
-  $: profileWidgets = profileRenderSnapshot?.modules?.widgets || [];
-  $: hasSpotifyWidget = profileRenderSnapshot?.modules?.hasSpotifyWidget === true;
-  $: hasProfileMusic = profileRenderSnapshot?.modules?.hasMusic === true;
-  $: composition = profileRenderSnapshot?.modules?.composition || { secondaryModules: [] };
-  $: secondaryModules = composition.secondaryModules || [];
-  $: storyModules = profileRenderSnapshot?.modules?.storyModules || secondaryModules.filter(module => module.id !== 'links');
   $: layoutVariant = profileRenderSnapshot?.layout?.variant || 'compact';
   $: openingLinks = profileRenderSnapshot?.links?.opening || [];
   $: showRoll = profileRenderSnapshot?.roll?.show === true;
-  $: showLowerExpression = profileRenderSnapshot?.modules?.showLowerExpression === true;
-  $: hasProfileStory = profileRenderSnapshot?.modules?.hasProfileStory === true;
-  $: hasProfileMore = profileRenderSnapshot?.visibility?.hasProfileMore === true;
-  $: renderProfileMore = profileRenderSnapshot?.visibility?.renderProfileMore === true;
-  $: portfolioPages = getProfilePortfolioPages({
-    hasProfileContent,
-    hasProfileMusic: hasProfileMusic && !audioSrc && !richAudioPlaylist.tracks.length,
-    widgetCount: profileWidgets.length,
-    hasProfileStory
-  });
+  $: hasProfileProgressPage = profileRenderSnapshot?.visibility?.hasProgressPage === true;
+  $: renderProfileProgressPage = profileRenderSnapshot?.visibility?.renderProgressPage === true;
+  $: profilePages = getProfilePages({ hasProgressPage: hasProfileProgressPage });
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
-  $: pinnedAchievements = profileRenderSnapshot?.identity?.badges || [];
   $: recentScores = profileRenderSnapshot?.story?.recentScores || [];
   $: nameRendererRecentColors = profileRenderSnapshot?.colors?.nameRecent || [];
   // Layout is structure only. Keep the default class off the renderer so a
   // new Compact profile never receives a baked-in starfield or color theme.
   $: profilePresentationLayoutVariant = layoutVariant;
-  $: if (profilePresentationLayoutVariant === 'portfolio' && profilePageElement) void ensurePortfolioScrollController();
+  $: if (hasProfileProgressPage && profilePageElement) void ensureProfilePageScrollController();
   // The roll is a profile widget in every layout. The full interactive game
   // stays on the authenticated game surface; public profiles only expose the
   // compact, shareable result summary.
@@ -491,19 +450,22 @@
 
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (profileWideNameFontEnabled ? ' profile-shell-page--profile-wide-name-font' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} data-profile-render-model="v1" data-profile-layout={profilePresentationLayoutVariant} data-profile-render-mode={profileRenderSnapshot?.mode || (previewMode ? 'studio' : 'public')} aria-busy={loading}>
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<!-- Focusable only when the optional paginated profile is enabled so keyboard users can use PageUp/PageDown and arrow keys. -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (hasProfileProgressPage && !previewMode ? ' profile-shell-page--progress-enabled' : '') + (profileWideNameFontEnabled ? ' profile-shell-page--profile-wide-name-font' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} data-profile-render-model="v1" data-profile-layout={profilePresentationLayoutVariant} data-profile-page-count={profilePages.length} data-profile-render-mode={profileRenderSnapshot?.mode || (previewMode ? 'studio' : 'public')} aria-busy={loading} tabindex={hasProfileProgressPage && !previewMode ? 0 : undefined} on:keydown={handleProfilePageKeydown}>
   {#if renderEnvironment}
     <ProfileEnvironmentLayer snapshot={profileRenderSnapshot} mode={previewMode ? 'preview' : 'public'} reducedMotion={prefersReducedMotion} />
   {/if}
-  {#if profilePresentationLayoutVariant === 'portfolio' && portfolioPages.length > 1}
-    <nav class="profile-shell__portfolio-pagination" aria-label="Portfolio pages">
-      {#each portfolioPages as page, index (page.key)}
+  {#if hasProfileProgressPage && !previewMode}
+    <nav class="profile-shell__page-pagination" aria-label="Profile pages">
+      {#each profilePages as page, index (page.key)}
         <button
           type="button"
-          class:active={activePortfolioPage === index}
+          class:active={activeProfilePage === index}
           aria-label={`Go to ${page.label} page`}
-          aria-current={activePortfolioPage === index ? 'page' : undefined}
-          on:click={() => scrollToPortfolioPage(index)}
+          aria-current={activeProfilePage === index ? 'page' : undefined}
+          on:click={() => scrollToProfilePage(index)}
         >
           <span aria-hidden="true"></span>
         </button>
@@ -524,7 +486,7 @@
     {/if}
     <div class="profile-shell__composition">
     <div class="profile-shell__approved-canvas">
-      <div class="profile-shell__approved-main" data-profile-portfolio-page="hero">
+      <div class="profile-shell__approved-main" data-profile-page="hero">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity">
           <ProfileMotionEffect
             motionKey={profileMotionTarget === 'none' ? '' : profileMotionKey}
@@ -614,7 +576,7 @@
                     linkStyle={effectiveProfileConfig.linkStyle}
                     roll={showRoll && !refreshing && profileCardKeepsRollInline ? latestRoll : null}
                     accentColor={signatureColor}
-                    audioAvailable={hasProfileMusic}
+                    audioAvailable={hasHostedAudio}
                     audioStatus="▶"
                     rollLabel="Daily roll"
                     presentation="profile"
@@ -631,9 +593,9 @@
           </ProfileMotionEffect>
         </div>
 
-      {#if !previewMode && hasProfileMore && !profileMoreActive}
+      {#if !previewMode && hasProfileProgressPage && activeProfilePage === 0}
         <button type="button" class="profile-shell__more-cue profile-shell__more-cue--continuation" aria-controls="profile-more" on:click={scrollToProfileMore}>
-          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'portfolio' ? 'Scroll for more' : 'More'}</span>
+          <span class="profile-shell__more-cue-label">Scroll for progress</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
         </button>
       {/if}
@@ -641,223 +603,26 @@
 
     </div>
 
-    {#if renderProfileMore}
-    <div id="profile-more" class="profile-shell__more">
-        {#if !previewMode && hasProfileMore && profileMoreActive}
-          <button type="button" class="profile-shell__more-back" aria-label="Return to profile top" on:click={scrollToProfileHero}>
-            <span aria-hidden="true">↑</span>
-          </button>
-        {/if}
+    {#if renderProfileProgressPage}
+      <div id="profile-more" class="profile-shell__more profile-shell__more--progress">
         <div class="profile-shell__continuation-column">
-        {#if profilePresentationLayoutVariant === 'portfolio'}
-          <ProfilePortfolioContinuation
+          <ProfileGameProgressPage
             username={username}
-            profileContent={profileContent}
-            hasProfileContent={hasProfileContent}
-            hasProfileMusic={hasProfileMusic}
-            profileWidgets={profileWidgets}
-            latestRoll={latestRoll}
-            displayBestRoll={displayBestRoll}
-            profileControlAccent={profileControlAccent}
-            colorEffectsEnabled={colorEffectsEnabled}
-            audioSrc={audioSrc}
-            richAudioPlaylist={richAudioPlaylist}
-            hasSpotifyWidget={hasSpotifyWidget}
-            spotifyType={effectiveProfileConfig.spotify_type}
-            spotifyId={effectiveProfileConfig.spotify_id}
-            visualFixture={visualFixture}
-            previewMode={previewMode}
-            prefersReducedMotion={prefersReducedMotion}
-            profileFeatureFlags={profileFeatureFlags}
+            displayName={profileDisplayName}
+            profile={renderProfile}
+            accentColor={signatureColor}
+            surfaceStyle={profileCardStyle}
+            profileBorderKey={cosmetics?.profile_border}
+            bestRoll={displayBestRoll}
+            recentScores={recentScores}
             rank={rank}
             rankState={rankState}
-            progressionProofSnapshot={progressionProofSnapshot}
-            progressionProofCount={progressionProofCount}
-            progressionProofRolls={progressionProofRolls}
-            isOwnProfile={isOwnProfile}
-            storyModules={storyModules}
-            renderProfile={renderProfile}
-            storyUnlocks={storyUnlocks}
-            hasProfileStory={hasProfileStory}
-            pinnedAchievements={pinnedAchievements}
-            collectionItems={collectionItems}
-            recentScores={recentScores}
-            timelineEvents={timelineEvents}
-            totalPublicRolls={targetScores.length}
-            onEntryClick={recordProfileClick}
+            prefersReducedMotion={prefersReducedMotion}
+            {previewMode}
+            onReturn={scrollToProfileHero}
           />
-        {:else}
-        {#if hasProfileStory}
-          <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>
-            <FeaturedCollection
-              items={collectionItems}
-              samples={recentScores}
-              accentColor={signatureColor}
-              unlocked={storyUnlocks.collectionUnlocked}
-              rollsRequired={storyUnlocks.collectionRollsRequired}
-              totalRolls={storyUnlocks.totalRolls}
-            />
-          </div>
-        {/if}
-        {#if showLowerExpression && hasProfileContent}
-          <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition data-profile-continuation="content" aria-label={username + ' cosmetics'}>
-            <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="content">
-              <ProfileContent content={profileContent} onEntryClick={recordProfileClick} />
-            </div>
-          </div>
-        {/if}
-        {#if showLowerExpression && ((hasProfileMusic && !hasHostedAudio) || profileWidgets.length)}
-          <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition data-profile-continuation="media" aria-label={username + ' media and integrations'}>
-            <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="media-integrations">
-              {#if hasProfileMusic && !hasHostedAudio}
-                <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
-              {/if}
-              {#if profileWidgets.length}
-                <ProfileWidgets widgets={profileWidgets} onEntryClick={recordProfileClick} />
-              {/if}
-            </div>
-          </div>
-        {/if}
-
-      {#if hasProfileStory}
-        <section class="profile-shell__story-section" aria-labelledby="profile-story-title">
-          <div class="profile-shell__story-heading">
-            <div>
-              <p class="profile-shell__story-eyebrow">Color story</p>
-              <h3 id="profile-story-title">History, milestones, and collected conditions</h3>
-            </div>
-          </div>
-          <div class="profile-shell__details-grid">
-            {#if rank && rankState}
-              <Module size="wide" tone="quiet" eyebrow="Progress" title={rank.name + ' rank'} description="A quiet record of the progress behind this identity.">
-                <div class="profile-shell__rank-row">
-                  <div>
-                    <span class="profile-shell__rank-label">{rank.name} rank</span>
-                    <span class="profile-shell__rank-value">{formatStat(rankState.lifetimeEp)} EP</span>
-                  </div>
-                  <div class="profile-shell__rank-track" aria-label={Math.round(rankState.progress * 100) + ' percent toward the next rank'}>
-                    <span style={'width: ' + Math.round(rankState.progress * 100) + '%; background: ' + rank.color + ';'}></span>
-                  </div>
-                  <span class="profile-shell__rank-next">{rankState.next ? rankState.next.name + ' at ' + formatStat(rankState.next.min) + ' EP' : 'Highest rank reached'}</span>
-                </div>
-                {#if profileFeatureFlags.progressionJourney && (progressionProofSnapshot.recentUnlocks.length || progressionProofCount)}
-                  <div class="profile-shell__progression-proof" aria-label="Progression history">
-                    {#if progressionProofSnapshot.recentUnlocks.length}<span class="profile-shell__progression-proof-label">Recent unlocks</span>{:else}<span class="profile-shell__progression-proof-label">Profile history</span>{/if}
-                    {#if progressionProofSnapshot.recentUnlocks.length}
-                      <div>
-                        {#each progressionProofSnapshot.recentUnlocks.slice(0, 2) as unlock (unlock.id)}
-                          <span class="profile-shell__progression-proof-item"><strong>{unlock.reward?.name || unlock.name}</strong><small>{unlock.track === 'discovery' ? 'Discovery' : unlock.track === 'ritual' ? 'Ritual' : 'Rank'}</small></span>
-                        {/each}
-                      </div>
-                    {/if}
-                    <div class="profile-shell__progression-proof-stats">
-                      {#if progressionProofCount}<span>{formatStat(progressionProofCount)} milestones</span>{/if}
-                      {#if progressionProofRolls}<span>{formatStat(progressionProofRolls)} rolls</span>{/if}
-                    </div>
-                    {#if isOwnProfile}<a class="profile-shell__progression-link" href="/progression">View full progression</a>{/if}
-                  </div>
-                {/if}
-              </Module>
-            {/if}
-
-            {#each storyModules as module (module.id)}
-              {#if module.id === 'stats'}
-                <Module size={module.size} tone="quiet" eyebrow="Progress" title="A record of color" description="The milestones behind this identity.">
-                  <div class="profile-shell__stats" aria-label="Profile statistics">
-                    <div><strong>{formatStat(renderProfile?.current_streak)}</strong><span>Current streak</span></div>
-                    <div><strong>{formatStat(renderProfile?.longest_streak)}</strong><span>Longest streak</span></div>
-                    <div><strong>{formatStat(renderProfile?.lifetime_ep)}</strong><span>Lifetime EP</span></div>
-                    <div><strong>{formatStat(renderProfile?.total_rolls)}</strong><span>Total rolls</span></div>
-                  </div>
-                </Module>
-              {:else if module.id === 'signature'}
-                <Module size={module.size} eyebrow="Signature roll" title="The color worth remembering" description={displayBestRoll ? (displayBestRoll.rarity || 'Unranked') + ' from the public record.' : 'This profile is waiting for its first roll.'}>
-                  {#if displayBestRoll}
-                    <div class="profile-shell__best-roll">
-                      <div class="profile-shell__best-color" style={'background: ' + colorFor(displayBestRoll.hex_code) + ';'} title={displayBestRoll.hex_code || 'Color unavailable'}></div>
-                      <div>
-                        <p class="profile-shell__hex">{colorFor(displayBestRoll.hex_code, '#000000')}</p>
-                        <p class="profile-shell__score">{formatFullValue(displayBestRoll.score)} score</p>
-                        <p class="profile-shell__rarity">{displayBestRoll.rarity || 'Unranked'}</p>
-                      </div>
-                    </div>
-                  {:else}
-                    <div class="profile-shell__empty">No rolls yet. The first color will give this profile its opening note.</div>
-                  {/if}
-                </Module>
-              {:else if module.id === 'recent'}
-                <Module size={module.size} eyebrow="Recent color story" title="The last 30 days" description={targetScores.length + ' public roll' + (targetScores.length === 1 ? '' : 's') + ' in the available recent history.'}>
-                  {#if recentScores.length}
-                    <div class="profile-shell__color-list" aria-label="Recent public colors">
-                      {#each recentScores as score (score.roll_date)}
-                        <div class="profile-shell__color-entry">
-                          <span class="profile-shell__color-dot" style={'background: ' + colorFor(score.hex_code) + ';'}></span>
-                          <span>{score.roll_date}</span>
-                          <strong>{colorFor(score.hex_code, '#000000')}</strong>
-                        </div>
-                      {/each}
-                    </div>
-                  {:else}
-                    <div class="profile-shell__empty">No recent colors are available yet.</div>
-                  {/if}
-                  <div class="profile-shell__story-divider" aria-hidden="true"></div>
-                  <div class="profile-shell__story-heading">
-                    <div>
-                      <p class="profile-shell__story-eyebrow">Durable story</p>
-                      <h3>Color timeline</h3>
-                    </div>
-                    <span>{storyUnlocks.timelineLimit} visible chapter{storyUnlocks.timelineLimit === 1 ? '' : 's'}</span>
-                  </div>
-                  <ProfileTimeline events={timelineEvents} maxItems={storyUnlocks.timelineLimit} />
-                </Module>
-              {:else if module.id === 'achievements'}
-                <Module size={module.size} eyebrow="Pinned identity" title="Achievements on display" description={pinnedAchievements.length ? 'A small public selection from this player’s earned history.' : 'No achievements are pinned to the public profile yet.'}>
-                  {#if pinnedAchievements.length}
-                    <div class="profile-shell__achievement-list">
-                      {#each pinnedAchievements as achievement (achievement.id)}
-                        <article class="profile-shell__achievement">
-                          <span class="profile-shell__achievement-icon" aria-hidden="true">{achievement.icon}</span>
-                          <div><strong>{achievement.name}</strong><p>{achievement.description}</p></div>
-                        </article>
-                      {/each}
-                    </div>
-                  {:else}
-                    <div class="profile-shell__empty">Pinned badges will appear here when this player chooses them.</div>
-                  {/if}
-                  {#if isOwnProfile}<a class="profile-shell__record-link" href="/progression?tab=achievements">View all achievements</a>{/if}
-                  <div class="profile-shell__story-divider" aria-hidden="true"></div>
-                  <div class="profile-shell__story-heading">
-                    <div>
-                      <p class="profile-shell__story-eyebrow">Lifetime discoveries</p>
-                      <h3>Condition collection</h3>
-                    </div>
-                    {#if storyUnlocks.collectionUnlocked}
-                      <span>{collectionItems.length} discovered</span>
-                    {:else}
-                      <span>{storyUnlocks.totalRolls}/{storyUnlocks.collectionRollsRequired} rolls</span>
-                    {/if}
-                  </div>
-                  {#if storyUnlocks.collectionUnlocked}
-                    <ProfileCollection items={collectionItems} />
-                  {:else}
-                    <div class="profile-shell__story-locked">
-                      <strong>Keep rolling to open the collection showcase.</strong>
-                      <p>Your first {storyUnlocks.collectionRollsRequired} daily rolls reveal the conditions that define this color identity.</p>
-                      <div class="profile-shell__story-progress" aria-label={storyUnlocks.totalRolls + ' of ' + storyUnlocks.collectionRollsRequired + ' rolls toward the collection showcase'}>
-                        <span style={'width: ' + Math.min(100, Math.round((storyUnlocks.totalRolls / storyUnlocks.collectionRollsRequired) * 100)) + '%;'}></span>
-                      </div>
-                    </div>
-                  {/if}
-                  {#if isOwnProfile}<a class="profile-shell__record-link" href="/progression?tab=collection">Open full collection</a>{/if}
-                </Module>
-              {/if}
-            {/each}
-          </div>
-        </section>
-      {/if}
-        {/if}
         </div>
-    </div>
+      </div>
     {/if}
     </div>
 
@@ -910,11 +675,6 @@
   .profile-shell-page--rich-pointer :global(a),
   .profile-shell-page--rich-pointer :global(button),
   .profile-shell-page--rich-pointer :global([role="button"]) { cursor: var(--profile-pointer-cursor), pointer; }
-  .profile-shell__rank-row {
-    display: flex;
-    align-items: center;
-  }
-
   .profile-shell__action { display: inline-flex; align-items: center; justify-content: center; min-height: 2.35rem; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 0 var(--space-4); color: var(--color-ink-strong); font: 600 var(--type-label) / 1 var(--font-body-stack); cursor: pointer; transition: transform var(--motion-fast) var(--motion-ease-standard), background-color var(--motion-base) var(--motion-ease-standard), border-color var(--motion-base) var(--motion-ease-standard); }
   .profile-shell__action:hover:not(:disabled) { transform: translateY(-2px); }
   .profile-shell__action:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
@@ -922,87 +682,12 @@
   .profile-shell__action--primary { background: var(--color-ink-strong); color: var(--color-canvas-deep); }
   .profile-shell__action--secondary { border-color: color-mix(in srgb, var(--profile-control-accent) 55%, transparent); background: color-mix(in srgb, var(--profile-control-accent) 14%, transparent); color: var(--color-accent-bright); }
 
-  .profile-shell__rank-row { flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin-top: var(--space-8); padding-top: var(--space-5); border-top: 1px solid var(--color-line-subtle); }
-  .profile-shell__rank-row > div:first-child { display: flex; align-items: baseline; gap: var(--space-3); }
-  .profile-shell__rank-label { color: var(--profile-accent); }
-  .profile-shell__rank-value { color: var(--color-ink-strong); font: 600 var(--type-small) / 1 var(--font-mono-stack); }
-  .profile-shell__rank-track { flex: 1 1 12rem; min-width: 8rem; height: 0.45rem; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-inset); }
-  .profile-shell__rank-track span { display: block; height: 100%; border-radius: inherit; transition: width var(--motion-slow) var(--motion-ease-emphasis); }
-  .profile-shell__rank-next { color: var(--color-ink-muted); letter-spacing: 0.04em; }
-  .profile-shell__progression-proof { display:grid; gap:.45rem; margin-top:var(--space-4); padding-top:var(--space-4); border-top:1px solid var(--color-line-subtle); }
-  .profile-shell__progression-proof-label { color:var(--profile-accent); font:700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
-  .profile-shell__progression-proof > div { display:flex; flex-wrap:wrap; gap:.45rem; }
-  .profile-shell__progression-proof-item { display:grid; gap:.14rem; min-width:8rem; padding:.5rem .65rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
-  .profile-shell__progression-proof-item strong { color:var(--color-ink-strong); font-size:var(--type-small); }
-  .profile-shell__progression-proof-item small { color:var(--color-ink-muted); font-size:.68rem; }
-  .profile-shell__progression-proof-stats { display:flex; flex-wrap:wrap; gap:.45rem; color:var(--color-ink-muted); font:600 .68rem/1.2 var(--font-mono-stack); }
-  .profile-shell__progression-link { justify-self:start; color:var(--color-ink-strong); font-size:var(--type-small); font-weight:650; text-decoration:none; }
-  .profile-shell__progression-link:hover, .profile-shell__progression-link:focus-visible { color:var(--profile-accent); }
-
-  .profile-shell__supporting-region { min-width: 0; }
-  .profile-shell__details-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--module-gap); padding-bottom: var(--space-6); }
-  .profile-shell__details-grid :global(.foundation-module) { grid-column: span 6; }
-  .profile-shell__details-grid :global(.foundation-module--wide) { grid-column: span 12; }
-  .profile-shell__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
-  .profile-shell__stats > div { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-inset); }
-  .profile-shell__stats strong { display: block; color: var(--color-ink-strong); font: 600 clamp(1.45rem, 3vw, 2.25rem) / 1 var(--font-display-stack); }
-  .profile-shell__stats span { display: block; margin-top: var(--space-2); color: var(--color-ink-muted); font-size: var(--type-label); }
-
-  .profile-shell__best-roll { display: grid; grid-template-columns: minmax(5rem, 8rem) 1fr; gap: var(--space-5); align-items: center; }
-  .profile-shell__best-color { min-height: 8rem; border-radius: var(--radius-md); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 1rem 2rem rgba(0, 0, 0, 0.24); }
-  .profile-shell__hex { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-body) / 1 var(--font-mono-stack); }
-  .profile-shell__score { margin: var(--space-3) 0 0; color: var(--profile-accent); font: 600 var(--type-h2) / 1 var(--font-display-stack); }
-  .profile-shell__rarity { margin: var(--space-2) 0 0; color: var(--color-ink-muted); font-size: var(--type-small); }
-
-  .profile-shell__color-list { display: grid; gap: var(--space-2); }
-  .profile-shell__color-entry { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-3); min-width: 0; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--surface-inset); color: var(--color-ink-muted); font: 600 var(--type-label) / 1.2 var(--font-mono-stack); }
-  .profile-shell__color-entry strong { color: var(--color-ink-strong); font-weight: 600; }
-  .profile-shell__color-dot { width: 1.25rem; height: 1.25rem; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 50%; }
-  .profile-shell__achievement-list { display: grid; gap: var(--space-3); }
-  .profile-shell__achievement { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3); align-items: start; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--surface-inset); }
-  .profile-shell__achievement-icon { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: color-mix(in srgb, var(--profile-accent) 18%, transparent); color: var(--profile-accent); font-size: 1.1rem; }
-  .profile-shell__achievement strong { color: var(--color-ink-strong); font-size: var(--type-small); }
-  .profile-shell__achievement p { margin: var(--space-1) 0 0; color: var(--color-ink-muted); font-size: var(--type-label); line-height: 1.4; }
-  .profile-shell__record-link { display:inline-flex; margin-top:var(--space-4); color:var(--color-ink-muted); font-size:var(--type-label); font-weight:650; text-decoration:none; }
-  .profile-shell__record-link:hover, .profile-shell__record-link:focus-visible { color:var(--profile-accent); }
-  .profile-shell__story-divider { height: 1px; margin: var(--space-6) 0; background: var(--color-line-subtle); }
-  .profile-shell__story-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
-  .profile-shell__story-heading h3 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h3) / 1.1 var(--font-display-stack); }
-  .profile-shell__story-heading > span { color: var(--color-ink-faint); font: 600 var(--type-label) / 1.2 var(--font-mono-stack); text-align: right; }
-  .profile-shell__story-eyebrow { margin: 0 0 var(--space-1); color: var(--profile-accent); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.12em; text-transform: uppercase; }
-  .profile-shell__story-locked { display: grid; gap: var(--space-2); padding: var(--space-4); border: 1px dashed color-mix(in srgb, var(--profile-accent) 45%, var(--color-line-subtle)); border-radius: var(--radius-md); background: color-mix(in srgb, var(--profile-accent) 6%, var(--surface-inset)); }
-  .profile-shell__story-locked strong { color: var(--color-ink-strong); font-size: var(--type-small); }
-  .profile-shell__story-locked p { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
-  .profile-shell__story-progress { height: 0.4rem; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-panel); }
-  .profile-shell__story-progress span { display: block; height: 100%; border-radius: inherit; background: var(--profile-accent); transition: width var(--motion-base) var(--motion-ease-standard); }
-
-  .profile-shell__empty { padding: var(--space-4); border: 1px dashed var(--color-line-subtle); border-radius: var(--radius-sm); color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
-
   .profile-shell-state { width: min(100%, 42rem); margin: clamp(var(--space-8), 12vh, var(--space-20)) auto; }
   .profile-shell-state h1 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h1) / var(--type-line-tight) var(--font-display-stack); }
   .profile-shell-state p:not(.profile-shell-state__eyebrow) { color: var(--color-ink-muted); line-height: 1.6; }
   .profile-shell-state__eyebrow { margin: 0 0 var(--space-3); color: var(--profile-accent); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.14em; text-transform: uppercase; }
-  @media (max-width: 48rem) {
-    .profile-shell__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .profile-shell__details-grid :global(.foundation-module),
-    .profile-shell__details-grid :global(.foundation-module--wide) { grid-column: 1 / -1; }
-    .profile-shell__story-heading { align-items: flex-start; flex-direction: column; gap: var(--space-2); }
-    .profile-shell__story-heading > span { text-align: left; }
-  }
-
-  @media (max-width: 36rem) {
-    .profile-shell__rank-row { align-items: flex-start; flex-direction: column; gap: var(--space-2); }
-    .profile-shell__rank-track { width: 100%; }
-    .profile-shell__rank-next { font-size: 0.625rem; }
-    .profile-shell__best-roll { grid-template-columns: 5.5rem 1fr; gap: var(--space-3); }
-    .profile-shell__best-color { min-height: 5.5rem; }
-    .profile-shell__story-heading h3 { font-size: var(--type-h3); }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .profile-shell__action,
-    .profile-shell__rank-track span,
-    .profile-shell__story-progress span { transition-duration: 0.001ms; }
+    .profile-shell__action { transition-duration: 0.001ms; }
     .profile-shell__action:hover:not(:disabled) { transform: none; }
   }
   /* Profile composition: one color field, one identity surface. */
@@ -1020,17 +705,13 @@
     scroll-padding-block: 0;
   }
 
-  .profile-shell__story-section,
+  .profile-shell-page:focus-visible { outline: 2px solid color-mix(in srgb, var(--profile-control-accent) 60%, transparent); outline-offset: -4px; }
+
   .profile-shell__social-section {
     position: relative;
     z-index: 2;
     width: min(100%, 52rem);
     margin-inline: auto;
-  }
-
-  .profile-shell__story-section {
-    margin-top: 1rem;
-    border-top: 1px solid var(--color-line-subtle);
   }
 
   .profile-shell__social-section { margin-top: var(--space-6); }
@@ -1055,7 +736,7 @@
     justify-content: center;
   }
 
-  .profile-shell__portfolio-pagination {
+  .profile-shell__page-pagination {
     position: fixed;
     z-index: 5;
     top: 50%;
@@ -1068,7 +749,7 @@
     transform: translateY(-50%);
   }
 
-  .profile-shell__portfolio-pagination button {
+  .profile-shell__page-pagination button {
     display: grid;
     place-items: center;
     width: 1.35rem;
@@ -1081,7 +762,7 @@
     cursor: pointer;
   }
 
-  .profile-shell__portfolio-pagination button span {
+  .profile-shell__page-pagination button span {
     display: block;
     width: .42rem;
     height: .42rem;
@@ -1092,16 +773,16 @@
     transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, opacity 160ms ease;
   }
 
-  .profile-shell__portfolio-pagination button:hover span,
-  .profile-shell__portfolio-pagination button:focus-visible span,
-  .profile-shell__portfolio-pagination button.active span {
+  .profile-shell__page-pagination button:hover span,
+  .profile-shell__page-pagination button:focus-visible span,
+  .profile-shell__page-pagination button.active span {
     border-color: var(--profile-control-accent);
     background: var(--profile-control-accent);
     opacity: 1;
   }
 
-  .profile-shell__portfolio-pagination button.active span { transform: scale(1.45); }
-  .profile-shell__portfolio-pagination button:focus-visible { outline: 2px solid var(--profile-control-accent); outline-offset: 2px; }
+  .profile-shell__page-pagination button.active span { transform: scale(1.45); }
+  .profile-shell__page-pagination button:focus-visible { outline: 2px solid var(--profile-control-accent); outline-offset: 2px; }
 
   .profile-shell__more-cue {
     position: absolute;
@@ -1175,28 +856,6 @@
     gap: clamp(1.15rem, 2.8vw, 1.8rem);
   }
 
-  .profile-shell__more-back {
-    position: absolute;
-    top: 1.25rem;
-    left: 50%;
-    display: grid;
-    place-items: center;
-    width: 2.9rem;
-    height: 2.9rem;
-    padding: 0;
-    border: 1px solid color-mix(in srgb, var(--profile-control-accent) 38%, var(--color-line-subtle));
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--color-canvas-deep) 72%, transparent);
-    color: color-mix(in srgb, var(--profile-control-accent) 68%, white);
-    cursor: pointer;
-    font-size: 1.35rem;
-    line-height: 1;
-    transform: translateX(-50%);
-  }
-
-  .profile-shell__more-back:hover { color: var(--color-ink-strong); border-color: var(--profile-control-accent); }
-  .profile-shell__more-back:focus-visible { outline: 2px solid var(--profile-control-accent); outline-offset: 4px; }
-
   .profile-shell__opening.profile-shell__approved-opening {
     width: min(100%, 46rem);
     align-self: center;
@@ -1213,26 +872,6 @@
   .profile-shell__card-scale { width: 100%; min-width: 0; }
   .profile-shell__card-scale { transform-origin: center; }
 
-  .profile-shell__approved-featured {
-    width: 100%;
-    margin-top: 0;
-    padding: 0;
-  }
-
-  .profile-shell__approved-supporting {
-    display: grid;
-    grid-template-columns: 1fr;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-  }
-
-  .profile-shell__approved-supporting .profile-shell__supporting-region--expression {
-    width: 100%;
-    padding: 0;
-    border: 0;
-  }
-
   /* Layout frames own the relationship between identity and expression. */
   .profile-shell__composition { display:contents; min-width:0; }
   .profile-shell__approved-canvas,
@@ -1241,9 +880,7 @@
   .profile-shell__approved-canvas,
   .profile-shell__approved-main,
   .profile-shell__more,
-  .profile-shell__approved-opening,
-  .profile-shell__approved-featured,
-  .profile-shell__approved-supporting { min-width:0; max-width:100%; }
+  .profile-shell__approved-opening { min-width:0; max-width:100%; }
 
   @media (max-width: 36rem) {
     .profile-shell-page { height: 100dvh; min-height: 100dvh; padding-inline: 1.5rem; padding-bottom: 0; }
@@ -1253,16 +890,11 @@
     .profile-shell__approved-main { height: 100dvh; min-height: 100dvh; }
     .profile-shell__more-cue { bottom: 1rem; }
     .profile-shell__more { min-height: 100dvh; padding-block: 4rem; }
-    .profile-shell__approved-featured { margin-top: 1.25rem; padding-inline: 0.25rem; }
-    .profile-shell__approved-supporting { margin-top: clamp(3rem, 8vh, 4.5rem); }
-    .profile-shell-page .profile-shell__story-section { margin-top: 0.75rem; }
   }
 
   @media (min-width: 36.01rem) and (max-height: 47.5rem) {
     .profile-shell__approved-canvas { display: flex; flex-direction: column; min-height: 0; padding: 1.25rem 0 1.25rem; }
     .profile-shell__opening.profile-shell__approved-opening { align-self: center; }
-    .profile-shell-page :global(.profile-shell__approved-featured) { margin-top: 1.25rem; }
-    .profile-shell__approved-supporting { margin-top: 1.5rem; }
   }
 
 
@@ -1280,26 +912,26 @@
   .profile-shell-page--sleek .profile-shell__approved-main,
   .profile-shell-page--framed .profile-shell__approved-main { justify-content: center; }
 
-  .profile-shell-page--portfolio {
-    height: 100dvh;
-    min-height: 100dvh;
-    scroll-snap-type: y mandatory;
-    scroll-padding-block: 0;
-  }
-
   .profile-shell-page--portfolio .profile-shell__approved-canvas { display: contents; min-height: 0; }
-  .profile-shell-page--portfolio .profile-shell__approved-main { height: 100dvh; min-height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; }
   .profile-shell-page--portfolio .profile-shell__more { display: block; min-height: 0; padding: 0; scroll-snap-align: none; scroll-snap-stop: normal; }
   .profile-shell-page--portfolio .profile-shell__continuation-column { display: contents; width: 100%; }
-  .profile-shell-page--portfolio .profile-shell__more-back { display: none; }
+
+  .profile-shell-page--progress-enabled { scroll-snap-type: y mandatory; }
+  .profile-shell-page--progress-enabled .profile-shell__approved-canvas { display: contents; min-height: 0; }
+  .profile-shell-page--progress-enabled .profile-shell__approved-main { height: 100dvh; min-height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; }
+  .profile-shell-page--progress-enabled .profile-shell__more { display: block; min-height: 0; padding: 0; scroll-snap-align: none; scroll-snap-stop: normal; }
+  .profile-shell-page--progress-enabled .profile-shell__continuation-column { display: contents; width: 100%; }
+  .profile-shell__social-section { scroll-snap-align: start; scroll-snap-stop: normal; }
 
   .profile-shell-page--compact .profile-shell__more { min-height: 0; justify-content: flex-start; padding: 2.5rem 0 4rem; }
-  .profile-shell-page--compact .profile-shell__more-back { display: none; }
   .profile-shell-page--full-bleed .profile-shell__more,
   .profile-shell-page--framed .profile-shell__more { align-items: center; }
 
+  .profile-shell-page--progress-enabled .profile-shell__more { align-items: stretch; }
+
   .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening { width: 100%; }
   .profile-shell-page--preview :global(.profile-daily-roll) { box-sizing: border-box; }
+  .profile-shell-page--preview .profile-shell__more { min-height: 0; padding: 0; }
 
   @media (max-width: 36rem) {
     .profile-shell-page--compact { padding-inline: .9rem; }
@@ -1308,7 +940,7 @@
     .profile-shell-page--sleek .profile-shell__opening.profile-shell__approved-opening,
     .profile-shell-page--framed .profile-shell__opening.profile-shell__approved-opening,
     .profile-shell-page--portfolio .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 100%); }
-    .profile-shell__portfolio-pagination { right: .35rem; }
+    .profile-shell__page-pagination { right: .35rem; }
   }
 
   /* A compact card is allowed to grow with its links and roll state on a
@@ -1321,10 +953,20 @@
       min-height: 100dvh;
     }
 
+    .profile-shell-page--progress-enabled:not(.profile-shell-page--preview) {
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow-y: auto;
+    }
+
     .profile-shell-page--compact:not(.profile-shell-page--preview) .profile-shell__approved-canvas {
       display: flex;
       flex-direction: column;
       min-height: 100dvh;
+    }
+
+    .profile-shell-page--progress-enabled:not(.profile-shell-page--preview) .profile-shell__approved-canvas {
+      display: contents;
     }
 
     .profile-shell-page--compact:not(.profile-shell-page--preview) .profile-shell__approved-main {

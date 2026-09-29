@@ -1,6 +1,12 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { getProfileRollVisible, normalizeProfileConfig, setProfileRollVisible } from './profileConfig.js';
+  import {
+    getProfileProgressPageVisible,
+    getProfileRollVisible,
+    normalizeProfileConfig,
+    setProfileProgressPageVisible,
+    setProfileRollVisible
+  } from './profileConfig.js';
   import { createProfileLayoutPatch } from './profile-layout/profileLayoutPatch.js';
   import { PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
 
@@ -18,6 +24,7 @@
   $: syncIncomingConfig(draftConfig, publishedConfig);
   $: activeLayout = staged.layoutVariant || 'compact';
   $: rollVisible = getProfileRollVisible(staged);
+  $: progressPageVisible = getProfileProgressPageVisible(staged);
 
   function syncIncomingConfig(nextDraft, nextPublished) {
     const nextKey = JSON.stringify(nextDraft || nextPublished || '');
@@ -43,6 +50,12 @@
   function toggleRollWidget(event) {
     const nextVisible = event.currentTarget.checked;
     staged = setProfileRollVisible(staged, nextVisible);
+    emitPatch({ modules: staged.modules });
+  }
+
+  function toggleProgressPage(event) {
+    const nextVisible = event.currentTarget.checked;
+    staged = setProfileProgressPageVisible(staged, nextVisible);
     emitPatch({ modules: staged.modules });
   }
 
@@ -97,6 +110,23 @@
       />
       <span aria-hidden="true"><i></i></span>
       <strong>{rollVisible ? 'Shown' : 'Hidden'}</strong>
+    </label>
+  </section>
+
+  <section class="profile-layout-editor__widget" aria-labelledby="profile-progress-page-title">
+    <div>
+      <h3 id="profile-progress-page-title">Game progress page</h3>
+      <p id="profile-progress-page-description">Let visitors scroll from your profile card to a full-page view of your rolls, streaks, rank, and recent colors. Recent colors follow your activity privacy setting.</p>
+    </div>
+    <label class="profile-layout-editor__toggle" data-progress-page-toggle>
+      <input
+        type="checkbox"
+        checked={progressPageVisible}
+        aria-describedby="profile-progress-page-description"
+        on:change={toggleProgressPage}
+      />
+      <span aria-hidden="true"><i></i></span>
+      <strong>{progressPageVisible ? 'Shown' : 'Hidden'}</strong>
     </label>
   </section>
 
