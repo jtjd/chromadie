@@ -8470,3 +8470,8 @@ balances. Remove public About, project, provider-widget, and Spotify surfaces,
 but retain their saved configuration values so the presentation change does
 not erase existing data. Remove provider iframe origins from the public CSP.
 No database migration is required.
+
+
+### Mobile navigation polish — 2026-09-30
+
+Replaced the cramped mobile menu grid with a single column, grouped account actions, and a dark rounded panel matching the header. Added a 44px hamburger/close toggle, viewport-constrained scrolling, active-page semantics, Escape and outside-pointer dismissal, and reduced-motion support. Supporting routes now consolidate account actions into the mobile menu. No schema or account contract changes. Build, Svelte checks, ESLint, links, CSP, performance, username policy, balance, catalog, scoring parity, and database security checks passed. The npm test suite and browser visual verification were not run.

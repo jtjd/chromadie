@@ -23,11 +23,23 @@
 
   const dispatch = createEventDispatcher();
   let mobileMenuOpen = false;
+  let mobileMenuElement;
+  let mobileMenuToggle;
   let failedAvatarSource = '';
 
   $: accountAvatarReference = $profile?.avatar_reference || $profile?.media_references?.avatar;
   $: resolvedAvatarSource = accountAvatarReference ? getProfileMediaUrl(accountAvatarReference) : avatarSrc;
   $: activeAvatarSource = resolvedAvatarSource && failedAvatarSource !== resolvedAvatarSource ? resolvedAvatarSource : '';
+
+  function dismissMobileMenu(event) {
+    if (!mobileMenuOpen) return;
+    if (event.type === 'keydown' && event.key === 'Escape') {
+      mobileMenuOpen = false;
+      mobileMenuToggle?.focus();
+    } else if (event.type === 'pointerdown' && !mobileMenuElement?.contains(event.target)) {
+      mobileMenuOpen = false;
+    }
+  }
 
   function handleAvatarError() {
     failedAvatarSource = resolvedAvatarSource;
@@ -61,6 +73,8 @@
     void prefetchRouteComponent(view);
   }
 </script>
+
+<svelte:window on:keydown={dismissMobileMenu} on:pointerdown={dismissMobileMenu} />
 
 <header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} class:site-mode-header--home-route={isHomeMode} class:site-mode-header--leaderboard={isLeaderboardMode} data-site-chrome="header" style="--site-header-accent: var(--white, #ffffff);">
   <div class="site-mode-header__inner">
@@ -121,19 +135,18 @@
       </div>
     </div>
 
-    <details class="site-mode-header__mobile-menu" bind:open={mobileMenuOpen}>
-      <summary aria-expanded={mobileMenuOpen} aria-label={isProfileMode ? 'Open profile actions' : isHomeMode || isHomepageStyle ? 'Open account actions' : 'Open application navigation'}>Menu</summary>
+    <details class="site-mode-header__mobile-menu" bind:this={mobileMenuElement} bind:open={mobileMenuOpen}>
+      <summary bind:this={mobileMenuToggle} aria-expanded={mobileMenuOpen} aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}>
+        <span class="site-mode-header__menu-icon" aria-hidden="true"><span></span><span></span></span>
+      </summary>
       <div class="site-mode-header__mobile-panel" aria-hidden={!mobileMenuOpen}>
         {#if !isProfileMode}
           <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
-            {#if !isHomeMode}<button type="button" class:active={activeView === 'home'} on:mouseenter={() => prefetch('home')} on:focus={() => prefetch('home')} on:click={() => navigate('home')}>Roll</button>{/if}
-            <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
-            <button type="button" class:active={activeView === 'progression'} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigateProtected('progression')}>Progression</button>
-            <button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigateProtected('profile-settings')}>Customize</button>
-            <button type="button" class:active={activeView === 'pricing'} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
-            {#if !isAuthenticated}
-              <button type="button" class="site-mode-header__create-profile" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Create profile</button>
-            {/if}
+            {#if !isHomeMode}<button type="button" class:active={activeView === 'home'} aria-current={activeView === 'home' ? 'page' : undefined} on:mouseenter={() => prefetch('home')} on:focus={() => prefetch('home')} on:click={() => navigate('home')}>Roll</button>{/if}
+            <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+            <button type="button" class:active={activeView === 'progression'} aria-current={activeView === 'progression' ? 'page' : undefined} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigateProtected('progression')}>Progression</button>
+            <button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigateProtected('profile-settings')}>Customize</button>
+            <button type="button" class:active={activeView === 'pricing'} aria-current={activeView === 'pricing' ? 'page' : undefined} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
           </div>
         {/if}
 
@@ -153,6 +166,7 @@
             <!-- Keep account controls visually quiet while session data hydrates. -->
           {:else if !isAuthenticated}
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Login</button>
+            <button type="button" class="site-mode-header__create-profile" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Create profile</button>
           {:else}
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in / Sign up</button>
           {/if}
@@ -319,49 +333,69 @@
     color: var(--text);
   }
 
-  .site-mode-header__mobile-menu { display: none; position: relative; }
+  .site-mode-header__mobile-menu { display: none; position: relative; margin-left: auto; }
   .site-mode-header__mobile-menu summary {
-    min-height: 38px;
-    padding: 0 12px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 9px;
-    color: var(--text);
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    color: #f5f5f6;
     list-style: none;
   }
   .site-mode-header__mobile-menu summary::-webkit-details-marker { display: none; }
+  .site-mode-header__mobile-menu summary:hover,
+  .site-mode-header__mobile-menu[open] summary { background: rgba(255, 255, 255, 0.09); }
+  .site-mode-header__menu-icon { position: relative; width: 18px; height: 12px; }
+  .site-mode-header__menu-icon span {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 18px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 180ms ease;
+  }
+  .site-mode-header__menu-icon span:last-child { top: 9px; }
+  .site-mode-header__mobile-menu[open] .site-mode-header__menu-icon span:first-child { transform: translateY(3.5px) rotate(45deg); }
+  .site-mode-header__mobile-menu[open] .site-mode-header__menu-icon span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
 
   .site-mode-header__mobile-panel {
     position: absolute;
-    top: calc(100% + 10px);
+    top: calc(100% + 14px);
     right: 0;
     display: grid;
-    min-width: 14rem;
-    padding: 0.55rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 0.65rem;
-    background: var(--surface-2, #1e1e22);
-    box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.42);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    width: min(320px, calc(100vw - 48px));
+    max-height: calc(100dvh - 100px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 20px;
+    background: rgba(13, 14, 17, 0.98);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    font: 500 0.875rem / 1.4 var(--site-header-font);
   }
   .site-mode-header__mobile-panel button {
-    min-height: 2.7rem;
-    padding: 0.75rem;
-    border-radius: 0.4rem;
-    color: var(--text-muted, #8d8c92);
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    color: #b6b6be;
     text-align: left;
   }
   .site-mode-header__mobile-panel button:hover,
-  .site-mode-header__mobile-panel button.active { background: var(--surface-3, #28282c); }
+  .site-mode-header__mobile-panel button.active { background: rgba(255, 255, 255, 0.07); color: #fff; }
+  .site-mode-header__mobile-panel button:disabled { opacity: 0.5; cursor: wait; }
   .site-mode-header__mobile-primary,
   .site-mode-header__mobile-context,
-  .site-mode-header__mobile-account { display: grid; gap: 0.25rem; }
-  .site-mode-header__mobile-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .site-mode-header__mobile-context,
-  .site-mode-header__mobile-account { margin-top: 0.35rem; padding-top: 0.55rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-  .site-mode-header__mobile-panel > .site-mode-header__mobile-context:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
-  .site-mode-header__mobile-context button,
-  .site-mode-header__mobile-account button { width: 100%; }
+  .site-mode-header__mobile-account { display: grid; gap: 4px; }
+  .site-mode-header__mobile-account:not(:empty) { margin-top: 8px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+  .site-mode-header__mobile-account:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+  .site-mode-header__mobile-panel .site-mode-header__create-profile { min-height: 44px !important; margin-top: 4px; }
 
   /* Reference header: a compact, centered glass capsule with a balanced
      three-part layout. The equal outer columns keep navigation centered even
@@ -548,7 +582,8 @@
       margin-top: 9px;
       padding: 0 10px 0 18px;
     }
-    .site-mode-header__nav { gap: 10px; }
+    .site-mode-header:not(.site-mode-header--profile) .site-mode-header__nav,
+    .site-mode-header:not(.site-mode-header--profile) .site-mode-header__right { display: none; }
     .site-mode-header__nav button,
     .site-mode-header__account-action,
     .site-mode-header__account-name { display: none; }
@@ -564,6 +599,7 @@
     .site-mode-header--profile .site-mode-header__context .site-mode-header__account-action { display: inline-flex; }
     .site-mode-header--profile .site-mode-header__mobile-menu { display: block; }
     .site-mode-header--profile .site-mode-header__mobile-context { display: none; }
+    .site-mode-header--profile .site-mode-header__mobile-account { margin-top: 0; padding-top: 0; border-top: 0; }
     .site-mode-header:not(.site-mode-header--home-route) .site-mode-header__mobile-menu { display: block; }
   }
 
@@ -577,6 +613,8 @@
     .site-mode-header__account button,
     .site-mode-header__mobile-panel button,
     .site-mode-header__create-profile,
+    .site-mode-header__menu-icon span,
+    .site-mode-header__mobile-menu summary,
     .site-mode-header__chevron { transition-duration: 0.001ms; }
   }
 </style>

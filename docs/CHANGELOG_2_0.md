@@ -5651,3 +5651,8 @@ provider-widget, Spotify, and color archive content no longer appears on public
 profiles. Existing saved values remain intact, and no database migration was
 needed. The progress page follows the existing activity privacy setting for
 recent colors and keeps the public profile data boundary.
+
+
+### Mobile navigation polish — 2026-09-30
+
+Replaced the cramped mobile menu grid with a single column, grouped account actions, and a dark rounded panel matching the header. Added a 44px hamburger/close toggle, viewport-constrained scrolling, active-page semantics, Escape and outside-pointer dismissal, and reduced-motion support. Supporting routes now consolidate account actions into the mobile menu. No schema or account contract changes. Build, Svelte checks, ESLint, links, CSP, performance, username policy, balance, catalog, scoring parity, and database security checks passed. The npm test suite and browser visual verification were not run.
